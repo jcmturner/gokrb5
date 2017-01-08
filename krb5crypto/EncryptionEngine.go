@@ -3,6 +3,7 @@ package krb5crypto
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 )
 
 type EType interface {
@@ -10,16 +11,16 @@ type EType interface {
 	GetKeyByteSize() int // See protocol key format for defined values
 	StringToKey(string, salt string, s2kparams []byte) (protocolKey []byte)
 	GetDefaultStringToKeyParams() string // s2kparams
-	GetKeySeedBitLength() int // key-generation seed length, k
+	GetKeySeedBitLength() int            // key-generation seed length, k
 	RandomToKey(b []byte) (protocolKey []byte)
-	GetHMACBitLength() int // HMAC output size, h
-	GetMessageBlockByteSize() int // message block size, m
-	Encrypt(key, message []byte) (ct []byte, err error) // E function
+	GetHMACBitLength() int                                      // HMAC output size, h
+	GetMessageBlockByteSize() int                               // message block size, m
+	Encrypt(key, message []byte) (ct []byte, err error)         // E function
 	Decrypt(key, ciphertext []byte) (message []byte, err error) // D function
-	GetCypherBlockBitLength() int // cipher block size, c
-	GetConfounderByteSize() int // This is the same as the cipher block size but in bytes.
-	DeriveKey(protocolKey, usage []byte) (specificKey []byte) // DK
-	DeriveRandom(protocolKey, usage []byte) ([]byte, error) // DR
+	GetCypherBlockBitLength() int                               // cipher block size, c
+	GetConfounderByteSize() int                                 // This is the same as the cipher block size but in bytes.
+	DeriveKey(protocolKey, usage []byte) (specificKey []byte)   // DK
+	DeriveRandom(protocolKey, usage []byte) ([]byte, error)     // DR
 }
 type encryptFunc func([]byte, []byte) ([]byte, error)
 
@@ -53,6 +54,44 @@ func deriveRandom(key, usage []byte, n, k int, encrypt encryptFunc) ([]byte, err
 		i = i + copy(out[i:], K)
 	}
 	return out, nil
+}
+
+
+func pkcs7Pad(b []byte, m int) ([]byte, error) {
+	if m <= 0 {
+		return nil, errors.New("Invalid message block size when padding")
+	}
+	if b == nil || len(b) == 0 {
+		return nil, errors.New("Data not valid to pad: Zero size")
+	}
+	n := m - (len(b) % m)
+	pb := make([]byte, len(b)+n)
+	copy(pb, b)
+	copy(pb[len(b):], bytes.Repeat([]byte{byte(n)}, n))
+	return pb, nil
+}
+
+func pkcs7Unpad(b []byte, m int) ([]byte, error) {
+	if m <= 0 {
+		return nil, errors.New("Invalid message block size when unpadding")
+	}
+	if b == nil || len(b) == 0 {
+		return nil, errors.New("Padded data not valid: Zero size")
+	}
+	if len(b)%m != 0 {
+		return nil, errors.New("Padded data not valid: Not multiple of message block size")
+	}
+	c := b[len(b)-1]
+	n := int(c)
+	if n == 0 || n > len(b) {
+		return nil, errors.New("Padded data not valid: Data may not have been padded")
+	}
+	for i := 0; i < n; i++ {
+		if b[len(b)-n+i] != c {
+			return nil, errors.New("Padded data not valid")
+		}
+	}
+	return b[:len(b)-n], nil
 }
 
 /*

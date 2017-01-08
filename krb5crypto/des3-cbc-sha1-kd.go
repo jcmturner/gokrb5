@@ -68,7 +68,8 @@ func (e *Des3CbcSha1Kd) GetHash() hash.Hash {
 }
 
 func (e *Des3CbcSha1Kd) GetMessageBlockByteSize() int {
-	return 8
+	//For traditional CBC mode with padding, it would be the underlying cipher's block size
+	return des.BlockSize
 }
 
 func (e *Des3CbcSha1Kd) GetDefaultStringToKeyParams() string {
@@ -106,7 +107,7 @@ func (e *Des3CbcSha1Kd) DeriveKey(protocolKey, usage []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return RandomToKey(r)
+	return RandomToKey(r), nil
 }
 
 func (e *Des3CbcSha1Kd) Encrypt(key, message []byte) ([]byte, error) {
@@ -114,9 +115,8 @@ func (e *Des3CbcSha1Kd) Encrypt(key, message []byte) ([]byte, error) {
 		return nil, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeySeedBitLength(), len(key))
 
 	}
-	if len(message) % des.BlockSize != 0 {
-		return nil, errors.New("Plaintext is not a multiple of the block size. Padding may be needed.")
-
+	if len(message) % e.GetMessageBlockByteSize() != 0 {
+		message, _ = pkcs7Pad(message, e.GetMessageBlockByteSize())
 	}
 
 	block, err := des.NewTripleDESCipher(key)
@@ -128,9 +128,6 @@ func (e *Des3CbcSha1Kd) Encrypt(key, message []byte) ([]byte, error) {
 	//RFC 3961: initial cipher state      All bits zero
 	iv := make([]byte, e.GetConfounderByteSize())
 	//_, err = rand.Read(iv) //Not needed as all bits need to be zero
-	if err != nil {
-		return nil, fmt.Errorf("Error creating random nonce/initial state: %v", err)
-	}
 
 	ct := make([]byte, len(message))
 	mode := cipher.NewCBCEncrypter(block, iv)
@@ -143,6 +140,7 @@ func (e *Des3CbcSha1Kd) Decrypt(key, ciphertext []byte) (message []byte, err err
 		err = fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeySeedBitLength(), len(key))
 		return
 	}
+
 	if len(ciphertext) < des.BlockSize || len(ciphertext) % des.BlockSize != 0 {
 		err = errors.New("Ciphertext is not a multiple of the block size.")
 		return
@@ -159,5 +157,9 @@ func (e *Des3CbcSha1Kd) Decrypt(key, ciphertext []byte) (message []byte, err err
 
 	mode := cipher.NewCBCDecrypter(block, iv)
 	mode.CryptBlocks(message, ciphertext)
+	m, er := pkcs7Unpad(message, e.GetMessageBlockByteSize())
+	if er == nil {
+		message = m
+	}
 	return
 }
