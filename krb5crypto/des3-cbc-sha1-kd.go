@@ -1,16 +1,15 @@
 package krb5crypto
 
 import (
-	"crypto/des"
-	"fmt"
 	"crypto/cipher"
-	"errors"
+	"crypto/des"
 	"crypto/sha1"
+	"errors"
+	"fmt"
 	"hash"
 )
 
 //RFC: 3961 Section 6.3
-
 
 /*
                  des3-cbc-hmac-sha1-kd, hmac-sha1-des3-kd
@@ -48,7 +47,6 @@ import (
    checksum type number of twelve (12)*/
 
 type Des3CbcSha1Kd struct {
-
 }
 
 func (e *Des3CbcSha1Kd) GetETypeID() int {
@@ -107,7 +105,7 @@ func (e *Des3CbcSha1Kd) DeriveKey(protocolKey, usage []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return RandomToKey(r), nil
+	return e.RandomToKey(r), nil
 }
 
 func (e *Des3CbcSha1Kd) Encrypt(key, message []byte) ([]byte, error) {
@@ -115,7 +113,7 @@ func (e *Des3CbcSha1Kd) Encrypt(key, message []byte) ([]byte, error) {
 		return nil, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeySeedBitLength(), len(key))
 
 	}
-	if len(message) % e.GetMessageBlockByteSize() != 0 {
+	if len(message)%e.GetMessageBlockByteSize() != 0 {
 		message, _ = pkcs7Pad(message, e.GetMessageBlockByteSize())
 	}
 
@@ -141,7 +139,7 @@ func (e *Des3CbcSha1Kd) Decrypt(key, ciphertext []byte) (message []byte, err err
 		return
 	}
 
-	if len(ciphertext) < des.BlockSize || len(ciphertext) % des.BlockSize != 0 {
+	if len(ciphertext) < des.BlockSize || len(ciphertext)%des.BlockSize != 0 {
 		err = errors.New("Ciphertext is not a multiple of the block size.")
 		return
 	}
