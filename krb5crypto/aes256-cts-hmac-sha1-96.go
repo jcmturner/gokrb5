@@ -14,13 +14,6 @@ import (
 	"strings"
 )
 
-const (
-	CipherKeyLength = 256 // AES256
-	HMACKeyLength   = 96  // SHA96
-	KeySize         = 352 // CipherKeyLength + HMACKeyLength
-	NonceSize       = aes.BlockSize
-)
-
 //+--------------------------------------------------------------------+
 //|               protocol key format        128- or 256-bit string    |
 //|                                                                    |
@@ -65,6 +58,10 @@ const (
 //|    hmac-sha1-96-aes128                15                   96      |
 //|    hmac-sha1-96-aes256                16                   96      |
 //+--------------------------------------------------------------------+
+
+const (
+	s2kParamsZero = 4294967296
+)
 
 type Aes256CtsHmacSha196 struct {
 }
@@ -113,7 +110,7 @@ func (e *Aes256CtsHmacSha196) StringToKey(secret string, salt string, s2kparams 
 	//be performed is 4,294,967,296 (2**32).
 	var i int
 	if s2kparams == "00 00 00 00" {
-		i = 4294967296
+		i = s2kParamsZero
 	} else {
 		s := strings.Replace(s2kparams, " ", "", -1)
 		if len(s) != 8 {
@@ -126,7 +123,7 @@ func (e *Aes256CtsHmacSha196) StringToKey(secret string, salt string, s2kparams 
 		buf := bytes.NewBuffer(b)
 		binary.Read(buf, binary.BigEndian, &i)
 		if i == 0 {
-			i = 4294967296
+			i = s2kParamsZero
 		}
 	}
 
@@ -160,38 +157,32 @@ func (e *Aes256CtsHmacSha196) DeriveKey(protocolKey, usage []byte) ([]byte, erro
 	return e.RandomToKey(r), nil
 }
 
-func (e *Aes256CtsHmacSha196) Encrypt(key, message []byte) (ct []byte, err error) {
-	if len(key) != KeySize {
-		err = fmt.Errorf("Incorrect keysize: expected: %v actual: %v", KeySize, len(key))
-		return
+func (e *Aes256CtsHmacSha196) Encrypt(key, message []byte) ([]byte, error) {
+	if len(key) != e.GetKeyByteSize() {
+		return nil, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeySeedBitLength(), len(key))
 	}
 	if len(message)%aes.BlockSize != 0 {
-		err = errors.New("Plaintext is not a multiple of the block size. Padding may be needed.")
-		return
+		message, _ = pkcs7Pad(message, e.GetMessageBlockByteSize())
 	}
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		err = fmt.Errorf("Error creating cipher: %v", err)
-		return
+		return nil, fmt.Errorf("Error creating cipher: %v", err)
 	}
 
 	//RFC 3961: initial cipher state      All bits zero
-	iv := make([]byte, NonceSize)
+	iv := make([]byte, e.GetConfounderByteSize())
 	//_, err = rand.Read(iv) //Not needed as all bits need to be zero
-	if err != nil {
-		err = fmt.Errorf("Error creating random nonce/initial state: %v", err)
-		return
-	}
 
+	ct := make([]byte, len(message))
 	mode := cipher.NewCBCEncrypter(block, iv)
 	mode.CryptBlocks(ct, message)
-	return
+	return ct, nil
 }
 
 func (e *Aes256CtsHmacSha196) Decrypt(key, ciphertext []byte) (message []byte, err error) {
-	if len(key) != KeySize {
-		err = fmt.Errorf("Incorrect keysize: expected: %v actual: %v", KeySize, len(key))
+	if len(key) != e.GetKeySeedBitLength() {
+		err = fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeySeedBitLength(), len(key))
 		return
 	}
 	if len(ciphertext) < aes.BlockSize || len(ciphertext)%aes.BlockSize != 0 {

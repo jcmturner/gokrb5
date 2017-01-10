@@ -47,7 +47,7 @@ func deriveRandom(key, usage []byte, n, k int, encrypt encryptFunc) ([]byte, err
 	DR(Key, Constant) = k-truncate(K1 | K2 | K3 | K4 ...)*/
 	K, err := encrypt(key, nFoldUsage)
 	if err != nil {
-		return out, nil
+		return out, err
 	}
 	for i := copy(out, K); i < len(out); {
 		K, _ = encrypt(key, K)
@@ -55,7 +55,6 @@ func deriveRandom(key, usage []byte, n, k int, encrypt encryptFunc) ([]byte, err
 	}
 	return out, nil
 }
-
 
 func pkcs7Pad(b []byte, m int) ([]byte, error) {
 	if m <= 0 {
