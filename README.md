@@ -2,6 +2,9 @@
 
 This is work in progress and does not yet work...
 
+[![GoDoc](https://godoc.org/github.com/jcmturner/gokrb5?status.svg)](https://godoc.org/github.com/jcmturner/gokrb5)
+
+
 # References
 ## RFCs
 * RFC 4120 The Kerberos Network Authentication Service (V5)
@@ -12,4 +15,3 @@ This is work in progress and does not yet work...
 [text](https://www.ietf.org/rfc/rfc3962.txt) [html](https://tools.ietf.org/html/rfc3962)
 
 ## Useful Links
-* https://leanpub.com/gocrypto/read#leanpub-auto-aes-cbc
