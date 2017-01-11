@@ -107,7 +107,6 @@ func Parse(b []byte) (kt Keytab, err error) {
 	*/
 	// n tracks position in the byte array
 	n := 2
-	//Version 2 so Big Endian
 	l := read_int32(b, &n, &endian)
 	for l != 0 {
 		if l < 0 {
@@ -141,6 +140,10 @@ func Parse(b []byte) (kt Keytab, err error) {
 			}
 			// Add the entry to the keytab
 			kt.Entries = append(kt.Entries, ke)
+		}
+		// Check if there are still 4 bytes left to read
+		if len(b[n:]) < 4 {
+			break
 		}
 		// Read the size of the next entry
 		l = read_int32(b, &n, &endian)
