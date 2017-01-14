@@ -8,21 +8,21 @@ import (
 
 type EType interface {
 	GetETypeID() int
-	GetKeyByteSize() int // See protocol key format for defined values
-	StringToKey(string, salt string, s2kparams []byte) (protocolKey []byte)
-	GetDefaultStringToKeyParams() string // s2kparams
+	GetKeyByteSize() int // See "protocol key format" for defined values
 	GetKeySeedBitLength() int            // key-generation seed length, k
-	RandomToKey(b []byte) (protocolKey []byte)
+	GetDefaultStringToKeyParams() string // default string-to-key parameters (s2kparams)
+	StringToKey(string, salt, s2kparams string) ([]byte, error) // string-to-key (UTF-8 string, UTF-8 string, opaque)->(protocol-key)
+	RandomToKey(b []byte) []byte		// random-to-key (bitstring[K])->(protocol-key)
 	GetHMACBitLength() int                                      // HMAC output size, h
 	GetMessageBlockByteSize() int                               // message block size, m
-	Encrypt(key, message []byte) (ct []byte, err error)         // E function
-	Decrypt(key, ciphertext []byte) (message []byte, err error) // D function
+	Encrypt(key, message []byte) ([]byte, []byte, error)         // E function - encrypt (specific-key, state, octet string)->(state, octet string)
+	Decrypt(key, ciphertext []byte) ([]byte, error) // D function
 	GetCypherBlockBitLength() int                               // cipher block size, c
 	GetConfounderByteSize() int                                 // This is the same as the cipher block size but in bytes.
-	DeriveKey(protocolKey, usage []byte) (specificKey []byte)   // DK
-	DeriveRandom(protocolKey, usage []byte) ([]byte, error)     // DR
+	DeriveKey(protocolKey, usage []byte) ([]byte, error)  // DK key-derivation (protocol-key, integer)->(specific-key)
+	DeriveRandom(protocolKey, usage []byte) ([]byte, error)     // DR pseudo-random (protocol-key, octet-string)->(octet-string)
 }
-type encryptFunc func([]byte, []byte) ([]byte, error)
+type encryptFunc func([]byte, []byte) ([]byte, []byte, error)
 
 // RFC3961: DR(Key, Constant) = k-truncate(E(Key, Constant, initial-cipher-state))
 // key - base key or protocol key. Likely to be a key from a keytab file
@@ -45,15 +45,30 @@ func deriveRandom(key, usage []byte, n, k int, encrypt encryptFunc) ([]byte, err
 	K4 = ...
 
 	DR(Key, Constant) = k-truncate(K1 | K2 | K3 | K4 ...)*/
-	K, err := encrypt(key, nFoldUsage)
+	_, K, err := encrypt(key, nFoldUsage)
 	if err != nil {
 		return out, err
 	}
 	for i := copy(out, K); i < len(out); {
-		K, _ = encrypt(key, K)
+		_, K, _ = encrypt(key, K)
 		i = i + copy(out[i:], K)
 	}
 	return out, nil
+}
+
+func zeroPad(b []byte, m int) ([]byte, error) {
+	if m <= 0 {
+		return nil, errors.New("Invalid message block size when padding")
+	}
+	if b == nil || len(b) == 0 {
+		return nil, errors.New("Data not valid to pad: Zero size")
+	}
+	if l := len(b) %m; l != 0{
+		n := m - l
+		z := make([]byte, n)
+		b = append(b, z...)
+	}
+	return b, nil
 }
 
 func pkcs7Pad(b []byte, m int) ([]byte, error) {

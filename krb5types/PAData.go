@@ -39,7 +39,7 @@ type ETypeInfo2Entry struct {
 type ETypeInfo2 []ETypeInfo2Entry
 
 func (pa *PAData) GetETypeInfo() (d ETypeInfo, err error) {
-	dt := krbDictionary.PADataTypesByName["pa-etype-info"]
+	dt := KrbDictionary.PADataTypesByName["pa-etype-info"]
 	if pa.PADataType != dt {
 		err = fmt.Errorf("PAData does not contain PA EType Info data. TypeID Expected: %v; Actual: %v", dt, pa.PADataType)
 		return
@@ -49,7 +49,7 @@ func (pa *PAData) GetETypeInfo() (d ETypeInfo, err error) {
 }
 
 func (pa *PAData) GetETypeInfo2() (d ETypeInfo2, err error) {
-	dt := krbDictionary.PADataTypesByName["pa-etype-info2"]
+	dt := KrbDictionary.PADataTypesByName["pa-etype-info2"]
 	if pa.PADataType != dt {
 		err = fmt.Errorf("PAData does not contain PA EType Info 2 data. TypeID Expected: %v; Actual: %v", dt, pa.PADataType)
 		return

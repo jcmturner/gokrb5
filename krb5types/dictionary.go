@@ -1,6 +1,6 @@
 package krb5types
 
-var krbDictionary = struct {
+var KrbDictionary = struct {
 	MsgTypesByID      map[int]string
 	NameTypesByID     map[int]string
 	ErrorCodesByID    map[int]string

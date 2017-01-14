@@ -108,9 +108,9 @@ func (e *Des3CbcSha1Kd) DeriveKey(protocolKey, usage []byte) ([]byte, error) {
 	return e.RandomToKey(r), nil
 }
 
-func (e *Des3CbcSha1Kd) Encrypt(key, message []byte) ([]byte, error) {
+func (e *Des3CbcSha1Kd) Encrypt(key, message []byte) ([]byte, []byte, error) {
 	if len(key) != e.GetKeyByteSize() {
-		return nil, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeySeedBitLength(), len(key))
+		return nil, nil, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeySeedBitLength(), len(key))
 
 	}
 	if len(message)%e.GetMessageBlockByteSize() != 0 {
@@ -119,7 +119,7 @@ func (e *Des3CbcSha1Kd) Encrypt(key, message []byte) ([]byte, error) {
 
 	block, err := des.NewTripleDESCipher(key)
 	if err != nil {
-		return nil, fmt.Errorf("Error creating cipher: %v", err)
+		return nil, nil, fmt.Errorf("Error creating cipher: %v", err)
 
 	}
 
@@ -130,7 +130,7 @@ func (e *Des3CbcSha1Kd) Encrypt(key, message []byte) ([]byte, error) {
 	ct := make([]byte, len(message))
 	mode := cipher.NewCBCEncrypter(block, iv)
 	mode.CryptBlocks(ct, message)
-	return ct, nil
+	return ct[:e.GetConfounderByteSize()], ct, nil
 }
 
 func (e *Des3CbcSha1Kd) Decrypt(key, ciphertext []byte) (message []byte, err error) {

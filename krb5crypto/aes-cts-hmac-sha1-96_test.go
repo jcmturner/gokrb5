@@ -6,6 +6,29 @@ import (
 	"testing"
 )
 
+func TestAesCtsHmacSha196_Encrypt(t *testing.T) {
+	//iv := make([]byte, 16)
+	key, _ := hex.DecodeString("636869636b656e207465726979616b69")
+	var tests = []struct {
+		input  string
+		output string
+		nextIV string
+	}{
+		{"4920776f756c64206c696b652074686520", "c6353568f2bf8cb4d8a580362da7ff7f97", "c6353568f2bf8cb4d8a580362da7ff7f"},
+	}
+	var e Aes128CtsHmacSha196
+	for i, test := range tests {
+		m, err := hex.DecodeString(test.input)
+		niv, c, err := e.Encrypt(key, m)
+		if err != nil {
+			t.Errorf("Encryption failed for test %v: %v", i+1, err)
+		}
+		assert.Equal(t, test.output, hex.EncodeToString(c), "Encrypted result not as expected")
+		assert.Equal(t, test.nextIV, hex.EncodeToString(niv), "Next state IV not as expected")
+
+	}
+}
+
 func TestAes256CtsHmacSha196_StringToKey(t *testing.T) {
 	// Test vectors from RFC 3962 Appendix B
 	b, _ := hex.DecodeString("1234567878563412")
@@ -27,10 +50,11 @@ func TestAes256CtsHmacSha196_StringToKey(t *testing.T) {
 		{1200, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", "pass phrase exceeds block size", "9ccad6d468770cd51b10e6a68721be611a8b4d282601db3b36be9246915ec82a", "d78c5c9cb872a8c9dad4697f0bb5b2d21496c82beb2caeda2112fceea057401b"},
 		{50, s2, "EXAMPLE.COMpianist", "6b9cf26d45455a43a5b8bb276a403b39e7fe37a0c41e02c281ff3069e1e94f52", "4b6d9839f84406df1f09cc166db4b83c571848b784a3d6bdc346589a3e393f9e"},
 	}
+	var e Aes256CtsHmacSha196
 	for i, test := range tests {
-		var e Aes256CtsHmacSha196
-		assert.Equal(t, test.pbkdf2, hex.EncodeToString(e.StringToPBKDF2(test.phrase, test.salt, test.iterations)), "PBKDF2 not as expected")
-		k, err := e.StringToKeyIter(test.phrase, test.salt, test.iterations)
+
+		assert.Equal(t, test.pbkdf2, hex.EncodeToString(AESStringToPBKDF2(test.phrase, test.salt, test.iterations, e)), "PBKDF2 not as expected")
+		k, err := AESStringToKeyIter(test.phrase, test.salt, test.iterations, e)
 		if err != nil {
 			t.Errorf("Error in processing string to key for test %d: %v", i, err)
 		}

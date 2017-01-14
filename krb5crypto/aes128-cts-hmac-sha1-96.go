@@ -52,65 +52,65 @@ import (
 //|    hmac-sha1-96-aes256                16                   96      |
 //+--------------------------------------------------------------------+
 
-type Aes256CtsHmacSha196 struct {
+type Aes128CtsHmacSha196 struct {
 }
 
-func (e Aes256CtsHmacSha196) GetETypeID() int {
-	return 18
+func (e Aes128CtsHmacSha196) GetETypeID() int {
+	return 17
 }
 
-func (e Aes256CtsHmacSha196) GetKeyByteSize() int {
-	return 256 / 8
+func (e Aes128CtsHmacSha196) GetKeyByteSize() int {
+	return 128 / 8
 }
 
-func (e Aes256CtsHmacSha196) GetKeySeedBitLength() int {
+func (e Aes128CtsHmacSha196) GetKeySeedBitLength() int {
 	return e.GetKeyByteSize() * 8
 }
 
-func (e Aes256CtsHmacSha196) GetHash() hash.Hash {
+func (e Aes128CtsHmacSha196) GetHash() hash.Hash {
 	return sha1.New()
 }
 
-func (e Aes256CtsHmacSha196) GetMessageBlockByteSize() int {
+func (e Aes128CtsHmacSha196) GetMessageBlockByteSize() int {
 	return 1
 }
 
-func (e Aes256CtsHmacSha196) GetDefaultStringToKeyParams() string {
+func (e Aes128CtsHmacSha196) GetDefaultStringToKeyParams() string {
 	return "00 00 10 00"
 }
 
-func (e Aes256CtsHmacSha196) GetConfounderByteSize() int {
+func (e Aes128CtsHmacSha196) GetConfounderByteSize() int {
 	return aes.BlockSize
 }
 
-func (e Aes256CtsHmacSha196) GetHMACBitLength() int {
+func (e Aes128CtsHmacSha196) GetHMACBitLength() int {
 	return 96
 }
 
-func (e Aes256CtsHmacSha196) GetCypherBlockBitLength() int {
+func (e Aes128CtsHmacSha196) GetCypherBlockBitLength() int {
 	return aes.BlockSize * 8
 }
 
-func (e Aes256CtsHmacSha196) StringToKey(secret string, salt string, s2kparams string) ([]byte, error) {
+func (e Aes128CtsHmacSha196) StringToKey(secret string, salt string, s2kparams string) ([]byte, error) {
 	return AESStringToKey(secret, salt, s2kparams, e)
 }
 
-func (e Aes256CtsHmacSha196) RandomToKey(b []byte) []byte {
+func (e Aes128CtsHmacSha196) RandomToKey(b []byte) []byte {
 	return AESRandomToKey(b)
 }
 
-func (e Aes256CtsHmacSha196) Encrypt(key, message []byte) ([]byte, []byte, error) {
+func (e Aes128CtsHmacSha196) Encrypt(key, message []byte) ([]byte, []byte, error) {
 	return AESCTSEncrypt(key, message, e)
 }
 
-func (e Aes256CtsHmacSha196) Decrypt(key, ciphertext []byte) ([]byte, error) {
+func (e Aes128CtsHmacSha196) Decrypt(key, ciphertext []byte) ([]byte, error) {
 	return AESCTSDecrypt(key, ciphertext, e)
 }
 
-func (e Aes256CtsHmacSha196) DeriveKey(protocolKey, usage []byte) ([]byte, error) {
+func (e Aes128CtsHmacSha196) DeriveKey(protocolKey, usage []byte) ([]byte, error) {
 	return AESDeriveKey(protocolKey, usage, e)
 }
 
-func (e Aes256CtsHmacSha196) DeriveRandom(protocolKey, usage []byte) ([]byte, error) {
+func (e Aes128CtsHmacSha196) DeriveRandom(protocolKey, usage []byte) ([]byte, error) {
 	return AESDeriveRandom(protocolKey, usage, e)
 }
