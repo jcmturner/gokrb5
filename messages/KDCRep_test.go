@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/jcmturner/gokrb5/krb5types"
 	"github.com/jcmturner/gokrb5/keytab"
-	"github.com/jcmturner/gokrb5/krb5crypto"
 )
 
 
@@ -35,23 +34,22 @@ func TestUnmarshalASRep(t *testing.T) {
 	assert.Equal(t, 0, asRep.EncPart.KVNO, "Encrypted part KVNO not as expected")
 	t.Log("Finished testing unecrypted parts of AS REP")
 
-
 	kt, err := keytab.Load("/home/turnerj/tmp.keytab")
 	if err != nil {
 		fmt.Printf("keytab parse error: %v\n", err)
 	}
-	var etype krb5crypto.Aes256CtsHmacSha196
-	//Derive the key
-	key, err := etype.DeriveKey(kt.Entries[0].Key.KeyMaterial, krb5crypto.GetUsageKe(3))
-	s, err := etype.Decrypt(key, asRep.EncPart.Cipher)
+	err = asRep.DecryptEncPart(kt)
 	if err != nil {
-		t.Fatalf("Error decrypting encrypted part: %v\n", err)
+		t.Fatalf("Decryption of EncPart failed: %v", err)
 	}
-	t.Logf("Decypted EncPart %+v", s)
-	s, err = etype.Decrypt(key, asRep.Ticket.EncPart.Cipher)
+
+	t.Logf("Decypted EncPart %+v", asRep.DecryptedPart)
+
+	//TODO should we be able to decrypt this part with the client key?
+	/*s, err = etype.Decrypt(key, asRep.Ticket.EncPart.Cipher)
 	if err != nil {
 		t.Fatalf("Error decrypting ticket encrypted part: %v\n", err)
 	}
-	t.Logf("Decypted Ticket EncPart %+v", s)
+	t.Logf("Decypted Ticket EncPart %+v", s)*/
 }
 

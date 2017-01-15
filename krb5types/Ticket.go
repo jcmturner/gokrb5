@@ -18,7 +18,7 @@ type Ticket struct {
 }
 
 type EncTicketPart struct {
-	Flags             TicketFlags       `asn1:"explicit,tag:0"`
+	Flags             asn1.BitString       `asn1:"explicit,tag:0"`
 	Key               EncryptionKey     `asn1:"explicit,tag:1"`
 	CRealm            string             `asn1:"explicit,tag:2"`
 	CName             PrincipalName     `asn1:"explicit,tag:3"`

@@ -21,9 +21,9 @@ func TestParse(t *testing.T) {
 	assert.Equal(t, uint8(1), kt.Entries[0].KVNO8, "KVNO8 not as expected")
 	assert.Equal(t, time.Unix(1483384877, 0), kt.Entries[0].Timestamp, "Timestamp not as expected")
 	assert.Equal(t, uint16(23), kt.Entries[0].Key.EType, "Key's EType not as expected")
-	assert.Equal(t, "0c61039f010b2fbb88fe449fbf262477", hex.EncodeToString(kt.Entries[0].Key.KeyMaterial), "Timestamp not as expected")
+	assert.Equal(t, "0c61039f010b2fbb88fe449fbf262477", hex.EncodeToString(kt.Entries[0].Key.KeyMaterial), "Key material not as expected")
 	assert.Equal(t, int16(1), kt.Entries[0].Principal.NumComponents, "Number of components in principal not as expected")
-	assert.Equal(t, int32(1), kt.Entries[0].Principal.NameType, "Number of components in principal not as expected")
-	assert.Equal(t, "EXAMPLE.COM", kt.Entries[0].Principal.Realm, "Number of components in principal not as expected")
-	assert.Equal(t, "user", kt.Entries[0].Principal.Components[0], "Number of components in principal not as expected")
+	assert.Equal(t, int32(1), kt.Entries[0].Principal.NameType, "Name type of principal not as expected")
+	assert.Equal(t, "EXAMPLE.COM", kt.Entries[0].Principal.Realm, "Realm of principal not as expected")
+	assert.Equal(t, "user", kt.Entries[0].Principal.Components[0], "Component in principal not as expected")
 }

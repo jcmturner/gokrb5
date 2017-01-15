@@ -2,6 +2,7 @@ package krb5types
 
 var KrbDictionary = struct {
 	MsgTypesByID      map[int]string
+	MsgTypesByName    map[string]int
 	NameTypesByID     map[int]string
 	ErrorCodesByID    map[int]string
 	ADTypesByID       map[int]string
@@ -23,6 +24,20 @@ var KrbDictionary = struct {
 		21: "KRB_PRIV",
 		22: "KRB_CRED",
 		30: "KRB_ERROR",
+	},
+	MsgTypesByName: map[string]int{
+		"KRB_AS_REQ":     10,
+		"KRB_AS_REP":     11,
+		"KRB_TGS_REQ":    12,
+		"KRB_TGS_REP":    13,
+		"KRB_AP_REQ":     14,
+		"KRB_AP_REP":     15,
+		"KRB_RESERVED16": 16,
+		"KRB_RESERVED17": 17,
+		"KRB_SAFE":       20,
+		"KRB_PRIV":       21,
+		"KRB_CRED":       22,
+		"KRB_ERROR":      30,
 	},
 	NameTypesByID: map[int]string{
 		0:  "KRB_NT_UNKNOWN",

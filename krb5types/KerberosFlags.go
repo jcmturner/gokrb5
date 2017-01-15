@@ -95,5 +95,3 @@ const (
 )*/
 
 type KDCOptions asn1.BitString
-
-type TicketFlags asn1.BitString

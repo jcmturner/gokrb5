@@ -22,7 +22,7 @@ func TestAesCtsHmacSha196_Encrypt_Decrypt(t *testing.T) {
 		{"4920776f756c64206c696b65207468652047656e6572616c20476175277320436869636b656e2c20706c656173652c20", "97687268d6ecccc0c07b25e25ecfe5849dad8bbb96c4cdc03bc103e1a194bbd839312523a78662d5be7fcbcc98ebf5a8", "9dad8bbb96c4cdc03bc103e1a194bbd8"},
 		{"4920776f756c64206c696b65207468652047656e6572616c20476175277320436869636b656e2c20706c656173652c20616e6420776f6e746f6e20736f75702e", "97687268d6ecccc0c07b25e25ecfe58439312523a78662d5be7fcbcc98ebf5a84807efe836ee89a526730dbc2f7bc8409dad8bbb96c4cdc03bc103e1a194bbd8", "4807efe836ee89a526730dbc2f7bc840"},
 	}
-	var e Aes128CtsHmacSha196
+	var e Aes128CtsHmacSha96
 	for i, test := range tests {
 		m, _ := hex.DecodeString(test.plain)
 		niv, c, err := AESCTSEncrypt(key, iv, m, e)
@@ -65,7 +65,7 @@ func TestAes256CtsHmacSha196_StringToKey(t *testing.T) {
 		{1200, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", "pass phrase exceeds block size", "9ccad6d468770cd51b10e6a68721be611a8b4d282601db3b36be9246915ec82a", "d78c5c9cb872a8c9dad4697f0bb5b2d21496c82beb2caeda2112fceea057401b"},
 		{50, s2, "EXAMPLE.COMpianist", "6b9cf26d45455a43a5b8bb276a403b39e7fe37a0c41e02c281ff3069e1e94f52", "4b6d9839f84406df1f09cc166db4b83c571848b784a3d6bdc346589a3e393f9e"},
 	}
-	var e Aes256CtsHmacSha196
+	var e Aes256CtsHmacSha96
 	for i, test := range tests {
 
 		assert.Equal(t, test.pbkdf2, hex.EncodeToString(AESStringToPBKDF2(test.phrase, test.salt, test.iterations, e)), "PBKDF2 not as expected")

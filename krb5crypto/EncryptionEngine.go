@@ -157,3 +157,4 @@ var KeyUsageNumbers map[int]string = map[int]string{
 	19:   "AD-KDC-ISSUED checksum",
 	1024: "Encryption for application use in protocols that do not specify key usage values",
 }
+
