@@ -61,7 +61,7 @@ func AESRandomToKey(b []byte) []byte {
 }
 
 func AESDeriveRandom(protocolKey, usage []byte, e EType) ([]byte, error) {
-	r, err := deriveRandom(protocolKey, usage, e.GetCypherBlockBitLength(), e.GetKeySeedBitLength(), e.Encrypt)
+	r, err := deriveRandom(protocolKey, usage, e.GetCypherBlockBitLength(), e.GetKeySeedBitLength(), e)
 	return r, err
 }
 
@@ -74,12 +74,11 @@ func AESDeriveKey(protocolKey, usage []byte, e EType) ([]byte, error) {
 }
 
 func AESCTSEncrypt(key, iv, message []byte, e EType) ([]byte, []byte, error) {
-	//fmt.Fprintf(os.Stderr, "Input:\nkey: %v\niv: %v\nmessage: %v\n", hex.EncodeToString(key), hex.EncodeToString(iv), hex.EncodeToString(message))
 	if len(key) != e.GetKeyByteSize() {
-		return nil, nil, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeySeedBitLength(), len(key))
+		return nil, nil, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeyByteSize(), len(key))
 	}
+
 	l := len(message)
-	message, _ = zeroPad(message, aes.BlockSize)
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -87,102 +86,42 @@ func AESCTSEncrypt(key, iv, message []byte, e EType) ([]byte, []byte, error) {
 	}
 	mode := cipher.NewCBCEncrypter(block, iv)
 
-	ct := make([]byte, len(message))
-	if l == aes.BlockSize {
-		mode.CryptBlocks(ct, message)
-		return ct, ct, nil
-	}
-	if l%aes.BlockSize == 0 {
-		mode.CryptBlocks(ct, message)
-		iv = ct[len(ct)-aes.BlockSize:]
-		rb, _ := swapLastTwoBlocks(ct, aes.BlockSize)
-		return iv, rb, nil
-	}
-	rb, pb, lb, err := tailBlocks(message, aes.BlockSize)
-	if rb != nil {
-		ct = make([]byte, len(rb))
-		mode.CryptBlocks(ct, rb)
-		iv = ct[len(ct)-aes.BlockSize:]
-		mode = cipher.NewCBCEncrypter(block, iv)
-		mode.CryptBlocks(pb, pb)
-		mode = cipher.NewCBCEncrypter(block, pb)
-		mode.CryptBlocks(lb, lb)
-		ct = append(ct, lb...)
-		ct = append(ct, pb...)
-		return pb, ct[:l], nil
-	}
-	mode.CryptBlocks(pb, pb)
-	fmt.Fprintf(os.Stderr, "cpb %v\n", hex.EncodeToString(pb))
-	mode = cipher.NewCBCEncrypter(block, pb)
-	mode.CryptBlocks(lb, lb)
-	fmt.Fprintf(os.Stderr, "clb %v\n", hex.EncodeToString(lb))
-	var ctx []byte
-	ctx = append(ctx, lb...)
-	ctx = append(ctx, pb...)
-	fmt.Fprintf(os.Stderr, "ctx %v\n", hex.EncodeToString(ctx))
-	return lb, ctx[:l], nil
-
 	//Ref: https://tools.ietf.org/html/rfc3962 section 5
 	/*For consistency, ciphertext stealing is always used for the last two
 	blocks of the data to be encrypted, as in [RC5].  If the data length
 	is a multiple of the block size, this is equivalent to plain CBC mode
 	with the last two ciphertext blocks swapped.*/
+	if l == aes.BlockSize {
+		mode.CryptBlocks(message, message)
+		return message, message, nil
+	}
+	if l%aes.BlockSize == 0 {
+		mode.CryptBlocks(message, message)
+		iv = message[len(message)-aes.BlockSize:]
+		rb, _ := swapLastTwoBlocks(message, aes.BlockSize)
+		return iv, rb, nil
+	}
+	message, _ = zeroPad(message, aes.BlockSize)
+	rb, pb, lb, err := tailBlocks(message, aes.BlockSize)
+	var ct []byte
+	if rb != nil {
+		// Encrpt all but the lats 2 blocks and update the rolling iv
+		mode.CryptBlocks(rb, rb)
+		iv = rb[len(rb)-aes.BlockSize:]
+		mode = cipher.NewCBCEncrypter(block, iv)
+		ct = append(ct, rb...)
+	}
+	mode.CryptBlocks(pb, pb)
+	mode = cipher.NewCBCEncrypter(block, pb)
+	mode.CryptBlocks(lb, lb)
 	// Cipher Text Stealing (CTS) - Ref: https://en.wikipedia.org/wiki/Ciphertext_stealing#CBC_ciphertext_stealing
 	// Swap the last two cipher blocks
-	ct, _ = swapLastTwoBlocks(ct, aes.BlockSize)
 	// Truncate the ciphertext to the length of the original plaintext
+	ct = append(ct, lb...)
+	ct = append(ct, pb...)
+	return lb, ct[:l], nil
 	//TODO do we need to add the hash to the beginning?
-	return iv, ct[:l], nil
 }
-
-//func AESCTSEncrypt(key, message []byte, e EType) ([]byte, []byte, error) {
-//	ivz := make([]byte, 16)
-//	return AESEncrypt(key, ivz, message, e)
-//	l := len(message)
-//	//last block size
-//	lbs := len(message)%aes.BlockSize
-//	if len(key) != e.GetKeyByteSize() {
-//		return nil, nil, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeySeedBitLength(), len(key))
-//	}
-//
-//	if lbs != 0 {
-//		message, _ = zeroPad(message, aes.BlockSize)
-//	}
-//
-//	block, err := aes.NewCipher(key)
-//	if err != nil {
-//		return nil, nil, fmt.Errorf("Error creating cipher: %v", err)
-//	}
-//	//RFC 3961: initial cipher state      All bits zero
-//	iv := make([]byte, e.GetConfounderByteSize())
-//	ct := make([]byte, l + e.GetConfounderByteSize())
-//	mode := cipher.NewCBCEncrypter(block, iv)
-//	mode.CryptBlocks(ct, message)
-//	iv = ct[:aes.BlockSize]
-//	ct = ct[aes.BlockSize:]
-//	fmt.Fprintf(os.Stderr, "JT: len ct %v\n", len(ct))
-//	ct ,_ = zeroPad(ct, aes.BlockSize)
-//	fmt.Fprintf(os.Stderr, "JT: ct %v\n", hex.EncodeToString(ct))
-//
-//
-//	if len(message) == aes.BlockSize {
-//		//Ref: https://tools.ietf.org/html/rfc3962 section 5
-//		//If exactly one block is to be encrypted, that block is simply encrypted with AES (also known as ECBmode).
-//		return ct[e.GetConfounderByteSize():], ct[:l], nil
-//	}
-//	iv = ct[len(ct)-aes.BlockSize:]
-//	//Ref: https://tools.ietf.org/html/rfc3962 section 5
-//	/*For consistency, ciphertext stealing is always used for the last two
-//	blocks of the data to be encrypted, as in [RC5].  If the data length
-//	is a multiple of the block size, this is equivalent to plain CBC mode
-//	with the last two ciphertext blocks swapped.*/
-//	//Cipher Text Stealing (CTS) - Ref: https://en.wikipedia.org/wiki/Ciphertext_stealing#CBC_ciphertext_stealing
-//	// Swap the last two cipher blocks
-//	ct, _ = swapLastTwoBlocks(ct, aes.BlockSize)
-//	// Truncate the ciphertext to the length of the original plaintext
-//	return iv, ct, nil
-//	//TODO do we need to add the hash to the beginning?
-//}
 
 func tailBlocks(b []byte, c int) ([]byte, []byte, []byte, error) {
 	if len(b) < 2*c {
@@ -192,7 +131,6 @@ func tailBlocks(b []byte, c int) ([]byte, []byte, []byte, error) {
 	lb := b[len(b)-c:]
 	// Get 2nd to last (penultimate) block
 	pb := b[len(b)-2*c : len(b)-c]
-	fmt.Fprintf(os.Stderr, "pb %v\nlb %v\n", hex.EncodeToString(pb), hex.EncodeToString(lb))
 	if len(b) > 2*c {
 		rb := b[:len(b)-2*c]
 		return rb, pb, lb, nil

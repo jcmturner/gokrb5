@@ -8,21 +8,20 @@ import (
 
 type EType interface {
 	GetETypeID() int
-	GetKeyByteSize() int // See "protocol key format" for defined values
-	GetKeySeedBitLength() int            // key-generation seed length, k
-	GetDefaultStringToKeyParams() string // default string-to-key parameters (s2kparams)
+	GetKeyByteSize() int                                        // See "protocol key format" for defined values
+	GetKeySeedBitLength() int                                   // key-generation seed length, k
+	GetDefaultStringToKeyParams() string                        // default string-to-key parameters (s2kparams)
 	StringToKey(string, salt, s2kparams string) ([]byte, error) // string-to-key (UTF-8 string, UTF-8 string, opaque)->(protocol-key)
-	RandomToKey(b []byte) []byte		// random-to-key (bitstring[K])->(protocol-key)
+	RandomToKey(b []byte) []byte                                // random-to-key (bitstring[K])->(protocol-key)
 	GetHMACBitLength() int                                      // HMAC output size, h
 	GetMessageBlockByteSize() int                               // message block size, m
-	Encrypt(key, message []byte) ([]byte, []byte, error)         // E function - encrypt (specific-key, state, octet string)->(state, octet string)
-	Decrypt(key, ciphertext []byte) ([]byte, error) // D function
+	Encrypt(key, message []byte) ([]byte, []byte, error)        // E function - encrypt (specific-key, state, octet string)->(state, octet string)
+	Decrypt(key, ciphertext []byte) ([]byte, error)             // D function
 	GetCypherBlockBitLength() int                               // cipher block size, c
 	GetConfounderByteSize() int                                 // This is the same as the cipher block size but in bytes.
-	DeriveKey(protocolKey, usage []byte) ([]byte, error)  // DK key-derivation (protocol-key, integer)->(specific-key)
+	DeriveKey(protocolKey, usage []byte) ([]byte, error)        // DK key-derivation (protocol-key, integer)->(specific-key)
 	DeriveRandom(protocolKey, usage []byte) ([]byte, error)     // DR pseudo-random (protocol-key, octet-string)->(octet-string)
 }
-type encryptFunc func([]byte, []byte) ([]byte, []byte, error)
 
 // RFC3961: DR(Key, Constant) = k-truncate(E(Key, Constant, initial-cipher-state))
 // key - base key or protocol key. Likely to be a key from a keytab file
@@ -30,7 +29,7 @@ type encryptFunc func([]byte, []byte) ([]byte, []byte, error)
 // n - block size in bits (not bytes) - note if you use something like aes.BlockSize this is in bytes.
 // k - key length / key seed length in bits. Eg. for AES256 this value is 256
 // encrypt - the encryption function to use
-func deriveRandom(key, usage []byte, n, k int, encrypt encryptFunc) ([]byte, error) {
+func deriveRandom(key, usage []byte, n, k int, e EType) ([]byte, error) {
 	//Ensure the usage constant is at least the size of the cypher block size. Pass it through the nfold algorithm that will "stretch" it if needs be.
 	nFoldUsage := Nfold(usage, n)
 	//k-truncate implemented by creating a byte array the size of k (k is in bits hence /8)
@@ -45,12 +44,12 @@ func deriveRandom(key, usage []byte, n, k int, encrypt encryptFunc) ([]byte, err
 	K4 = ...
 
 	DR(Key, Constant) = k-truncate(K1 | K2 | K3 | K4 ...)*/
-	_, K, err := encrypt(key, nFoldUsage)
+	_, K, err := e.Encrypt(key, nFoldUsage)
 	if err != nil {
 		return out, err
 	}
 	for i := copy(out, K); i < len(out); {
-		_, K, _ = encrypt(key, K)
+		_, K, _ = e.Encrypt(key, K)
 		i = i + copy(out[i:], K)
 	}
 	return out, nil
@@ -63,7 +62,7 @@ func zeroPad(b []byte, m int) ([]byte, error) {
 	if b == nil || len(b) == 0 {
 		return nil, errors.New("Data not valid to pad: Zero size")
 	}
-	if l := len(b) %m; l != 0{
+	if l := len(b) % m; l != 0 {
 		n := m - l
 		z := make([]byte, n)
 		b = append(b, z...)
