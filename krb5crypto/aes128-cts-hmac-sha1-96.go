@@ -100,7 +100,8 @@ func (e Aes128CtsHmacSha196) RandomToKey(b []byte) []byte {
 }
 
 func (e Aes128CtsHmacSha196) Encrypt(key, message []byte) ([]byte, []byte, error) {
-	return AESCTSEncrypt(key, message, e)
+	ivz := make([]byte, aes.BlockSize)
+	return AESCTSEncrypt(ivz, key, message, e)
 }
 
 func (e Aes128CtsHmacSha196) Decrypt(key, ciphertext []byte) ([]byte, error) {

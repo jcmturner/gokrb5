@@ -7,7 +7,7 @@ import (
 )
 
 func TestAesCtsHmacSha196_Encrypt(t *testing.T) {
-	//iv := make([]byte, 16)
+	iv := make([]byte, 16)
 	key, _ := hex.DecodeString("636869636b656e207465726979616b69")
 	var tests = []struct {
 		input  string
@@ -19,7 +19,7 @@ func TestAesCtsHmacSha196_Encrypt(t *testing.T) {
 	var e Aes128CtsHmacSha196
 	for i, test := range tests {
 		m, err := hex.DecodeString(test.input)
-		niv, c, err := e.Encrypt(key, m)
+		niv, c, err := AESCTSEncrypt(key, iv, m, e)
 		if err != nil {
 			t.Errorf("Encryption failed for test %v: %v", i+1, err)
 		}

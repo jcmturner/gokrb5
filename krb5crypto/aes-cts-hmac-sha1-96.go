@@ -10,8 +10,8 @@ import (
 	"errors"
 	"fmt"
 	"golang.org/x/crypto/pbkdf2"
-	"strings"
 	"os"
+	"strings"
 )
 
 const (
@@ -73,10 +73,13 @@ func AESDeriveKey(protocolKey, usage []byte, e EType) ([]byte, error) {
 	return AESRandomToKey(r), nil
 }
 
-func AESEncrypt(key, iv, message []byte, e EType) ([]byte, []byte, error){
+func AESCTSEncrypt(key, iv, message []byte, e EType) ([]byte, []byte, error) {
+	//fmt.Fprintf(os.Stderr, "Input:\nkey: %v\niv: %v\nmessage: %v\n", hex.EncodeToString(key), hex.EncodeToString(iv), hex.EncodeToString(message))
 	if len(key) != e.GetKeyByteSize() {
 		return nil, nil, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeySeedBitLength(), len(key))
 	}
+	l := len(message)
+	message, _ = zeroPad(message, aes.BlockSize)
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -84,115 +87,133 @@ func AESEncrypt(key, iv, message []byte, e EType) ([]byte, []byte, error){
 	}
 	mode := cipher.NewCBCEncrypter(block, iv)
 
-	//last block size
-	lbs := len(message)%aes.BlockSize
-	m := message
-	message, _ = zeroPad(message, aes.BlockSize)
-	var ct []byte
- 	if lbs != 0 {
-		// Will need to cycle through each block to achieve CTS
-		var c []byte
-		cb := make([]byte, aes.BlockSize)
-		for len(m) > 0 {
-			var tm []byte
-			if len(m) >= aes.BlockSize{
-				tm = m[:aes.BlockSize]
-			} else {
-				tm, _ = zeroPad(m, aes.BlockSize)
-			}
-			//Encrypt one block of the message
-			fmt.Fprintf(os.Stderr, "JT: tm %v\n", hex.EncodeToString(tm))
-
-			mode.CryptBlocks(cb, tm)
-			fmt.Fprintf(os.Stderr, "JT: cb %v\n", hex.EncodeToString(cb))
-			//Append to the overall cipher text
-			c = append(c, cb...)
-			//iv = cb[:e.GetConfounderByteSize()]
-			mode = cipher.NewCBCEncrypter(block, cb)
-			if len(m) < 16{
-				break
-			}
-			m = m[aes.BlockSize:]
-		}
-		//ct = append(ct, iv...)
-		ct = append(ct, c...)
-	} else {
-		c := make([]byte, len(message))
-		mode.CryptBlocks(c, message)
-		ct = append(ct, c...)
+	ct := make([]byte, len(message))
+	if l == aes.BlockSize {
+		mode.CryptBlocks(ct, message)
+		return ct, ct, nil
 	}
+	if l%aes.BlockSize == 0 {
+		mode.CryptBlocks(ct, message)
+		iv = ct[len(ct)-aes.BlockSize:]
+		rb, _ := swapLastTwoBlocks(ct, aes.BlockSize)
+		return iv, rb, nil
+	}
+	rb, pb, lb, err := tailBlocks(message, aes.BlockSize)
+	if rb != nil {
+		ct = make([]byte, len(rb))
+		mode.CryptBlocks(ct, rb)
+		iv = ct[len(ct)-aes.BlockSize:]
+		mode = cipher.NewCBCEncrypter(block, iv)
+		mode.CryptBlocks(pb, pb)
+		mode = cipher.NewCBCEncrypter(block, pb)
+		mode.CryptBlocks(lb, lb)
+		ct = append(ct, lb...)
+		ct = append(ct, pb...)
+		return pb, ct[:l], nil
+	}
+	mode.CryptBlocks(pb, pb)
+	fmt.Fprintf(os.Stderr, "cpb %v\n", hex.EncodeToString(pb))
+	mode = cipher.NewCBCEncrypter(block, pb)
+	mode.CryptBlocks(lb, lb)
+	fmt.Fprintf(os.Stderr, "clb %v\n", hex.EncodeToString(lb))
+	var ctx []byte
+	ctx = append(ctx, lb...)
+	ctx = append(ctx, pb...)
+	fmt.Fprintf(os.Stderr, "ctx %v\n", hex.EncodeToString(ctx))
+	return lb, ctx[:l], nil
+
 	//Ref: https://tools.ietf.org/html/rfc3962 section 5
 	/*For consistency, ciphertext stealing is always used for the last two
 	blocks of the data to be encrypted, as in [RC5].  If the data length
 	is a multiple of the block size, this is equivalent to plain CBC mode
 	with the last two ciphertext blocks swapped.*/
-	//Cipher Text Stealing (CTS) - Ref: https://en.wikipedia.org/wiki/Ciphertext_stealing#CBC_ciphertext_stealing
+	// Cipher Text Stealing (CTS) - Ref: https://en.wikipedia.org/wiki/Ciphertext_stealing#CBC_ciphertext_stealing
 	// Swap the last two cipher blocks
-	// Get 2nd to last (penultimate) block
-	cpb := ct[len(ct)-aes.BlockSize-aes.BlockSize : len(ct)-aes.BlockSize]
-	// Get last block
-	clb := ct[len(ct)-aes.BlockSize:]
-	// Swap
-	ct = ct[:len(ct)-aes.BlockSize-aes.BlockSize]
-	ct = append(ct, clb...)
-	ct = append(ct, cpb...)
+	ct, _ = swapLastTwoBlocks(ct, aes.BlockSize)
 	// Truncate the ciphertext to the length of the original plaintext
-	return ct[:e.GetConfounderByteSize()], ct[e.GetConfounderByteSize():], nil
+	//TODO do we need to add the hash to the beginning?
+	return iv, ct[:l], nil
 }
 
-func AESCTSEncrypt(key, message []byte, e EType) ([]byte, []byte, error) {
-	ivz := make([]byte, 16)
-	return AESEncrypt(key, ivz, message, e)
-	l := len(message)
-	//last block size
-	lbs := len(message)%aes.BlockSize
-	if len(key) != e.GetKeyByteSize() {
-		return nil, nil, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeySeedBitLength(), len(key))
-	}
+//func AESCTSEncrypt(key, message []byte, e EType) ([]byte, []byte, error) {
+//	ivz := make([]byte, 16)
+//	return AESEncrypt(key, ivz, message, e)
+//	l := len(message)
+//	//last block size
+//	lbs := len(message)%aes.BlockSize
+//	if len(key) != e.GetKeyByteSize() {
+//		return nil, nil, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeySeedBitLength(), len(key))
+//	}
+//
+//	if lbs != 0 {
+//		message, _ = zeroPad(message, aes.BlockSize)
+//	}
+//
+//	block, err := aes.NewCipher(key)
+//	if err != nil {
+//		return nil, nil, fmt.Errorf("Error creating cipher: %v", err)
+//	}
+//	//RFC 3961: initial cipher state      All bits zero
+//	iv := make([]byte, e.GetConfounderByteSize())
+//	ct := make([]byte, l + e.GetConfounderByteSize())
+//	mode := cipher.NewCBCEncrypter(block, iv)
+//	mode.CryptBlocks(ct, message)
+//	iv = ct[:aes.BlockSize]
+//	ct = ct[aes.BlockSize:]
+//	fmt.Fprintf(os.Stderr, "JT: len ct %v\n", len(ct))
+//	ct ,_ = zeroPad(ct, aes.BlockSize)
+//	fmt.Fprintf(os.Stderr, "JT: ct %v\n", hex.EncodeToString(ct))
+//
+//
+//	if len(message) == aes.BlockSize {
+//		//Ref: https://tools.ietf.org/html/rfc3962 section 5
+//		//If exactly one block is to be encrypted, that block is simply encrypted with AES (also known as ECBmode).
+//		return ct[e.GetConfounderByteSize():], ct[:l], nil
+//	}
+//	iv = ct[len(ct)-aes.BlockSize:]
+//	//Ref: https://tools.ietf.org/html/rfc3962 section 5
+//	/*For consistency, ciphertext stealing is always used for the last two
+//	blocks of the data to be encrypted, as in [RC5].  If the data length
+//	is a multiple of the block size, this is equivalent to plain CBC mode
+//	with the last two ciphertext blocks swapped.*/
+//	//Cipher Text Stealing (CTS) - Ref: https://en.wikipedia.org/wiki/Ciphertext_stealing#CBC_ciphertext_stealing
+//	// Swap the last two cipher blocks
+//	ct, _ = swapLastTwoBlocks(ct, aes.BlockSize)
+//	// Truncate the ciphertext to the length of the original plaintext
+//	return iv, ct, nil
+//	//TODO do we need to add the hash to the beginning?
+//}
 
-	if lbs != 0 {
-		message, _ = zeroPad(message, aes.BlockSize)
+func tailBlocks(b []byte, c int) ([]byte, []byte, []byte, error) {
+	if len(b) < 2*c {
+		return nil, nil, nil, errors.New("bytes shorter than two blocks so cannot swap")
 	}
-
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return nil, nil, fmt.Errorf("Error creating cipher: %v", err)
-	}
-	//RFC 3961: initial cipher state      All bits zero
-	iv := make([]byte, e.GetConfounderByteSize())
-	ct := make([]byte, l + e.GetConfounderByteSize())
-	mode := cipher.NewCBCEncrypter(block, iv)
-	mode.CryptBlocks(ct, message)
-	iv = ct[:aes.BlockSize]
-	ct = ct[aes.BlockSize:]
-	fmt.Fprintf(os.Stderr, "JT: len ct %v\n", len(ct))
-	ct ,_ = zeroPad(ct, aes.BlockSize)
-	fmt.Fprintf(os.Stderr, "JT: ct %v\n", hex.EncodeToString(ct))
-
-
-	if len(message) == aes.BlockSize {
-		//Ref: https://tools.ietf.org/html/rfc3962 section 5
-		//If exactly one block is to be encrypted, that block is simply encrypted with AES (also known as ECBmode).
-		return ct[e.GetConfounderByteSize():], ct[:l], nil
-	}
-	//Ref: https://tools.ietf.org/html/rfc3962 section 5
-	/*For consistency, ciphertext stealing is always used for the last two
-	blocks of the data to be encrypted, as in [RC5].  If the data length
-	is a multiple of the block size, this is equivalent to plain CBC mode
-	with the last two ciphertext blocks swapped.*/
-	//Cipher Text Stealing (CTS) - Ref: https://en.wikipedia.org/wiki/Ciphertext_stealing#CBC_ciphertext_stealing
-	// Swap the last two cipher blocks
-	// Get 2nd to last (penultimate) block
-	cpb := ct[len(ct)-aes.BlockSize-aes.BlockSize : len(ct)-aes.BlockSize]
 	// Get last block
-	clb := ct[len(ct)-aes.BlockSize:]
-	// Swap
-	ct = ct[:len(ct)-aes.BlockSize-aes.BlockSize]
-	ct = append(ct, clb...)
-	ct = append(ct, cpb...)
-	// Truncate the ciphertext to the length of the original plaintext
-	return iv, ct, nil
-	//TODO do we need to add the hash to the beginning?
+	lb := b[len(b)-c:]
+	// Get 2nd to last (penultimate) block
+	pb := b[len(b)-2*c : len(b)-c]
+	fmt.Fprintf(os.Stderr, "pb %v\nlb %v\n", hex.EncodeToString(pb), hex.EncodeToString(lb))
+	if len(b) > 2*c {
+		rb := b[:len(b)-2*c]
+		return rb, pb, lb, nil
+	}
+	return nil, pb, lb, nil
+}
+
+func swapLastTwoBlocks(b []byte, c int) ([]byte, error) {
+	rb, pb, lb, err := tailBlocks(b, c)
+	if err != nil {
+		return nil, err
+	}
+	var out []byte
+	if rb != nil {
+		out = append(out, rb...)
+	}
+	out = append(out, lb...)
+	out = append(out, pb...)
+	fmt.Fprintf(os.Stderr, "JT: out %v\n", hex.EncodeToString(out))
+
+	return rb, nil
 }
 
 func AESCTSDecrypt(key, ciphertext []byte, e EType) ([]byte, error) {
