@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestAesCtsHmacSha196_Encrypt(t *testing.T) {
+func TestAesCtsHmacSha196_Encrypt_Decrypt(t *testing.T) {
 	iv := make([]byte, 16)
 	key, _ := hex.DecodeString("636869636b656e207465726979616b69")
 	var tests = []struct {
@@ -24,13 +24,20 @@ func TestAesCtsHmacSha196_Encrypt(t *testing.T) {
 	}
 	var e Aes128CtsHmacSha196
 	for i, test := range tests {
-		m, err := hex.DecodeString(test.input)
+		m, _ := hex.DecodeString(test.input)
 		niv, c, err := AESCTSEncrypt(key, iv, m, e)
 		if err != nil {
 			t.Errorf("Encryption failed for test %v: %v", i+1, err)
 		}
 		assert.Equal(t, test.output, hex.EncodeToString(c), "Encrypted result not as expected")
 		assert.Equal(t, test.nextIV, hex.EncodeToString(niv), "Next state IV not as expected")
+		t.Log("AES CTS Encryption tests finished")
+		b, _ := hex.DecodeString(test.input)
+		p, err := AESCTSDecrypt(key, b, e)
+		if err != nil {
+			t.Errorf("Decryption failed for test %v: %v", i+1, err)
+		}
+		assert.Equal(t, test.input, hex.EncodeToString(p), "Decrypted result not as expected")
 
 	}
 }
