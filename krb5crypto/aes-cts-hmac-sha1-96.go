@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"golang.org/x/crypto/pbkdf2"
 	"strings"
+	"os"
 )
 
 const (
@@ -90,7 +91,11 @@ func AESCTSEncrypt(key, iv, message []byte, e EType) ([]byte, []byte, error) {
 	blocks of the data to be encrypted, as in [RC5].  If the data length
 	is a multiple of the block size, this is equivalent to plain CBC mode
 	with the last two ciphertext blocks swapped.*/
-	if l == aes.BlockSize {
+	/*The initial vector carried out from one encryption for use in a
+	subsequent encryption is the next-to-last block of the encryption
+	output; this is the encrypted form of the last plaintext block.*/
+	if l <= aes.BlockSize {
+		message, _ = zeroPad(message, aes.BlockSize)
 		mode.CryptBlocks(message, message)
 		return message, message, nil
 	}
@@ -123,15 +128,22 @@ func AESCTSEncrypt(key, iv, message []byte, e EType) ([]byte, []byte, error) {
 }
 
 func tailBlocks(b []byte, c int) ([]byte, []byte, []byte, error) {
-	if len(b) < 2*c {
-		return nil, nil, nil, errors.New("bytes shorter than two blocks so cannot swap")
+	if len(b) <= c {
+		return nil, nil, nil, errors.New("bytes not larger than one block so cannot tail")
+	}
+	// Get size of last block
+	var lbs int
+	if l := len(b) % aes.BlockSize; l == 0 {
+		lbs = aes.BlockSize
+	} else {
+		lbs = l
 	}
 	// Get last block
-	lb := b[len(b)-c:]
+	lb := b[len(b)-lbs:]
 	// Get 2nd to last (penultimate) block
-	pb := b[len(b)-2*c : len(b)-c]
+	pb := b[len(b)-lbs-c : len(b)-lbs]
 	if len(b) > 2*c {
-		rb := b[:len(b)-2*c]
+		rb := b[:len(b)-lbs-c]
 		return rb, pb, lb, nil
 	}
 	return nil, pb, lb, nil
@@ -156,48 +168,73 @@ func AESCTSDecrypt(key, ciphertext []byte, e EType) ([]byte, error) {
 		return nil, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeySeedBitLength(), len(key))
 
 	}
-
-	// Take the iv off the beginning and the hash block off the end
-	iv := ciphertext[:e.GetConfounderByteSize()]
-	cipherMsg := ciphertext[e.GetConfounderByteSize() : len(ciphertext)-(e.GetHMACBitLength()/8)]
-	//cipherHash := ciphertext[len(ciphertext)-(e.GetHMACBitLength()/8):]
-
-	if len(cipherMsg) < aes.BlockSize {
-		return nil, fmt.Errorf("Ciphertext is not large enough. It is less that one block size. Blocksize:%v; Ciphertext:%v", aes.BlockSize, len(cipherMsg))
+	if len(ciphertext) < aes.BlockSize {
+		return nil, fmt.Errorf("Ciphertext is not large enough. It is less that one block size. Blocksize:%v; Ciphertext:%v", aes.BlockSize, len(ciphertext))
 	}
+	l := len(ciphertext)
+
+	/*When decrypting, the next-to-last block of the supplied ciphertext is
+	carried forward as the next initial vector.  If only one ciphertext
+	block is available (decrypting one block, or encrypting one block or
+	less), then that one block is carried out instead.*/
+	var iv []byte
+	if len(ciphertext) == aes.BlockSize {
+		iv = ciphertext
+	} else {
+		tct, _ := zeroPad(ciphertext, aes.BlockSize)
+		iv = tct[len(tct)-2*aes.BlockSize:len(tct)-aes.BlockSize]
+	}
+
+	//cipherMsg := ciphertext[e.GetConfounderByteSize() : len(ciphertext)-(e.GetHMACBitLength()/8)]
+	//cipherHash := ciphertext[len(ciphertext)-(e.GetHMACBitLength()/8):]
 
 	// Configure the CBC
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, fmt.Errorf("Error creating cipher: %v", err)
 	}
-	mode := cipher.NewCBCDecrypter(block, iv)
+	//mode := getMode(block, iv, ciphertext)
+	var mode cipher.BlockMode
 
-	if len(cipherMsg) > aes.BlockSize {
+	if len(ciphertext) > aes.BlockSize {
 		// Cipher Text Stealing (CTS) using CBC interface. Ref: https://en.wikipedia.org/wiki/Ciphertext_stealing#CBC_ciphertext_stealing
-		// Get 2nd to last (penultimate) block
-		cpb := cipherMsg[len(cipherMsg)-(len(cipherMsg)%aes.BlockSize)-aes.BlockSize : len(cipherMsg)-(len(cipherMsg)%aes.BlockSize)]
-		// Get last block
-		clb := cipherMsg[len(cipherMsg)-(len(cipherMsg)%aes.BlockSize):]
+		// Get 2nd to last (penultimate) block and the last block
+		crb, cpb, clb, _ := tailBlocks(ciphertext, aes.BlockSize)
+		var ct []byte
+		if crb != nil {
+			ct = crb
+			iv = ct[len(ct)-aes.BlockSize:]
+		} else {
+			iv = make([]byte, aes.BlockSize)
+		}
+		iv = make([]byte, aes.BlockSize)
 		//Decryt the 2nd to last (penultimate) block
 		pb := make([]byte, aes.BlockSize)
+		mode = getMode(block, iv, ciphertext)
 		mode.CryptBlocks(pb, cpb)
 		// number of byte needed to pad
-		npb := aes.BlockSize - len(cipherMsg)%aes.BlockSize
+		npb := aes.BlockSize - len(ciphertext)%aes.BlockSize
 		//pad last block using the number of bytes needed from the tail of the plaintext 2nd to last (penultimate) block
 		clb = append(clb, pb[len(pb)-npb:]...)
 		// Swap the last two cipher blocks
-		cipherMsg = cipherMsg[:len(cipherMsg)-aes.BlockSize-(len(cipherMsg)%aes.BlockSize)]
-		cipherMsg = append(cipherMsg, clb...)
-		cipherMsg = append(cipherMsg, cpb...)
+		ct = append(ct, clb...)
+		ct = append(ct, cpb...)
+		ciphertext = ct
 	}
+	//ivz := make([]byte, 16)
+	mode = getMode(block, iv, ciphertext)
 
-	message := make([]byte, len(cipherMsg))
-	mode.CryptBlocks(message, cipherMsg)
+	message := make([]byte, len(ciphertext))
+	mode.CryptBlocks(message, ciphertext)
+	//fmt.Fprintf(os.Stderr, "plain %v\n", hex.EncodeToString(message))
 	//TODO verify checksum here
-	return message, nil
+	return message[:l], nil
 }
 
+func getMode(block cipher.Block, iv, ct []byte) cipher.BlockMode {
+	fmt.Fprintf(os.Stderr, "%v - iv for mode: %v\n",hex.EncodeToString(ct), hex.EncodeToString(iv))
+	return cipher.NewCBCDecrypter(block, iv)
+}
 /*func DEwithHMAC(key, message []byte) (ct []byte, err error) {
 	if len(key) != KeySize {
 		return nil, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", KeySize, len(key))
