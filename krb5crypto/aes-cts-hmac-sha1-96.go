@@ -162,7 +162,7 @@ func AESCTSDecrypt(key, ciphertext []byte, e EType) ([]byte, error) {
 	var message []byte
 	if crb != nil {
 		//If there is more than just the last and the penultimate block we decrypt it and the last bloc of this becomes the iv for later
-		rb := make([]byte, aes.BlockSize)
+		rb := make([]byte, len(crb))
 		mode = cipher.NewCBCDecrypter(block, ivz)
 		iv = crb[len(crb)-aes.BlockSize:]
 		mode.CryptBlocks(rb, crb)
