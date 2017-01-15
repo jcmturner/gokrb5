@@ -10,7 +10,6 @@ import (
 	"errors"
 	"fmt"
 	"golang.org/x/crypto/pbkdf2"
-	"os"
 	"strings"
 )
 
@@ -149,9 +148,7 @@ func swapLastTwoBlocks(b []byte, c int) ([]byte, error) {
 	}
 	out = append(out, lb...)
 	out = append(out, pb...)
-	fmt.Fprintf(os.Stderr, "JT: out %v\n", hex.EncodeToString(out))
-
-	return rb, nil
+	return out, nil
 }
 
 func AESCTSDecrypt(key, ciphertext []byte, e EType) ([]byte, error) {
