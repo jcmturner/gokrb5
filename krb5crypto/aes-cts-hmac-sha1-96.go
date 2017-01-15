@@ -10,8 +10,8 @@ import (
 	"errors"
 	"fmt"
 	"golang.org/x/crypto/pbkdf2"
-	"strings"
 	"os"
+	"strings"
 )
 
 const (
@@ -173,18 +173,6 @@ func AESCTSDecrypt(key, ciphertext []byte, e EType) ([]byte, error) {
 	}
 	l := len(ciphertext)
 
-	/*When decrypting, the next-to-last block of the supplied ciphertext is
-	carried forward as the next initial vector.  If only one ciphertext
-	block is available (decrypting one block, or encrypting one block or
-	less), then that one block is carried out instead.*/
-	var iv []byte
-	if len(ciphertext) == aes.BlockSize {
-		iv = ciphertext
-	} else {
-		tct, _ := zeroPad(ciphertext, aes.BlockSize)
-		iv = tct[len(tct)-2*aes.BlockSize:len(tct)-aes.BlockSize]
-	}
-
 	//cipherMsg := ciphertext[e.GetConfounderByteSize() : len(ciphertext)-(e.GetHMACBitLength()/8)]
 	//cipherHash := ciphertext[len(ciphertext)-(e.GetHMACBitLength()/8):]
 
@@ -195,19 +183,20 @@ func AESCTSDecrypt(key, ciphertext []byte, e EType) ([]byte, error) {
 	}
 	//mode := getMode(block, iv, ciphertext)
 	var mode cipher.BlockMode
+	var iv []byte
 
-	if len(ciphertext) > aes.BlockSize {
+	if len(ciphertext) > aes.BlockSize && len(ciphertext)%aes.BlockSize == 0 {
+		ciphertext, _ = swapLastTwoBlocks(ciphertext, aes.BlockSize)
+	} else if len(ciphertext) > aes.BlockSize {
 		// Cipher Text Stealing (CTS) using CBC interface. Ref: https://en.wikipedia.org/wiki/Ciphertext_stealing#CBC_ciphertext_stealing
 		// Get 2nd to last (penultimate) block and the last block
 		crb, cpb, clb, _ := tailBlocks(ciphertext, aes.BlockSize)
 		var ct []byte
 		if crb != nil {
 			ct = crb
-			iv = ct[len(ct)-aes.BlockSize:]
-		} else {
-			iv = make([]byte, aes.BlockSize)
 		}
-		iv = make([]byte, aes.BlockSize)
+		iv = getIV(crb)
+		fmt.Fprintf(os.Stderr, "getIV IV: %v\n", hex.EncodeToString(iv))
 		//Decryt the 2nd to last (penultimate) block
 		pb := make([]byte, aes.BlockSize)
 		mode = getMode(block, iv, ciphertext)
@@ -221,7 +210,7 @@ func AESCTSDecrypt(key, ciphertext []byte, e EType) ([]byte, error) {
 		ct = append(ct, cpb...)
 		ciphertext = ct
 	}
-	//ivz := make([]byte, 16)
+	iv = make([]byte, aes.BlockSize)
 	mode = getMode(block, iv, ciphertext)
 
 	message := make([]byte, len(ciphertext))
@@ -231,10 +220,35 @@ func AESCTSDecrypt(key, ciphertext []byte, e EType) ([]byte, error) {
 	return message[:l], nil
 }
 
+//Pass the previous blocks to the one you want decrypted
+func getIV(ct []byte) []byte {
+	/*When decrypting, the next-to-last block of the supplied ciphertext is
+	carried forward as the next initial vector.  If only one ciphertext
+	block is available (decrypting one block, or encrypting one block or
+	less), then that one block is carried out instead.*/
+	fmt.Fprintf(os.Stderr, "getIV len: %v\n", len(ct))
+	if ct == nil {
+		return make([]byte, aes.BlockSize)
+	}
+	if len(ct) < 2*aes.BlockSize {
+		return make([]byte, aes.BlockSize)
+	}
+	var lbs int
+	if l := len(ct) % aes.BlockSize; l == 0 {
+		lbs = aes.BlockSize
+	} else {
+		lbs = l
+	}
+	// Get 2nd to last (penultimate) block
+	pb := ct[len(ct)-lbs-aes.BlockSize : len(ct)-lbs]
+	return pb
+}
+
 func getMode(block cipher.Block, iv, ct []byte) cipher.BlockMode {
-	fmt.Fprintf(os.Stderr, "%v - iv for mode: %v\n",hex.EncodeToString(ct), hex.EncodeToString(iv))
+	//fmt.Fprintf(os.Stderr, "%v (%v) - iv for mode: %v\n",hex.EncodeToString(ct), len(ct), hex.EncodeToString(iv))
 	return cipher.NewCBCDecrypter(block, iv)
 }
+
 /*func DEwithHMAC(key, message []byte) (ct []byte, err error) {
 	if len(key) != KeySize {
 		return nil, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", KeySize, len(key))
