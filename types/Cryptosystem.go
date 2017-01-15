@@ -1,4 +1,4 @@
-package krb5types
+package types
 
 // Reference: https://www.ietf.org/rfc/rfc4120.txt
 // Section: 5.2.9
@@ -7,7 +7,7 @@ package krb5types
 
 type EncryptedData struct {
 	EType  int    `asn1:"explicit,tag:0"`
-	KVNO   int `asn1:"explicit,optional,tag:1"`
+	KVNO   int    `asn1:"explicit,optional,tag:1"`
 	Cipher []byte `asn1:"explicit,tag:2"`
 }
 

@@ -7,38 +7,38 @@ import (
 	"encoding/asn1"
 	"errors"
 	"fmt"
+	"github.com/jcmturner/gokrb5/crypto"
 	"github.com/jcmturner/gokrb5/keytab"
-	"github.com/jcmturner/gokrb5/krb5crypto"
-	"github.com/jcmturner/gokrb5/krb5types"
-	"github.com/jcmturner/gokrb5/krb5types/asnAppTag"
+	"github.com/jcmturner/gokrb5/types"
+	"github.com/jcmturner/gokrb5/types/asnAppTag"
 	"os"
 	"time"
 )
 
 type marshalKDCRep struct {
-	PVNO    int                     `asn1:"explicit,tag:0"`
-	MsgType int                     `asn1:"explicit,tag:1"`
-	PAData  []krb5types.PAData      `asn1:"explicit,optional,tag:2"`
-	CRealm  string                  `asn1:"explicit,tag:3"`
-	CName   krb5types.PrincipalName `asn1:"explicit,tag:4"`
+	PVNO    int                 `asn1:"explicit,tag:0"`
+	MsgType int                 `asn1:"explicit,tag:1"`
+	PAData  []types.PAData      `asn1:"explicit,optional,tag:2"`
+	CRealm  string              `asn1:"explicit,tag:3"`
+	CName   types.PrincipalName `asn1:"explicit,tag:4"`
 	// Ticket needs to be a raw value as it is wrapped in an APPLICATION tag
-	Ticket  asn1.RawValue           `asn1:"explicit,tag:5"`
-	EncPart krb5types.EncryptedData `asn1:"explicit,tag:6"`
+	Ticket  asn1.RawValue       `asn1:"explicit,tag:5"`
+	EncPart types.EncryptedData `asn1:"explicit,tag:6"`
 }
 
 type marshalEncKDCRepPart struct {
-	Key           krb5types.EncryptionKey `asn1:"explicit,tag:0"`
-	LastReqs      []marshalLastReq        `asn1:"explicit,tag:1"`
-	Nonce         int                  `asn1:"explicit,tag:2"`
-	KeyExpiration time.Time               `asn1:"explicit,optional,tag:3"`
-	Flags         asn1.BitString   `asn1:"explicit,tag:4"`
-	AuthTime      time.Time               `asn1:"explicit,tag:5"`
-	StartTime     time.Time               `asn1:"explicit,optional,tag:6"`
-	EndTime       time.Time               `asn1:"explicit,tag:7"`
-	RenewTill     time.Time               `asn1:"explicit,optional,tag:8"`
-	SRealm        string                  `asn1:"explicit,tag:9"`
-	SName         krb5types.PrincipalName `asn1:"explicit,tag:10"`
-	CAddr         []krb5types.HostAddress `asn1:"explicit,optional,tag:11"`
+	Key           types.EncryptionKey `asn1:"explicit,tag:0"`
+	LastReqs      []marshalLastReq    `asn1:"explicit,tag:1"`
+	Nonce         int                 `asn1:"explicit,tag:2"`
+	KeyExpiration time.Time           `asn1:"explicit,optional,tag:3"`
+	Flags         asn1.BitString      `asn1:"explicit,tag:4"`
+	AuthTime      time.Time           `asn1:"explicit,tag:5"`
+	StartTime     time.Time           `asn1:"explicit,optional,tag:6"`
+	EndTime       time.Time           `asn1:"explicit,tag:7"`
+	RenewTill     time.Time           `asn1:"explicit,optional,tag:8"`
+	SRealm        string              `asn1:"explicit,tag:9"`
+	SName         types.PrincipalName `asn1:"explicit,tag:10"`
+	CAddr         []types.HostAddress `asn1:"explicit,optional,tag:11"`
 }
 
 type marshalLastReq struct {
@@ -49,22 +49,22 @@ type marshalLastReq struct {
 type KDCRep struct {
 	PVNO    int
 	MsgType int
-	PAData  []krb5types.PAData
+	PAData  []types.PAData
 	CRealm  string
-	CName   krb5types.PrincipalName
+	CName   types.PrincipalName
 	// Ticket needs to be a raw value as it is wrapped in an APPLICATION tag
-	Ticket        krb5types.Ticket
-	EncPart       krb5types.EncryptedData
+	Ticket        types.Ticket
+	EncPart       types.EncryptedData
 	DecryptedPart marshalEncKDCRepPart
 }
 
 func (k *KDCRep) DecryptEncPart(kt keytab.Keytab) error {
 	//TODO create the etype based on the EType value in the EncPart and find the corresponding entry in the keytab
 	//k.EncPart.EType
-	var etype krb5crypto.Aes256CtsHmacSha96
+	var etype crypto.Aes256CtsHmacSha96
 	//Derive the key
 	//Key Usage Number: 3 - "AS-REP encrypted part (includes TGS session key or application session key), encrypted with the client key"
-	key, err := etype.DeriveKey(kt.Entries[0].Key.KeyMaterial, krb5crypto.GetUsageKe(3))
+	key, err := etype.DeriveKey(kt.Entries[0].Key.KeyMaterial, crypto.GetUsageKe(3))
 	b, err := etype.Decrypt(key, k.EncPart.Cipher)
 	//TODO why is this 19???
 	b = b[19:]
@@ -85,7 +85,7 @@ func UnmarshalASRep(b []byte) (k KDCRep, err error) {
 	if err != nil {
 		return k, err
 	}
-	if k.MsgType != krb5types.KrbDictionary.MsgTypesByName["KRB_AS_REP"] {
+	if k.MsgType != types.KrbDictionary.MsgTypesByName["KRB_AS_REP"] {
 		return k, errors.New("Message ID does not indicate a KRB_TGS_REP")
 	}
 	return k, nil
@@ -96,7 +96,7 @@ func UnmarshalTGSRep(b []byte) (k KDCRep, err error) {
 	if err != nil {
 		return k, err
 	}
-	if k.MsgType != krb5types.KrbDictionary.MsgTypesByName["KRB_TGS_REP"] {
+	if k.MsgType != types.KrbDictionary.MsgTypesByName["KRB_TGS_REP"] {
 		return k, errors.New("Message ID does not indicate a KRB_TGS_REP")
 	}
 	return k, nil
@@ -109,7 +109,7 @@ func unmarshalKDCRep(b []byte, asnAppTag int) (k KDCRep, err error) {
 		return
 	}
 	//Process the raw ticket within
-	k.Ticket, err = krb5types.UnmarshalTicket(asRep.Ticket.Bytes)
+	k.Ticket, err = types.UnmarshalTicket(asRep.Ticket.Bytes)
 	if err != nil {
 		return
 	}

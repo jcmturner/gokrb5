@@ -1,15 +1,15 @@
-package krb5crypto
+package crypto
 
 import (
-	"testing"
-	"github.com/stretchr/testify/assert"
 	"encoding/hex"
+	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func Test_nfold(t *testing.T) {
 	var tests = []struct {
-		n int
-		b []byte
+		n      int
+		b      []byte
 		folded string
 	}{
 		{64, []byte("012345"), "be072631276b1955"},
@@ -21,6 +21,6 @@ func Test_nfold(t *testing.T) {
 		{168, []byte("ba"), "fb25d531ae8974499f52fd92ea9857c4ba24cf297e"},
 	}
 	for _, test := range tests {
-		assert.Equal(t, test.folded, hex.EncodeToString(Nfold(test.b,test.n)), "Folded not as expected")
+		assert.Equal(t, test.folded, hex.EncodeToString(Nfold(test.b, test.n)), "Folded not as expected")
 	}
 }

@@ -1,19 +1,19 @@
-package krb5crypto
+package crypto
 
 import (
-	"testing"
-	"github.com/stretchr/testify/assert"
 	"encoding/hex"
 	"fmt"
+	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
-func TestDes3CbcSha1Kd_DR_DK(t *testing.T){
+func TestDes3CbcSha1Kd_DR_DK(t *testing.T) {
 	// Test vectors from RFC 3961 Appendix A3
 	var tests = []struct {
-		key string
+		key   string
 		usage string
-		dr string
-		dk string
+		dr    string
+		dk    string
 	}{
 		{"dce06b1f64c857a11c3db57c51899b2cc1791008ce973b92", "0000000155", "935079d14490a75c3093c4a6e8c3b049c71e6ee705", "925179d04591a79b5d3192c4a7e9c289b049c71f6ee604cd"},
 		{"5e13d31c70ef765746578531cb51c15bf11ca82c97cee9f2", "00000001aa", "9f58e5a047d894101c469845d67ae3c5249ed812f2", "9e58e5a146d9942a101c469845d67a20e3c4259ed913f207"},

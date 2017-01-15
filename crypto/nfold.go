@@ -1,4 +1,4 @@
-package krb5crypto
+package crypto
 
 /*
 Implementation of the n-fold algorithm as defined in RFC 3961.
@@ -61,7 +61,7 @@ func Nfold(in []byte, n int) []byte {
 
 func onesComplementAddition(n1, n2 []byte) []byte {
 	numBits := len(n1) * 8
-	out := make([]byte, numBits / 8)
+	out := make([]byte, numBits/8)
 	carry := 0
 	for i := numBits - 1; i > -1; i-- {
 		n1b := getBit(&n1, i)
@@ -91,7 +91,7 @@ func rotateRight(b []byte, step int) []byte {
 	bitLen := len(b) * 8
 	for i := 0; i < bitLen; i++ {
 		v := getBit(&b, i)
-		setBit(&out, (i + step) % bitLen, v)
+		setBit(&out, (i+step)%bitLen, v)
 	}
 	return out
 }

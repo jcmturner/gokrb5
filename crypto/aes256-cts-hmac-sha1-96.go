@@ -1,4 +1,4 @@
-package krb5crypto
+package crypto
 
 import (
 	"crypto/aes"

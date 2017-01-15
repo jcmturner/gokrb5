@@ -1,4 +1,4 @@
-package krb5types
+package types
 
 var KrbDictionary = struct {
 	MsgTypesByID      map[int]string

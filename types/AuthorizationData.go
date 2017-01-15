@@ -1,4 +1,4 @@
-package krb5types
+package types
 
 // Reference: https://www.ietf.org/rfc/rfc4120.txt
 // Section: 5.2.6
@@ -85,24 +85,22 @@ type ADIfRelevant struct {
 
 type ADAndOr struct {
 	ConditionCount int
-	Elements AuthorizationData
+	Elements       AuthorizationData
 }
 
 type ADKDCIssued struct {
 	ADChecksum string
-	IRealm string
-	Isname PrincipalName
-	Elements AuthorizationData
+	IRealm     string
+	Isname     PrincipalName
+	Elements   AuthorizationData
 }
 
 type ADMandatoryForKDC struct {
 	AuthorizationData
 }
 
-
 func (a *AuthorizationData) GetData() (string, error) {
 	var b []byte
 	_, err := asn1.Unmarshal(a.ADData, &b)
 	return string(b), err
 }
-

@@ -1,11 +1,11 @@
-package krb5types
+package types
 
 // Reference: https://www.ietf.org/rfc/rfc4120.txt
 // Section: 5.2.7
 import (
-	"time"
-	"fmt"
 	"encoding/asn1"
+	"fmt"
+	"time"
 )
 
 type PAData struct {
@@ -20,18 +20,18 @@ type PAEncTimestamp struct {
 
 type PAEncTSEnc struct {
 	PATimestamp time.Time `asn1:"explicit,tag:0"`
-	PAUSec      int `asn1:"explicit,optional,tag:1"`
+	PAUSec      int       `asn1:"explicit,optional,tag:1"`
 }
 
 type ETypeInfoEntry struct {
-	EType int `asn1:"explicit,tag:0"`
+	EType int    `asn1:"explicit,tag:0"`
 	Salt  []byte `asn1:"explicit,optional,tag:1"`
 }
 
 type ETypeInfo []ETypeInfoEntry
 
 type ETypeInfo2Entry struct {
-	EType     int `asn1:"explicit,tag:0"`
+	EType     int    `asn1:"explicit,tag:0"`
 	Salt      string `asn1:"explicit,optional,tag:1,ia5"`
 	S2KParams []byte `asn1:"explicit,optional,tag:2"`
 }
