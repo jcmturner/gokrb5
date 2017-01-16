@@ -11,7 +11,6 @@ import (
 	"github.com/jcmturner/gokrb5/keytab"
 	"github.com/jcmturner/gokrb5/types"
 	"github.com/jcmturner/gokrb5/types/asnAppTag"
-	"os"
 	"time"
 )
 
@@ -65,17 +64,27 @@ func (k *KDCRep) DecryptEncPart(kt keytab.Keytab) error {
 	//Derive the key
 	//Key Usage Number: 3 - "AS-REP encrypted part (includes TGS session key or application session key), encrypted with the client key"
 	key, err := etype.DeriveKey(kt.Entries[0].Key.KeyMaterial, crypto.GetUsageKe(3))
-	b, err := etype.Decrypt(key, k.EncPart.Cipher)
-	//TODO why is this 19???
-	b = b[19:]
-	fmt.Fprintf(os.Stderr, "b: %v", b)
+	// Strip off the checksum from the end
+	//TODO should this check be moved to the Decrypt method?
+	b, err := etype.Decrypt(key, k.EncPart.Cipher[:len(k.EncPart.Cipher)-etype.GetHMACBitLength()/8])
+	//Remove the confounder bytes
+	b = b[etype.GetConfounderByteSize():]
 	if err != nil {
 		return fmt.Errorf("Error decrypting encrypted part: %v", err)
 	}
-	//_, err = asn1.UnmarshalWithParams(b, &k.DecryptedPart, fmt.Sprintf("application,explicit,tag:%v", 25))
-	_, err = asn1.Unmarshal(b, &k.DecryptedPart)
+	_, err = asn1.UnmarshalWithParams(b, &k.DecryptedPart, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.EncASRepPart))
 	if err != nil {
-		return fmt.Errorf("Error unmarshalling encrypted part: %v", err)
+		// Try using tag 26
+		/* Ref: RFC 4120
+		Compatibility note: Some implementations unconditionally send an
+		encrypted EncTGSRepPart (application tag number 26) in this field
+		regardless of whether the reply is a AS-REP or a TGS-REP.  In the
+		interest of compatibility, implementors MAY relax the check on the
+		tag number of the decrypted ENC-PART.*/
+		_, err = asn1.UnmarshalWithParams(b, &k.DecryptedPart, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.EncTGSRepPart))
+		if err != nil {
+			return fmt.Errorf("Error unmarshalling encrypted part: %v", err)
+		}
 	}
 	return nil
 }

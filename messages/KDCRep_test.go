@@ -6,11 +6,14 @@ import (
 	"github.com/jcmturner/gokrb5/types"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
+	"os/user"
 	"testing"
 )
 
 func TestUnmarshalASRep(t *testing.T) {
-	asrepData, _ := ioutil.ReadFile("/home/turnerj/IdeaProjects/golang/src/github.com/jcmturner/gokrb5/AS-REP.raw")
+	usr, _ := user.Current()
+	dir := usr.HomeDir
+	asrepData, _ := ioutil.ReadFile(dir + "/IdeaProjects/golang/src/github.com/jcmturner/gokrb5/AS-REP.raw")
 	asRep, err := UnmarshalASRep(asrepData)
 	if err != nil {
 		t.Fatalf("AS REP Unmarshal error: %v\n", err)
@@ -33,7 +36,7 @@ func TestUnmarshalASRep(t *testing.T) {
 	assert.Equal(t, 0, asRep.EncPart.KVNO, "Encrypted part KVNO not as expected")
 	t.Log("Finished testing unecrypted parts of AS REP")
 
-	kt, err := keytab.Load("/home/turnerj/tmp.keytab")
+	kt, err := keytab.Load(dir + "/tmp.keytab")
 	if err != nil {
 		fmt.Printf("keytab parse error: %v\n", err)
 	}
