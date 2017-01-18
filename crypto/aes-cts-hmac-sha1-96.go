@@ -4,12 +4,14 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"golang.org/x/crypto/pbkdf2"
+	"os"
 	"strings"
 )
 
@@ -230,6 +232,22 @@ func swapLastTwoBlocks(b []byte, c int) ([]byte, error) {
 	out = append(out, lb...)
 	out = append(out, pb...)
 	return out, nil
+}
+
+func VerifyChecksum(ct, pt, key []byte, usage int, etype EType) bool {
+	//The ciphertext output is the concatenation of the output of the basic
+	//encryption function E and a (possibly truncated) HMAC using the
+	//specified hash function H, both applied to the plaintext with a
+	//random confounder prefix and sufficient padding to bring it to a
+	//multiple of the message block size.  When the HMAC is computed, the
+	//key is used in the protocol key form.
+	h := ct[len(ct)-12:]
+	k, _ := etype.DeriveKey(key, GetUsageKi(uint32(usage)))
+	mac := hmac.New(sha1.New, k)
+	mac.Write(pt)
+	expectedMAC := mac.Sum(nil)
+	fmt.Fprintf(os.Stderr, "%v\n%v", h, expectedMAC[:12])
+	return hmac.Equal(h, expectedMAC[:12])
 }
 
 /*func DEwithHMAC(key, message []byte) (ct []byte, err error) {

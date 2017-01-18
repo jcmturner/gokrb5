@@ -67,6 +67,10 @@ func (k *KDCRep) DecryptEncPart(kt keytab.Keytab) error {
 	// Strip off the checksum from the end
 	//TODO should this check be moved to the Decrypt method?
 	b, err := etype.Decrypt(key, k.EncPart.Cipher[:len(k.EncPart.Cipher)-etype.GetHMACBitLength()/8])
+	//Verify checksum
+	if !crypto.VerifyChecksum(k.EncPart.Cipher, b, kt.Entries[0].Key.KeyMaterial, 3, etype) {
+		return errors.New("Error decrypting encrypted part: checksum verification failed")
+	}
 	//Remove the confounder bytes
 	b = b[etype.GetConfounderByteSize():]
 	if err != nil {
