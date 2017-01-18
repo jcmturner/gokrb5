@@ -163,3 +163,7 @@ func (e Des3CbcSha1Kd) Decrypt(key, ciphertext []byte) (message []byte, err erro
 	}
 	return
 }
+
+func (e Des3CbcSha1Kd) VerifyChecksum(protocolKey, ct, pt []byte, usage int) bool {
+	return VerifyChecksum(protocolKey, ct, pt, usage, e)
+}

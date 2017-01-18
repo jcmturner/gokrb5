@@ -2,8 +2,11 @@ package crypto
 
 import (
 	"bytes"
+	"crypto/hmac"
 	"encoding/binary"
 	"errors"
+	"fmt"
+	"hash"
 )
 
 type EType interface {
@@ -21,6 +24,8 @@ type EType interface {
 	GetConfounderByteSize() int                                 // This is the same as the cipher block size but in bytes.
 	DeriveKey(protocolKey, usage []byte) ([]byte, error)        // DK key-derivation (protocol-key, integer)->(specific-key)
 	DeriveRandom(protocolKey, usage []byte) ([]byte, error)     // DR pseudo-random (protocol-key, octet-string)->(octet-string)
+	VerifyChecksum(protocolKey, ct, pt []byte, usage int) bool
+	GetHash() hash.Hash
 }
 
 // RFC3961: DR(Key, Constant) = k-truncate(E(Key, Constant, initial-cipher-state))
@@ -105,6 +110,29 @@ func pkcs7Unpad(b []byte, m int) ([]byte, error) {
 		}
 	}
 	return b[:len(b)-n], nil
+}
+
+func GetChecksum(pt, key []byte, usage int, etype EType) ([]byte, error) {
+	k, err := etype.DeriveKey(key, GetUsageKi(uint32(usage)))
+	if err != nil {
+		return nil, fmt.Errorf("Unable to derive key for checksum: %v", err)
+	}
+	mac := hmac.New(etype.GetHash, k)
+	mac.Write(pt)
+	return mac.Sum(nil), nil
+}
+
+func VerifyChecksum(key, ct, pt []byte, usage int, etype EType) bool {
+	//The ciphertext output is the concatenation of the output of the basic
+	//encryption function E and a (possibly truncated) HMAC using the
+	//specified hash function H, both applied to the plaintext with a
+	//random confounder prefix and sufficient padding to bring it to a
+	//multiple of the message block size.  When the HMAC is computed, the
+	//key is used in the protocol key form.
+	// HMAC(Ki, P1)[1..h] - note this starts from 1 not zero hence getting the last etype.GetHMACBitLength()/8 + 1 bytes not 12 and [1:12]
+	h := ct[len(ct)-etype.GetHMACBitLength()/8+1:]
+	expectedMAC, _ := GetChecksum(pt, key, usage, etype)
+	return hmac.Equal(h, expectedMAC[1:etype.GetHMACBitLength()/8])
 }
 
 /*
