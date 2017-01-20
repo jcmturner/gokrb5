@@ -231,33 +231,3 @@ func swapLastTwoBlocks(b []byte, c int) ([]byte, error) {
 	out = append(out, pb...)
 	return out, nil
 }
-
-/*func DEwithHMAC(key, message []byte) (ct []byte, err error) {
-	if len(key) != KeySize {
-		return nil, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", KeySize, len(key))
-	}
-	if len(message)%aes.BlockSize != 0 {
-		return nil, errors.New("Plaintext is not a multiple of the block size")
-	}
-
-	iv := make([]byte, NonceSize)
-	_, err = rand.Read(iv)
-	if err != nil {
-		return nil, fmt.Errorf("Error creating random nonce: %v", err)
-	}
-
-	// NewCipher only returns an error with an invalid key size,
-	// but the key size was checked at the beginning of the function.
-	c, err := aes.NewCipher(key[:CipherKeyLength])
-	if err != nil {
-		return nil, fmt.Errorf("Error creating cipher: %v", err)
-	}
-	ctr := cipher.NewCBCEncrypter(c, iv)
-	ctr.CryptBlocks(ct, message)
-
-	h := hmac.New(sha1.New(), key[CipherKeyLength:])
-	ct = append(iv, ct...)
-	h.Write(ct)
-	ct = h.Sum(ct)
-	return ct[:HMACKeyLength], nil
-}*/

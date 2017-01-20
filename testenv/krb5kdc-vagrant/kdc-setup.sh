@@ -56,7 +56,7 @@ if [ ! -f /opt/krb5/data/principal ]; then
   if [ ! -z "$INITIAL_USERS" ]; then
     for user in $INITIAL_USERS
     do
-      /usr/sbin/kadmin.local -q "add_principal -randkey $user"
+      /usr/sbin/kadmin.local -q "add_principal -pw passwordvalue $user"
       echo "User $user added to kerberos database with random password. To update password: sudo /usr/sbin/kadmin.local -q \"change_password $user\""
     done
   fi

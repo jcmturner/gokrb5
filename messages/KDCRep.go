@@ -134,3 +134,34 @@ func unmarshalKDCRep(b []byte, asnAppTag int) (k KDCRep, err error) {
 	k.EncPart = asRep.EncPart
 	return
 }
+
+func (k KDCRep) Validate(asReq KDCReq, kt keytab.Keytab) (bool, error) {
+	//Ref RFC 4120 Section 3.1.5
+	//TODO change the following to a contains check or slice compare
+	if k.CName.NameType != asReq.ReqBody.CName.NameType || k.CName.NameString[0] != asReq.ReqBody.CName.NameString[0] {
+		return false, fmt.Errorf("CName in response does not match what was requested. Requested: %v; Reply: %v", asReq.ReqBody.CName, k.CName)
+	}
+	if k.CRealm != asReq.ReqBody.Realm {
+		return false, fmt.Errorf("CRealm in response does not match what was requested. Requested: %s; Reply: %s", asReq.ReqBody.Realm, k.CRealm)
+	}
+	if k.DecryptedPart.Key.KeyType == 0 {
+		err := k.DecryptEncPart(kt)
+		if err != nil {
+			return false, fmt.Errorf("Could not decrypt encrypted part of response: %v", err)
+		}
+	}
+	if k.DecryptedPart.Nonce != asReq.ReqBody.Nonce {
+		return false, errors.New("Possible replay attack, nonce in request does not match that in response")
+	}
+	//TODO change the following to a contains check or slice compare
+	if k.DecryptedPart.SName.NameType != asReq.ReqBody.SName.NameType || k.DecryptedPart.SName.NameString[0] != asReq.ReqBody.SName.NameString[0] {
+		return false, fmt.Errorf("SName in response does not match what was requested. Requested: %v; Reply: %v", asReq.ReqBody.SName, k.DecryptedPart.SName)
+	}
+	if k.DecryptedPart.SRealm != asReq.ReqBody.Realm {
+		return false, fmt.Errorf("SRealm in response does not match what was requested. Requested: %s; Reply: %s", asReq.ReqBody.Realm, k.DecryptedPart.SRealm)
+	}
+	if len(asReq.ReqBody.Address) > 0 {
+		//TODO compare if address list is the same
+	}
+	return true, nil
+}
