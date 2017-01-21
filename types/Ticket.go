@@ -37,6 +37,29 @@ type TransitedEncoding struct {
 }
 
 func UnmarshalTicket(b []byte) (t Ticket, err error) {
-	_, err = asn1.UnmarshalWithParams(b, &t, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.Ticket))
+	_, err = asn1.UnmarshalWithParams(b, &t, fmt.Sprintf("application,explicit,tag:%d", asnAppTag.Ticket))
 	return
+}
+
+func UnmarshalSequenceTickets(in asn1.RawValue) ([]Ticket, error) {
+	//This is a workaround to a asn1 decoding issue in golang - https://github.com/golang/go/issues/17321. It's not pretty I'm afraid
+	//We pull out raw values from the larger raw value (that is actually the data of the sequence of raw values) and track our position moving along the data.
+	b := in.Bytes
+	// Ignore the head of the asn1 stream (3bytes) as this is what tells us its a sequence but we're handling it ourselves
+	p := 3
+	var tkts []Ticket
+	var raw asn1.RawValue
+	for p < (len(b)) {
+		_, err := asn1.UnmarshalWithParams(b[p:], &raw, fmt.Sprintf("application,tag:%d", asnAppTag.Ticket))
+		if err != nil {
+			return nil, fmt.Errorf("Unmarshalling sequence of tickets failed geting length of ticket: %v", err)
+		}
+		t, err := UnmarshalTicket(b[p:])
+		if err != nil {
+			return nil, fmt.Errorf("Unmarshalling sequence of tickets failed: %v", err)
+		}
+		p += len(raw.FullBytes)
+		tkts = append(tkts, t)
+	}
+	return tkts, nil
 }
