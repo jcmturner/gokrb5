@@ -160,7 +160,7 @@ func (k KDCRep) Validate(asReq KDCReq, kt keytab.Keytab) (bool, error) {
 	if k.DecryptedPart.SRealm != asReq.ReqBody.Realm {
 		return false, fmt.Errorf("SRealm in response does not match what was requested. Requested: %s; Reply: %s", asReq.ReqBody.Realm, k.DecryptedPart.SRealm)
 	}
-	if len(asReq.ReqBody.Address) > 0 {
+	if len(asReq.ReqBody.Addresses) > 0 {
 		//TODO compare if address list is the same
 	}
 	return true, nil

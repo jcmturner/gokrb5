@@ -14,7 +14,7 @@ import (
 type KDCReq struct {
 	PVNO    int            `asn1:"explicit,tag:1"`
 	MsgType int            `asn1:"explicit,tag:2"`
-	PAData  []types.PAData `asn1:"explicit,general,tag:3"`
+	PAData  []types.PAData `asn1:"explicit,optional,tag:3"`
 	ReqBody KDCReqBody     `asn1:"explicit,tag:4"`
 }
 
@@ -28,7 +28,7 @@ type KDCReqBody struct {
 	RTime             time.Time           `asn1:"explicit,optional,tag:6"`
 	Nonce             int                 `asn1:"explicit,tag:7"`
 	EType             []int               `asn1:"explicit,tag:8"`
-	Address           []types.HostAddress `asn1:"explicit,optional,tag:9"`
+	Addresses         []types.HostAddress `asn1:"explicit,optional,tag:9"`
 	EncAuthData       types.EncryptedData `asn1:"explicit,optional,tag:10"`
 	AdditionalTickets []types.Ticket      `asn1:"explicit,optional,tag:11"`
 }
