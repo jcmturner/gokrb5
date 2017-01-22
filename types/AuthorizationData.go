@@ -3,8 +3,6 @@ package types
 // Reference: https://www.ietf.org/rfc/rfc4120.txt
 // Section: 5.2.6
 
-import "encoding/asn1"
-
 /*
 AuthorizationData
 
@@ -74,9 +72,12 @@ the ASN.1 structure that follows the subsection heading.
 */
 
 type AuthorizationData struct {
-	ADType int
-	// TODO may make the following a slice of AuthorizationDataEntry
-	ADData []byte
+	Entries []AuthorizationDataEntry
+}
+
+type AuthorizationDataEntry struct {
+	ADType int    `asn1:"explicit,tag:0"`
+	ADData []byte `asn1:"explicit,tag:1"`
 }
 
 type ADIfRelevant struct {
@@ -97,10 +98,4 @@ type ADKDCIssued struct {
 
 type ADMandatoryForKDC struct {
 	AuthorizationData
-}
-
-func (a *AuthorizationData) GetData() (string, error) {
-	var b []byte
-	_, err := asn1.Unmarshal(a.ADData, &b)
-	return string(b), err
 }
