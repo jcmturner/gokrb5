@@ -14,6 +14,7 @@ type PAData struct {
 }
 
 type PADataSequence []PAData
+type MethodData []PAData
 
 type PAEncTimestamp EncryptedData
 
