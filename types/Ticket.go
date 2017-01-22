@@ -36,6 +36,11 @@ type TransitedEncoding struct {
 	Contents []byte `asn1:"explicit,tag:1"`
 }
 
+func (t *Ticket) Unmarshal(b []byte) error {
+	_, err := asn1.UnmarshalWithParams(b, t, fmt.Sprintf("application,explicit,tag:%d", asnAppTag.Ticket))
+	return err
+}
+
 func UnmarshalTicket(b []byte) (t Ticket, err error) {
 	_, err = asn1.UnmarshalWithParams(b, &t, fmt.Sprintf("application,explicit,tag:%d", asnAppTag.Ticket))
 	return

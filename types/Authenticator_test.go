@@ -9,12 +9,7 @@ import (
 	"time"
 )
 
-const (
-	tf     = "20060102150405"
-	trealm = "ATHENA.MIT.EDU"
-)
-
-func unmarshal(t *testing.T, v string) Authenticator {
+func unmarshalAuthenticator_test(t *testing.T, v string) Authenticator {
 	var a Authenticator
 	//t.Logf("Starting unmarshal tests of %s", v)
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -28,16 +23,15 @@ func unmarshal(t *testing.T, v string) Authenticator {
 	return a
 }
 func TestUnmarshalAuthenticator(t *testing.T) {
-	a := unmarshal(t, "encode_krb5_authenticator")
+	a := unmarshalAuthenticator_test(t, "encode_krb5_authenticator")
 	//Parse the test time value into a time.Time type
-	tt, _ := time.Parse(tf, "19940610060317")
+	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
 
-	assert.Equal(t, 5, a.AVNO, "Authenticator version number not as expected")
-	assert.Equal(t, trealm, a.CRealm, "CRealm not as expected")
-	assert.Equal(t, 1, a.CName.NameType, "CName NameType not as expected")
-	assert.Equal(t, 2, len(a.CName.NameString), "CName does not have the expected number of NameStrings")
-	assert.Equal(t, "hftsai", a.CName.NameString[0], "CName first entry not as expected")
-	assert.Equal(t, "extra", a.CName.NameString[1], "CName second entry not as expected")
+	assert.Equal(t, testdata.TEST_KVNO, a.AVNO, "Authenticator version number not as expected")
+	assert.Equal(t, testdata.TEST_REALM, a.CRealm, "CRealm not as expected")
+	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMETYPE, a.CName.NameType, "CName NameType not as expected")
+	assert.Equal(t, len(testdata.TEST_PRINCIPALNAME_NAMESTRING), len(a.CName.NameString), "CName does not have the expected number of NameStrings")
+	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMESTRING, a.CName.NameString, "CName entries not as expected")
 	assert.Equal(t, 1, a.Cksum.CksumType, "Checksum type not as expected")
 	assert.Equal(t, []byte("1234"), a.Cksum.Checksum, "Checsum not as expected")
 	assert.Equal(t, 123456, a.Cusec, "Client microseconds not as expected")
@@ -52,31 +46,29 @@ func TestUnmarshalAuthenticator(t *testing.T) {
 }
 
 func TestUnmarshalAuthenticator_optionalsempty(t *testing.T) {
-	a := unmarshal(t, "encode_krb5_authenticator(optionalsempty)")
+	a := unmarshalAuthenticator_test(t, "encode_krb5_authenticator(optionalsempty)")
 	//Parse the test time value into a time.Time type
-	tt, _ := time.Parse(tf, "19940610060317")
+	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
 
-	assert.Equal(t, 5, a.AVNO, "Authenticator version number not as expected")
-	assert.Equal(t, trealm, a.CRealm, "CRealm not as expected")
-	assert.Equal(t, 1, a.CName.NameType, "CName NameType not as expected")
-	assert.Equal(t, 2, len(a.CName.NameString), "CName does not have the expected number of NameStrings")
-	assert.Equal(t, "hftsai", a.CName.NameString[0], "CName first entry not as expected")
-	assert.Equal(t, "extra", a.CName.NameString[1], "CName second entry not as expected")
+	assert.Equal(t, testdata.TEST_KVNO, a.AVNO, "Authenticator version number not as expected")
+	assert.Equal(t, testdata.TEST_REALM, a.CRealm, "CRealm not as expected")
+	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMETYPE, a.CName.NameType, "CName NameType not as expected")
+	assert.Equal(t, len(testdata.TEST_PRINCIPALNAME_NAMESTRING), len(a.CName.NameString), "CName does not have the expected number of NameStrings")
+	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMESTRING, a.CName.NameString, "CName entries not as expected")
 	assert.Equal(t, 123456, a.Cusec, "Client microseconds not as expected")
 	assert.Equal(t, tt, a.CTime, "Client time not as expected")
 }
 
 func TestUnmarshalAuthenticator_optionalsNULL(t *testing.T) {
-	a := unmarshal(t, "encode_krb5_authenticator(optionalsNULL)")
+	a := unmarshalAuthenticator_test(t, "encode_krb5_authenticator(optionalsNULL)")
 	//Parse the test time value into a time.Time type
-	tt, _ := time.Parse(tf, "19940610060317")
+	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
 
-	assert.Equal(t, 5, a.AVNO, "Authenticator version number not as expected")
-	assert.Equal(t, trealm, a.CRealm, "CRealm not as expected")
-	assert.Equal(t, 1, a.CName.NameType, "CName NameType not as expected")
-	assert.Equal(t, 2, len(a.CName.NameString), "CName does not have the expected number of NameStrings")
-	assert.Equal(t, "hftsai", a.CName.NameString[0], "CName first entry not as expected")
-	assert.Equal(t, "extra", a.CName.NameString[1], "CName second entry not as expected")
+	assert.Equal(t, testdata.TEST_KVNO, a.AVNO, "Authenticator version number not as expected")
+	assert.Equal(t, testdata.TEST_REALM, a.CRealm, "CRealm not as expected")
+	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMETYPE, a.CName.NameType, "CName NameType not as expected")
+	assert.Equal(t, len(testdata.TEST_PRINCIPALNAME_NAMESTRING), len(a.CName.NameString), "CName does not have the expected number of NameStrings")
+	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMESTRING, a.CName.NameString, "CName entries not as expected")
 	assert.Equal(t, 123456, a.Cusec, "Client microseconds not as expected")
 	assert.Equal(t, tt, a.CTime, "Client time not as expected")
 }
