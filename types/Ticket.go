@@ -27,7 +27,7 @@ type EncTicketPart struct {
 	StartTime         time.Time         `asn1:"explicit,optional,tag:6"`
 	EndTime           time.Time         `asn1:"explicit,tag:7"`
 	RenewTill         time.Time         `asn1:"explicit,optional,tag:8"`
-	CAddr             HostAddress       `asn1:"explicit,optional,tag:9"`
+	CAddr             HostAddresses       `asn1:"explicit,optional,tag:9"`
 	AuthorizationData AuthorizationData `asn1:"explicit,optional,tag:10"`
 }
 
@@ -38,6 +38,11 @@ type TransitedEncoding struct {
 
 func (t *Ticket) Unmarshal(b []byte) error {
 	_, err := asn1.UnmarshalWithParams(b, t, fmt.Sprintf("application,explicit,tag:%d", asnAppTag.Ticket))
+	return err
+}
+
+func (t *EncTicketPart) Unmarshal(b []byte) error {
+	_, err := asn1.UnmarshalWithParams(b, t, fmt.Sprintf("application,explicit,tag:%d", asnAppTag.EncTicketPart))
 	return err
 }
 
