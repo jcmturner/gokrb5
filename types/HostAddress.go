@@ -31,6 +31,8 @@ address
 	This field encodes a single address of type addr-type.
 */
 
+type HostAddresses []HostAddress
+
 type HostAddress struct {
 	AddrType int    `asn1:"explicit,tag:0"`
 	Address  []byte `asn1:"explicit,tag:1"`

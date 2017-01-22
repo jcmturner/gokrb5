@@ -17,7 +17,7 @@ import (
 type marshalKDCRep struct {
 	PVNO    int                 `asn1:"explicit,tag:0"`
 	MsgType int                 `asn1:"explicit,tag:1"`
-	PAData  []types.PAData      `asn1:"explicit,optional,tag:2"`
+	PAData  types.PADataSequence     `asn1:"explicit,optional,tag:2"`
 	CRealm  string              `asn1:"explicit,tag:3"`
 	CName   types.PrincipalName `asn1:"explicit,tag:4"`
 	// Ticket needs to be a raw value as it is wrapped in an APPLICATION tag

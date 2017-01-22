@@ -13,10 +13,9 @@ type PAData struct {
 	PADataValue []byte `asn1:"explicit,tag:2"`
 }
 
-// Do I need to define this one?
-type PAEncTimestamp struct {
-	PAEncTSEnc
-}
+type PADataSequence []PAData
+
+type PAEncTimestamp EncryptedData
 
 type PAEncTSEnc struct {
 	PATimestamp time.Time `asn1:"explicit,tag:0"`
@@ -38,6 +37,50 @@ type ETypeInfo2Entry struct {
 
 type ETypeInfo2 []ETypeInfo2Entry
 
+
+func (pa *PAData) Unmarshal(b []byte) error {
+	_, err := asn1.Unmarshal(b, pa)
+	return err
+}
+
+func (pa *PADataSequence) Unmarshal(b []byte) error {
+	_, err := asn1.Unmarshal(b, pa)
+	return err
+}
+
+func (pa *PAEncTimestamp) Unmarshal(b []byte) error {
+	_, err := asn1.Unmarshal(b, pa)
+	return err
+}
+
+func (pa *PAEncTSEnc) Unmarshal(b []byte) error {
+	_, err := asn1.Unmarshal(b, pa)
+	return err
+}
+
+func (a *ETypeInfo) Unmarshal(b []byte) error {
+	_, err := asn1.Unmarshal(b, a)
+	return err
+}
+
+func (a *ETypeInfoEntry) Unmarshal(b []byte) error {
+	_, err := asn1.Unmarshal(b, a)
+	return err
+}
+
+func (a *ETypeInfo2) Unmarshal(b []byte) error {
+	_, err := asn1.Unmarshal(b, a)
+	return err
+}
+
+func (a *ETypeInfo2Entry) Unmarshal(b []byte) error {
+	_, err := asn1.Unmarshal(b, a)
+	return err
+}
+
+
+
+
 func (pa *PAData) GetETypeInfo() (d ETypeInfo, err error) {
 	dt := KrbDictionary.PADataTypesByName["pa-etype-info"]
 	if pa.PADataType != dt {
@@ -57,3 +100,4 @@ func (pa *PAData) GetETypeInfo2() (d ETypeInfo2, err error) {
 	_, err = asn1.Unmarshal(pa.PADataValue, &d)
 	return
 }
+
