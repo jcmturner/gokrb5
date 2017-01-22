@@ -36,7 +36,7 @@ type Authenticator struct {
 	CTime             time.Time                `asn1:"explicit,tag:5"`
 	SubKey            EncryptionKey            `asn1:"explicit,optional,tag:6"`
 	SeqNumber         int                      `asn1:"explicit,optional,tag:7"`
-	AuthorizationData []AuthorizationDataEntry `asn1:"explicit,optional,tag:8"`
+	AuthorizationData AuthorizationData `asn1:"explicit,optional,tag:8"`
 }
 
 func (a *Authenticator) Unmarshal(b []byte) error {

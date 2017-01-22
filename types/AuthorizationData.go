@@ -1,5 +1,9 @@
 package types
 
+import (
+	"encoding/asn1"
+)
+
 // Reference: https://www.ietf.org/rfc/rfc4120.txt
 // Section: 5.2.6
 
@@ -71,31 +75,35 @@ the ASN.1 structure that follows the subsection heading.
 
 */
 
-type AuthorizationData struct {
-	Entries []AuthorizationDataEntry
-}
+type AuthorizationData []AuthorizationDataEntry
 
 type AuthorizationDataEntry struct {
 	ADType int    `asn1:"explicit,tag:0"`
 	ADData []byte `asn1:"explicit,tag:1"`
 }
 
-type ADIfRelevant struct {
-	AuthorizationData
-}
+type ADIfRelevant AuthorizationData
 
 type ADAndOr struct {
-	ConditionCount int
-	Elements       AuthorizationData
+	ConditionCount int               `asn1:"explicit,tag:0"`
+	Elements       AuthorizationData `asn1:"explicit,tag:1"`
 }
 
 type ADKDCIssued struct {
-	ADChecksum string
-	IRealm     string
-	Isname     PrincipalName
-	Elements   AuthorizationData
+	ADChecksum Checksum          `asn1:"explicit,tag:0"`
+	IRealm     string            `asn1:"optional,explicit,tag:1"`
+	Isname     PrincipalName     `asn1:"optional,explicit,tag:2"`
+	Elements   AuthorizationData `asn1:"explicit,tag:3"`
 }
 
-type ADMandatoryForKDC struct {
-	AuthorizationData
+type ADMandatoryForKDC AuthorizationData
+
+func (a *ADKDCIssued) Unmarshal(b []byte) error {
+	_, err := asn1.Unmarshal(b, a)
+	return err
+}
+
+func (a *AuthorizationData) Unmarshal(b []byte) error {
+	_, err := asn1.Unmarshal(b, a)
+	return err
 }

@@ -40,8 +40,8 @@ func TestUnmarshalAuthenticator(t *testing.T) {
 	assert.Equal(t, []byte("12345678"), a.SubKey.KeyValue, "Subkey value not as expected")
 	assert.Equal(t, 2, len(a.AuthorizationData), "Number of Authorization data items not as expected")
 	for i, entry := range a.AuthorizationData {
-		assert.Equal(t, 1, entry.ADType, fmt.Sprintf("Authorization type of entry %d not as expected", i+1))
-		assert.Equal(t, []byte("foobar"), entry.ADData, fmt.Sprintf("Authorization data of entry %d not as expected", i+1))
+		assert.Equal(t, testdata.TEST_AUTHORIZATION_DATA_TYPE, entry.ADType, fmt.Sprintf("Authorization type of entry %d not as expected", i+1))
+		assert.Equal(t, []byte(testdata.TEST_AUTHORIZATION_DATA_VALUE), entry.ADData, fmt.Sprintf("Authorization data of entry %d not as expected", i+1))
 	}
 }
 
