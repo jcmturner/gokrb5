@@ -18,4 +18,4 @@ This is work in progress and does not yet work...
 * https://en.wikipedia.org/wiki/Ciphertext_stealing#CBC_ciphertext_stealing
 
 ## Thanks
-* Greg Hudsons from the MIT Consortium for Kerberos and Internet Trust for providing useful test vectors.
+* Greg Hudson from the MIT Consortium for Kerberos and Internet Trust for providing useful test vectors.
