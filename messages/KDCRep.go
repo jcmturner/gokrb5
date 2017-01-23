@@ -127,6 +127,7 @@ func (e *EncKDCRepPart) Unmarshal(b []byte) error {
 }
 
 func decryptKDCRepEncPart(ct []byte, kt keytab.Keytab) (EncKDCRepPart, error) {
+	//TODO move this to the a method on the Encrypted data object and call that from here. update the KRB_CRED too
 	//TODO create the etype based on the EType value in the EncPart and find the corresponding entry in the keytab
 	//k.EncPart.EType
 	var etype crypto.Aes256CtsHmacSha96
