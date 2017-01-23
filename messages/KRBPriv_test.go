@@ -1,22 +1,68 @@
 package messages
 
-/*
-KRB-PRIV        ::= [APPLICATION 21] SEQUENCE {
-	pvno            [0] INTEGER (5),
-	msg-type        [1] INTEGER (21),
-	enc-part        [3] EncryptedData -- EncKrbPrivPart
+import (
+	"encoding/hex"
+	"github.com/jcmturner/gokrb5/testdata"
+	"github.com/jcmturner/gokrb5/types"
+	"github.com/stretchr/testify/assert"
+	"testing"
+	"time"
+)
+
+func TestUnmarshalKRBPriv(t *testing.T) {
+	var a KRBPriv
+	v := "encode_krb5_priv"
+	b, err := hex.DecodeString(testdata.TestVectors[v])
+	if err != nil {
+		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+	}
+	err = a.Unmarshal(b)
+	if err != nil {
+		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+	}
+	assert.Equal(t, testdata.TEST_KVNO, a.PVNO, "PVNO not as expected")
+	assert.Equal(t, types.KrbDictionary.MsgTypesByName["KRB_PRIV"], a.MsgType, "Message type not as expected")
+	assert.Equal(t, testdata.TEST_KVNO, a.EncPart.KVNO, "EncPart KVNO not as expected")
+	assert.Equal(t, testdata.TEST_ETYPE, a.EncPart.EType, "EncPart etype not as expected")
+	assert.Equal(t, []byte(testdata.TEST_CIPHERTEXT), a.EncPart.Cipher, "Cipher text of EncPart not as expected")
 }
 
-EncKrbPrivPart  ::= [APPLICATION 28] SEQUENCE {
-	user-data       [0] OCTET STRING,
-	timestamp       [1] KerberosTime OPTIONAL,
-	usec            [2] Microseconds OPTIONAL,
-	seq-number      [3] UInt32 OPTIONAL,
-	s-address       [4] HostAddress -- sender's addr --,
-	r-address       [5] HostAddress OPTIONAL -- recip's addr
-}
-*/
+func TestUnmarshalEncPrivPart(t *testing.T) {
+	var a EncKrbPrivPart
+	v := "encode_krb5_enc_priv_part"
+	b, err := hex.DecodeString(testdata.TestVectors[v])
+	if err != nil {
+		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+	}
+	err = a.Unmarshal(b)
+	if err != nil {
+		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+	}
+	//Parse the test time value into a time.Time type
+	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
 
-//encode_krb5_priv
-//encode_krb5_enc_priv_part
-//encode_krb5_enc_priv_part(optionalsNULL)
+	assert.Equal(t, "krb5data", string(a.UserData), "User data not as expected")
+	assert.Equal(t, tt, a.Timestamp, "Timestamp not as expected")
+	assert.Equal(t, 123456, a.Usec, "Microseconds not as expected")
+	assert.Equal(t, 17, a.SequenceNumber, "Sequence number not as expected")
+	assert.Equal(t, 2, a.SAddress.AddrType, "SAddress type not as expected")
+	assert.Equal(t, "12d00023", hex.EncodeToString(a.SAddress.Address), "Address not as expected for SAddress")
+	assert.Equal(t, 2, a.RAddress.AddrType, "RAddress type not as expected")
+	assert.Equal(t, "12d00023", hex.EncodeToString(a.RAddress.Address), "Address not as expected for RAddress")
+}
+
+func TestUnmarshalEncPrivPart_optionalsNULL(t *testing.T) {
+	var a EncKrbPrivPart
+	v := "encode_krb5_enc_priv_part(optionalsNULL)"
+	b, err := hex.DecodeString(testdata.TestVectors[v])
+	if err != nil {
+		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+	}
+	err = a.Unmarshal(b)
+	if err != nil {
+		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+	}
+	assert.Equal(t, "krb5data", string(a.UserData), "User data not as expected")
+	assert.Equal(t, 2, a.SAddress.AddrType, "SAddress type not as expected")
+	assert.Equal(t, "12d00023", hex.EncodeToString(a.SAddress.Address), "Address not as expected for SAddress")
+}
