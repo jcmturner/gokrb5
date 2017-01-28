@@ -24,7 +24,7 @@ const (
 // This method adds that wrapping tag
 func AddASNAppTag(b []byte, tag int) []byte {
 	// The ASN1 wrapping consists of 2 bytes:
-	// 1st byte -> Application Tag
+	// 1st byte -> Identifier Octet - Application Tag
 	// 2nd byte -> The length (this will be the size indicated in the input bytes + 2 for the additional bytes we add here.
 	// Application Tag:
 	//| Byte:       | 8                            | 7                          | 6                                         | 5 | 4 | 3 | 2 | 1             |

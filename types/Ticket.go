@@ -6,6 +6,8 @@ import (
 	"github.com/jcmturner/gokrb5/types/asnAppTag"
 	jtasn1 "github.com/jcmturner/asn1"
 	"time"
+	"os"
+	"encoding/hex"
 )
 
 // Reference: https://www.ietf.org/rfc/rfc4120.txt
@@ -62,9 +64,10 @@ func UnmarshalTicket(b []byte) (t Ticket, err error) {
 }
 
 func UnmarshalTicketsSequence(in asn1.RawValue) ([]Ticket, error) {
-	//fmt.Fprintf(os.Stderr, "Raw c: %v\n", in.Class)
-	//fmt.Fprintf(os.Stderr, "Raw  b: %v\n", in.Bytes)
-	//fmt.Fprintf(os.Stderr, "Raw fb: %v\n", in.FullBytes)
+	fmt.Fprintf(os.Stderr, "Raw c: %v is: %v t: %v\n", in.Class, in.IsCompound, in.Tag)
+	fmt.Fprintf(os.Stderr, "Raw  b: %v\n", in.Bytes)
+	fmt.Fprintf(os.Stderr, "Raw  b: %v\n", hex.EncodeToString(in.Bytes))
+	fmt.Fprintf(os.Stderr, "Raw fb: %v\n", in.FullBytes)
 	//This is a workaround to a asn1 decoding issue in golang - https://github.com/golang/go/issues/17321. It's not pretty I'm afraid
 	//We pull out raw values from the larger raw value (that is actually the data of the sequence of raw values) and track our position moving along the data.
 	b := in.Bytes
@@ -84,13 +87,33 @@ func UnmarshalTicketsSequence(in asn1.RawValue) ([]Ticket, error) {
 		p += len(raw.FullBytes)
 		tkts = append(tkts, t)
 	}
+	MarshalTicketSequence(tkts)
 	return tkts, nil
 }
 
-//func MarshalTicketSequence([]Ticket) (asn1.RawValue, error) {
-//	raw := asn1.RawValue{
-//		Class:      16,
-//		IsCompound: true,
-//	}
-//
-//}
+func MarshalTicketSequence(tkts []Ticket) (asn1.RawValue, error) {
+	raw := asn1.RawValue{
+		Class:      2,
+		IsCompound: true,
+		//Tag: 11,
+	}
+	var btkts []byte
+	for i, t := range tkts {
+		b, err := t.Marshal()
+		if err != nil {
+			return raw, fmt.Errorf("Error marshalling ticket number %d in seqence of tickets", i +1)
+		}
+		btkts = append(btkts, b...)
+	}
+	// The ASN1 wrapping consists of 2 bytes:
+	// 1st byte -> Identifier Octet - In this case an OCTET STRING (ASN TAG
+	// 2nd byte -> The length (this will be the size indicated in the input bytes + 2 for the additional bytes we add here.
+	// Application Tag:
+	//| Byte:       | 8                            | 7                          | 6                                         | 5 | 4 | 3 | 2 | 1             |
+	//| Value:      | 0                            | 1                          | 1                                         | From the RFC spec 4120        |
+	//| Explanation | Defined by the ASN1 encoding rules for an application tag | A value of 1 indicates a constructed type | The ASN Application tag value |
+	btkts = append([]byte{byte(len(btkts))}, btkts...)
+	fmt.Fprintf(os.Stderr, "mar: %+v", btkts)
+	raw.Bytes = btkts
+	return raw, nil
+}

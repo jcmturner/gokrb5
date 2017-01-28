@@ -26,3 +26,4 @@ This is work in progress and does not yet work...
 | Cannot unmarshal into slice of asn1.RawValue | Yes | [https://github.com/golang/go/issues/17321](https://github.com/golang/go/issues/17321) |
 | Cannot marshal into a GeneralString | Yes - using https://github.com/jcmturner/asn1 | [encoding/asn1: cannot marshal into a GeneralString](https://github.com/golang/go/issues/18832) |
 | Cannot marshal into slice of strings and pass stringtype parameter tags to members | Yes - using https://github.com/jcmturner/asn1 |[encoding/asn1: cannot marshal into slice of strings and pass stringtype parameter tags to members](https://github.com/golang/go/issues/18834) |
+| Cannot marshal with application tags | Yes | |
