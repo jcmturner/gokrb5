@@ -2,12 +2,13 @@ package types
 
 import (
 	"encoding/asn1"
-	"fmt"
-	"github.com/jcmturner/gokrb5/types/asnAppTag"
-	jtasn1 "github.com/jcmturner/asn1"
-	"time"
-	"os"
 	"encoding/hex"
+	"fmt"
+	jtasn1 "github.com/jcmturner/asn1"
+	"github.com/jcmturner/gokrb5/asn1tools"
+	"github.com/jcmturner/gokrb5/types/asnAppTag"
+	"os"
+	"time"
 )
 
 // Reference: https://www.ietf.org/rfc/rfc4120.txt
@@ -49,7 +50,7 @@ func (t *Ticket) Marshal() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	b = asnAppTag.AddASNAppTag(b, asnAppTag.Ticket)
+	b = asn1tools.AddASNAppTag(b, asnAppTag.Ticket)
 	return b, nil
 }
 
@@ -101,7 +102,7 @@ func MarshalTicketSequence(tkts []Ticket) (asn1.RawValue, error) {
 	for i, t := range tkts {
 		b, err := t.Marshal()
 		if err != nil {
-			return raw, fmt.Errorf("Error marshalling ticket number %d in seqence of tickets", i +1)
+			return raw, fmt.Errorf("Error marshalling ticket number %d in seqence of tickets", i+1)
 		}
 		btkts = append(btkts, b...)
 	}
@@ -112,7 +113,7 @@ func MarshalTicketSequence(tkts []Ticket) (asn1.RawValue, error) {
 	//| Byte:       | 8                            | 7                          | 6                                         | 5 | 4 | 3 | 2 | 1             |
 	//| Value:      | 0                            | 1                          | 1                                         | From the RFC spec 4120        |
 	//| Explanation | Defined by the ASN1 encoding rules for an application tag | A value of 1 indicates a constructed type | The ASN Application tag value |
-	btkts = append([]byte{byte(len(btkts))}, btkts...)
+	btkts = append(asn1tools.MarshalLengthBytes(len(btkts)), btkts...)
 	fmt.Fprintf(os.Stderr, "mar: %+v", btkts)
 	raw.Bytes = btkts
 	return raw, nil
