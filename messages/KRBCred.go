@@ -37,14 +37,14 @@ type EncKrbCredPart struct {
 
 type KrbCredInfo struct {
 	Key       types.EncryptionKey `asn1:"explicit,tag:0"`
-	PRealm    string              `asn1:"optional,explicit,tag:1"`
+	PRealm    string              `asn1:"generalstring,optional,explicit,tag:1"`
 	PName     types.PrincipalName `asn1:"optional,explicit,tag:2"`
 	Flags     asn1.BitString      `asn1:"optional,explicit,tag:3"`
 	AuthTime  time.Time           `asn1:"optional,explicit,tag:4"`
 	StartTime time.Time           `asn1:"optional,explicit,tag:5"`
 	EndTime   time.Time           `asn1:"optional,explicit,tag:6"`
 	RenewTill time.Time           `asn1:"optional,explicit,tag:7"`
-	SRealm    string              `asn1:"optional,explicit,tag:8"`
+	SRealm    string              `asn1:"optional,explicit,ia5,tag:8"`
 	SName     types.PrincipalName `asn1:"optional,explicit,tag:9"`
 	CAddr     types.HostAddresses `asn1:"optional,explicit,tag:10"`
 }
@@ -63,7 +63,7 @@ func (k *KRBCred) Unmarshal(b []byte) error {
 	k.MsgType = m.MsgType
 	k.EncPart = m.EncPart
 	if len(m.Tickets.Bytes) > 0 {
-		k.Tickets, err = types.UnmarshalSequenceTickets(m.Tickets)
+		k.Tickets, err = types.UnmarshalTicketsSequence(m.Tickets)
 		if err != nil {
 			return fmt.Errorf("Error unmarshalling tickets within KRB_CRED: %v", err)
 		}

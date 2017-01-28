@@ -31,7 +31,7 @@ type TGSReq KDCReq
 type marshalKDCReqBody struct {
 	KDCOptions  asn1.BitString      `asn1:"explicit,tag:0"`
 	CName       types.PrincipalName `asn1:"explicit,optional,tag:1"`
-	Realm       string              `asn1:"ia5,explicit,tag:2"`
+	Realm       string              `asn1:"generalstring,explicit,tag:2"`
 	SName       types.PrincipalName `asn1:"explicit,optional,tag:3"`
 	From        time.Time           `asn1:"explicit,optional,tag:4"`
 	Till        time.Time           `asn1:"explicit,tag:5"`
@@ -47,7 +47,7 @@ type marshalKDCReqBody struct {
 type KDCReqBody struct {
 	KDCOptions        asn1.BitString      `asn1:"explicit,tag:0"`
 	CName             types.PrincipalName `asn1:"explicit,optional,tag:1"`
-	Realm             string              `asn1:"ia5,explicit,tag:2"`
+	Realm             string              `asn1:"generalstring,explicit,tag:2"`
 	SName             types.PrincipalName `asn1:"explicit,optional,tag:3"`
 	From              time.Time           `asn1:"explicit,optional,tag:4"`
 	Till              time.Time           `asn1:"explicit,tag:5"`
@@ -121,7 +121,7 @@ func (k *KDCReqBody) Unmarshal(b []byte) error {
 	k.Addresses = m.Addresses
 	k.EncAuthData = m.EncAuthData
 	if len(m.AdditionalTickets.Bytes) > 0 {
-		k.AdditionalTickets, err = types.UnmarshalSequenceTickets(m.AdditionalTickets)
+		k.AdditionalTickets, err = types.UnmarshalTicketsSequence(m.AdditionalTickets)
 		if err != nil {
 			return fmt.Errorf("Error unmarshalling additional tickets: %v", err)
 		}
@@ -139,22 +139,22 @@ func NewASReq() ASReq {
 	}
 }
 
-func (k *ASReq) Marshal() ([]byte, error) {
-
-}
-
-func (k *KDCReqBody) Marshal() ([]byte, error) {
-	m := marshalKDCReqBody{
-		KDCOptions:  k.KDCOptions,
-		CName:       k.CName,
-		Realm:       k.Realm,
-		SName:       k.SName,
-		From:        k.From,
-		Till:        k.Till,
-		RTime:       k.RTime,
-		Nonce:       k.Nonce,
-		EType:       k.EType,
-		Addresses:   k.Addresses,
-		EncAuthData: k.EncAuthData,
-	}
-}
+//func (k *ASReq) Marshal() ([]byte, error) {
+//
+//}
+//
+//func (k *KDCReqBody) Marshal() ([]byte, error) {
+//	m := marshalKDCReqBody{
+//		KDCOptions:  k.KDCOptions,
+//		CName:       k.CName,
+//		Realm:       k.Realm,
+//		SName:       k.SName,
+//		From:        k.From,
+//		Till:        k.Till,
+//		RTime:       k.RTime,
+//		Nonce:       k.Nonce,
+//		EType:       k.EType,
+//		Addresses:   k.Addresses,
+//		EncAuthData: k.EncAuthData,
+//	}
+//}

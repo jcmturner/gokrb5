@@ -16,11 +16,11 @@ type KRBError struct {
 	STime     time.Time           `asn1:"explicit,tag:4"`
 	Susec     int                 `asn1:"explicit,tag:5"`
 	ErrorCode int                 `asn1:"explicit,tag:6"`
-	CRealm    string              `asn1:"optional,explicit,tag:7"`
+	CRealm    string              `asn1:"generalstring,optional,explicit,tag:7"`
 	CName     types.PrincipalName `asn1:"optional,explicit,tag:8"`
-	Realm     string              `asn1:"explicit,tag:9"`
+	Realm     string              `asn1:"generalstring,explicit,tag:9"`
 	SName     types.PrincipalName `asn1:"explicit,tag:10"`
-	EText     string              `asn1:"optional,explicit,tag:11"`
+	EText     string              `asn1:"generalstring,optional,explicit,tag:11"`
 	EData     []byte              `asn1:"optional,explicit,tag:12"`
 }
 

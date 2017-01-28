@@ -18,7 +18,7 @@ type marshalKDCRep struct {
 	PVNO             int                 `asn1:"explicit,tag:0"`
 	MsgType          int                 `asn1:"explicit,tag:1"`
 	PAData           types.PADataSequence     `asn1:"explicit,optional,tag:2"`
-	CRealm           string              `asn1:"explicit,tag:3"`
+	CRealm           string              `asn1:"generalstring,explicit,tag:3"`
 	CName            types.PrincipalName `asn1:"explicit,tag:4"`
 	// Ticket needs to be a raw value as it is wrapped in an APPLICATION tag
 	Ticket           asn1.RawValue       `asn1:"explicit,tag:5"`
@@ -50,7 +50,7 @@ type EncKDCRepPart struct {
 	StartTime     time.Time           `asn1:"explicit,optional,tag:6"`
 	EndTime       time.Time           `asn1:"explicit,tag:7"`
 	RenewTill     time.Time           `asn1:"explicit,optional,tag:8"`
-	SRealm        string              `asn1:"explicit,tag:9"`
+	SRealm        string              `asn1:"generalstring,explicit,tag:9"`
 	SName         types.PrincipalName `asn1:"explicit,tag:10"`
 	CAddr         []types.HostAddress `asn1:"explicit,optional,tag:11"`
 }

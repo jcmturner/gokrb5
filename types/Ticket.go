@@ -4,6 +4,7 @@ import (
 	"encoding/asn1"
 	"fmt"
 	"github.com/jcmturner/gokrb5/types/asnAppTag"
+	jtasn1 "github.com/jcmturner/asn1"
 	"time"
 )
 
@@ -12,7 +13,7 @@ import (
 
 type Ticket struct {
 	TktVNO  int           `asn1:"explicit,tag:0"`
-	Realm   string        `asn1:"explicit,tag:1"`
+	Realm   string        `asn1:"generalstring,explicit,tag:1"`
 	SName   PrincipalName `asn1:"explicit,tag:2"`
 	EncPart EncryptedData `asn1:"explicit,tag:3"`
 }
@@ -20,7 +21,7 @@ type Ticket struct {
 type EncTicketPart struct {
 	Flags             asn1.BitString    `asn1:"explicit,tag:0"`
 	Key               EncryptionKey     `asn1:"explicit,tag:1"`
-	CRealm            string            `asn1:"explicit,tag:2"`
+	CRealm            string            `asn1:"generalstring,explicit,tag:2"`
 	CName             PrincipalName     `asn1:"explicit,tag:3"`
 	Transited         TransitedEncoding `asn1:"explicit,tag:4"`
 	AuthTime          time.Time         `asn1:"explicit,tag:5"`
@@ -41,6 +42,15 @@ func (t *Ticket) Unmarshal(b []byte) error {
 	return err
 }
 
+func (t *Ticket) Marshal() ([]byte, error) {
+	b, err := jtasn1.Marshal(*t)
+	if err != nil {
+		return nil, err
+	}
+	b = asnAppTag.AddASNAppTag(b, asnAppTag.Ticket)
+	return b, nil
+}
+
 func (t *EncTicketPart) Unmarshal(b []byte) error {
 	_, err := asn1.UnmarshalWithParams(b, t, fmt.Sprintf("application,explicit,tag:%d", asnAppTag.EncTicketPart))
 	return err
@@ -51,7 +61,10 @@ func UnmarshalTicket(b []byte) (t Ticket, err error) {
 	return
 }
 
-func UnmarshalSequenceTickets(in asn1.RawValue) ([]Ticket, error) {
+func UnmarshalTicketsSequence(in asn1.RawValue) ([]Ticket, error) {
+	//fmt.Fprintf(os.Stderr, "Raw c: %v\n", in.Class)
+	//fmt.Fprintf(os.Stderr, "Raw  b: %v\n", in.Bytes)
+	//fmt.Fprintf(os.Stderr, "Raw fb: %v\n", in.FullBytes)
 	//This is a workaround to a asn1 decoding issue in golang - https://github.com/golang/go/issues/17321. It's not pretty I'm afraid
 	//We pull out raw values from the larger raw value (that is actually the data of the sequence of raw values) and track our position moving along the data.
 	b := in.Bytes
@@ -74,10 +87,10 @@ func UnmarshalSequenceTickets(in asn1.RawValue) ([]Ticket, error) {
 	return tkts, nil
 }
 
-func MarshalTicketSequence([]Ticket) (asn1.RawValue, error) {
-	raw := asn1.RawValue{
-		Class:      16,
-		IsCompound: true,
-	}
-
-}
+//func MarshalTicketSequence([]Ticket) (asn1.RawValue, error) {
+//	raw := asn1.RawValue{
+//		Class:      16,
+//		IsCompound: true,
+//	}
+//
+//}

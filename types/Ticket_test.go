@@ -93,3 +93,21 @@ func TestUnmarshalEncTicketPart_optionalsNULL(t *testing.T) {
 	assert.Equal(t, tt, a.AuthTime, "Auth time not as expected")
 	assert.Equal(t, tt, a.EndTime, "End time not as expected")
 }
+
+func TestMarshalTicket(t *testing.T) {
+	var a Ticket
+	v := "encode_krb5_ticket"
+	b, err := hex.DecodeString(testdata.TestVectors[v])
+	if err != nil {
+		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+	}
+	err = a.Unmarshal(b)
+	if err != nil {
+		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+	}
+	mb, err := a.Marshal()
+	if err != nil {
+		t.Fatalf("Marshal of ticket errored: %v", err)
+	}
+	assert.Equal(t, b, mb, "Marshalled bytes not as expected")
+}

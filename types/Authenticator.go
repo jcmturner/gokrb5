@@ -29,7 +29,7 @@ authorization-data      [8] AuthorizationData OPTIONAL
 
 type Authenticator struct {
 	AVNO              int               `asn1:"explicit,tag:0"`
-	CRealm            string            `asn1:"explicit,tag:1"`
+	CRealm            string            `asn1:"generalstring,explicit,tag:1"`
 	CName             PrincipalName     `asn1:"explicit,tag:2"`
 	Cksum             Checksum          `asn1:"explicit,optional,tag:3"`
 	Cusec             int               `asn1:"explicit,tag:4"`

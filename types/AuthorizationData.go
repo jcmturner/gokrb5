@@ -91,7 +91,7 @@ type ADAndOr struct {
 
 type ADKDCIssued struct {
 	ADChecksum Checksum          `asn1:"explicit,tag:0"`
-	IRealm     string            `asn1:"optional,explicit,tag:1"`
+	IRealm     string            `asn1:"optional,generalstring,explicit,tag:1"`
 	Isname     PrincipalName     `asn1:"optional,explicit,tag:2"`
 	Elements   AuthorizationData `asn1:"explicit,tag:3"`
 }

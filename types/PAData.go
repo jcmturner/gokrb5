@@ -32,7 +32,7 @@ type ETypeInfo []ETypeInfoEntry
 
 type ETypeInfo2Entry struct {
 	EType     int    `asn1:"explicit,tag:0"`
-	Salt      string `asn1:"explicit,optional,tag:1,ia5"`
+	Salt      string `asn1:"explicit,optional,generalstring,tag:1,ia5"`
 	S2KParams []byte `asn1:"explicit,optional,tag:2"`
 }
 

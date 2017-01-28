@@ -5,5 +5,6 @@ package types
 
 type PrincipalName struct {
 	NameType   int      `asn1:"explicit,tag:0"`
-	NameString []string `asn1:"explicit,tag:1,ia5"`
+	NameString []string `asn1:"generalstring,explicit,tag:1"`
 }
+
