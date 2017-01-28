@@ -27,7 +27,7 @@ type EncTicketPart struct {
 	StartTime         time.Time         `asn1:"explicit,optional,tag:6"`
 	EndTime           time.Time         `asn1:"explicit,tag:7"`
 	RenewTill         time.Time         `asn1:"explicit,optional,tag:8"`
-	CAddr             HostAddresses       `asn1:"explicit,optional,tag:9"`
+	CAddr             HostAddresses     `asn1:"explicit,optional,tag:9"`
 	AuthorizationData AuthorizationData `asn1:"explicit,optional,tag:10"`
 }
 
@@ -72,4 +72,12 @@ func UnmarshalSequenceTickets(in asn1.RawValue) ([]Ticket, error) {
 		tkts = append(tkts, t)
 	}
 	return tkts, nil
+}
+
+func MarshalTicketSequence([]Ticket) (asn1.RawValue, error) {
+	raw := asn1.RawValue{
+		Class:      16,
+		IsCompound: true,
+	}
+
 }
