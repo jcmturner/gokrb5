@@ -394,6 +394,10 @@ func TestUnmarshalASReq_raw(t *testing.T) {
 
 //// Marshal Tests ////
 
+type BitStringStruct struct {
+	Bs asn1.BitString `asn1:"explicit,tag:0"`
+}
+
 func TestMarshalKDCReqBody(t *testing.T) {
 	var a KDCReqBody
 	v := "encode_krb5_kdc_req_body"
@@ -419,7 +423,23 @@ func TestMarshalKDCReqBody(t *testing.T) {
 	j, _ := asn1.Marshal(a.KDCOptions.Bytes)
 	fmt.Fprintf(os.Stderr, "ib: %v\n j: %v\n", b[5:13], j)
 	fmt.Fprintf(os.Stderr, "ib: %v\n j: %v\n", hex.EncodeToString(b[5:13]), hex.EncodeToString(j))
-	fmt.Fprintf(os.Stderr, "bs: %+v", a.KDCOptions.Bytes)
+	fmt.Fprintf(os.Stderr, "bs: %+v\n", a.KDCOptions.Bytes)
+
+	var o BitStringStruct
+	b = append([]byte{byte(48), byte(9), byte(160), byte(7)}, b[6:13]...)
+	fmt.Fprintf(os.Stderr, "b: %v\nh:%v\n", b, hex.EncodeToString(b))
+	_, e := asn1.Unmarshal(b, &o)
+	if e != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", e)
+	} else {
+		fmt.Fprintf(os.Stderr, "Bitstring: %+v\n", o)
+	}
+	c, err := asn1.Marshal(o)
+	if e != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", e)
+	} else {
+		fmt.Fprintf(os.Stderr, "Input bytes:  %v\nOutput bytes: %v", b, c)
+	}
 
 }
 

@@ -23,8 +23,8 @@ This is work in progress and does not yet work...
 ## Known Issues
 | Issue | Worked around? | References |
 |-------|-------------|------------|
-| Cannot unmarshal into slice of asn1.RawValue | Yes | [https://github.com/golang/go/issues/17321](https://github.com/golang/go/issues/17321) |
-| Cannot marshal into a GeneralString | Yes - using https://github.com/jcmturner/asn1 | [encoding/asn1: cannot marshal into a GeneralString](https://github.com/golang/go/issues/18832) |
-| Cannot marshal into slice of strings and pass stringtype parameter tags to members | Yes - using https://github.com/jcmturner/asn1 |[encoding/asn1: cannot marshal into slice of strings and pass stringtype parameter tags to members](https://github.com/golang/go/issues/18834) |
+| Cannot unmarshal into slice of asn1.RawValue | Yes | https://github.com/golang/go/issues/17321 |
+| Cannot marshal into a GeneralString | Yes - using https://github.com/jcmturner/asn1 | https://github.com/golang/go/issues/18832 |
+| Cannot marshal into slice of strings and pass stringtype parameter tags to members | Yes - using https://github.com/jcmturner/asn1 | https://github.com/golang/go/issues/18834 |
 | Cannot marshal with application tags | Yes | |
-| Marshalling of bit string does not just marshal the bitstring bytes but also the BitLength attribute | | |
+| Built binary and distributed src seem to be different for encoding/asn1 | No | https://github.com/golang/go/issues/18844 |
