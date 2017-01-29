@@ -27,3 +27,4 @@ This is work in progress and does not yet work...
 | Cannot marshal into a GeneralString | Yes - using https://github.com/jcmturner/asn1 | [encoding/asn1: cannot marshal into a GeneralString](https://github.com/golang/go/issues/18832) |
 | Cannot marshal into slice of strings and pass stringtype parameter tags to members | Yes - using https://github.com/jcmturner/asn1 |[encoding/asn1: cannot marshal into slice of strings and pass stringtype parameter tags to members](https://github.com/golang/go/issues/18834) |
 | Cannot marshal with application tags | Yes | |
+| Marshalling of bit string does not just marshal the bitstring bytes but also the BitLength attribute | | |

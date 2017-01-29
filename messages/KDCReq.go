@@ -6,6 +6,8 @@ package messages
 import (
 	"encoding/asn1"
 	"fmt"
+	jtasn1 "github.com/jcmturner/asn1"
+	"github.com/jcmturner/gokrb5/asn1tools"
 	"github.com/jcmturner/gokrb5/types"
 	"github.com/jcmturner/gokrb5/types/asnAppTag"
 	"time"
@@ -110,6 +112,11 @@ func (k *KDCReqBody) Unmarshal(b []byte) error {
 		return fmt.Errorf("Error unmarshalling KDC_REQ_BODY: %v", err)
 	}
 	k.KDCOptions = m.KDCOptions
+	if len(k.KDCOptions.Bytes) < 4 {
+		tb := make([]byte, 4-len(k.KDCOptions.Bytes))
+		k.KDCOptions.Bytes = append(tb, k.KDCOptions.Bytes...)
+		k.KDCOptions.BitLength = len(k.KDCOptions.Bytes) * 8
+	}
 	k.CName = m.CName
 	k.Realm = m.Realm
 	k.SName = m.SName
@@ -129,32 +136,60 @@ func (k *KDCReqBody) Unmarshal(b []byte) error {
 	return nil
 }
 
-func NewASReq() ASReq {
-	return ASReq{
-		PVNO:    5,
-		MsgType: types.KrbDictionary.MsgTypesByName["KRB_AS_REQ"],
-		ReqBody: KDCReqBody{
-			KDCOptions: asn1.BitString{},
-		},
-	}
-}
-
-//func (k *ASReq) Marshal() ([]byte, error) {
-//
-//}
-//
-//func (k *KDCReqBody) Marshal() ([]byte, error) {
-//	m := marshalKDCReqBody{
-//		KDCOptions:  k.KDCOptions,
-//		CName:       k.CName,
-//		Realm:       k.Realm,
-//		SName:       k.SName,
-//		From:        k.From,
-//		Till:        k.Till,
-//		RTime:       k.RTime,
-//		Nonce:       k.Nonce,
-//		EType:       k.EType,
-//		Addresses:   k.Addresses,
-//		EncAuthData: k.EncAuthData,
+//func NewASReq() ASReq {
+//	return ASReq{
+//		PVNO:    5,
+//		MsgType: types.KrbDictionary.MsgTypesByName["KRB_AS_REQ"],
+//		ReqBody: KDCReqBody{
+//			KDCOptions: asn1.BitString{},
+//		},
 //	}
 //}
+
+func (k *ASReq) Marshal() ([]byte, error) {
+	m := marshalKDCReq{
+		PVNO:    k.PVNO,
+		MsgType: k.MsgType,
+		PAData:  k.PAData,
+	}
+	b, err := k.ReqBody.Marshal()
+	if err != nil {
+		var mk []byte
+		return mk, err
+	}
+	m.ReqBody = asn1.RawValue{
+		Class:      2,
+		IsCompound: true,
+		Tag:        4,
+		Bytes:      b,
+	}
+	mk, err := jtasn1.Marshal(m)
+	if err != nil {
+		return mk, fmt.Errorf("Error marshalling AS_REQ: %v", err)
+	}
+	mk = asn1tools.AddASNAppTag(mk, asnAppTag.ASREQ)
+	return mk, nil
+}
+
+func (k *KDCReqBody) Marshal() ([]byte, error) {
+	var b []byte
+	m := marshalKDCReqBody{
+		KDCOptions:  k.KDCOptions,
+		CName:       k.CName,
+		Realm:       k.Realm,
+		SName:       k.SName,
+		From:        k.From,
+		Till:        k.Till,
+		RTime:       k.RTime,
+		Nonce:       k.Nonce,
+		EType:       k.EType,
+		Addresses:   k.Addresses,
+		EncAuthData: k.EncAuthData,
+	}
+	rawtkts, err := types.MarshalTicketSequence(k.AdditionalTickets)
+	if err != nil {
+		return b, fmt.Errorf("Error in marshalling KDC request body additional tickets: %v", err)
+	}
+	m.AdditionalTickets = rawtkts
+	return jtasn1.Marshal(m)
+}

@@ -3,6 +3,7 @@ package messages
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/jcmturner/asn1"
 	"github.com/jcmturner/gokrb5/testdata"
 	"github.com/jcmturner/gokrb5/types"
 	"github.com/stretchr/testify/assert"
@@ -389,4 +390,54 @@ func TestUnmarshalASReq_raw(t *testing.T) {
 	assert.IsType(t, time.Time{}, asReq.ReqBody.RTime, "RTime field in request body is not a time type")
 	assert.Equal(t, 2069991465, asReq.ReqBody.Nonce, "Nonce field in request body not as expected")
 	assert.Equal(t, []int{18, 17, 16, 23, 25, 26}, asReq.ReqBody.EType, "Accepted EType field in request body not as expected")
+}
+
+//// Marshal Tests ////
+
+func TestMarshalKDCReqBody(t *testing.T) {
+	var a KDCReqBody
+	v := "encode_krb5_kdc_req_body"
+	b, err := hex.DecodeString(testdata.TestVectors[v])
+	if err != nil {
+		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+	}
+	err = a.Unmarshal(b)
+	if err != nil {
+		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+	}
+	a.KDCOptions.BitLength += 8
+	a.KDCOptions.Bytes = append([]byte{byte(0)}, a.KDCOptions.Bytes...)
+	mb, err := a.Marshal()
+	if err != nil {
+		t.Fatalf("Marshal of ticket errored: %v", err)
+	}
+	//a.KDCOptions.Bytes.BitLength += 8
+	//a.KDCOptions.Bytes.Bytes = append([]byte{byte(0)}, a.KDCOptions.Bytes.Bytes...)
+	//assert.Equal(t, b, mb, "Marshalled bytes not as expected")
+	a.KDCOptions.BitLength = 40
+	fmt.Fprintf(os.Stderr, " in: %v\nout: %v\n", b, mb)
+	j, _ := asn1.Marshal(a.KDCOptions.Bytes)
+	fmt.Fprintf(os.Stderr, "ib: %v\n j: %v\n", b[5:13], j)
+	fmt.Fprintf(os.Stderr, "ib: %v\n j: %v\n", hex.EncodeToString(b[5:13]), hex.EncodeToString(j))
+	fmt.Fprintf(os.Stderr, "bs: %+v", a.KDCOptions.Bytes)
+
+}
+
+func TestMarshalASReq(t *testing.T) {
+	var a ASReq
+	v := "encode_krb5_as_req"
+	b, err := hex.DecodeString(testdata.TestVectors[v])
+	if err != nil {
+		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+	}
+	err = a.Unmarshal(b)
+	if err != nil {
+		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+	}
+	mb, err := a.Marshal()
+	if err != nil {
+		t.Fatalf("Marshal of ticket errored: %v", err)
+	}
+	assert.Equal(t, b, mb, "Marshalled bytes not as expected")
+	fmt.Fprintf(os.Stderr, " in: %v\nout: %v", b, mb)
 }

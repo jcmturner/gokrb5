@@ -2,12 +2,10 @@ package types
 
 import (
 	"encoding/asn1"
-	"encoding/hex"
 	"fmt"
 	jtasn1 "github.com/jcmturner/asn1"
 	"github.com/jcmturner/gokrb5/asn1tools"
 	"github.com/jcmturner/gokrb5/types/asnAppTag"
-	"os"
 	"time"
 )
 
@@ -65,10 +63,6 @@ func UnmarshalTicket(b []byte) (t Ticket, err error) {
 }
 
 func UnmarshalTicketsSequence(in asn1.RawValue) ([]Ticket, error) {
-	fmt.Fprintf(os.Stderr, "Raw c: %v is: %v t: %v\n", in.Class, in.IsCompound, in.Tag)
-	fmt.Fprintf(os.Stderr, "Raw  b: %v\n", in.Bytes)
-	fmt.Fprintf(os.Stderr, "Raw  b: %v\n", hex.EncodeToString(in.Bytes))
-	fmt.Fprintf(os.Stderr, "Raw fb: %v\n", in.FullBytes)
 	//This is a workaround to a asn1 decoding issue in golang - https://github.com/golang/go/issues/17321. It's not pretty I'm afraid
 	//We pull out raw values from the larger raw value (that is actually the data of the sequence of raw values) and track our position moving along the data.
 	b := in.Bytes
@@ -114,7 +108,9 @@ func MarshalTicketSequence(tkts []Ticket) (asn1.RawValue, error) {
 	//| Value:      | 0                            | 1                          | 1                                         | From the RFC spec 4120        |
 	//| Explanation | Defined by the ASN1 encoding rules for an application tag | A value of 1 indicates a constructed type | The ASN Application tag value |
 	btkts = append(asn1tools.MarshalLengthBytes(len(btkts)), btkts...)
-	fmt.Fprintf(os.Stderr, "mar: %+v", btkts)
+	btkts = append([]byte{byte(32 + asn1.TagSequence)}, btkts...)
 	raw.Bytes = btkts
+	// If we need to create teh full bytes then identifier octect is "context-specific" = 128 + "constructed" + 32 + the wrapping explicit tag (11)
+	//fmt.Fprintf(os.Stderr, "mRaw fb: %v\n", raw.FullBytes)
 	return raw, nil
 }
