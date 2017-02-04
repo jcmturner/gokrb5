@@ -29,8 +29,8 @@ func TestUnmarshalASRep(t *testing.T) {
 	assert.Equal(t, types.KrbDictionary.MsgTypesByName["KRB_AS_REP"], a.MsgType, "MsgType not as expected")
 	assert.Equal(t, 2, len(a.PAData), "Number of PAData items in the sequence not as expected")
 	for i, pa := range a.PAData {
-		assert.Equal(t, testdata.TEST_PADATA_TYPE, pa.PADataType, fmt.Sprintf("PAData type for entry %d not as expected", i + 1))
-		assert.Equal(t, []byte(testdata.TEST_PADATA_VALUE), pa.PADataValue, fmt.Sprintf("PAData valye for entry %d not as expected", i + 1))
+		assert.Equal(t, testdata.TEST_PADATA_TYPE, pa.PADataType, fmt.Sprintf("PAData type for entry %d not as expected", i+1))
+		assert.Equal(t, []byte(testdata.TEST_PADATA_VALUE), pa.PADataValue, fmt.Sprintf("PAData valye for entry %d not as expected", i+1))
 	}
 	assert.Equal(t, testdata.TEST_REALM, a.CRealm, "Client Realm not as expected")
 	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMETYPE, a.CName.NameType, "CName NameType not as expected")
@@ -95,8 +95,8 @@ func TestUnmarshalTGSRep(t *testing.T) {
 	assert.Equal(t, types.KrbDictionary.MsgTypesByName["KRB_TGS_REP"], a.MsgType, "MsgType not as expected")
 	assert.Equal(t, 2, len(a.PAData), "Number of PAData items in the sequence not as expected")
 	for i, pa := range a.PAData {
-		assert.Equal(t, testdata.TEST_PADATA_TYPE, pa.PADataType, fmt.Sprintf("PAData type for entry %d not as expected", i + 1))
-		assert.Equal(t, []byte(testdata.TEST_PADATA_VALUE), pa.PADataValue, fmt.Sprintf("PAData valye for entry %d not as expected", i + 1))
+		assert.Equal(t, testdata.TEST_PADATA_TYPE, pa.PADataType, fmt.Sprintf("PAData type for entry %d not as expected", i+1))
+		assert.Equal(t, []byte(testdata.TEST_PADATA_VALUE), pa.PADataValue, fmt.Sprintf("PAData valye for entry %d not as expected", i+1))
 	}
 	assert.Equal(t, testdata.TEST_REALM, a.CRealm, "Client Realm not as expected")
 	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMETYPE, a.CName.NameType, "CName NameType not as expected")
@@ -242,7 +242,7 @@ func TestUnmarshalASRepDecodeAndDecrypt(t *testing.T) {
 	assert.Equal(t, 1, asRep.Ticket.EncPart.KVNO, "Ticket encrypted part KVNO not as expected")
 	assert.Equal(t, types.KrbDictionary.ETypesByName["aes256-cts-hmac-sha1-96"], asRep.EncPart.EType, "Etype of encrypted part not as expected")
 	assert.Equal(t, 0, asRep.EncPart.KVNO, "Encrypted part KVNO not as expected")
-	t.Log("Finished testing unecrypted parts of AS REP")
+	//t.Log("Finished testing unecrypted parts of AS REP")
 	kt, err := keytab.Load(dir + "/tmp.keytab")
 	if err != nil {
 		fmt.Printf("keytab parse error: %v\n", err)
@@ -262,7 +262,7 @@ func TestUnmarshalASRepDecodeAndDecrypt(t *testing.T) {
 	assert.Equal(t, "JTLAN.CO.UK", asRep.DecryptedEncPart.SRealm, "Service realm not as expected")
 	assert.Equal(t, 2, asRep.DecryptedEncPart.SName.NameType, "Name type for AS_REP not as expected")
 	assert.Equal(t, []string{"krbtgt", "JTLAN.CO.UK"}, asRep.DecryptedEncPart.SName.NameString, "Service name string not as expected")
-	t.Log("Finished testing ecrypted parts of AS REP")
+	//t.Log("Finished testing ecrypted parts of AS REP")
 
 	//TODO should we be able to decrypt this part with the client key?
 	/*s, err = etype.Decrypt(key, asRep.Ticket.EncPart.Cipher)

@@ -32,7 +32,7 @@ func TestAesCtsHmacSha196_Encrypt_Decrypt(t *testing.T) {
 		assert.Equal(t, test.cipher, hex.EncodeToString(c), "Encrypted result not as expected")
 		assert.Equal(t, test.nextIV, hex.EncodeToString(niv), "Next state IV not as expected")
 	}
-	t.Log("AES CTS Encryption tests finished")
+	//t.Log("AES CTS Encryption tests finished")
 	for i, test := range tests {
 		b, _ := hex.DecodeString(test.cipher)
 		p, err := AESCTSDecrypt(key, b, e)
@@ -41,7 +41,7 @@ func TestAesCtsHmacSha196_Encrypt_Decrypt(t *testing.T) {
 		}
 		assert.Equal(t, test.plain, hex.EncodeToString(p), "Decrypted result not as expected")
 	}
-	t.Log("AES CTS Decryption tests finished")
+	//t.Log("AES CTS Decryption tests finished")
 }
 
 func TestAes256CtsHmacSha196_StringToKey(t *testing.T) {
