@@ -1,16 +1,15 @@
 package main
 
 import (
+	"encoding/asn1"
 	"encoding/hex"
 	"fmt"
-	"os"
-	"encoding/asn1"
 	cpasn1 "github.com/jcmturner/asn1/identicalsrc"
-
+	"os"
 )
 
 type BitStringStruct struct {
-	Bs asn1.BitString `asn1:"explicit,tag:0"`
+	Bs cpasn1.BitString `asn1:"explicit,tag:0"`
 }
 
 func main() {

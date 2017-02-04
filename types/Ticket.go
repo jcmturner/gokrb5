@@ -1,9 +1,8 @@
 package types
 
 import (
-	"encoding/asn1"
 	"fmt"
-	jtasn1 "github.com/jcmturner/asn1"
+	"github.com/jcmturner/asn1"
 	"github.com/jcmturner/gokrb5/asn1tools"
 	"github.com/jcmturner/gokrb5/types/asnAppTag"
 	"time"
@@ -44,7 +43,7 @@ func (t *Ticket) Unmarshal(b []byte) error {
 }
 
 func (t *Ticket) Marshal() ([]byte, error) {
-	b, err := jtasn1.Marshal(*t)
+	b, err := asn1.Marshal(*t)
 	if err != nil {
 		return nil, err
 	}

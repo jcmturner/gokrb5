@@ -4,9 +4,9 @@ package messages
 // Section: 5.4.2
 
 import (
-	"encoding/asn1"
 	"errors"
 	"fmt"
+	"github.com/jcmturner/asn1"
 	"github.com/jcmturner/gokrb5/crypto"
 	"github.com/jcmturner/gokrb5/keytab"
 	"github.com/jcmturner/gokrb5/types"
@@ -15,14 +15,14 @@ import (
 )
 
 type marshalKDCRep struct {
-	PVNO             int                 `asn1:"explicit,tag:0"`
-	MsgType          int                 `asn1:"explicit,tag:1"`
-	PAData           types.PADataSequence     `asn1:"explicit,optional,tag:2"`
-	CRealm           string              `asn1:"generalstring,explicit,tag:3"`
-	CName            types.PrincipalName `asn1:"explicit,tag:4"`
+	PVNO    int                  `asn1:"explicit,tag:0"`
+	MsgType int                  `asn1:"explicit,tag:1"`
+	PAData  types.PADataSequence `asn1:"explicit,optional,tag:2"`
+	CRealm  string               `asn1:"generalstring,explicit,tag:3"`
+	CName   types.PrincipalName  `asn1:"explicit,tag:4"`
 	// Ticket needs to be a raw value as it is wrapped in an APPLICATION tag
-	Ticket           asn1.RawValue       `asn1:"explicit,tag:5"`
-	EncPart          types.EncryptedData `asn1:"explicit,tag:6"`
+	Ticket  asn1.RawValue       `asn1:"explicit,tag:5"`
+	EncPart types.EncryptedData `asn1:"explicit,tag:6"`
 }
 
 type KDCRep struct {
@@ -32,8 +32,8 @@ type KDCRep struct {
 	CRealm  string
 	CName   types.PrincipalName
 	// Ticket needs to be a raw value as it is wrapped in an APPLICATION tag
-	Ticket        types.Ticket
-	EncPart       types.EncryptedData
+	Ticket           types.Ticket
+	EncPart          types.EncryptedData
 	DecryptedEncPart EncKDCRepPart
 }
 
@@ -42,7 +42,7 @@ type TGSRep KDCRep
 
 type EncKDCRepPart struct {
 	Key           types.EncryptionKey `asn1:"explicit,tag:0"`
-	LastReqs      []LastReq    `asn1:"explicit,tag:1"`
+	LastReqs      []LastReq           `asn1:"explicit,tag:1"`
 	Nonce         int                 `asn1:"explicit,tag:2"`
 	KeyExpiration time.Time           `asn1:"explicit,optional,tag:3"`
 	Flags         asn1.BitString      `asn1:"explicit,tag:4"`
@@ -59,10 +59,6 @@ type LastReq struct {
 	LRType  int       `asn1:"explicit,tag:0"`
 	LRValue time.Time `asn1:"explicit,tag:1"`
 }
-
-
-
-
 
 func (k *ASRep) Unmarshal(b []byte) error {
 	var m marshalKDCRep

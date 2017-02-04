@@ -1,8 +1,8 @@
 package messages
 
 import (
-	"encoding/asn1"
 	"fmt"
+	"github.com/jcmturner/asn1"
 	"github.com/jcmturner/gokrb5/types"
 	"github.com/jcmturner/gokrb5/types/asnAppTag"
 	"time"
@@ -34,4 +34,8 @@ func (k *KRBError) Unmarshal(b []byte) error {
 		return fmt.Errorf("Message ID does not indicate a KRB_ERROR. Expected: %v; Actual: %v", expectedMsgType, k.MsgType)
 	}
 	return nil
+}
+
+func (k *KRBError) Error() string {
+	return fmt.Sprintf("KRB Error: %d - %s", k.ErrorCode, k.EText)
 }

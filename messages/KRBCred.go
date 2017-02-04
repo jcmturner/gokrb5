@@ -1,14 +1,14 @@
 package messages
 
 import (
-	"encoding/asn1"
-	"github.com/jcmturner/gokrb5/types"
-	"time"
-	"fmt"
-	"github.com/jcmturner/gokrb5/types/asnAppTag"
-	"github.com/jcmturner/gokrb5/keytab"
-	"github.com/jcmturner/gokrb5/crypto"
 	"errors"
+	"fmt"
+	"github.com/jcmturner/asn1"
+	"github.com/jcmturner/gokrb5/crypto"
+	"github.com/jcmturner/gokrb5/keytab"
+	"github.com/jcmturner/gokrb5/types"
+	"github.com/jcmturner/gokrb5/types/asnAppTag"
+	"time"
 )
 
 type marshalKRBCred struct {

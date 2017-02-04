@@ -4,9 +4,8 @@ package messages
 // Section: 5.4.1
 
 import (
-	"encoding/asn1"
 	"fmt"
-	jtasn1 "github.com/jcmturner/asn1"
+	"github.com/jcmturner/asn1"
 	"github.com/jcmturner/gokrb5/asn1tools"
 	"github.com/jcmturner/gokrb5/types"
 	"github.com/jcmturner/gokrb5/types/asnAppTag"
@@ -163,7 +162,7 @@ func (k *ASReq) Marshal() ([]byte, error) {
 		Tag:        4,
 		Bytes:      b,
 	}
-	mk, err := jtasn1.Marshal(m)
+	mk, err := asn1.Marshal(m)
 	if err != nil {
 		return mk, fmt.Errorf("Error marshalling AS_REQ: %v", err)
 	}
@@ -191,5 +190,5 @@ func (k *KDCReqBody) Marshal() ([]byte, error) {
 		return b, fmt.Errorf("Error in marshalling KDC request body additional tickets: %v", err)
 	}
 	m.AdditionalTickets = rawtkts
-	return jtasn1.Marshal(m)
+	return asn1.Marshal(m)
 }

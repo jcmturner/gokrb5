@@ -1,11 +1,11 @@
 package messages
 
 import (
-	"encoding/asn1"
-	"github.com/jcmturner/gokrb5/types"
-	"fmt"
-	"github.com/jcmturner/gokrb5/types/asnAppTag"
 	"errors"
+	"fmt"
+	"github.com/jcmturner/asn1"
+	"github.com/jcmturner/gokrb5/types"
+	"github.com/jcmturner/gokrb5/types/asnAppTag"
 )
 
 /*AP-REQ          ::= [APPLICATION 14] SEQUENCE {
@@ -22,9 +22,9 @@ APOptions       ::= KerberosFlags
 -- mutual-required(2)*/
 
 type marshalAPReq struct {
-	PVNO          int                 `asn1:"explicit,tag:0"`
-	MsgType       int                 `asn1:"explicit,tag:1"`
-	APOptions     asn1.BitString      `asn1:"explicit,tag:2"`
+	PVNO      int            `asn1:"explicit,tag:0"`
+	MsgType   int            `asn1:"explicit,tag:1"`
+	APOptions asn1.BitString `asn1:"explicit,tag:2"`
 	// Ticket needs to be a raw value as it is wrapped in an APPLICATION tag
 	Ticket        asn1.RawValue       `asn1:"explicit,tag:3"`
 	Authenticator types.EncryptedData `asn1:"explicit,tag:4"`

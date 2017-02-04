@@ -1,7 +1,7 @@
 package types
 
 import (
-	"encoding/asn1"
+	"github.com/jcmturner/asn1"
 )
 
 // Reference: https://www.ietf.org/rfc/rfc4120.txt

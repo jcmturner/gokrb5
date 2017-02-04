@@ -1,6 +1,8 @@
 package types
 
-import "encoding/asn1"
+import (
+	"github.com/jcmturner/asn1"
+)
 
 // Reference: https://www.ietf.org/rfc/rfc4120.txt
 // Section: 5.2.9
@@ -38,4 +40,3 @@ func (a *Checksum) Unmarshal(b []byte) error {
 	_, err := asn1.Unmarshal(b, a)
 	return err
 }
-

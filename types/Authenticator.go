@@ -1,8 +1,8 @@
 package types
 
 import (
-	"encoding/asn1"
 	"fmt"
+	"github.com/jcmturner/asn1"
 	"github.com/jcmturner/gokrb5/types/asnAppTag"
 	"time"
 )

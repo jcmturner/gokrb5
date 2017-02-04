@@ -4,7 +4,7 @@ package types
 // Section: 5.2.5
 
 import (
-	"encoding/asn1"
+	"github.com/jcmturner/asn1"
 )
 
 /*

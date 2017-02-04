@@ -1,6 +1,6 @@
 package types
 
-import "encoding/asn1"
+import "github.com/jcmturner/asn1"
 
 type TypedData struct {
 	DataType  int    `asn1:"explicit,tag:0"`

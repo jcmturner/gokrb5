@@ -3,7 +3,7 @@ package types
 // Reference: https://www.ietf.org/rfc/rfc4120.txt
 // Section: 5.2.8
 
-import "encoding/asn1"
+import "github.com/jcmturner/asn1"
 
 /*
 KerberosFlags

@@ -3,8 +3,8 @@ package types
 // Reference: https://www.ietf.org/rfc/rfc4120.txt
 // Section: 5.2.7
 import (
-	"encoding/asn1"
 	"fmt"
+	"github.com/jcmturner/asn1"
 	"time"
 )
 
@@ -32,12 +32,11 @@ type ETypeInfo []ETypeInfoEntry
 
 type ETypeInfo2Entry struct {
 	EType     int    `asn1:"explicit,tag:0"`
-	Salt      string `asn1:"explicit,optional,generalstring,tag:1,ia5"`
+	Salt      string `asn1:"explicit,optional,generalstring,tag:1"`
 	S2KParams []byte `asn1:"explicit,optional,tag:2"`
 }
 
 type ETypeInfo2 []ETypeInfo2Entry
-
 
 func (pa *PAData) Unmarshal(b []byte) error {
 	_, err := asn1.Unmarshal(b, pa)
@@ -79,9 +78,6 @@ func (a *ETypeInfo2Entry) Unmarshal(b []byte) error {
 	return err
 }
 
-
-
-
 func (pa *PAData) GetETypeInfo() (d ETypeInfo, err error) {
 	dt := KrbDictionary.PADataTypesByName["pa-etype-info"]
 	if pa.PADataType != dt {
@@ -101,4 +97,3 @@ func (pa *PAData) GetETypeInfo2() (d ETypeInfo2, err error) {
 	_, err = asn1.Unmarshal(pa.PADataValue, &d)
 	return
 }
-
