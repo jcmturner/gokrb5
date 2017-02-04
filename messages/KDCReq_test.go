@@ -409,38 +409,17 @@ func TestMarshalKDCReqBody(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
 	}
-	a.KDCOptions.BitLength += 8
-	a.KDCOptions.Bytes = append([]byte{byte(0)}, a.KDCOptions.Bytes...)
+	// Marshal and re-unmarshal the result nd then compare
 	mb, err := a.Marshal()
 	if err != nil {
-		t.Fatalf("Marshal of ticket errored: %v", err)
+		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
 	}
-	//a.KDCOptions.Bytes.BitLength += 8
-	//a.KDCOptions.Bytes.Bytes = append([]byte{byte(0)}, a.KDCOptions.Bytes.Bytes...)
-	//assert.Equal(t, b, mb, "Marshalled bytes not as expected")
-	a.KDCOptions.BitLength = 40
-	fmt.Fprintf(os.Stderr, " in: %v\nout: %v\n", b, mb)
-	j, _ := asn1.Marshal(a.KDCOptions.Bytes)
-	fmt.Fprintf(os.Stderr, "ib: %v\n j: %v\n", b[5:13], j)
-	fmt.Fprintf(os.Stderr, "ib: %v\n j: %v\n", hex.EncodeToString(b[5:13]), hex.EncodeToString(j))
-	fmt.Fprintf(os.Stderr, "bs: %+v\n", a.KDCOptions.Bytes)
-
-	var o BitStringStruct
-	b = append([]byte{byte(48), byte(9), byte(160), byte(7)}, b[6:13]...)
-	fmt.Fprintf(os.Stderr, "b: %v\nh:%v\n", b, hex.EncodeToString(b))
-	_, e := asn1.Unmarshal(b, &o)
-	if e != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", e)
-	} else {
-		fmt.Fprintf(os.Stderr, "Bitstring: %+v\n", o)
+	var ma KDCReqBody
+	err = ma.Unmarshal(mb)
+	if err != nil {
+		t.Fatalf("Unmarshal of marshalled output failed: %v", err)
 	}
-	c, err := asn1.Marshal(o)
-	if e != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", e)
-	} else {
-		fmt.Fprintf(os.Stderr, "Input bytes:  %v\nOutput bytes: %v", b, c)
-	}
-
+	assert.Equal(t, a, ma, "Marshalling of KDCReqBody not as expected")
 }
 
 func TestMarshalASReq(t *testing.T) {
@@ -454,10 +433,15 @@ func TestMarshalASReq(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
 	}
+	// Marshal and re-unmarshal the result nd then compare
 	mb, err := a.Marshal()
 	if err != nil {
 		t.Fatalf("Marshal of ticket errored: %v", err)
 	}
-	assert.Equal(t, b, mb, "Marshalled bytes not as expected")
-	fmt.Fprintf(os.Stderr, " in: %v\nout: %v", b, mb)
+	var ma ASReq
+	err = ma.Unmarshal(mb)
+	if err != nil {
+		t.Fatalf("Unmarshal of marshalled output failed: %v", err)
+	}
+	assert.Equal(t, a, ma, "Marshalling of ASReq not as expected")
 }
