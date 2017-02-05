@@ -10,6 +10,7 @@ import (
 	"github.com/jcmturner/gokrb5/types"
 	"github.com/jcmturner/gokrb5/types/asnAppTag"
 	"time"
+	"encoding/hex"
 )
 
 type marshalKDCReq struct {
@@ -34,9 +35,9 @@ type marshalKDCReqBody struct {
 	CName       types.PrincipalName `asn1:"explicit,optional,tag:1"`
 	Realm       string              `asn1:"generalstring,explicit,tag:2"`
 	SName       types.PrincipalName `asn1:"explicit,optional,tag:3"`
-	From        time.Time           `asn1:"explicit,optional,tag:4"`
-	Till        time.Time           `asn1:"explicit,tag:5"`
-	RTime       time.Time           `asn1:"explicit,optional,tag:6"`
+	From        time.Time           `asn1:"generalized,explicit,optional,tag:4"`
+	Till        time.Time           `asn1:"generalized,explicit,tag:5"`
+	RTime       time.Time           `asn1:"generalized,explicit,optional,tag:6"`
 	Nonce       int                 `asn1:"explicit,tag:7"`
 	EType       []int               `asn1:"explicit,tag:8"`
 	Addresses   []types.HostAddress `asn1:"explicit,optional,tag:9"`
@@ -50,14 +51,31 @@ type KDCReqBody struct {
 	CName             types.PrincipalName `asn1:"explicit,optional,tag:1"`
 	Realm             string              `asn1:"generalstring,explicit,tag:2"`
 	SName             types.PrincipalName `asn1:"explicit,optional,tag:3"`
-	From              time.Time           `asn1:"explicit,optional,tag:4"`
-	Till              time.Time           `asn1:"explicit,tag:5"`
-	RTime             time.Time           `asn1:"explicit,optional,tag:6"`
+	From              time.Time           `asn1:"generalized,explicit,optional,tag:4"`
+	Till              time.Time           `asn1:"generalized,explicit,tag:5"`
+	RTime             time.Time           `asn1:"generalized,explicit,optional,tag:6"`
 	Nonce             int                 `asn1:"explicit,tag:7"`
 	EType             []int               `asn1:"explicit,tag:8"`
 	Addresses         []types.HostAddress `asn1:"explicit,optional,tag:9"`
 	EncAuthData       types.EncryptedData `asn1:"explicit,optional,tag:10"`
 	AdditionalTickets []types.Ticket      `asn1:"explicit,optional,tag:11"`
+}
+
+func NewASReq() ASReq {
+	opts := asn1.BitString{}
+	opts.Bytes, _ = hex.DecodeString("40000010")
+	opts.BitLength = len(opts.Bytes) * 8
+	pn := types.PrincipalName{NameType: 1}
+
+	return ASReq{
+		PVNO:    5,
+		MsgType: types.KrbDictionary.MsgTypesByName["KRB_AS_REQ"],
+		ReqBody: KDCReqBody{
+			KDCOptions: opts,
+			CName: pn,
+			SName: pn,
+		},
+	}
 }
 
 func (k *ASReq) Unmarshal(b []byte) error {
@@ -135,16 +153,6 @@ func (k *KDCReqBody) Unmarshal(b []byte) error {
 	return nil
 }
 
-//func NewASReq() ASReq {
-//	return ASReq{
-//		PVNO:    5,
-//		MsgType: types.KrbDictionary.MsgTypesByName["KRB_AS_REQ"],
-//		ReqBody: KDCReqBody{
-//			KDCOptions: asn1.BitString{},
-//		},
-//	}
-//}
-
 func (k *ASReq) Marshal() ([]byte, error) {
 	m := marshalKDCReq{
 		PVNO:    k.PVNO,
@@ -170,6 +178,31 @@ func (k *ASReq) Marshal() ([]byte, error) {
 	return mk, nil
 }
 
+func (k *TGSReq) Marshal() ([]byte, error) {
+	m := marshalKDCReq{
+		PVNO:    k.PVNO,
+		MsgType: k.MsgType,
+		PAData:  k.PAData,
+	}
+	b, err := k.ReqBody.Marshal()
+	if err != nil {
+		var mk []byte
+		return mk, err
+	}
+	m.ReqBody = asn1.RawValue{
+		Class:      2,
+		IsCompound: true,
+		Tag:        4,
+		Bytes:      b,
+	}
+	mk, err := asn1.Marshal(m)
+	if err != nil {
+		return mk, fmt.Errorf("Error marshalling AS_REQ: %v", err)
+	}
+	mk = asn1tools.AddASNAppTag(mk, asnAppTag.TGSREQ)
+	return mk, nil
+}
+
 func (k *KDCReqBody) Marshal() ([]byte, error) {
 	var b []byte
 	m := marshalKDCReqBody{
@@ -186,9 +219,13 @@ func (k *KDCReqBody) Marshal() ([]byte, error) {
 		EncAuthData: k.EncAuthData,
 	}
 	rawtkts, err := types.MarshalTicketSequence(k.AdditionalTickets)
+	//The asn1.rawValue needs the tag setting on it for where it is in the KDCReqBody
+	rawtkts.Tag = 11
 	if err != nil {
 		return b, fmt.Errorf("Error in marshalling KDC request body additional tickets: %v", err)
 	}
-	m.AdditionalTickets = rawtkts
+	if len(rawtkts.Bytes) > 0 {
+		m.AdditionalTickets = rawtkts
+	}
 	return asn1.Marshal(m)
 }

@@ -33,7 +33,7 @@ type Authenticator struct {
 	CName             PrincipalName     `asn1:"explicit,tag:2"`
 	Cksum             Checksum          `asn1:"explicit,optional,tag:3"`
 	Cusec             int               `asn1:"explicit,tag:4"`
-	CTime             time.Time         `asn1:"explicit,tag:5"`
+	CTime             time.Time         `asn1:"generalized,explicit,tag:5"`
 	SubKey            EncryptionKey     `asn1:"explicit,optional,tag:6"`
 	SeqNumber         int               `asn1:"explicit,optional,tag:7"`
 	AuthorizationData AuthorizationData `asn1:"explicit,optional,tag:8"`

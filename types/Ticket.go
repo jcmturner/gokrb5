@@ -24,10 +24,10 @@ type EncTicketPart struct {
 	CRealm            string            `asn1:"generalstring,explicit,tag:2"`
 	CName             PrincipalName     `asn1:"explicit,tag:3"`
 	Transited         TransitedEncoding `asn1:"explicit,tag:4"`
-	AuthTime          time.Time         `asn1:"explicit,tag:5"`
-	StartTime         time.Time         `asn1:"explicit,optional,tag:6"`
-	EndTime           time.Time         `asn1:"explicit,tag:7"`
-	RenewTill         time.Time         `asn1:"explicit,optional,tag:8"`
+	AuthTime          time.Time         `asn1:"generalized,explicit,tag:5"`
+	StartTime         time.Time         `asn1:"generalized,explicit,optional,tag:6"`
+	EndTime           time.Time         `asn1:"generalized,explicit,tag:7"`
+	RenewTill         time.Time         `asn1:"generalized,explicit,optional,tag:8"`
 	CAddr             HostAddresses     `asn1:"explicit,optional,tag:9"`
 	AuthorizationData AuthorizationData `asn1:"explicit,optional,tag:10"`
 }
@@ -89,7 +89,10 @@ func MarshalTicketSequence(tkts []Ticket) (asn1.RawValue, error) {
 	raw := asn1.RawValue{
 		Class:      2,
 		IsCompound: true,
-		//Tag: 11,
+	}
+	if len(tkts) < 1 {
+		// There are no tickets to marshal
+		return raw, nil
 	}
 	var btkts []byte
 	for i, t := range tkts {

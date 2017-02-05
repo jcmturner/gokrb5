@@ -16,7 +16,7 @@ type KRBPriv struct {
 
 type EncKrbPrivPart struct {
 	UserData       []byte            `asn1:"explicit,tag:0"`
-	Timestamp      time.Time         `asn1:"optional,explicit,tag:1"`
+	Timestamp      time.Time         `asn1:"generalized,optional,explicit,tag:1"`
 	Usec           int               `asn1:"optional,explicit,tag:2"`
 	SequenceNumber int               `asn1:"optional,explicit,tag:3"`
 	SAddress       types.HostAddress `asn1:"explicit,tag:4"`

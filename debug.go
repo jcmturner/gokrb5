@@ -1,35 +1,50 @@
 package main
 
 import (
-	"encoding/asn1"
-	"encoding/hex"
+	"net"
+	"github.com/jcmturner/gokrb5/messages"
+	"time"
 	"fmt"
-	cpasn1 "github.com/jcmturner/asn1/identicalsrc"
 	"os"
 )
 
-type BitStringStruct struct {
-	Bs cpasn1.BitString `asn1:"explicit,tag:0"`
-}
-
 func main() {
-	var o BitStringStruct
-	bs, _ := hex.DecodeString("3009a007030500fedcba90")
-	_, e := asn1.Unmarshal(bs, &o)
-	if e != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", e)
-	} else {
-		fmt.Fprintf(os.Stderr, "Bitstring: %+v\n", o)
-	}
-	n, err := asn1.Marshal(o)
+	udpAddr, _ := net.ResolveUDPAddr("udp", "10.80.88.88:88")
+	realm := "TEST.GOKRB5"
+
+	conn, _ := net.DialUDP("udp", nil, udpAddr)
+	defer conn.Close()
+
+	a := messages.NewASReq()
+	a.ReqBody.Realm = realm
+	a.ReqBody.CName.NameString = []string{"testuser1"}
+	a.ReqBody.SName.NameType = 2
+	a.ReqBody.SName.NameString = []string{"krbtgt", realm}
+	a.ReqBody.Till = time.Now().Add(10 * time.Hour)
+	a.ReqBody.Nonce = 2069991465
+	a.ReqBody.EType = []int{18}
+	fmt.Fprintf(os.Stdout, "AS_REQ: %+v\n", a)
+	b, err := a.Marshal()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", e)
+		fmt.Fprintf(os.Stderr, "Error marshalling AS_REQ: %v\n", err)
 	}
-	c, err := cpasn1.Marshal(o)
+	var m messages.ASReq
+	m.Unmarshal(b)
+	b, err = m.Marshal()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", e)
+		fmt.Fprintf(os.Stderr, "Error marshalling AS_REQ: %v\n", err)
 	}
-	fmt.Fprintf(os.Stderr, "Input bytes:         %v\nOutput originalasn1: %v\n", bs, n)
-	fmt.Fprintf(os.Stderr, "Output copy of asn1: %v\n", c)
+	fmt.Fprintf(os.Stdout, "AS_REQ post marshal: %+v\n", m)
+	_, _ = conn.Write(b)
+
+
+	buf := make([]byte, 4096)
+	n,_,err := conn.ReadFrom(buf)
+
+	var r messages.ASRep
+	r.Unmarshal(buf[:n])
+	fmt.Fprintf(os.Stdout, "AS REP: %+v\n", r)
+
+
 
 }

@@ -19,7 +19,7 @@ type MethodData []PAData
 type PAEncTimestamp EncryptedData
 
 type PAEncTSEnc struct {
-	PATimestamp time.Time `asn1:"explicit,tag:0"`
+	PATimestamp time.Time `asn1:"generalized,explicit,tag:0"`
 	PAUSec      int       `asn1:"explicit,optional,tag:1"`
 }
 

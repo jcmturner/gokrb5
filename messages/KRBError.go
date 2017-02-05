@@ -11,9 +11,9 @@ import (
 type KRBError struct {
 	PVNO      int                 `asn1:"explicit,tag:0"`
 	MsgType   int                 `asn1:"explicit,tag:1"`
-	CTime     time.Time           `asn1:"optional,explicit,tag:2"`
+	CTime     time.Time           `asn1:"generalized,optional,explicit,tag:2"`
 	Cusec     int                 `asn1:"optional,explicit,tag:3"`
-	STime     time.Time           `asn1:"explicit,tag:4"`
+	STime     time.Time           `asn1:"generalized,explicit,tag:4"`
 	Susec     int                 `asn1:"explicit,tag:5"`
 	ErrorCode int                 `asn1:"explicit,tag:6"`
 	CRealm    string              `asn1:"generalstring,optional,explicit,tag:7"`

@@ -30,7 +30,7 @@ type APRep struct {
 }
 
 type EncAPRepPart struct {
-	CTime          time.Time           `asn1:"explicit,tag:0"`
+	CTime          time.Time           `asn1:"generalized,explicit,tag:0"`
 	Cusec          int                 `asn1:"explicit,tag:1"`
 	Subkey         types.EncryptionKey `asn1:"optional,explicit,tag:2"`
 	SequenceNumber int                 `asn1:"optional,explicit,tag:3"`

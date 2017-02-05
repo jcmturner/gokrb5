@@ -29,7 +29,7 @@ type KRBCred struct {
 type EncKrbCredPart struct {
 	TicketInfo []KrbCredInfo     `asn1:"explicit,tag:0"`
 	Nouce      int               `asn1:"optional,explicit,tag:1"`
-	Timestamp  time.Time         `asn1:"optional,explicit,tag:2"`
+	Timestamp  time.Time         `asn1:"generalized,optional,explicit,tag:2"`
 	Usec       int               `asn1:"optional,explicit,tag:3"`
 	SAddress   types.HostAddress `asn1:"optional,explicit,tag:4"`
 	RAddress   types.HostAddress `asn1:"optional,explicit,tag:5"`
@@ -40,10 +40,10 @@ type KrbCredInfo struct {
 	PRealm    string              `asn1:"generalstring,optional,explicit,tag:1"`
 	PName     types.PrincipalName `asn1:"optional,explicit,tag:2"`
 	Flags     asn1.BitString      `asn1:"optional,explicit,tag:3"`
-	AuthTime  time.Time           `asn1:"optional,explicit,tag:4"`
-	StartTime time.Time           `asn1:"optional,explicit,tag:5"`
-	EndTime   time.Time           `asn1:"optional,explicit,tag:6"`
-	RenewTill time.Time           `asn1:"optional,explicit,tag:7"`
+	AuthTime  time.Time           `asn1:"generalized,optional,explicit,tag:4"`
+	StartTime time.Time           `asn1:"generalized,optional,explicit,tag:5"`
+	EndTime   time.Time           `asn1:"generalized,optional,explicit,tag:6"`
+	RenewTill time.Time           `asn1:"generalized,optional,explicit,tag:7"`
 	SRealm    string              `asn1:"optional,explicit,ia5,tag:8"`
 	SName     types.PrincipalName `asn1:"optional,explicit,tag:9"`
 	CAddr     types.HostAddresses `asn1:"optional,explicit,tag:10"`

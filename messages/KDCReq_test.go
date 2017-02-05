@@ -414,12 +414,7 @@ func TestMarshalKDCReqBody(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
 	}
-	var ma KDCReqBody
-	err = ma.Unmarshal(mb)
-	if err != nil {
-		t.Fatalf("Unmarshal of marshalled output failed: %v", err)
-	}
-	assert.Equal(t, a, ma, "Marshalling of KDCReqBody not as expected")
+	assert.Equal(t, b, mb, "Marshal bytes of KDCReqBody not as expected")
 }
 
 func TestMarshalASReq(t *testing.T) {
@@ -433,15 +428,27 @@ func TestMarshalASReq(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
 	}
-	// Marshal and re-unmarshal the result nd then compare
 	mb, err := a.Marshal()
 	if err != nil {
 		t.Fatalf("Marshal of ticket errored: %v", err)
 	}
-	var ma ASReq
-	err = ma.Unmarshal(mb)
+	assert.Equal(t, b, mb, "Marshal bytes of ASReq not as expected")
+}
+
+func TestMarshalTGSReq(t *testing.T) {
+	var a TGSReq
+	v := "encode_krb5_tgs_req"
+	b, err := hex.DecodeString(testdata.TestVectors[v])
 	if err != nil {
-		t.Fatalf("Unmarshal of marshalled output failed: %v", err)
+		t.Fatalf("Test vector read error of %s: %v\n", v, err)
 	}
-	assert.Equal(t, a, ma, "Marshalling of ASReq not as expected")
+	err = a.Unmarshal(b)
+	if err != nil {
+		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+	}
+	mb, err := a.Marshal()
+	if err != nil {
+		t.Fatalf("Marshal of ticket errored: %v", err)
+	}
+	assert.Equal(t, b, mb, "Marshal bytes of TGSReq not as expected")
 }
