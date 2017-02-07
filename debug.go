@@ -45,6 +45,7 @@ func main() {
 
 	buf := make([]byte, 4096)
 	n, _, err := conn.ReadFrom(buf)
+	//fmt.Fprintf(os.Stderr, "%v\n", hex.EncodeToString(buf[:n]))
 	var r messages.ASRep
 	r.Unmarshal(buf[:n])
 	fmt.Fprintf(os.Stdout, "AS_REP: %+v\n", r)

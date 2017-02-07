@@ -27,4 +27,3 @@ This is work in progress and does not yet work...
 | Cannot marshal into a GeneralString | Yes - using https://github.com/jcmturner/asn1 | https://github.com/golang/go/issues/18832 |
 | Cannot marshal into slice of strings and pass stringtype parameter tags to members | Yes - using https://github.com/jcmturner/asn1 | https://github.com/golang/go/issues/18834 |
 | Cannot marshal with application tags | Yes | |
-| Built binary and distributed src seem to be different for encoding/asn1 | No | https://github.com/golang/go/issues/18844 |
