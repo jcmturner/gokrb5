@@ -1,12 +1,17 @@
 package main
 
 import (
-	"net"
-	"github.com/jcmturner/gokrb5/messages"
-	"time"
+	"encoding/hex"
 	"fmt"
+	"github.com/jcmturner/gokrb5/keytab"
+	"github.com/jcmturner/gokrb5/messages"
+	"github.com/jcmturner/gokrb5/types"
+	"net"
 	"os"
+	"time"
 )
+
+const ktab = "05020000004b0001000b544553542e474f4b5242350009746573747573657231000000015898e0770100120020bbdc430aab7e2d4622a0b6951481453b0962e9db8e2f168942ad175cda6d9de900000001"
 
 func main() {
 	udpAddr, _ := net.ResolveUDPAddr("udp", "10.80.88.88:88")
@@ -15,7 +20,14 @@ func main() {
 	conn, _ := net.DialUDP("udp", nil, udpAddr)
 	defer conn.Close()
 
+	var pas types.PADataSequence
+	pa := types.PAData{
+		PADataType: 149,
+	}
+	pas = append(pas, pa)
+
 	a := messages.NewASReq()
+	a.PAData = pas
 	a.ReqBody.Realm = realm
 	a.ReqBody.CName.NameString = []string{"testuser1"}
 	a.ReqBody.SName.NameType = 2
@@ -28,23 +40,26 @@ func main() {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error marshalling AS_REQ: %v\n", err)
 	}
-	var m messages.ASReq
-	m.Unmarshal(b)
-	b, err = m.Marshal()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error marshalling AS_REQ: %v\n", err)
-	}
-	fmt.Fprintf(os.Stdout, "AS_REQ post marshal: %+v\n", m)
+
 	_, _ = conn.Write(b)
 
-
 	buf := make([]byte, 4096)
-	n,_,err := conn.ReadFrom(buf)
-
+	n, _, err := conn.ReadFrom(buf)
 	var r messages.ASRep
 	r.Unmarshal(buf[:n])
+	fmt.Fprintf(os.Stdout, "AS_REP: %+v\n", r)
+
+	kb, _ := hex.DecodeString(ktab)
+	kt, err := keytab.Parse(kb)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "KT load err: %v\n", err)
+	}
+	fmt.Fprintf(os.Stdout, "KT: %+v", kt)
+	err = r.DecryptEncPart(kt)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Decrypt err: %v\n", err)
+	}
+
 	fmt.Fprintf(os.Stdout, "AS REP: %+v\n", r)
-
-
 
 }

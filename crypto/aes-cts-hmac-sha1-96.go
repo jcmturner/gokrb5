@@ -123,7 +123,7 @@ func AESCTSEncrypt(key, iv, message []byte, e EType) ([]byte, []byte, error) {
 	ct = append(ct, lb...)
 	ct = append(ct, pb...)
 	return lb, ct[:l], nil
-	//TODO do we need to add the hash to the beginning?
+	//TODO do we need to add the hash to the end?
 }
 
 func AESCTSDecrypt(key, ciphertext []byte, e EType) ([]byte, error) {
@@ -141,7 +141,7 @@ func AESCTSDecrypt(key, ciphertext []byte, e EType) ([]byte, error) {
 	}
 	var mode cipher.BlockMode
 	//iv full of zeros
-	ivz := make([]byte, aes.BlockSize)
+	ivz := make([]byte, e.GetConfounderByteSize())
 
 	//If ciphertext is multiple of blocksize we just need to swap back the last two blocks and then do CBC
 	//If the ciphertext is just one block we can't swap so we just decrypt

@@ -6,10 +6,11 @@ setenforce 0
 sed -i "s/SELINUX=enforcing/SELINUX=permissive/g" /etc/sysconfig/selinux
 
 yum update -y && yum clean all
-yum install -y tcpdump krb5-server krb5-workstation httpd mod_auth_kerb mod_ssl
+yum install -y tcpdump krb5-server krb5-workstation httpd mod_auth_kerb mod_ssl ntp
 
 systemctl stop firewalld
 systemctl disable firewalld
+systemctl enable ntpd
 
 cat <<EOF >> /etc/sysctl.conf
 net.ipv6.conf.all.disable_ipv6 = 1

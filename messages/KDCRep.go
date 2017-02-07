@@ -127,14 +127,20 @@ func decryptKDCRepEncPart(ct []byte, kt keytab.Keytab) (EncKDCRepPart, error) {
 	//TODO create the etype based on the EType value in the EncPart and find the corresponding entry in the keytab
 	//k.EncPart.EType
 	var etype crypto.Aes256CtsHmacSha96
+	var denc EncKDCRepPart
 	//Derive the key
 	//Key Usage Number: 3 - "AS-REP encrypted part (includes TGS session key or application session key), encrypted with the client key"
 	key, err := etype.DeriveKey(kt.Entries[0].Key.KeyMaterial, crypto.GetUsageKe(3))
+	if err != nil {
+		return denc, fmt.Errorf("Error deriving key: %v", err)
+	}
 	// Strip off the checksum from the end
-	//TODO should this check be moved to the Decrypt method?
+	//TODO should this check be moved to the Decrypt method? No as makes it hard to test
 	b, err := etype.Decrypt(key, ct[:len(ct)-etype.GetHMACBitLength()/8])
+	if err != nil {
+		return denc, fmt.Errorf("Error decrypting: %v", err)
+	}
 	//Verify checksum
-	var denc EncKDCRepPart
 	if !etype.VerifyChecksum(kt.Entries[0].Key.KeyMaterial, ct, b, 3) {
 		return denc, errors.New("Error decrypting encrypted part: checksum verification failed")
 	}

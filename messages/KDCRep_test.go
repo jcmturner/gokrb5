@@ -245,7 +245,7 @@ func TestUnmarshalASRepDecodeAndDecrypt(t *testing.T) {
 	//t.Log("Finished testing unecrypted parts of AS REP")
 	kt, err := keytab.Load(dir + "/tmp.keytab")
 	if err != nil {
-		fmt.Printf("keytab parse error: %v\n", err)
+		t.Fatalf("keytab parse error: %v\n", err)
 	}
 	err = asRep.DecryptEncPart(kt)
 	if err != nil {
