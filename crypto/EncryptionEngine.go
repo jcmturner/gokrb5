@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"github.com/jcmturner/gokrb5/types"
 	"hash"
 )
 
@@ -26,6 +27,19 @@ type EType interface {
 	DeriveRandom(protocolKey, usage []byte) ([]byte, error)     // DR pseudo-random (protocol-key, octet-string)->(octet-string)
 	VerifyChecksum(protocolKey, ct, pt []byte, usage int) bool
 	GetHash() hash.Hash
+}
+
+func GetEtype(id int) (EType, error) {
+	switch id {
+	case 17:
+		var et Aes128CtsHmacSha96
+		return et, nil
+	case 18:
+		var et Aes256CtsHmacSha96
+		return et, nil
+	default:
+		return nil, fmt.Errorf("Unknown or unsupported EType: %d", id)
+	}
 }
 
 // RFC3961: DR(Key, Constant) = k-truncate(E(Key, Constant, initial-cipher-state))
@@ -110,6 +124,33 @@ func pkcs7Unpad(b []byte, m int) ([]byte, error) {
 		}
 	}
 	return b[:len(b)-n], nil
+}
+
+func DecryptEncPart(key []byte, pe types.EncryptedData, etype EType, usage uint32) ([]byte, error) {
+	//TODO move this to the a method on the Encrypted data object and call that from here. update the KRB_CRED too
+	//TODO create the etype based on the EType value in the EncPart and find the corresponding entry in the keytab
+	//Derive the key
+	//Key Usage Number: 3 - "AS-REP encrypted part (includes TGS session key or application session key), encrypted with the client key"
+	//TODO need to consider PAdata for deriving key
+	k, err := etype.DeriveKey(key, GetUsageKe(usage))
+	if err != nil {
+		return nil, fmt.Errorf("Error deriving key: %v", err)
+	}
+	// Strip off the checksum from the end
+	b, err := etype.Decrypt(k, pe.Cipher[:len(pe.Cipher)-etype.GetHMACBitLength()/8])
+	if err != nil {
+		return nil, fmt.Errorf("Error decrypting: %v", err)
+	}
+	//Verify checksum
+	if !etype.VerifyChecksum(key, pe.Cipher, b, 3) {
+		return nil, errors.New("Error decrypting encrypted part: checksum verification failed")
+	}
+	//Remove the confounder bytes
+	b = b[etype.GetConfounderByteSize():]
+	if err != nil {
+		return nil, fmt.Errorf("Error decrypting encrypted part: %v", err)
+	}
+	return b, nil
 }
 
 func GetChecksum(pt, key []byte, usage int, etype EType) ([]byte, error) {

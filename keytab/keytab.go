@@ -44,6 +44,25 @@ func NewKeytab() Keytab {
 	}
 }
 
+// Get the key material from the keytab for the newest entry with the required kvno, etype and matching principal
+func (kt *Keytab) GetKey(username, realm string, kvno, etype int) ([]byte, error) {
+	var key []byte
+	var t time.Time
+	for _, k := range kt.Entries {
+		if k.Principal.Realm == realm && int(k.Key.EType) == etype && (int(k.KVNO) == kvno || kvno == 0) && k.Timestamp.After(t) {
+			for _, n := range k.Principal.Components {
+				if n == username {
+					key = k.Key.KeyMaterial
+				}
+			}
+		}
+	}
+	if len(key) < 1 {
+		return key, errors.New("Matching key not found in keytab")
+	}
+	return key, nil
+}
+
 func newKeytabEntry() KeytabEntry {
 	return KeytabEntry{
 		Principal: newPrincipal(),

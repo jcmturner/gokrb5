@@ -122,53 +122,45 @@ func (e *EncKDCRepPart) Unmarshal(b []byte) error {
 	return err
 }
 
-func decryptKDCRepEncPart(ct []byte, kt keytab.Keytab) (EncKDCRepPart, error) {
-	//TODO move this to the a method on the Encrypted data object and call that from here. update the KRB_CRED too
-	//TODO create the etype based on the EType value in the EncPart and find the corresponding entry in the keytab
-	//k.EncPart.EType
-	var etype crypto.Aes256CtsHmacSha96
+func (k *ASRep) DecryptEncPart(kt keytab.Keytab) error {
+	etype, err := crypto.GetEtype(k.EncPart.EType)
+	if err != nil {
+		return fmt.Errorf("Keytab error: %v", err)
+	}
+	key, err := kt.GetKey(k.CName.NameString[0], k.CRealm, k.EncPart.KVNO, k.EncPart.EType)
+	if err != nil {
+		return fmt.Errorf("Could not get key from keytab: %v", err)
+	}
+	b, err := crypto.DecryptEncPart(key, k.EncPart, etype, USAGE_AS_REP_ENCPART)
+	if err != nil {
+		return fmt.Errorf("Error decrypting KDC_REP EncPart: %v", err)
+	}
 	var denc EncKDCRepPart
-	//Derive the key
-	//Key Usage Number: 3 - "AS-REP encrypted part (includes TGS session key or application session key), encrypted with the client key"
-	key, err := etype.DeriveKey(kt.Entries[0].Key.KeyMaterial, crypto.GetUsageKe(3))
-	if err != nil {
-		return denc, fmt.Errorf("Error deriving key: %v", err)
-	}
-	// Strip off the checksum from the end
-	//TODO should this check be moved to the Decrypt method? No as makes it hard to test
-	b, err := etype.Decrypt(key, ct[:len(ct)-etype.GetHMACBitLength()/8])
-	if err != nil {
-		return denc, fmt.Errorf("Error decrypting: %v", err)
-	}
-	//Verify checksum
-	if !etype.VerifyChecksum(kt.Entries[0].Key.KeyMaterial, ct, b, 3) {
-		return denc, errors.New("Error decrypting encrypted part: checksum verification failed")
-	}
-	//Remove the confounder bytes
-	b = b[etype.GetConfounderByteSize():]
-	if err != nil {
-		return denc, fmt.Errorf("Error decrypting encrypted part: %v", err)
-	}
 	err = denc.Unmarshal(b)
 	if err != nil {
-		return denc, fmt.Errorf("Error unmarshalling encrypted part: %v", err)
-	}
-	return denc, nil
-}
-
-func (k *ASRep) DecryptEncPart(kt keytab.Keytab) error {
-	denc, err := decryptKDCRepEncPart(k.EncPart.Cipher, kt)
-	if err != nil {
-		return err
+		return fmt.Errorf("Error unmarshalling encrypted part: %v", err)
 	}
 	k.DecryptedEncPart = denc
 	return nil
 }
 
 func (k *TGSRep) DecryptEncPart(kt keytab.Keytab) error {
-	denc, err := decryptKDCRepEncPart(k.EncPart.Cipher, kt)
+	etype, err := crypto.GetEtype(k.EncPart.EType)
 	if err != nil {
-		return err
+		return fmt.Errorf("Keytab error: %v", err)
+	}
+	key, err := kt.GetKey(k.CName.NameString[0], k.CRealm, k.EncPart.KVNO, k.EncPart.EType)
+	if err != nil {
+		return fmt.Errorf("Could not get key from keytab: %v", err)
+	}
+	b, err := crypto.DecryptEncPart(key, k.EncPart, etype, USAGE_AS_REP_ENCPART)
+	if err != nil {
+		return fmt.Errorf("Error decrypting KDC_REP EncPart: %v", err)
+	}
+	var denc EncKDCRepPart
+	err = denc.Unmarshal(b)
+	if err != nil {
+		return fmt.Errorf("Error unmarshalling encrypted part: %v", err)
 	}
 	k.DecryptedEncPart = denc
 	return nil

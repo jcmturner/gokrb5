@@ -1,11 +1,9 @@
 package messages
 
 import (
-	"errors"
 	"fmt"
 	"github.com/jcmturner/asn1"
 	"github.com/jcmturner/gokrb5/crypto"
-	"github.com/jcmturner/gokrb5/keytab"
 	"github.com/jcmturner/gokrb5/types"
 	"github.com/jcmturner/gokrb5/types/asnAppTag"
 	"time"
@@ -71,30 +69,21 @@ func (k *KRBCred) Unmarshal(b []byte) error {
 	return nil
 }
 
-func (k *KRBCred) DecryptEncPart(kt keytab.Keytab) error {
-	//TODO move this to the a method on the Encrypted data object and call that from here. update the KDCRep too
-	//TODO create the etype based on the EType value in the EncPart and find the corresponding entry in the keytab
-	//k.EncPart.EType
-	var etype crypto.Aes256CtsHmacSha96
-	//Derive the key
-	//Key Usage Number: 3 - "AS-REP encrypted part (includes TGS session key or application session key), encrypted with the client key"
-	key, err := etype.DeriveKey(kt.Entries[0].Key.KeyMaterial, crypto.GetUsageKe(3))
-	// Strip off the checksum from the end
-	//TODO should this check be moved to the Decrypt method?
-	b, err := etype.Decrypt(key, k.EncPart.Cipher[:len(k.EncPart.Cipher)-etype.GetHMACBitLength()/8])
-	//Verify checksum
-	if !etype.VerifyChecksum(kt.Entries[0].Key.KeyMaterial, k.EncPart.Cipher, b, 3) {
-		return errors.New("Error decrypting encrypted part: checksum verification failed")
-	}
-	//Remove the confounder bytes
-	b = b[etype.GetConfounderByteSize():]
+func (k *KRBCred) DecryptEncPart(key []byte) error {
+	etype, err := crypto.GetEtype(k.EncPart.EType)
 	if err != nil {
-		return fmt.Errorf("Error decrypting encrypted part: %v", err)
+		return fmt.Errorf("Keytab error: %v", err)
 	}
-	err = k.DecryptedEncPart.Unmarshal(b)
+	b, err := crypto.DecryptEncPart(key, k.EncPart, etype, USAGE_KRB_CRED_ENCPART)
+	if err != nil {
+		return fmt.Errorf("Error decrypting KDC_REP EncPart: %v", err)
+	}
+	var denc EncKrbCredPart
+	err = denc.Unmarshal(b)
 	if err != nil {
 		return fmt.Errorf("Error unmarshalling encrypted part: %v", err)
 	}
+	k.DecryptedEncPart = denc
 	return nil
 }
 
