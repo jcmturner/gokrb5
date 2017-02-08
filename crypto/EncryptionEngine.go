@@ -127,10 +127,7 @@ func pkcs7Unpad(b []byte, m int) ([]byte, error) {
 }
 
 func DecryptEncPart(key []byte, pe types.EncryptedData, etype EType, usage uint32) ([]byte, error) {
-	//TODO move this to the a method on the Encrypted data object and call that from here. update the KRB_CRED too
-	//TODO create the etype based on the EType value in the EncPart and find the corresponding entry in the keytab
 	//Derive the key
-	//Key Usage Number: 3 - "AS-REP encrypted part (includes TGS session key or application session key), encrypted with the client key"
 	//TODO need to consider PAdata for deriving key
 	k, err := etype.DeriveKey(key, GetUsageKe(usage))
 	if err != nil {
@@ -211,24 +208,4 @@ func getUsage(un uint32, o byte) []byte {
 	var buf bytes.Buffer
 	binary.Write(&buf, binary.BigEndian, un)
 	return append(buf.Bytes(), o)
-}
-
-var KeyUsageNumbers map[int]string = map[int]string{
-	1:    "AS-REQ PA-ENC-TIMESTAMP padata timestamp, encrypted with the client key",
-	2:    "AS-REP Ticket and TGS-REP Ticket (includes TGS session key or application session key), encrypted with the service key",
-	3:    "AS-REP encrypted part (includes TGS session key or application session key), encrypted with the client key",
-	4:    "TGS-REQ KDC-REQ-BODY AuthorizationData, encrypted with the TGS session key",
-	5:    "TGS-REQ KDC-REQ-BODY AuthorizationData, encrypted with the TGS authenticator subkey",
-	6:    "TGS-REQ PA-TGS-REQ padata AP-REQ Authenticator cksum, keyed with the TGS session key",
-	7:    "TGS-REQ PA-TGS-REQ padata AP-REQ Authenticator (includes TGS authenticator subkey), encrypted with the TGS session key",
-	8:    "TGS-REP encrypted part (includes application session key), encrypted with the TGS session key",
-	9:    "TGS-REP encrypted part (includes application session key), encrypted with the TGS authenticator subkey",
-	10:   "AP-REQ Authenticator cksum, keyed with the application session key",
-	11:   "AP-REQ Authenticator (includes application authenticator subkey), encrypted with the application session key",
-	12:   "AP-REP encrypted part (includes application session subkey), encrypted with the application session key",
-	13:   "KRB-PRIV encrypted part, encrypted with a key chosen by the application",
-	14:   "KRB-CRED encrypted part, encrypted with a key chosen by the application",
-	15:   "KRB-SAFE cksum, keyed with a key chosen by the application",
-	19:   "AD-KDC-ISSUED checksum",
-	1024: "Encryption for application use in protocols that do not specify key usage values",
 }
