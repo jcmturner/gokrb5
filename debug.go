@@ -59,15 +59,16 @@ func main() {
 	fmt.Fprintf(os.Stdout, "KT: %+v", kt)
 	err = r.DecryptEncPartWithKeytab(kt)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Decrypt err: %v\n", err)
+		fmt.Fprintf(os.Stderr, "\nDecrypt err: %v\n", err)
+	} else {
+		fmt.Fprintf(os.Stdout, "\n\nAS REP decrypted with keytab: %+v\n", r)
 	}
-	fmt.Fprintf(os.Stdout, "\n\nAS REP decrypted with keytab: %+v\n", r)
 
 	pswd := "passwordvalue"
 	err = p.DecryptEncPartWithPassword(pswd)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Decrypt err: %v\n", err)
+		fmt.Fprintf(os.Stderr, "\nDecrypt err: %v\n", err)
+	} else {
+		fmt.Fprintf(os.Stdout, "\nAS REP decrypted with passwd: %+v\n", p)
 	}
-	fmt.Fprintf(os.Stdout, "\nAS REP decrypted with passwd: %+v\n", p)
-
 }

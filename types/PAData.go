@@ -23,6 +23,19 @@ type PAEncTSEnc struct {
 	PAUSec      int       `asn1:"explicit,optional,tag:1"`
 }
 
+func GetPAEncTSEncAsnMarshalled() ([]byte, error){
+	t := time.Now()
+	p := PAEncTSEnc{
+		PATimestamp: t,
+		PAUSec: int((t.UnixNano() / int64(time.Microsecond)) - (t.Unix() * 1e6)),
+	}
+	b, err := asn1.Marshal(p)
+	if err != nil {
+		return b, fmt.Errorf("Error mashalling PAEncTSEnc: %v", err)
+	}
+	return b, nil
+}
+
 type ETypeInfoEntry struct {
 	EType int    `asn1:"explicit,tag:0"`
 	Salt  []byte `asn1:"explicit,optional,tag:1"`

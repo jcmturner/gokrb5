@@ -9,6 +9,7 @@ import (
 	"github.com/jcmturner/gokrb5/types"
 	"hash"
 	"encoding/hex"
+	"github.com/jcmturner/gokrb5/keytab"
 )
 
 type EType interface {
@@ -153,35 +154,38 @@ func DecryptEncPart(key []byte, pe types.EncryptedData, etype EType, usage uint3
 
 func GetKeyFromPassword(passwd string, cn types.PrincipalName, realm string, etypeId int, pas types.PADataSequence) ([]byte, EType, error) {
 	var key []byte
-	var etype EType
-	for _, pa := range pas {
-		if pa.PADataType == 19 {
-			var et2 types.ETypeInfo2
-			err := et2.Unmarshal(pa.PADataValue)
-			if err != nil {
-				return key, etype, fmt.Errorf("Error unmashalling PA Data to PA-ETYPE-INFO2: %v", err)
-			}
-			etype, err := GetEtype(et2[0].EType)
-			if err != nil {
-				return key, etype, fmt.Errorf("Error getting encryption type: %v", err)
-			}
-			sk2p := etype.GetDefaultStringToKeyParams()
-			if len(et2[0].S2KParams) == 8 {
-				sk2p = hex.EncodeToString(et2[0].S2KParams)
-			}
-			key, err := etype.StringToKey(passwd, et2[0].Salt, sk2p)
-			if err != nil {
-				return key, etype, fmt.Errorf("Error deriving key from string: %+v", err)
-			}
-			return key, etype, nil
-		}
-	}
 	etype, err := GetEtype(etypeId)
 	if err != nil {
 		return key, etype, fmt.Errorf("Error getting encryption type: %v", err)
 	}
 	sk2p := etype.GetDefaultStringToKeyParams()
-	key, err = etype.StringToKey(passwd, cn.GetSalt(realm), sk2p)
+	var salt string
+	for _, pa := range pas {
+		switch pa.PADataType{
+		case 3:
+			salt = string(pa.PADataValue)
+		case 19:
+			var et2 types.ETypeInfo2
+			err := et2.Unmarshal(pa.PADataValue)
+			if err != nil {
+				return key, etype, fmt.Errorf("Error unmashalling PA Data to PA-ETYPE-INFO2: %v", err)
+			}
+			if etypeId != et2[0].EType {
+				etype, err = GetEtype(et2[0].EType)
+				if err != nil {
+					return key, etype, fmt.Errorf("Error getting encryption type: %v", err)
+				}
+			}
+			if len(et2[0].S2KParams) == 8 {
+				sk2p = hex.EncodeToString(et2[0].S2KParams)
+			}
+			salt = et2[0].Salt
+		}
+	}
+	if salt == "" {
+		salt = cn.GetSalt(realm)
+	}
+	key, err = etype.StringToKey(passwd, salt, sk2p)
 	if err != nil {
 		return key, etype, fmt.Errorf("Error deriving key from string: %+v", err)
 	}
@@ -246,4 +250,18 @@ func getUsage(un uint32, o byte) []byte {
 	var buf bytes.Buffer
 	binary.Write(&buf, binary.BigEndian, un)
 	return append(buf.Bytes(), o)
+}
+
+func GetEncryptedData(b []byte, etype EType, crealm, username string, kt keytab.Keytab, kvno int) ([]byte, error) {
+	key, err := kt.GetKey(username, crealm, kvno, etype.GetETypeID())
+	_, cb, err := etype.Encrypt(key, b)
+	if err != nil {
+		return b, fmt.Errorf("Error encrypting data to form EncryptedData: %v", err)
+	}
+	ed := types.EncryptedData{
+		KVNO: kvno,
+		EType: etype.GetETypeID(),
+		Cipher: cb,
+	}
+	return ed.Marshal()
 }

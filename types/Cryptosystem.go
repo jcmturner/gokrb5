@@ -2,6 +2,7 @@ package types
 
 import (
 	"github.com/jcmturner/asn1"
+	"fmt"
 )
 
 // Reference: https://www.ietf.org/rfc/rfc4120.txt
@@ -31,6 +32,14 @@ func (a *EncryptedData) Unmarshal(b []byte) error {
 	return err
 }
 
+func (a *EncryptedData) Marshal() ([]byte, error) {
+	edb, err := asn1.Marshal(*a)
+	if err != nil {
+		return edb, fmt.Errorf("Error marshalling EncryptedData: %v", err)
+	}
+	return edb, nil
+}
+
 func (a *EncryptionKey) Unmarshal(b []byte) error {
 	_, err := asn1.Unmarshal(b, a)
 	return err
@@ -40,3 +49,4 @@ func (a *Checksum) Unmarshal(b []byte) error {
 	_, err := asn1.Unmarshal(b, a)
 	return err
 }
+
