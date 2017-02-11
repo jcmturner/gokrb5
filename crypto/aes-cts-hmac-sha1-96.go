@@ -10,46 +10,42 @@ import (
 	"errors"
 	"fmt"
 	"golang.org/x/crypto/pbkdf2"
-	"strings"
 )
 
 const (
 	s2kParamsZero = 4294967296
 )
 
-func AESStringToKey(secret string, salt string, s2kparams string, e EType) ([]byte, error) {
+func AESStringToKey(secret, salt, s2kparams string, e EType) ([]byte, error) {
 	//process s2kparams string
 	//The parameter string is four octets indicating an unsigned
 	//number in big-endian order.  This is the number of iterations to be
 	//performed.  If the value is 00 00 00 00, the number of iterations to
 	//be performed is 4,294,967,296 (2**32).
-	var i int
-	if s2kparams == "00 00 00 00" {
-		i = s2kParamsZero
-	} else {
-		s := strings.Replace(s2kparams, " ", "", -1)
-		if len(s) != 8 {
-			return nil, errors.New("Invalid s2kparams")
-		}
-		b, err := hex.DecodeString(s)
-		if err != nil {
-			return nil, errors.New("Invalid s2kparams")
-		}
-		buf := bytes.NewBuffer(b)
-		binary.Read(buf, binary.BigEndian, &i)
-		if i == 0 {
-			i = s2kParamsZero
-		}
+	var i int32
+	if len(s2kparams) != 8 {
+		return nil, errors.New("Invalid s2kparams length")
 	}
-
-	return AESStringToKeyIter(secret, salt, i, e)
+	b, err := hex.DecodeString(s2kparams)
+	if err != nil {
+		return nil, errors.New("Invalid s2kparams, cannot decode string to bytes")
+	}
+	buf := bytes.NewBuffer(b)
+	err = binary.Read(buf, binary.BigEndian, &i)
+	if err != nil {
+		return nil, errors.New("Invalid s2kparams, cannot convert to big endian int32")
+	}
+	if i == 0 {
+		return AESStringToKeyIter(secret, salt, s2kParamsZero, e)
+	}
+	return AESStringToKeyIter(secret, salt, int(i), e)
 }
 
-func AESStringToPBKDF2(secret string, salt string, iterations int, e EType) []byte {
+func AESStringToPBKDF2(secret, salt string, iterations int, e EType) []byte {
 	return pbkdf2.Key([]byte(secret), []byte(salt), iterations, e.GetKeyByteSize(), sha1.New)
 }
 
-func AESStringToKeyIter(secret string, salt string, iterations int, e EType) ([]byte, error) {
+func AESStringToKeyIter(secret, salt string, iterations int, e EType) ([]byte, error) {
 	tkey := AESRandomToKey(AESStringToPBKDF2(secret, salt, iterations, e))
 	key, err := AESDeriveKey(tkey, []byte("kerberos"), e)
 	return key, err

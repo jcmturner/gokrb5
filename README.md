@@ -13,6 +13,8 @@ This is work in progress and does not yet work...
 [text](https://www.ietf.org/rfc/rfc3961.txt) [html](https://tools.ietf.org/html/rfc3961)
 * RFC 3962 Advanced Encryption Standard (AES) Encryption for Kerberos 5
 [text](https://www.ietf.org/rfc/rfc3962.txt) [html](https://tools.ietf.org/html/rfc3962)
+* [Microsoft PAC Validation](https://blogs.msdn.microsoft.com/openspecification/2009/04/24/understanding-microsoft-kerberos-pac-validation/)
+* [Microsoft Kerberos Protocol Extensions](https://msdn.microsoft.com/en-us/library/cc233855.aspx)
 
 ### Useful Links
 * https://en.wikipedia.org/wiki/Ciphertext_stealing#CBC_ciphertext_stealing

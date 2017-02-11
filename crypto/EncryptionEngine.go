@@ -139,7 +139,7 @@ func DecryptEncPart(key []byte, pe types.EncryptedData, etype EType, usage uint3
 		return nil, fmt.Errorf("Error decrypting: %v", err)
 	}
 	//Verify checksum
-	if !etype.VerifyChecksum(key, pe.Cipher, b, 3) {
+	if !etype.VerifyChecksum(key, pe.Cipher, b, int(usage)) {
 		return nil, errors.New("Error decrypting encrypted part: checksum verification failed")
 	}
 	//Remove the confounder bytes

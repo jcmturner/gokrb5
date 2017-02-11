@@ -76,7 +76,7 @@ func (e Aes128CtsHmacSha96) GetMessageBlockByteSize() int {
 }
 
 func (e Aes128CtsHmacSha96) GetDefaultStringToKeyParams() string {
-	return "00 00 10 00"
+	return "00001000"
 }
 
 func (e Aes128CtsHmacSha96) GetConfounderByteSize() int {

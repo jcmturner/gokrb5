@@ -27,7 +27,7 @@ func main() {
 	pas = append(pas, pa)
 
 	a := messages.NewASReq()
-	a.PAData = pas
+	//a.PAData = pas
 	a.ReqBody.Realm = realm
 	a.ReqBody.CName.NameString = []string{"testuser1"}
 	a.ReqBody.SName.NameType = 2
@@ -56,7 +56,8 @@ func main() {
 		fmt.Fprintf(os.Stderr, "KT load err: %v\n", err)
 	}
 	fmt.Fprintf(os.Stdout, "KT: %+v", kt)
-	err = r.DecryptEncPart(kt)
+	//err = r.DecryptEncPart(kt)
+	err = r.DecryptTemp("passwordvalue")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Decrypt err: %v\n", err)
 	}
