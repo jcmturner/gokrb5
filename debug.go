@@ -27,7 +27,7 @@ func main() {
 	pas = append(pas, pa)
 
 	a := messages.NewASReq()
-	//a.PAData = pas
+	a.PAData = pas
 	a.ReqBody.Realm = realm
 	a.ReqBody.CName.NameString = []string{"testuser1"}
 	a.ReqBody.SName.NameType = 2
@@ -53,15 +53,21 @@ func main() {
 	kb, _ := hex.DecodeString(ktab)
 	kt, err := keytab.Parse(kb)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "KT load err: %v\n", err)
+		fmt.Fprintf(os.Stderr, "KT load err: %v\n\n", err)
 	}
 	fmt.Fprintf(os.Stdout, "KT: %+v", kt)
-	//err = r.DecryptEncPart(kt)
-	err = r.DecryptTemp("passwordvalue")
+	err = r.DecryptEncPartWithKeytab(kt)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Decrypt err: %v\n", err)
 	}
+	fmt.Fprintf(os.Stdout, "\n\nAS REP decrypted with keytab: %+v\n", r)
 
-	fmt.Fprintf(os.Stdout, "AS REP: %+v\n", r)
+	pswd := "passwordvalue"
+	err = r.DecryptEncPartWithPassword(pswd)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Decrypt err: %v\n", err)
+	}
+	fmt.Fprintf(os.Stdout, "\n\nAS REP decrypted with password: %+v\n", r)
+
 
 }

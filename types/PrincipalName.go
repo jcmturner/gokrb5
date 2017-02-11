@@ -8,3 +8,11 @@ type PrincipalName struct {
 	NameString []string `asn1:"generalstring,explicit,tag:1"`
 }
 
+func (pn *PrincipalName) GetSalt(realm string) string {
+	var sb []byte
+	sb = append(sb, realm...)
+	for _, n := range pn.NameString {
+		sb = append(sb, n...)
+	}
+	return string(sb)
+}

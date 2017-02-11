@@ -4,7 +4,6 @@ package messages
 // Section: 5.4.2
 
 import (
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"github.com/jcmturner/asn1"
@@ -123,18 +122,8 @@ func (e *EncKDCRepPart) Unmarshal(b []byte) error {
 	return err
 }
 
-func (k *ASRep) DecryptTemp(passwd string) error {
-	etype, _ := crypto.GetEtype(k.EncPart.EType)
-	var et2 types.ETypeInfo2
-	et2.Unmarshal(k.PAData[0].PADataValue)
-	sk2p := etype.GetDefaultStringToKeyParams()
-	if len(et2[0].S2KParams) == 8 {
-		sk2p = hex.EncodeToString(et2[0].S2KParams)
-	}
-	key, err := etype.StringToKey(passwd, et2[0].Salt, sk2p)
-	if err != nil {
-		return fmt.Errorf("Error with string to key: %+v", et2)
-	}
+func (k *ASRep) DecryptEncPartWithPassword(passwd string) error {
+	key, etype, err := crypto.GetKeyFromPassword(passwd, k.CName, k.CRealm, k.EncPart.EType, k.PAData)
 	b, err := crypto.DecryptEncPart(key, k.EncPart, etype, USAGE_AS_REP_ENCPART)
 	if err != nil {
 		return fmt.Errorf("Error decrypting KDC_REP EncPart: %v", err)
@@ -148,34 +137,12 @@ func (k *ASRep) DecryptTemp(passwd string) error {
 	return nil
 }
 
-func (k *ASRep) DecryptEncPart(kt keytab.Keytab) error {
+func (k *ASRep) DecryptEncPartWithKeytab(kt keytab.Keytab) error {
 	etype, err := crypto.GetEtype(k.EncPart.EType)
 	if err != nil {
 		return fmt.Errorf("Error getting encryption type: %v", err)
 	}
-	var key []byte
-	for _, pa := range k.PAData {
-		if pa.PADataType == 19 {
-			var et2 types.ETypeInfo2
-			err := et2.Unmarshal(pa.PADataValue)
-			if err != nil {
-				return fmt.Errorf("Error unmashalling PA Data to PA-ETYPE-INFO2: %v", err)
-			}
-			etype, err := crypto.GetEtype(et2[0].EType)
-			if err != nil {
-				return fmt.Errorf("Error getting encryption type: %v", err)
-			}
-			sk2p := etype.GetDefaultStringToKeyParams()
-			if len(et2[0].S2KParams) == 8 {
-				sk2p = hex.EncodeToString(et2[0].S2KParams)
-			}
-			key, err = etype.StringToKey("TBA", et2[0].Salt, sk2p)
-			if err != nil {
-				return fmt.Errorf("Error with string to key: %+v", et2)
-			}
-		}
-	}
-	key, err = kt.GetKey(k.CName.NameString[0], k.CRealm, k.EncPart.KVNO, k.EncPart.EType)
+	key, err := kt.GetKey(k.CName.NameString[0], k.CRealm, k.EncPart.KVNO, k.EncPart.EType)
 	if err != nil {
 		return fmt.Errorf("Could not get key from keytab: %v", err)
 	}

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/jcmturner/gokrb5/types"
 	"hash"
+	"encoding/hex"
 )
 
 type EType interface {
@@ -148,6 +149,43 @@ func DecryptEncPart(key []byte, pe types.EncryptedData, etype EType, usage uint3
 		return nil, fmt.Errorf("Error decrypting encrypted part: %v", err)
 	}
 	return b, nil
+}
+
+func GetKeyFromPassword(passwd string, cn types.PrincipalName, realm string, etypeId int, pas types.PADataSequence) ([]byte, EType, error) {
+	var key []byte
+	var etype EType
+	for _, pa := range pas {
+		if pa.PADataType == 19 {
+			var et2 types.ETypeInfo2
+			err := et2.Unmarshal(pa.PADataValue)
+			if err != nil {
+				return key, etype, fmt.Errorf("Error unmashalling PA Data to PA-ETYPE-INFO2: %v", err)
+			}
+			etype, err := GetEtype(et2[0].EType)
+			if err != nil {
+				return key, etype, fmt.Errorf("Error getting encryption type: %v", err)
+			}
+			sk2p := etype.GetDefaultStringToKeyParams()
+			if len(et2[0].S2KParams) == 8 {
+				sk2p = hex.EncodeToString(et2[0].S2KParams)
+			}
+			key, err := etype.StringToKey(passwd, et2[0].Salt, sk2p)
+			if err != nil {
+				return key, etype, fmt.Errorf("Error deriving key from string: %+v", err)
+			}
+			return key, etype, nil
+		}
+	}
+	etype, err := GetEtype(etypeId)
+	if err != nil {
+		return key, etype, fmt.Errorf("Error getting encryption type: %v", err)
+	}
+	sk2p := etype.GetDefaultStringToKeyParams()
+	key, err = etype.StringToKey(passwd, cn.GetSalt(realm), sk2p)
+	if err != nil {
+		return key, etype, fmt.Errorf("Error deriving key from string: %+v", err)
+	}
+	return key, etype, nil
 }
 
 func GetChecksum(pt, key []byte, usage int, etype EType) ([]byte, error) {
