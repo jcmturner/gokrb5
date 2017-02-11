@@ -45,9 +45,10 @@ func main() {
 
 	buf := make([]byte, 4096)
 	n, _, err := conn.ReadFrom(buf)
-	//fmt.Fprintf(os.Stderr, "%v\n", hex.EncodeToString(buf[:n]))
 	var r messages.ASRep
+	var p messages.ASRep
 	r.Unmarshal(buf[:n])
+	p.Unmarshal(buf[:n])
 	fmt.Fprintf(os.Stdout, "AS_REP: %+v\n", r)
 
 	kb, _ := hex.DecodeString(ktab)
@@ -63,11 +64,10 @@ func main() {
 	fmt.Fprintf(os.Stdout, "\n\nAS REP decrypted with keytab: %+v\n", r)
 
 	pswd := "passwordvalue"
-	err = r.DecryptEncPartWithPassword(pswd)
+	err = p.DecryptEncPartWithPassword(pswd)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Decrypt err: %v\n", err)
 	}
-	fmt.Fprintf(os.Stdout, "\nAS REP decrypted with passwd: %+v\n", r)
-
+	fmt.Fprintf(os.Stdout, "\nAS REP decrypted with passwd: %+v\n", p)
 
 }
