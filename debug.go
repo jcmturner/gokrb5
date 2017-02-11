@@ -67,7 +67,7 @@ func main() {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Decrypt err: %v\n", err)
 	}
-	fmt.Fprintf(os.Stdout, "\n\nAS REP decrypted with password: %+v\n", r)
+	fmt.Fprintf(os.Stdout, "\nAS REP decrypted with passwd: %+v\n", r)
 
 
 }
