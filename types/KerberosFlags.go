@@ -96,9 +96,9 @@ func SetFlags(f *asn1.BitString, j []int) {
 }
 
 func SetFlag(f *asn1.BitString, i int) {
-	if len(f.Bytes) != 4 {
-		(*f).Bytes = []byte{byte(0), byte(0), byte(0), byte(0)}
-		(*f).BitLength = 32
+	for l := len(f.Bytes); l < 4; l += 1 {
+		(*f).Bytes = append((*f).Bytes, byte(0))
+		(*f).BitLength = len((*f).Bytes) * 8
 	}
 	//Which byte?
 	b := int(i / 8)
@@ -114,9 +114,9 @@ func UnsetFlags(f *asn1.BitString, j []int) {
 }
 
 func UnsetFlag(f *asn1.BitString, i int) {
-	if len(f.Bytes) != 4 {
-		(*f).Bytes = []byte{byte(0), byte(0), byte(0), byte(0)}
-		(*f).BitLength = 32
+	for l := len(f.Bytes); l < 4; l += 1 {
+		(*f).Bytes = append((*f).Bytes, byte(0))
+		(*f).BitLength = len((*f).Bytes) * 8
 	}
 	//Which byte?
 	b := int(i / 8)
