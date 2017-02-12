@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"crypto/hmac"
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/jcmturner/gokrb5/keytab"
 	"github.com/jcmturner/gokrb5/types"
 	"hash"
-	"encoding/hex"
-	"github.com/jcmturner/gokrb5/keytab"
 )
 
 type EType interface {
@@ -160,11 +160,34 @@ func GetKeyFromPassword(passwd string, cn types.PrincipalName, realm string, ety
 	}
 	sk2p := etype.GetDefaultStringToKeyParams()
 	var salt string
+	var patype int
 	for _, pa := range pas {
-		switch pa.PADataType{
+		switch pa.PADataType {
 		case 3:
+			if patype > pa.PADataType {
+				continue
+			}
 			salt = string(pa.PADataValue)
+		case 11:
+			if patype > pa.PADataType {
+				continue
+			}
+			var et types.ETypeInfo
+			err := et.Unmarshal(pa.PADataValue)
+			if err != nil {
+				return key, etype, fmt.Errorf("Error unmashalling PA Data to PA-ETYPE-INFO2: %v", err)
+			}
+			if etypeId != et[0].EType {
+				etype, err = GetEtype(et[0].EType)
+				if err != nil {
+					return key, etype, fmt.Errorf("Error getting encryption type: %v", err)
+				}
+			}
+			salt = string(et[0].Salt)
 		case 19:
+			if patype > pa.PADataType {
+				continue
+			}
 			var et2 types.ETypeInfo2
 			err := et2.Unmarshal(pa.PADataValue)
 			if err != nil {
@@ -259,8 +282,8 @@ func GetEncryptedData(b []byte, etype EType, crealm, username string, kt keytab.
 		return b, fmt.Errorf("Error encrypting data to form EncryptedData: %v", err)
 	}
 	ed := types.EncryptedData{
-		KVNO: kvno,
-		EType: etype.GetETypeID(),
+		KVNO:   kvno,
+		EType:  etype.GetETypeID(),
 		Cipher: cb,
 	}
 	return ed.Marshal()

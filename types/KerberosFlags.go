@@ -3,7 +3,9 @@ package types
 // Reference: https://www.ietf.org/rfc/rfc4120.txt
 // Section: 5.2.8
 
-import "github.com/jcmturner/asn1"
+import (
+	"github.com/jcmturner/asn1"
+)
 
 /*
 KerberosFlags
@@ -61,37 +63,75 @@ encoding of a bit string that is declared with the "NamedBit"
 notation.
 */
 
-type KerberosFlag asn1.BitString
-
-/*// TODO do I want to make this into a map or should each be a type?
 const (
-	Reserved              KerberosFlag = 0
-	Forwardable           KerberosFlag = 1
-	Forwarded             KerberosFlag = 2
-	Proxiable             KerberosFlag = 3
-	Proxy                 KerberosFlag = 4
-	AllowPostDate         KerberosFlag = 5
-	MayPostDate         KerberosFlag = 5
-	PostDated             KerberosFlag = 6
-	Invalid               KerberosFlag = 7
-	Unused7               KerberosFlag = 7
-	Renewable             KerberosFlag = 8
-	Initial               KerberosFlag = 9
-	Unused9               KerberosFlag = 9
-	PreAuthent            KerberosFlag = 10
-	Unused10              KerberosFlag = 10
-	HWAuthent       KerberosFlag = 11
-	OptHardwareAuth       KerberosFlag = 11
-	TransitedPolicyChecked KerberosFlag = 12
-	unused12              KerberosFlag = 12
-	OKAsDelegate          KerberosFlag = 13
-	Unused13              KerberosFlag = 13
-	Unused15              KerberosFlag = 15
-	DisableTransitedCheck KerberosFlag = 26
-	RenewableOK           KerberosFlag = 27
-	EncTktInSkey          KerberosFlag = 28
-	Renew                 KerberosFlag = 30
-	Validate              KerberosFlag = 31
-)*/
+	Reserved               = 0
+	Forwardable            = 1
+	Forwarded              = 2
+	Proxiable              = 3
+	Proxy                  = 4
+	AllowPostDate          = 5
+	MayPostDate            = 5
+	PostDated              = 6
+	Invalid                = 7
+	Renewable              = 8
+	Initial                = 9
+	PreAuthent             = 10
+	HWAuthent              = 11
+	OptHardwareAuth        = 11
+	RequestAnonymous       = 12
+	TransitedPolicyChecked = 12
+	OKAsDelegate           = 13
+	Canonicalize           = 15
+	DisableTransitedCheck  = 26
+	RenewableOK            = 27
+	EncTktInSkey           = 28
+	Renew                  = 30
+	Validate               = 31
+)
 
-type KDCOptions asn1.BitString
+func SetFlags(f *asn1.BitString, j []int) {
+	for _, i := range j {
+		SetFlag(f, i)
+	}
+}
+
+func SetFlag(f *asn1.BitString, i int) {
+	if len(f.Bytes) != 4 {
+		(*f).Bytes = []byte{byte(0), byte(0), byte(0), byte(0)}
+		(*f).BitLength = 32
+	}
+	//Which byte?
+	b := int(i / 8)
+	//Which bit in byte
+	p := uint(7 - (i - 8*b))
+	(*f).Bytes[b] = (*f).Bytes[b] | (1 << p)
+}
+
+func UnsetFlags(f *asn1.BitString, j []int) {
+	for _, i := range j {
+		UnsetFlag(f, i)
+	}
+}
+
+func UnsetFlag(f *asn1.BitString, i int) {
+	if len(f.Bytes) != 4 {
+		(*f).Bytes = []byte{byte(0), byte(0), byte(0), byte(0)}
+		(*f).BitLength = 32
+	}
+	//Which byte?
+	b := int(i / 8)
+	//Which bit in byte
+	p := uint(7 - (i - 8*b))
+	(*f).Bytes[b] = (*f).Bytes[b] &^ (1 << p)
+}
+
+func IsFlagSet(f *asn1.BitString, i int) bool {
+	//Which byte?
+	b := int(i / 8)
+	//Which bit in byte
+	p := uint(7 - (i - 8*b))
+	if (*f).Bytes[b]&(1<<p) != 0 {
+		return true
+	}
+	return false
+}
