@@ -12,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"github.com/jcmturner/gokrb5/types"
+	"io"
 )
 
 type Config struct {
@@ -23,10 +25,15 @@ type Config struct {
 	//Plugins
 }
 
+const (
+	WEAK_ETYPE_LIST = "des-cbc-crc des-cbc-md4 des-cbc-md5 des-cbc-raw des3-cbc-raw des-hmac-sha1 arcfour-hmac-exp rc4-hmac-exp arcfour-hmac-md5-exp des"
+)
+
+
 func NewConfig() *Config {
 	d := make(DomainRealm)
 	return &Config{
-		LibDefaults: NewLibDefaults(),
+		LibDefaults: newLibDefaults(),
 		DomainRealm: d,
 	}
 }
@@ -43,6 +50,8 @@ type LibDefaults struct {
 	Default_realm              string
 	Default_tgs_enctypes       []string //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
 	Default_tkt_enctypes       []string //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
+	Default_tgs_enctype_ids       []int //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
+	Default_tkt_enctype_ids       []int //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
 	Dns_canonicalize_hostname  bool     //default true
 	Dns_lookup_kdc             bool     //default false
 	Dns_lookup_realm             bool
@@ -55,7 +64,8 @@ type LibDefaults struct {
 	Kdc_timesync             int            //default 1
 	//kdc_req_checksum_type int //unlikely to implement as for very old KDCs
 	Noaddresses        bool //default true
-	Permitted_enctypes []string
+	Permitted_enctypes []string  //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
+	Permitted_enctype_ids []int
 	//plugin_base_dir string //not supporting plugins
 	Preferred_preauth_types []int         //default “17, 16, 15, 14”, which forces libkrb5 to attempt to use PKINIT if it is supported
 	Proxiable               bool          //default false
@@ -68,7 +78,7 @@ type LibDefaults struct {
 	Verify_ap_req_nofail    bool          //default false
 }
 
-func NewLibDefaults() *LibDefaults {
+func newLibDefaults() *LibDefaults {
 	usr, _ := user.Current()
 	opts := asn1.BitString{}
 	opts.Bytes, _ = hex.DecodeString("00000010")
@@ -95,7 +105,7 @@ func NewLibDefaults() *LibDefaults {
 	}
 }
 
-func (l *LibDefaults) ParseLines(lines []string) error {
+func (l *LibDefaults) parseLines(lines []string) error {
 	for _, line := range lines {
 		if !strings.Contains(line, "=") {
 			return fmt.Errorf("libdefaults configuration line invalid: %s", line)
@@ -269,6 +279,9 @@ func (l *LibDefaults) ParseLines(lines []string) error {
 			continue
 		}
 	}
+	l.Default_tgs_enctype_ids = parseETypes(l.Default_tgs_enctypes, l.Allow_weak_crypto)
+	l.Default_tkt_enctype_ids = parseETypes(l.Default_tkt_enctypes, l.Allow_weak_crypto)
+	l.Permitted_enctype_ids = parseETypes(l.Permitted_enctypes, l.Allow_weak_crypto)
 	return nil
 }
 
@@ -283,7 +296,7 @@ type Realm struct {
 	Master_kdc     []string
 }
 
-func (r *Realm) ParseLines(name string, lines []string) error {
+func (r *Realm) parseLines(name string, lines []string) error {
 	r.Realm = name
 	var admin_server_final bool
 	var kdc_final bool
@@ -323,7 +336,7 @@ func (r *Realm) ParseLines(name string, lines []string) error {
 	return nil
 }
 
-func ParseRealms(lines []string) ([]Realm, error) {
+func parseRealms(lines []string) ([]Realm, error) {
 	var realms []Realm
 	start := -1
 	var name string
@@ -346,7 +359,7 @@ func ParseRealms(lines []string) ([]Realm, error) {
 				return nil, errors.New("Invalid Realms section in configuration.")
 			}
 			var r Realm
-			r.ParseLines(name, lines[start+1:i])
+			r.parseLines(name, lines[start+1:i])
 			realms = append(realms, r)
 			start = -1
 		}
@@ -356,7 +369,7 @@ func ParseRealms(lines []string) ([]Realm, error) {
 
 type DomainRealm map[string]string
 
-func (d *DomainRealm) ParseLines(lines []string) error {
+func (d *DomainRealm) parseLines(lines []string) error {
 	for _, line := range lines {
 		if !strings.Contains(line, "=") {
 			return fmt.Errorf("Realm configuration line invalid: %s", line)
@@ -364,16 +377,16 @@ func (d *DomainRealm) ParseLines(lines []string) error {
 		p := strings.Split(line, "=")
 		domain := strings.Replace(strings.ToLower(p[0]), " ", "", -1)
 		realm := strings.Replace(p[1], " ", "", -1)
-		d.AddMapping(domain, realm)
+		d.addMapping(domain, realm)
 	}
 	return nil
 }
 
-func (d *DomainRealm) AddMapping(domain, realm string) {
+func (d *DomainRealm) addMapping(domain, realm string) {
 	(*d)[domain] = realm
 }
 
-func (d *DomainRealm) DeleteMapping(domain, realm string) {
+func (d *DomainRealm) deleteMapping(domain, realm string) {
 	delete(*d, domain)
 }
 
@@ -383,38 +396,51 @@ func Load(cfgPath string) (*Config, error) {
 		return nil, errors.New("Configuration file could not be openned: " + cfgPath + " " + err.Error())
 	}
 	defer fh.Close()
-	c := NewConfig()
+	scanner := bufio.NewScanner(fh)
+	return NewConfigFromScanner(scanner)
+}
 
-	fs := bufio.NewScanner(fh)
+func NewConfigFromString(s string) (*Config, error){
+	reader := strings.NewReader(s)
+	return NewConfigFromReader(reader)
+}
+
+func NewConfigFromReader(r io.Reader) (*Config, error){
+	scanner := bufio.NewScanner(r)
+	return NewConfigFromScanner(scanner)
+}
+
+func NewConfigFromScanner(scanner *bufio.Scanner) (*Config, error){
+	c := NewConfig()
 	sections := make(map[int]string)
 	var section_line_num []int
 	var lines []string
-	for fs.Scan() {
+	for scanner.Scan() {
 		// Skip comments and blank lines
-		if matched, _ := regexp.MatchString(`\s*(#|;|\n)`, fs.Text()); matched {
+		if matched, _ := regexp.MatchString(`\s*(#|;|\n)`, scanner.Text()); matched {
 			continue
 		}
-		if matched, _ := regexp.MatchString(`\s*\[libdefaults\]\s*`, fs.Text()); matched {
+		if matched, _ := regexp.MatchString(`\s*\[libdefaults\]\s*`, scanner.Text()); matched {
 			sections[len(lines)] = "libdefaults"
 			section_line_num = append(section_line_num, len(lines))
 			continue
 		}
-		if matched, _ := regexp.MatchString(`\s*\[realms\]\s*`, fs.Text()); matched {
+		if matched, _ := regexp.MatchString(`\s*\[realms\]\s*`, scanner.Text()); matched {
 			sections[len(lines)] = "realms"
 			section_line_num = append(section_line_num, len(lines))
 			continue
 		}
-		if matched, _ := regexp.MatchString(`\s*\[domain_realm\]\s*`, fs.Text()); matched {
+		if matched, _ := regexp.MatchString(`\s*\[domain_realm\]\s*`, scanner.Text()); matched {
 			sections[len(lines)] = "domain_realm"
 			section_line_num = append(section_line_num, len(lines))
 			continue
 		}
-		if matched, _ := regexp.MatchString(`\s*\[.*\]\s*`, fs.Text()); matched {
+		if matched, _ := regexp.MatchString(`\s*\[.*\]\s*`, scanner.Text()); matched {
 			sections[len(lines)] = "unknown_section"
 			section_line_num = append(section_line_num, len(lines))
 			continue
 		}
-		lines = append(lines, fs.Text())
+		lines = append(lines, scanner.Text())
 	}
 	for i, start := range section_line_num {
 		var end int
@@ -425,18 +451,18 @@ func Load(cfgPath string) (*Config, error) {
 		}
 		switch section := sections[start]; section {
 		case "libdefaults":
-			err := c.LibDefaults.ParseLines(lines[start:end])
+			err := c.LibDefaults.parseLines(lines[start:end])
 			if err != nil {
 				return nil, fmt.Errorf("Error processing libdefaults section: %v", err)
 			}
 		case "realms":
-			realms, err := ParseRealms(lines[start:end])
+			realms, err := parseRealms(lines[start:end])
 			if err != nil {
 				return nil, fmt.Errorf("Error processing realms section: %v", err)
 			}
 			c.Realms = realms
 		case "domain_realm":
-			c.DomainRealm.ParseLines(lines[start:end])
+			err := c.DomainRealm.parseLines(lines[start:end])
 			if err != nil {
 				return nil, fmt.Errorf("Error processing domaain_realm section: %v", err)
 			}
@@ -445,6 +471,29 @@ func Load(cfgPath string) (*Config, error) {
 		}
 	}
 	return c, nil
+}
+
+func parseETypes(s []string, w bool) ([]int) {
+	var eti []int
+	for _, et := range s {
+		if !w {
+			var weak bool
+			for _, wet := range strings.Fields(WEAK_ETYPE_LIST){
+				if et == wet {
+					weak = true
+					break
+				}
+			}
+			if weak {
+				continue
+			}
+		}
+		i := types.KrbDictionary.ETypesByName[et]
+		if i != 0 {
+			eti = append(eti, i)
+		}
+	}
+	return eti
 }
 
 func parseDuration(s string) (time.Duration, error) {

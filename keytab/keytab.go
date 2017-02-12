@@ -36,6 +36,7 @@ type KeyBlock struct {
 	KeyMaterial []byte
 }
 
+//Create new, empty Keytab type
 func NewKeytab() Keytab {
 	var e []KeytabEntry
 	return Keytab{
@@ -91,6 +92,7 @@ func newKeyBlock() KeyBlock {
 	}
 }
 
+//Load a keytab file into Keytab type
 func Load(ktPath string) (kt Keytab, err error) {
 	k, err := ioutil.ReadFile(ktPath)
 	if err != nil {
@@ -99,6 +101,7 @@ func Load(ktPath string) (kt Keytab, err error) {
 	return Parse(k)
 }
 
+//Parse byte slice of keytab data into Keytab type
 func Parse(b []byte) (kt Keytab, err error) {
 	//The first byte of the file always has the value 5
 	if int8(b[0]) != 5 {
@@ -115,7 +118,7 @@ func Parse(b []byte) (kt Keytab, err error) {
 	//Version 1 of the file format uses native byte order for integer representations. Version 2 always uses big-endian byte order
 	var endian binary.ByteOrder
 	endian = binary.BigEndian
-	if kt.Version == 1 && IsNativeEndianLittle() {
+	if kt.Version == 1 && isNativeEndianLittle() {
 		endian = binary.LittleEndian
 	}
 	/*
@@ -222,7 +225,7 @@ func read_Bytes(b []byte, p *int, s int, e *binary.ByteOrder) []byte {
 	return r
 }
 
-func IsNativeEndianLittle() bool {
+func isNativeEndianLittle() bool {
 	var x int = 0x012345678
 	var p unsafe.Pointer = unsafe.Pointer(&x)
 	var bp *[4]byte = (*[4]byte)(p)

@@ -1,6 +1,8 @@
 package messages
 
 const (
+	PVNO = 5
+
 	//Key usage numbers
 	USAGE_AS_REQ_PA_ENC_TIMESTAMP                        = 1
 	USAGE_KDC_REP_TICKET                                 = 2
@@ -43,17 +45,6 @@ const (
 	KRB_PRIV       = 21 // Private (encrypted) application message
 	KRB_CRED       = 22 //Private (encrypted) message to forward credentials
 	KRB_ERROR      = 30 //Error response
-
-	//Name types
-	KRB_NT_UNKNOWN        = 0  //Name type not known
-	KRB_NT_PRINCIPAL      = 1  //Just the name of the principal as in DCE,  or for users
-	KRB_NT_SRV_INST       = 2  //Service and other unique instance (krbtgt)
-	KRB_NT_SRV_HST        = 3  //Service with host name as instance (telnet, rcommands)
-	KRB_NT_SRV_XHST       = 4  //Service with host as remaining components
-	KRB_NT_UID            = 5  //Unique ID
-	KRB_NT_X500_PRINCIPAL = 6  //Encoded X.509 Distinguished name [RFC2253]
-	KRB_NT_SMTP_NAME      = 7  //Name in form of SMTP email name (e.g., user@example.com)
-	KRB_NT_ENTERPRISE     = 10 //Enterprise name; may be mapped to principal name
 
 	//Error codes
 	KDC_ERR_NONE                          = 0  //No error

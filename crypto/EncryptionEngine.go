@@ -163,12 +163,12 @@ func GetKeyFromPassword(passwd string, cn types.PrincipalName, realm string, ety
 	var patype int
 	for _, pa := range pas {
 		switch pa.PADataType {
-		case 3:
+		case types.PA_PW_SALT:
 			if patype > pa.PADataType {
 				continue
 			}
 			salt = string(pa.PADataValue)
-		case 11:
+		case types.PA_ETYPE_INFO:
 			if patype > pa.PADataType {
 				continue
 			}
@@ -184,7 +184,7 @@ func GetKeyFromPassword(passwd string, cn types.PrincipalName, realm string, ety
 				}
 			}
 			salt = string(et[0].Salt)
-		case 19:
+		case types.PA_ETYPE_INFO2:
 			if patype > pa.PADataType {
 				continue
 			}
