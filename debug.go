@@ -1,17 +1,20 @@
 package main
 
 import (
-	"fmt"
-	"os"
-	"github.com/jcmturner/gokrb5/config"
-	"github.com/jcmturner/gokrb5/messages"
-	"github.com/jcmturner/gokrb5/client"
 	"encoding/hex"
+	"fmt"
+	"github.com/jcmturner/asn1"
+	"github.com/jcmturner/gokrb5/client"
+	"github.com/jcmturner/gokrb5/config"
+	"github.com/jcmturner/gokrb5/crypto"
 	"github.com/jcmturner/gokrb5/keytab"
+	"github.com/jcmturner/gokrb5/messages"
+	"github.com/jcmturner/gokrb5/types"
+	"os"
 )
 
-const ktab = "05020000004b0001000b544553542e474f4b5242350009746573747573657231000000015898e0770100120020bbdc430aab7e2d4622a0b6951481453b0962e9db8e2f168942ad175cda6d9de900000001"
-const krb5conf =`[libdefaults]
+const ktab = "05020000003b0001000b544553542e474f4b524235000974657374757365723100000001589b9b2b0100110010698c4df8e9f60e7eea5a21bf4526ad25000000010000004b0001000b544553542e474f4b524235000974657374757365723100000001589b9b2b0100120020bbdc430aab7e2d4622a0b6951481453b0962e9db8e2f168942ad175cda6d9de900000001"
+const krb5conf = `[libdefaults]
   default_realm = TEST.GOKRB5
   dns_lookup_realm = false
   dns_lookup_kdc = false
@@ -59,5 +62,19 @@ func main() {
 		fmt.Fprintf(os.Stderr, "\nDecrypt err: %v\n", err)
 	} else {
 		fmt.Fprintf(os.Stdout, "\n\nAS REP decrypted with keytab: %+v\n", ar)
+		var p types.PAReqEncPARep
+		_, err = asn1.Unmarshal(ar.DecryptedEncPart.EncPAData[0].PADataValue, &p)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error unmarshal PAReqEncPARep: %v\n", err)
+		}
+		fmt.Fprintf(os.Stdout, "PAReqEncPARep: %+v\n", p)
+		var et crypto.Aes256CtsHmacSha96
+		cb, err := crypto.GetChecksum(b, ar.DecryptedEncPart.Key.KeyValue, messages.USAGE_KEY_USAGE_AS_REQ, et)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error getting checksum PAReqEncPARep: %v\n", err)
+		} else {
+			fmt.Fprintf(os.Stdout, "AS REQ checksum: %+v\n", cb[:et.GetHMACBitLength()/8])
+		}
 	}
+
 }

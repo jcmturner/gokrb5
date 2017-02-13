@@ -23,11 +23,11 @@ type PAEncTSEnc struct {
 	PAUSec      int       `asn1:"explicit,optional,tag:1"`
 }
 
-func GetPAEncTSEncAsnMarshalled() ([]byte, error){
+func GetPAEncTSEncAsnMarshalled() ([]byte, error) {
 	t := time.Now()
 	p := PAEncTSEnc{
 		PATimestamp: t,
-		PAUSec: int((t.UnixNano() / int64(time.Microsecond)) - (t.Unix() * 1e6)),
+		PAUSec:      int((t.UnixNano() / int64(time.Microsecond)) - (t.Unix() * 1e6)),
 	}
 	b, err := asn1.Marshal(p)
 	if err != nil {
@@ -50,6 +50,11 @@ type ETypeInfo2Entry struct {
 }
 
 type ETypeInfo2 []ETypeInfo2Entry
+
+type PAReqEncPARep struct {
+	ChksumType int    `asn1:"explicit,tag:0"`
+	Chksum     []byte `asn1:"explicit,tag:1"`
+}
 
 func (pa *PAData) Unmarshal(b []byte) error {
 	_, err := asn1.Unmarshal(b, pa)

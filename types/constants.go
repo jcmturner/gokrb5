@@ -2,12 +2,20 @@ package types
 
 const (
 	//PA Types
-	PA_TGS_REQ        = 1
-	PA_ENC_TIMESTAMP  = 2
-	PA_PW_SALT        = 3
-	PA_ETYPE_INFO     = 11
-	PA_ETYPE_INFO2    = 19
-	PA_REQ_ENC_PA_REP = 149 //RFC6806 Section 11
+	PA_TGS_REQ       = 1
+	PA_ENC_TIMESTAMP = 2
+	PA_PW_SALT       = 3
+	PA_ETYPE_INFO    = 11
+	PA_ETYPE_INFO2   = 19
+	//From RFC 6113
+	PA_FX_COOKIE           = 133
+	PA_AUTHENTICATION_SET  = 134
+	PA_AUTH_SET_SELECTED   = 135
+	PA_FX_FAST             = 136
+	PA_FX_ERROR            = 137
+	PA_ENCRYPTED_CHALLENGE = 138
+	//RFC6806 Section 11
+	PA_REQ_ENC_PA_REP = 149
 
 	//Name types
 	KRB_NT_UNKNOWN        = 0  //Name type not known

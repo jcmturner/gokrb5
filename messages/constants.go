@@ -26,6 +26,7 @@ const (
 	USAGE_GSSAPI_ACCEPTOR_SIGN  = 23
 	USAGE_GSSAPI_INITIATOR_SEAL = 24
 	USAGE_GSSAPI_INITIATOR_SIGN = 25
+	USAGE_KEY_USAGE_AS_REQ      = 56
 	//26-511.  Reserved for future use in Kerberos and related protocols.
 	//512-1023.  Reserved for uses internal to a Kerberos implementation.
 	//1024.  Encryption for application use in protocols that do not specify key usage values
