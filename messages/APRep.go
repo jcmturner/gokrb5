@@ -3,8 +3,9 @@ package messages
 import (
 	"fmt"
 	"github.com/jcmturner/asn1"
+	"github.com/jcmturner/gokrb5/iana/asnAppTag"
+	"github.com/jcmturner/gokrb5/iana/msgtype"
 	"github.com/jcmturner/gokrb5/types"
-	"github.com/jcmturner/gokrb5/types/asnAppTag"
 	"time"
 )
 
@@ -41,7 +42,7 @@ func (a *APRep) Unmarshal(b []byte) error {
 	if err != nil {
 		return err
 	}
-	expectedMsgType := types.KrbDictionary.MsgTypesByName["KRB_AP_REP"]
+	expectedMsgType := msgtype.KRB_AP_REP
 	if a.MsgType != expectedMsgType {
 		return fmt.Errorf("Message ID does not indicate a KRB_AP_REP. Expected: %v; Actual: %v", expectedMsgType, a.MsgType)
 	}

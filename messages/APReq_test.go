@@ -2,10 +2,10 @@ package messages
 
 import (
 	"encoding/hex"
-	"testing"
+	"github.com/jcmturner/gokrb5/iana/msgtype"
 	"github.com/jcmturner/gokrb5/testdata"
 	"github.com/stretchr/testify/assert"
-	"github.com/jcmturner/gokrb5/types"
+	"testing"
 )
 
 func TestUnmarshalAPReq(t *testing.T) {
@@ -20,7 +20,7 @@ func TestUnmarshalAPReq(t *testing.T) {
 		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
 	}
 	assert.Equal(t, testdata.TEST_KVNO, a.PVNO, "PVNO not as expected")
-	assert.Equal(t, types.KrbDictionary.MsgTypesByName["KRB_AP_REQ"], a.MsgType, "MsgType is not as expected")
+	assert.Equal(t, msgtype.KRB_AP_REQ, a.MsgType, "MsgType is not as expected")
 	assert.Equal(t, "fedcba98", hex.EncodeToString(a.APOptions.Bytes), "AP Options not as expected")
 	assert.Equal(t, testdata.TEST_KVNO, a.Ticket.TktVNO, "Ticket VNO not as expected")
 	assert.Equal(t, testdata.TEST_REALM, a.Ticket.Realm, "Ticket realm not as expected")
@@ -31,4 +31,3 @@ func TestUnmarshalAPReq(t *testing.T) {
 	assert.Equal(t, testdata.TEST_KVNO, a.Ticket.EncPart.KVNO, "Ticket encPart KVNO not as expected")
 	assert.Equal(t, []byte(testdata.TEST_CIPHERTEXT), a.Ticket.EncPart.Cipher, "Ticket encPart cipher not as expected")
 }
-

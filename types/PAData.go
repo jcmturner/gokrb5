@@ -5,6 +5,7 @@ package types
 import (
 	"fmt"
 	"github.com/jcmturner/asn1"
+	"github.com/jcmturner/gokrb5/iana/patype"
 	"time"
 )
 
@@ -97,9 +98,8 @@ func (a *ETypeInfo2Entry) Unmarshal(b []byte) error {
 }
 
 func (pa *PAData) GetETypeInfo() (d ETypeInfo, err error) {
-	dt := KrbDictionary.PADataTypesByName["pa-etype-info"]
-	if pa.PADataType != dt {
-		err = fmt.Errorf("PAData does not contain PA EType Info data. TypeID Expected: %v; Actual: %v", dt, pa.PADataType)
+	if pa.PADataType != patype.PA_ETYPE_INFO {
+		err = fmt.Errorf("PAData does not contain PA EType Info data. TypeID Expected: %v; Actual: %v", patype.PA_ETYPE_INFO, pa.PADataType)
 		return
 	}
 	_, err = asn1.Unmarshal(pa.PADataValue, &d)
@@ -107,9 +107,8 @@ func (pa *PAData) GetETypeInfo() (d ETypeInfo, err error) {
 }
 
 func (pa *PAData) GetETypeInfo2() (d ETypeInfo2, err error) {
-	dt := KrbDictionary.PADataTypesByName["pa-etype-info2"]
-	if pa.PADataType != dt {
-		err = fmt.Errorf("PAData does not contain PA EType Info 2 data. TypeID Expected: %v; Actual: %v", dt, pa.PADataType)
+	if pa.PADataType != patype.PA_ETYPE_INFO2 {
+		err = fmt.Errorf("PAData does not contain PA EType Info 2 data. TypeID Expected: %v; Actual: %v", patype.PA_ETYPE_INFO2, pa.PADataType)
 		return
 	}
 	_, err = asn1.Unmarshal(pa.PADataValue, &d)

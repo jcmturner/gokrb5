@@ -4,8 +4,8 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/jcmturner/asn1"
+	"github.com/jcmturner/gokrb5/iana/msgtype"
 	"github.com/jcmturner/gokrb5/testdata"
-	"github.com/jcmturner/gokrb5/types"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -135,7 +135,7 @@ func TestUnmarshalASReq(t *testing.T) {
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
 
 	assert.Equal(t, testdata.TEST_KVNO, a.PVNO, "PVNO not as expected")
-	assert.Equal(t, types.KrbDictionary.MsgTypesByName["KRB_AS_REQ"], a.MsgType, "Message ID not as expected")
+	assert.Equal(t, msgtype.KRB_AS_REQ, a.MsgType, "Message ID not as expected")
 	assert.Equal(t, 2, len(a.PAData), "Number of PAData items in the sequence not as expected")
 	for i, pa := range a.PAData {
 		assert.Equal(t, testdata.TEST_PADATA_TYPE, pa.PADataType, fmt.Sprintf("PAData type for entry %d not as expected", i+1))
@@ -190,7 +190,7 @@ func TestUnmarshalASReq_optionalsNULLexceptsecond_ticket(t *testing.T) {
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
 
 	assert.Equal(t, testdata.TEST_KVNO, a.PVNO, "PVNO not as expected")
-	assert.Equal(t, types.KrbDictionary.MsgTypesByName["KRB_AS_REQ"], a.MsgType, "Message ID not as expected")
+	assert.Equal(t, msgtype.KRB_AS_REQ, a.MsgType, "Message ID not as expected")
 	assert.Equal(t, 0, len(a.PAData), "Number of PAData items in the sequence not as expected")
 	assert.Equal(t, "fedcba98", hex.EncodeToString(a.ReqBody.KDCOptions.Bytes), "Request body flags not as expected")
 	assert.Equal(t, testdata.TEST_REALM, a.ReqBody.Realm, "Request body Realm not as expected")
@@ -227,7 +227,7 @@ func TestUnmarshalASReq_optionalsNULLexceptserver(t *testing.T) {
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
 
 	assert.Equal(t, testdata.TEST_KVNO, a.PVNO, "PVNO not as expected")
-	assert.Equal(t, types.KrbDictionary.MsgTypesByName["KRB_AS_REQ"], a.MsgType, "Message ID not as expected")
+	assert.Equal(t, msgtype.KRB_AS_REQ, a.MsgType, "Message ID not as expected")
 	assert.Equal(t, 0, len(a.PAData), "Number of PAData items in the sequence not as expected")
 	assert.Equal(t, "fedcba90", hex.EncodeToString(a.ReqBody.KDCOptions.Bytes), "Request body flags not as expected")
 	assert.Equal(t, testdata.TEST_REALM, a.ReqBody.Realm, "Request body Realm not as expected")
@@ -257,7 +257,7 @@ func TestUnmarshalTGSReq(t *testing.T) {
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
 
 	assert.Equal(t, testdata.TEST_KVNO, a.PVNO, "PVNO not as expected")
-	assert.Equal(t, types.KrbDictionary.MsgTypesByName["KRB_TGS_REQ"], a.MsgType, "Message ID not as expected")
+	assert.Equal(t, msgtype.KRB_TGS_REQ, a.MsgType, "Message ID not as expected")
 	assert.Equal(t, 2, len(a.PAData), "Number of PAData items in the sequence not as expected")
 	for i, pa := range a.PAData {
 		assert.Equal(t, testdata.TEST_PADATA_TYPE, pa.PADataType, fmt.Sprintf("PAData type for entry %d not as expected", i+1))
@@ -312,7 +312,7 @@ func TestUnmarshalTGSReq_optionalsNULLexceptsecond_ticket(t *testing.T) {
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
 
 	assert.Equal(t, testdata.TEST_KVNO, a.PVNO, "PVNO not as expected")
-	assert.Equal(t, types.KrbDictionary.MsgTypesByName["KRB_TGS_REQ"], a.MsgType, "Message ID not as expected")
+	assert.Equal(t, msgtype.KRB_TGS_REQ, a.MsgType, "Message ID not as expected")
 	assert.Equal(t, 0, len(a.PAData), "Number of PAData items in the sequence not as expected")
 	assert.Equal(t, "fedcba98", hex.EncodeToString(a.ReqBody.KDCOptions.Bytes), "Request body flags not as expected")
 	assert.Equal(t, testdata.TEST_REALM, a.ReqBody.Realm, "Request body Realm not as expected")
@@ -349,7 +349,7 @@ func TestUnmarshalTGSReq_optionalsNULLexceptserver(t *testing.T) {
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
 
 	assert.Equal(t, testdata.TEST_KVNO, a.PVNO, "PVNO not as expected")
-	assert.Equal(t, types.KrbDictionary.MsgTypesByName["KRB_TGS_REQ"], a.MsgType, "Message ID not as expected")
+	assert.Equal(t, msgtype.KRB_TGS_REQ, a.MsgType, "Message ID not as expected")
 	assert.Equal(t, 0, len(a.PAData), "Number of PAData items in the sequence not as expected")
 	assert.Equal(t, "fedcba90", hex.EncodeToString(a.ReqBody.KDCOptions.Bytes), "Request body flags not as expected")
 	assert.Equal(t, testdata.TEST_REALM, a.ReqBody.Realm, "Request body Realm not as expected")

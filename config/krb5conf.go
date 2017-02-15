@@ -6,14 +6,14 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jcmturner/asn1"
+	"github.com/jcmturner/gokrb5/iana/etype"
+	"io"
 	"os"
 	"os/user"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
-	"github.com/jcmturner/gokrb5/types"
-	"io"
 )
 
 type Config struct {
@@ -28,7 +28,6 @@ type Config struct {
 const (
 	WEAK_ETYPE_LIST = "des-cbc-crc des-cbc-md4 des-cbc-md5 des-cbc-raw des3-cbc-raw des-hmac-sha1 arcfour-hmac-exp rc4-hmac-exp arcfour-hmac-md5-exp des"
 )
-
 
 func NewConfig() *Config {
 	d := make(DomainRealm)
@@ -50,11 +49,11 @@ type LibDefaults struct {
 	Default_realm              string
 	Default_tgs_enctypes       []string //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
 	Default_tkt_enctypes       []string //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
-	Default_tgs_enctype_ids       []int //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
-	Default_tkt_enctype_ids       []int //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
+	Default_tgs_enctype_ids    []int    //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
+	Default_tkt_enctype_ids    []int    //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
 	Dns_canonicalize_hostname  bool     //default true
 	Dns_lookup_kdc             bool     //default false
-	Dns_lookup_realm             bool
+	Dns_lookup_realm           bool
 	//extra_addresses []net.IPAddr //Not implementing yet
 	Forwardable              bool           //default false
 	Ignore_acceptor_hostname bool           //default false
@@ -63,8 +62,8 @@ type LibDefaults struct {
 	Kdc_default_options      asn1.BitString //default 0x00000010 (KDC_OPT_RENEWABLE_OK)
 	Kdc_timesync             int            //default 1
 	//kdc_req_checksum_type int //unlikely to implement as for very old KDCs
-	Noaddresses        bool //default true
-	Permitted_enctypes []string  //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
+	Noaddresses           bool     //default true
+	Permitted_enctypes    []string //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
 	Permitted_enctype_ids []int
 	//plugin_base_dir string //not supporting plugins
 	Preferred_preauth_types []int         //default “17, 16, 15, 14”, which forces libkrb5 to attempt to use PKINIT if it is supported
@@ -330,7 +329,7 @@ func (r *Realm) parseLines(name string, lines []string) error {
 	if len(r.Kpasswd_server) < 1 {
 		for _, a := range r.Admin_server {
 			s := strings.Split(a, ":")
-			r.Kpasswd_server = append(r.Kpasswd_server, s[0] + ":464")
+			r.Kpasswd_server = append(r.Kpasswd_server, s[0]+":464")
 		}
 	}
 	return nil
@@ -400,17 +399,17 @@ func Load(cfgPath string) (*Config, error) {
 	return NewConfigFromScanner(scanner)
 }
 
-func NewConfigFromString(s string) (*Config, error){
+func NewConfigFromString(s string) (*Config, error) {
 	reader := strings.NewReader(s)
 	return NewConfigFromReader(reader)
 }
 
-func NewConfigFromReader(r io.Reader) (*Config, error){
+func NewConfigFromReader(r io.Reader) (*Config, error) {
 	scanner := bufio.NewScanner(r)
 	return NewConfigFromScanner(scanner)
 }
 
-func NewConfigFromScanner(scanner *bufio.Scanner) (*Config, error){
+func NewConfigFromScanner(scanner *bufio.Scanner) (*Config, error) {
 	c := NewConfig()
 	sections := make(map[int]string)
 	var section_line_num []int
@@ -473,12 +472,12 @@ func NewConfigFromScanner(scanner *bufio.Scanner) (*Config, error){
 	return c, nil
 }
 
-func parseETypes(s []string, w bool) ([]int) {
+func parseETypes(s []string, w bool) []int {
 	var eti []int
 	for _, et := range s {
 		if !w {
 			var weak bool
-			for _, wet := range strings.Fields(WEAK_ETYPE_LIST){
+			for _, wet := range strings.Fields(WEAK_ETYPE_LIST) {
 				if et == wet {
 					weak = true
 					break
@@ -488,7 +487,7 @@ func parseETypes(s []string, w bool) ([]int) {
 				continue
 			}
 		}
-		i := types.KrbDictionary.ETypesByName[et]
+		i := etype.ETypesByName[et]
 		if i != 0 {
 			eti = append(eti, i)
 		}

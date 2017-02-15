@@ -8,9 +8,10 @@ import (
 	"fmt"
 	"github.com/jcmturner/asn1"
 	"github.com/jcmturner/gokrb5/crypto"
+	"github.com/jcmturner/gokrb5/iana/asnAppTag"
+	"github.com/jcmturner/gokrb5/iana/msgtype"
 	"github.com/jcmturner/gokrb5/keytab"
 	"github.com/jcmturner/gokrb5/types"
-	"github.com/jcmturner/gokrb5/types/asnAppTag"
 	"time"
 )
 
@@ -67,7 +68,7 @@ func (k *ASRep) Unmarshal(b []byte) error {
 	if err != nil {
 		return err
 	}
-	if m.MsgType != types.KrbDictionary.MsgTypesByName["KRB_AS_REP"] {
+	if m.MsgType != msgtype.KRB_AS_REP {
 		return errors.New("Message ID does not indicate a KRB_AS_REP")
 	}
 	//Process the raw ticket within
@@ -90,7 +91,7 @@ func (k *TGSRep) Unmarshal(b []byte) error {
 	if err != nil {
 		return err
 	}
-	if m.MsgType != types.KrbDictionary.MsgTypesByName["KRB_TGS_REP"] {
+	if m.MsgType != msgtype.KRB_TGS_REP {
 		return errors.New("Message ID does not indicate a KRB_TGS_REP")
 	}
 	//Process the raw ticket within

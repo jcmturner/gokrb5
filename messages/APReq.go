@@ -4,8 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jcmturner/asn1"
+	"github.com/jcmturner/gokrb5/iana/asnAppTag"
+	"github.com/jcmturner/gokrb5/iana/msgtype"
 	"github.com/jcmturner/gokrb5/types"
-	"github.com/jcmturner/gokrb5/types/asnAppTag"
 )
 
 /*AP-REQ          ::= [APPLICATION 14] SEQUENCE {
@@ -44,7 +45,7 @@ func (a *APReq) Unmarshal(b []byte) error {
 	if err != nil {
 		return err
 	}
-	if m.MsgType != types.KrbDictionary.MsgTypesByName["KRB_AP_REQ"] {
+	if m.MsgType != msgtype.KRB_AP_REQ {
 		return errors.New("Message ID does not indicate a KRB_AS_REP")
 	}
 	a.PVNO = m.PVNO

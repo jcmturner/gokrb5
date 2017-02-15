@@ -1,6 +1,6 @@
 package types
 
-var KrbDictionary = struct {
+var KrbDictionary1 = struct {
 	MsgTypesByID      map[int]string
 	MsgTypesByName    map[string]int
 	NameTypesByID     map[int]string

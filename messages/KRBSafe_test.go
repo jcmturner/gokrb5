@@ -2,8 +2,8 @@ package messages
 
 import (
 	"encoding/hex"
+	"github.com/jcmturner/gokrb5/iana/msgtype"
 	"github.com/jcmturner/gokrb5/testdata"
-	"github.com/jcmturner/gokrb5/types"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -24,7 +24,7 @@ func TestUnmarshalKRBSafe(t *testing.T) {
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
 
 	assert.Equal(t, testdata.TEST_KVNO, a.PVNO, "PVNO not as expected")
-	assert.Equal(t, types.KrbDictionary.MsgTypesByName["KRB_SAFE"], a.MsgType, "MsgType is not as expected")
+	assert.Equal(t, msgtype.KRB_SAFE, a.MsgType, "MsgType is not as expected")
 	assert.Equal(t, []byte("krb5data"), a.SafeBody.UserData, "Safe body userdata not as expected")
 	assert.Equal(t, tt, a.SafeBody.Timestamp, "Safe body timestamp not as expected")
 	assert.Equal(t, 123456, a.SafeBody.Usec, "Safe body microseconds not as expected")
@@ -50,7 +50,7 @@ func TestUnmarshalKRBSafe_optionalsNULL(t *testing.T) {
 	}
 
 	assert.Equal(t, testdata.TEST_KVNO, a.PVNO, "PVNO not as expected")
-	assert.Equal(t, types.KrbDictionary.MsgTypesByName["KRB_SAFE"], a.MsgType, "MsgType is not as expected")
+	assert.Equal(t, msgtype.KRB_SAFE, a.MsgType, "MsgType is not as expected")
 	assert.Equal(t, []byte("krb5data"), a.SafeBody.UserData, "Safe body userdata not as expected")
 	assert.Equal(t, 2, a.SafeBody.SAddress.AddrType, "SAddress type not as expected")
 	assert.Equal(t, "12d00023", hex.EncodeToString(a.SafeBody.SAddress.Address), "SAddress not as expected")

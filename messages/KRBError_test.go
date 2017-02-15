@@ -2,8 +2,8 @@ package messages
 
 import (
 	"encoding/hex"
+	"github.com/jcmturner/gokrb5/iana/msgtype"
 	"github.com/jcmturner/gokrb5/testdata"
-	"github.com/jcmturner/gokrb5/types"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -24,7 +24,7 @@ func TestUnmarshalKRBError(t *testing.T) {
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
 
 	assert.Equal(t, testdata.TEST_KVNO, a.PVNO, "PVNO is not as expected")
-	assert.Equal(t, types.KrbDictionary.MsgTypesByName["KRB_ERROR"], a.MsgType, "Message type is not as expected")
+	assert.Equal(t, msgtype.KRB_ERROR, a.MsgType, "Message type is not as expected")
 	assert.Equal(t, tt, a.CTime, "CTime not as expected")
 	assert.Equal(t, 123456, a.Cusec, "Client microseconds not as expected")
 	assert.Equal(t, tt, a.STime, "STime not as expected")
@@ -57,7 +57,7 @@ func TestUnmarshalKRBError_optionalsNULL(t *testing.T) {
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
 
 	assert.Equal(t, testdata.TEST_KVNO, a.PVNO, "PVNO is not as expected")
-	assert.Equal(t, types.KrbDictionary.MsgTypesByName["KRB_ERROR"], a.MsgType, "Message type is not as expected")
+	assert.Equal(t, msgtype.KRB_ERROR, a.MsgType, "Message type is not as expected")
 	assert.Equal(t, 123456, a.Cusec, "Client microseconds not as expected")
 	assert.Equal(t, tt, a.STime, "STime not as expected")
 	assert.Equal(t, 123456, a.Susec, "Service microseconds not as expected")

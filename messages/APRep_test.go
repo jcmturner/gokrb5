@@ -2,13 +2,12 @@ package messages
 
 import (
 	"encoding/hex"
-	"github.com/stretchr/testify/assert"
+	"github.com/jcmturner/gokrb5/iana/msgtype"
 	"github.com/jcmturner/gokrb5/testdata"
+	"github.com/stretchr/testify/assert"
 	"testing"
-	"github.com/jcmturner/gokrb5/types"
 	"time"
 )
-
 
 func TestUnmarshalAPRep(t *testing.T) {
 	var a APRep
@@ -22,7 +21,7 @@ func TestUnmarshalAPRep(t *testing.T) {
 		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
 	}
 	assert.Equal(t, testdata.TEST_KVNO, a.PVNO, "PVNO not as expected")
-	assert.Equal(t, types.KrbDictionary.MsgTypesByName["KRB_AP_REP"], a.MsgType, "MsgType is not as expected")
+	assert.Equal(t, msgtype.KRB_AP_REP, a.MsgType, "MsgType is not as expected")
 	assert.Equal(t, testdata.TEST_ETYPE, a.EncPart.EType, "Ticket encPart etype not as expected")
 	assert.Equal(t, testdata.TEST_KVNO, a.EncPart.KVNO, "Ticket encPart KVNO not as expected")
 	assert.Equal(t, []byte(testdata.TEST_CIPHERTEXT), a.EncPart.Cipher, "Ticket encPart cipher not as expected")

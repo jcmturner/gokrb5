@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/jcmturner/gokrb5/iana/patype"
 	"github.com/jcmturner/gokrb5/keytab"
 	"github.com/jcmturner/gokrb5/types"
 	"hash"
@@ -160,16 +161,16 @@ func GetKeyFromPassword(passwd string, cn types.PrincipalName, realm string, ety
 	}
 	sk2p := etype.GetDefaultStringToKeyParams()
 	var salt string
-	var patype int
+	var paID int
 	for _, pa := range pas {
 		switch pa.PADataType {
-		case types.PA_PW_SALT:
-			if patype > pa.PADataType {
+		case patype.PA_PW_SALT:
+			if paID > pa.PADataType {
 				continue
 			}
 			salt = string(pa.PADataValue)
-		case types.PA_ETYPE_INFO:
-			if patype > pa.PADataType {
+		case patype.PA_ETYPE_INFO:
+			if paID > pa.PADataType {
 				continue
 			}
 			var et types.ETypeInfo
@@ -184,8 +185,8 @@ func GetKeyFromPassword(passwd string, cn types.PrincipalName, realm string, ety
 				}
 			}
 			salt = string(et[0].Salt)
-		case types.PA_ETYPE_INFO2:
-			if patype > pa.PADataType {
+		case patype.PA_ETYPE_INFO2:
+			if paID > pa.PADataType {
 				continue
 			}
 			var et2 types.ETypeInfo2

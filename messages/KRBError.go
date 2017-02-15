@@ -3,8 +3,9 @@ package messages
 import (
 	"fmt"
 	"github.com/jcmturner/asn1"
+	"github.com/jcmturner/gokrb5/iana/asnAppTag"
+	"github.com/jcmturner/gokrb5/iana/msgtype"
 	"github.com/jcmturner/gokrb5/types"
-	"github.com/jcmturner/gokrb5/types/asnAppTag"
 	"time"
 )
 
@@ -29,7 +30,7 @@ func (k *KRBError) Unmarshal(b []byte) error {
 	if err != nil {
 		return err
 	}
-	expectedMsgType := types.KrbDictionary.MsgTypesByName["KRB_ERROR"]
+	expectedMsgType := msgtype.KRB_ERROR
 	if k.MsgType != expectedMsgType {
 		return fmt.Errorf("Message ID does not indicate a KRB_ERROR. Expected: %v; Actual: %v", expectedMsgType, k.MsgType)
 	}

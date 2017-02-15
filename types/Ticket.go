@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/jcmturner/asn1"
 	"github.com/jcmturner/gokrb5/asn1tools"
-	"github.com/jcmturner/gokrb5/types/asnAppTag"
+	"github.com/jcmturner/gokrb5/iana/asnAppTag"
 	"time"
 )
 

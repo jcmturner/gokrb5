@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"github.com/jcmturner/asn1"
 	"github.com/jcmturner/gokrb5/crypto"
+	"github.com/jcmturner/gokrb5/iana/asnAppTag"
+	"github.com/jcmturner/gokrb5/iana/msgtype"
 	"github.com/jcmturner/gokrb5/types"
-	"github.com/jcmturner/gokrb5/types/asnAppTag"
 	"time"
 )
 
@@ -53,7 +54,7 @@ func (k *KRBCred) Unmarshal(b []byte) error {
 	if err != nil {
 		return fmt.Errorf("Error unmarshalling KDC_CRED: %v", err)
 	}
-	expectedMsgType := types.KrbDictionary.MsgTypesByName["KRB_CRED"]
+	expectedMsgType := msgtype.KRB_CRED
 	if m.MsgType != expectedMsgType {
 		return fmt.Errorf("Message ID does not indicate a KRB_CRED. Expected: %v; Actual: %v", expectedMsgType, m.MsgType)
 	}

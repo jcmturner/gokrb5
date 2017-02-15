@@ -7,11 +7,12 @@ import (
 	"fmt"
 	"github.com/jcmturner/asn1"
 	"github.com/jcmturner/gokrb5/asn1tools"
-	"github.com/jcmturner/gokrb5/types"
-	"github.com/jcmturner/gokrb5/types/asnAppTag"
-	"time"
 	"github.com/jcmturner/gokrb5/config"
+	"github.com/jcmturner/gokrb5/iana/asnAppTag"
+	"github.com/jcmturner/gokrb5/iana/msgtype"
+	"github.com/jcmturner/gokrb5/types"
 	"math/rand"
+	"time"
 )
 
 type marshalKDCReq struct {
@@ -74,19 +75,19 @@ func NewASReq(c *config.Config, username string) ASReq {
 	a := ASReq{
 		PVNO:    PVNO,
 		MsgType: KRB_AS_REQ,
-		PAData: pas,
+		PAData:  pas,
 		ReqBody: KDCReqBody{
 			KDCOptions: c.LibDefaults.Kdc_default_options,
-			Realm: c.LibDefaults.Default_realm,
+			Realm:      c.LibDefaults.Default_realm,
 			CName: types.PrincipalName{
-				NameType: types.KRB_NT_PRINCIPAL,
+				NameType:   types.KRB_NT_PRINCIPAL,
 				NameString: []string{username},
 			},
 			SName: types.PrincipalName{
-				NameType: types.KRB_NT_SRV_INST,
+				NameType:   types.KRB_NT_SRV_INST,
 				NameString: []string{"krbtgt", c.LibDefaults.Default_realm},
 			},
-			Till: t.Add(c.LibDefaults.Ticket_lifetime),
+			Till:  t.Add(c.LibDefaults.Ticket_lifetime),
 			Nonce: nonce,
 			EType: c.LibDefaults.Default_tkt_enctype_ids,
 		},
@@ -106,14 +107,13 @@ func NewASReq(c *config.Config, username string) ASReq {
 	return a
 }
 
-
 func (k *ASReq) Unmarshal(b []byte) error {
 	var m marshalKDCReq
 	_, err := asn1.UnmarshalWithParams(b, &m, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.ASREQ))
 	if err != nil {
 		return fmt.Errorf("Error unmarshalling KDC_REQ: %v", err)
 	}
-	expectedMsgType := types.KrbDictionary.MsgTypesByName["KRB_AS_REQ"]
+	expectedMsgType := msgtype.KRB_AS_REQ
 	if m.MsgType != expectedMsgType {
 		return fmt.Errorf("Message ID does not indicate a KRB_AS_REQ. Expected: %v; Actual: %v", expectedMsgType, m.MsgType)
 	}
@@ -135,7 +135,7 @@ func (k *TGSReq) Unmarshal(b []byte) error {
 	if err != nil {
 		return fmt.Errorf("Error unmarshalling KDC_REQ: %v", err)
 	}
-	expectedMsgType := types.KrbDictionary.MsgTypesByName["KRB_TGS_REQ"]
+	expectedMsgType := msgtype.KRB_TGS_REQ
 	if m.MsgType != expectedMsgType {
 		return fmt.Errorf("Message ID does not indicate a KRB_TGS_REQ. Expected: %v; Actual: %v", expectedMsgType, m.MsgType)
 	}
