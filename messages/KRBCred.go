@@ -5,6 +5,7 @@ import (
 	"github.com/jcmturner/asn1"
 	"github.com/jcmturner/gokrb5/crypto"
 	"github.com/jcmturner/gokrb5/iana/asnAppTag"
+	"github.com/jcmturner/gokrb5/iana/keyusage"
 	"github.com/jcmturner/gokrb5/iana/msgtype"
 	"github.com/jcmturner/gokrb5/types"
 	"time"
@@ -75,7 +76,7 @@ func (k *KRBCred) DecryptEncPart(key []byte) error {
 	if err != nil {
 		return fmt.Errorf("Keytab error: %v", err)
 	}
-	b, err := crypto.DecryptEncPart(key, k.EncPart, etype, USAGE_KRB_CRED_ENCPART)
+	b, err := crypto.DecryptEncPart(key, k.EncPart, etype, keyusage.KRB_CRED_ENCPART)
 	if err != nil {
 		return fmt.Errorf("Error decrypting KDC_REP EncPart: %v", err)
 	}

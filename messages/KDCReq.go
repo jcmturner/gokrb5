@@ -8,6 +8,7 @@ import (
 	"github.com/jcmturner/asn1"
 	"github.com/jcmturner/gokrb5/asn1tools"
 	"github.com/jcmturner/gokrb5/config"
+	"github.com/jcmturner/gokrb5/iana"
 	"github.com/jcmturner/gokrb5/iana/asnAppTag"
 	"github.com/jcmturner/gokrb5/iana/msgtype"
 	"github.com/jcmturner/gokrb5/types"
@@ -73,8 +74,8 @@ func NewASReq(c *config.Config, username string) ASReq {
 	t := time.Now()
 
 	a := ASReq{
-		PVNO:    PVNO,
-		MsgType: KRB_AS_REQ,
+		PVNO:    iana.PVNO,
+		MsgType: msgtype.KRB_AS_REQ,
 		PAData:  pas,
 		ReqBody: KDCReqBody{
 			KDCOptions: c.LibDefaults.Kdc_default_options,

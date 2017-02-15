@@ -7,6 +7,7 @@ import (
 	"github.com/jcmturner/gokrb5/client"
 	"github.com/jcmturner/gokrb5/config"
 	"github.com/jcmturner/gokrb5/crypto"
+	"github.com/jcmturner/gokrb5/iana/keyusage"
 	"github.com/jcmturner/gokrb5/keytab"
 	"github.com/jcmturner/gokrb5/messages"
 	"github.com/jcmturner/gokrb5/types"
@@ -69,7 +70,7 @@ func main() {
 		}
 		fmt.Fprintf(os.Stdout, "PAReqEncPARep: %+v\n", p)
 		var et crypto.Aes256CtsHmacSha96
-		cb, err := crypto.GetChecksum(b, ar.DecryptedEncPart.Key.KeyValue, messages.USAGE_KEY_USAGE_AS_REQ, et)
+		cb, err := crypto.GetChecksum(b, ar.DecryptedEncPart.Key.KeyValue, keyusage.KEY_USAGE_AS_REQ, et)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error getting checksum PAReqEncPARep: %v\n", err)
 		} else {

@@ -9,6 +9,7 @@ import (
 	"github.com/jcmturner/asn1"
 	"github.com/jcmturner/gokrb5/crypto"
 	"github.com/jcmturner/gokrb5/iana/asnAppTag"
+	"github.com/jcmturner/gokrb5/iana/keyusage"
 	"github.com/jcmturner/gokrb5/iana/msgtype"
 	"github.com/jcmturner/gokrb5/keytab"
 	"github.com/jcmturner/gokrb5/types"
@@ -126,7 +127,7 @@ func (e *EncKDCRepPart) Unmarshal(b []byte) error {
 
 func (k *ASRep) DecryptEncPartWithPassword(passwd string) error {
 	key, etype, err := crypto.GetKeyFromPassword(passwd, k.CName, k.CRealm, k.EncPart.EType, k.PAData)
-	b, err := crypto.DecryptEncPart(key, k.EncPart, etype, USAGE_AS_REP_ENCPART)
+	b, err := crypto.DecryptEncPart(key, k.EncPart, etype, keyusage.AS_REP_ENCPART)
 	if err != nil {
 		return fmt.Errorf("Error decrypting KDC_REP EncPart: %v", err)
 	}
@@ -148,7 +149,7 @@ func (k *ASRep) DecryptEncPartWithKeytab(kt keytab.Keytab) error {
 	if err != nil {
 		return fmt.Errorf("Could not get key from keytab: %v", err)
 	}
-	b, err := crypto.DecryptEncPart(key, k.EncPart, etype, USAGE_AS_REP_ENCPART)
+	b, err := crypto.DecryptEncPart(key, k.EncPart, etype, keyusage.AS_REP_ENCPART)
 	if err != nil {
 		return fmt.Errorf("Error decrypting KDC_REP EncPart: %v", err)
 	}
@@ -170,7 +171,7 @@ func (k *TGSRep) DecryptEncPart(kt keytab.Keytab) error {
 	if err != nil {
 		return fmt.Errorf("Could not get key from keytab: %v", err)
 	}
-	b, err := crypto.DecryptEncPart(key, k.EncPart, etype, USAGE_AS_REP_ENCPART)
+	b, err := crypto.DecryptEncPart(key, k.EncPart, etype, keyusage.AS_REP_ENCPART)
 	if err != nil {
 		return fmt.Errorf("Error decrypting KDC_REP EncPart: %v", err)
 	}
