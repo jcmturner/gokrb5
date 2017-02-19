@@ -28,7 +28,7 @@ type EType interface {
 	GetConfounderByteSize() int                                 // This is the same as the cipher block size but in bytes.
 	DeriveKey(protocolKey, usage []byte) ([]byte, error)        // DK key-derivation (protocol-key, integer)->(specific-key)
 	DeriveRandom(protocolKey, usage []byte) ([]byte, error)     // DR pseudo-random (protocol-key, octet-string)->(octet-string)
-	VerifyChecksum(protocolKey, ct, pt []byte, usage int) bool
+	VerifyIntegrity(protocolKey, ct, pt []byte, usage uint32) bool
 	GetHash() hash.Hash
 }
 
@@ -142,8 +142,8 @@ func DecryptEncPart(key []byte, pe types.EncryptedData, etype EType, usage uint3
 		return nil, fmt.Errorf("Error decrypting: %v", err)
 	}
 	//Verify checksum
-	if !etype.VerifyChecksum(key, pe.Cipher, b, int(usage)) {
-		return nil, errors.New("Error decrypting encrypted part: checksum verification failed")
+	if !etype.VerifyIntegrity(key, pe.Cipher, b, usage) {
+		return nil, errors.New("Error decrypting encrypted part: integrity verification failed")
 	}
 	//Remove the confounder bytes
 	b = b[etype.GetConfounderByteSize():]
@@ -200,7 +200,7 @@ func GetKeyFromPassword(passwd string, cn types.PrincipalName, realm string, ety
 					return key, etype, fmt.Errorf("Error getting encryption type: %v", err)
 				}
 			}
-			if len(et2[0].S2KParams) == 8 {
+			if len(et2[0].S2KParams) == 4 {
 				sk2p = hex.EncodeToString(et2[0].S2KParams)
 			}
 			salt = et2[0].Salt
@@ -216,8 +216,8 @@ func GetKeyFromPassword(passwd string, cn types.PrincipalName, realm string, ety
 	return key, etype, nil
 }
 
-func GetChecksum(pt, key []byte, usage int, etype EType) ([]byte, error) {
-	k, err := etype.DeriveKey(key, GetUsageKi(uint32(usage)))
+func GetIntegrityHash(pt, key []byte, usage uint32, etype EType) ([]byte, error) {
+	k, err := etype.DeriveKey(key, GetUsageKi(usage))
 	if err != nil {
 		return nil, fmt.Errorf("Unable to derive key for checksum: %v", err)
 	}
@@ -230,10 +230,10 @@ func GetChecksum(pt, key []byte, usage int, etype EType) ([]byte, error) {
 	//	pt = append(pt, t...)
 	//}
 	mac.Write(pt)
-	return mac.Sum(nil), nil
+	return mac.Sum(nil)[1:etype.GetHMACBitLength()/8], nil
 }
 
-func VerifyChecksum(key, ct, pt []byte, usage int, etype EType) bool {
+func VerifyIntegrity(key, ct, pt []byte, usage uint32, etype EType) bool {
 	//The ciphertext output is the concatenation of the output of the basic
 	//encryption function E and a (possibly truncated) HMAC using the
 	//specified hash function H, both applied to the plaintext with a
@@ -241,8 +241,8 @@ func VerifyChecksum(key, ct, pt []byte, usage int, etype EType) bool {
 	//multiple of the message block size.  When the HMAC is computed, the
 	//key is used in the protocol key form.
 	h := ct[len(ct)-etype.GetHMACBitLength()/8+1:]
-	expectedMAC, _ := GetChecksum(pt, key, usage, etype)
-	return hmac.Equal(h, expectedMAC[1:etype.GetHMACBitLength()/8])
+	expectedMAC, _ := GetIntegrityHash(pt, key, usage, etype)
+	return hmac.Equal(h, expectedMAC)
 }
 
 /*

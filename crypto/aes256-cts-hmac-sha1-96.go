@@ -116,6 +116,6 @@ func (e Aes256CtsHmacSha96) DeriveRandom(protocolKey, usage []byte) ([]byte, err
 	return AESDeriveRandom(protocolKey, usage, e)
 }
 
-func (e Aes256CtsHmacSha96) VerifyChecksum(protocolKey, ct, pt []byte, usage int) bool {
-	return VerifyChecksum(protocolKey, ct, pt, usage, e)
+func (e Aes256CtsHmacSha96) VerifyIntegrity(protocolKey, ct, pt []byte, usage uint32) bool {
+	return VerifyIntegrity(protocolKey, ct, pt, usage, e)
 }

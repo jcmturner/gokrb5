@@ -3,9 +3,11 @@ package client
 import (
 	"github.com/jcmturner/gokrb5/types"
 	"time"
+	"github.com/jcmturner/gokrb5/keytab"
 )
 
-type session struct {
+
+type Session struct {
 	AuthTime  time.Time
 	EndTime   time.Time
 	RenewTill time.Time
@@ -13,3 +15,4 @@ type session struct {
 	TGT        types.Ticket
 	SessionKey types.EncryptionKey
 }
+
