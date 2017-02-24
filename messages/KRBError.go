@@ -37,6 +37,6 @@ func (k *KRBError) Unmarshal(b []byte) error {
 	return nil
 }
 
-func (k *KRBError) Error() string {
+func (k KRBError) Error() string {
 	return fmt.Sprintf("KRB Error: %d - %s", k.ErrorCode, k.EText)
 }

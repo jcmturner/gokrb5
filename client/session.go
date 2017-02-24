@@ -3,7 +3,6 @@ package client
 import (
 	"github.com/jcmturner/gokrb5/types"
 	"time"
-	"github.com/jcmturner/gokrb5/keytab"
 )
 
 

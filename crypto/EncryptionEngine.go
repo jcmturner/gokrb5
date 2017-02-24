@@ -47,7 +47,7 @@ func GetEtype(id int) (EType, error) {
 
 // RFC3961: DR(Key, Constant) = k-truncate(E(Key, Constant, initial-cipher-state))
 // key - base key or protocol key. Likely to be a key from a keytab file
-// TODO usage - a constant
+// usage - a constant
 // n - block size in bits (not bytes) - note if you use something like aes.BlockSize this is in bytes.
 // k - key length / key seed length in bits. Eg. for AES256 this value is 256
 // encrypt - the encryption function to use
@@ -131,7 +131,6 @@ func pkcs7Unpad(b []byte, m int) ([]byte, error) {
 
 func DecryptEncPart(key []byte, pe types.EncryptedData, etype EType, usage uint32) ([]byte, error) {
 	//Derive the key
-	//TODO need to consider PAdata for deriving key
 	k, err := etype.DeriveKey(key, GetUsageKe(usage))
 	if err != nil {
 		return nil, fmt.Errorf("Error deriving key: %v", err)
@@ -143,7 +142,7 @@ func DecryptEncPart(key []byte, pe types.EncryptedData, etype EType, usage uint3
 	}
 	//Verify checksum
 	if !etype.VerifyIntegrity(key, pe.Cipher, b, usage) {
-		return nil, errors.New("Error decrypting encrypted part: integrity verification failed")
+			return nil, errors.New("Error decrypting encrypted part: integrity verification failed")
 	}
 	//Remove the confounder bytes
 	b = b[etype.GetConfounderByteSize():]
@@ -222,15 +221,8 @@ func GetIntegrityHash(pt, key []byte, usage uint32, etype EType) ([]byte, error)
 		return nil, fmt.Errorf("Unable to derive key for checksum: %v", err)
 	}
 	mac := hmac.New(etype.GetHash, k)
-	//TODO do I need to append the ivz before taking the hash?
-	//ivz := make([]byte, etype.GetConfounderByteSize())
-	//pt = append(ivz, pt...)
-	//if r := len(pt)%etype.GetMessageBlockByteSize(); r != 0 {
-	//	t := make([]byte, etype.GetMessageBlockByteSize() - r)
-	//	pt = append(pt, t...)
-	//}
 	mac.Write(pt)
-	return mac.Sum(nil)[1:etype.GetHMACBitLength()/8], nil
+	return mac.Sum(nil)[:etype.GetHMACBitLength()/8], nil
 }
 
 func VerifyIntegrity(key, ct, pt []byte, usage uint32, etype EType) bool {
@@ -240,16 +232,15 @@ func VerifyIntegrity(key, ct, pt []byte, usage uint32, etype EType) bool {
 	//random confounder prefix and sufficient padding to bring it to a
 	//multiple of the message block size.  When the HMAC is computed, the
 	//key is used in the protocol key form.
-	h := ct[len(ct)-etype.GetHMACBitLength()/8+1:]
+	h := make([]byte, etype.GetHMACBitLength()/8)
+	copy(h, ct[len(ct)-etype.GetHMACBitLength()/8:])
 	expectedMAC, _ := GetIntegrityHash(pt, key, usage, etype)
 	return hmac.Equal(h, expectedMAC)
 }
 
 /*
 Key Usage Numbers
-
 RFC 3961: The "well-known constant" used for the DK function is the key usage number, expressed as four octets in big-endian order, followed by one octet indicated below.
-
 Kc = DK(base-key, usage | 0x99);
 Ke = DK(base-key, usage | 0xAA);
 Ki = DK(base-key, usage | 0x55);

@@ -40,7 +40,6 @@ const pa149rep= "6b8202f3308202efa003020105a10302010ba22e302c302aa103020113a2230
 func main() {
 
 NoPA()
-
 }
 
 func NoPA() {
@@ -73,17 +72,18 @@ func Fast (){
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error marshalling AS_REQ: %v\n", err)
 	}
-	rb, err := client.SendToKDC(c, b)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error sending to KDC: %v\n", err)
-	}
-	var ar messages.ASRep
-	ar.Unmarshal(rb)
 	kb, _ := hex.DecodeString(ktab)
 	kt, err := keytab.Parse(kb)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "KT load err: %v\n\n", err)
 	}
+	cl := client.NewClientWithKeytab("testuser1", kt)
+	rb, err := cl.SendToKDC(b)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error sending to KDC: %v\n", err)
+	}
+	var ar messages.ASRep
+	ar.Unmarshal(rb)
 	err = ar.DecryptEncPartWithKeytab(kt)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "\nDecrypt err: %v\n", err)

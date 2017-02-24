@@ -123,12 +123,15 @@ func AESCTSEncrypt(key, iv, message []byte, e EType) ([]byte, []byte, error) {
 }
 
 func AESCTSDecrypt(key, ciphertext []byte, e EType) ([]byte, error) {
+	// Copy the cipher text as golang slices even when passed by value to this method can result in the backing arrays of the calling code value being updated.
+	ct := make([]byte, len(ciphertext))
+	copy(ct, ciphertext)
 	if len(key) != e.GetKeyByteSize() {
 		return nil, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeySeedBitLength(), len(key))
 
 	}
-	if len(ciphertext) < aes.BlockSize {
-		return nil, fmt.Errorf("Ciphertext is not large enough. It is less that one block size. Blocksize:%v; Ciphertext:%v", aes.BlockSize, len(ciphertext))
+	if len(ct) < aes.BlockSize {
+		return nil, fmt.Errorf("Ciphertext is not large enough. It is less that one block size. Blocksize:%v; Ciphertext:%v", aes.BlockSize, len(ct))
 	}
 	// Configure the CBC
 	block, err := aes.NewCipher(key)
@@ -141,19 +144,19 @@ func AESCTSDecrypt(key, ciphertext []byte, e EType) ([]byte, error) {
 
 	//If ciphertext is multiple of blocksize we just need to swap back the last two blocks and then do CBC
 	//If the ciphertext is just one block we can't swap so we just decrypt
-	if len(ciphertext)%aes.BlockSize == 0 {
-		if len(ciphertext) > aes.BlockSize {
-			ciphertext, _ = swapLastTwoBlocks(ciphertext, aes.BlockSize)
+	if len(ct)%aes.BlockSize == 0 {
+		if len(ct) > aes.BlockSize {
+			ct, _ = swapLastTwoBlocks(ct, aes.BlockSize)
 		}
 		mode = cipher.NewCBCDecrypter(block, ivz)
-		message := make([]byte, len(ciphertext))
-		mode.CryptBlocks(message, ciphertext)
-		return message[:len(ciphertext)], nil
+		message := make([]byte, len(ct))
+		mode.CryptBlocks(message, ct)
+		return message[:len(ct)], nil
 	}
 
 	// Cipher Text Stealing (CTS) using CBC interface. Ref: https://en.wikipedia.org/wiki/Ciphertext_stealing#CBC_ciphertext_stealing
 	// Get ciphertext of the 2nd to last (penultimate) block (cpb), the last block (clb) and the rest (crb)
-	crb, cpb, clb, _ := tailBlocks(ciphertext, aes.BlockSize)
+	crb, cpb, clb, _ := tailBlocks(ct, aes.BlockSize)
 	iv := ivz
 	var message []byte
 	if crb != nil {
@@ -171,7 +174,7 @@ func AESCTSDecrypt(key, ciphertext []byte, e EType) ([]byte, error) {
 	mode = cipher.NewCBCDecrypter(block, ivz)
 	mode.CryptBlocks(pb, cpb)
 	// number of byte needed to pad
-	npb := aes.BlockSize - len(ciphertext)%aes.BlockSize
+	npb := aes.BlockSize - len(ct)%aes.BlockSize
 	//pad last block using the number of bytes needed from the tail of the plaintext 2nd to last (penultimate) block
 	clb = append(clb, pb[len(pb)-npb:]...)
 
@@ -189,7 +192,7 @@ func AESCTSDecrypt(key, ciphertext []byte, e EType) ([]byte, error) {
 	message = append(message, cpb...)
 
 	// Truncate to the size of the original cipher text
-	return message[:len(ciphertext)], nil
+	return message[:len(ct)], nil
 }
 
 func tailBlocks(b []byte, c int) ([]byte, []byte, []byte, error) {

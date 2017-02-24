@@ -29,7 +29,7 @@ func (cl *Client) ASExchange() error {
 		if err != nil {
 			return fmt.Errorf("Could not unmarshal data returned from KDC: %v", err)
 		}
-		if krberr.ErrorCode = errorcode.KDC_ERR_PREAUTH_REQUIRED {
+		if krberr.ErrorCode == errorcode.KDC_ERR_PREAUTH_REQUIRED {
 			//TODO put PA TIMESTAMP here
 		}
 		return krberr

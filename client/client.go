@@ -1,22 +1,9 @@
 package client
 
 import (
-	"bytes"
-	"encoding/hex"
-	"fmt"
-	"github.com/jcmturner/asn1"
-	"github.com/jcmturner/gokrb5/config"
-	"github.com/jcmturner/gokrb5/crypto"
-	"github.com/jcmturner/gokrb5/iana/keyusage"
 	"github.com/jcmturner/gokrb5/keytab"
-	"github.com/jcmturner/gokrb5/messages"
-	"github.com/jcmturner/gokrb5/types"
-	"math/rand"
-	"net"
-	"os"
-	"time"
+	"github.com/jcmturner/gokrb5/config"
 )
-
 type Client struct {
 	Username string
 	Password string
@@ -51,7 +38,7 @@ func (cl *Client) WithKeytab(kt keytab.Keytab) *Client {
 	return cl
 }
 
-func (cl *Client) WithConfig(cfg config.Config) *Client {
+func (cl *Client) WithConfig(cfg *config.Config) *Client {
 	cl.Config = cfg
 	return cl
 }
