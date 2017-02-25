@@ -11,6 +11,8 @@ import (
 	"github.com/jcmturner/gokrb5/iana"
 	"github.com/jcmturner/gokrb5/iana/asnAppTag"
 	"github.com/jcmturner/gokrb5/iana/msgtype"
+	"github.com/jcmturner/gokrb5/iana/nametype"
+	"github.com/jcmturner/gokrb5/iana/patype"
 	"github.com/jcmturner/gokrb5/types"
 	"math/rand"
 	"time"
@@ -67,7 +69,7 @@ type KDCReqBody struct {
 func NewASReq(c *config.Config, username string) ASReq {
 	pas := types.PADataSequence{
 		types.PAData{
-			PADataType: types.PA_REQ_ENC_PA_REP,
+			PADataType: patype.PA_REQ_ENC_PA_REP,
 		},
 	}
 	nonce := int(rand.Int31())
@@ -81,11 +83,11 @@ func NewASReq(c *config.Config, username string) ASReq {
 			KDCOptions: c.LibDefaults.Kdc_default_options,
 			Realm:      c.LibDefaults.Default_realm,
 			CName: types.PrincipalName{
-				NameType:   types.KRB_NT_PRINCIPAL,
+				NameType:   nametype.KRB_NT_PRINCIPAL,
 				NameString: []string{username},
 			},
 			SName: types.PrincipalName{
-				NameType:   types.KRB_NT_SRV_INST,
+				NameType:   nametype.KRB_NT_SRV_INST,
 				NameString: []string{"krbtgt", c.LibDefaults.Default_realm},
 			},
 			Till:  t.Add(c.LibDefaults.Ticket_lifetime),
