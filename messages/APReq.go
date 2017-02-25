@@ -7,6 +7,10 @@ import (
 	"github.com/jcmturner/gokrb5/iana/asnAppTag"
 	"github.com/jcmturner/gokrb5/iana/msgtype"
 	"github.com/jcmturner/gokrb5/types"
+	"github.com/jcmturner/gokrb5/iana"
+	"github.com/jcmturner/gokrb5/crypto"
+	"github.com/jcmturner/gokrb5/asn1tools"
+	"github.com/jcmturner/gokrb5/iana/keyusage"
 )
 
 /*AP-REQ          ::= [APPLICATION 14] SEQUENCE {
@@ -39,6 +43,47 @@ type APReq struct {
 	Authenticator types.EncryptedData `asn1:"explicit,tag:4"`
 }
 
+func NewAPReq(TGT types.Ticket, sessionKey types.EncryptionKey, auth types.Authenticator) (APReq, error) {
+	var a APReq
+	ed, err := encryptAuthenticator(auth, sessionKey)
+	if err != nil {
+		return a, fmt.Errorf("Error creating authenticator for AP_REQ: %v", err)
+	}
+	a = APReq{
+		PVNO:    iana.PVNO,
+		MsgType: msgtype.KRB_AP_REQ,
+		APOptions: asn1.BitString{},
+		Ticket: TGT,
+		Authenticator: ed,
+	}
+	return a, nil
+}
+
+func encryptAuthenticator(a types.Authenticator, sessionKey types.EncryptionKey) (types.EncryptedData, error) {
+	var ed types.EncryptedData
+	etype, err := crypto.GetEtype(sessionKey.KeyType)
+	if err != nil {
+		return ed, fmt.Errorf("Error getting etype to encrypt authenticator: %v", err)
+	}
+	m, err := a.Marshal()
+	if err != nil {
+		return ed, fmt.Errorf("Error marshalling authenticator: %v", err)
+	}
+	k, err := etype.DeriveKey(sessionKey.KeyValue, crypto.GetUsageKe(uint32(keyusage.TGS_REQ_PA_TGS_REQ_AP_REQ_AUTHENTICATOR)))
+	if err != nil {
+		return ed, fmt.Errorf("Error deriving key for authenticator: %v", err)
+	}
+	_, b, err := etype.Encrypt(k, m)
+	if err != nil {
+		return ed, fmt.Errorf("Error encrypting authenticator: %v", err)
+	}
+	ed = types.EncryptedData{
+		EType: sessionKey.KeyType,
+		Cipher: b,
+	}
+	return ed, nil
+}
+
 func (a *APReq) Unmarshal(b []byte) error {
 	var m marshalAPReq
 	_, err := asn1.UnmarshalWithParams(b, &m, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.APREQ))
@@ -57,4 +102,30 @@ func (a *APReq) Unmarshal(b []byte) error {
 		return fmt.Errorf("Error unmarshalling ticket in AP_REQ; %v", err)
 	}
 	return nil
+}
+
+func (a *APReq) Marshal() ([]byte, error) {
+	m := marshalAPReq{
+		PVNO:    a.PVNO,
+		MsgType: a.MsgType,
+		APOptions: a.APOptions,
+		Authenticator: a.Authenticator,
+	}
+	var b []byte
+	b, err := a.Ticket.Marshal()
+	if err != nil {
+		return b, err
+	}
+	m.Ticket = asn1.RawValue{
+		Class:      2,
+		IsCompound: true,
+		Tag:        3,
+		Bytes:      b,
+	}
+	mk, err := asn1.Marshal(m)
+	if err != nil {
+		return mk, fmt.Errorf("Error marshalling AP_REQ: %v", err)
+	}
+	mk = asn1tools.AddASNAppTag(mk, asnAppTag.APREQ)
+	return mk, nil
 }

@@ -15,6 +15,7 @@ import (
 
 type EType interface {
 	GetETypeID() int
+	GetHashID() int
 	GetKeyByteSize() int                                        // See "protocol key format" for defined values
 	GetKeySeedBitLength() int                                   // key-generation seed length, k
 	GetDefaultStringToKeyParams() string                        // default string-to-key parameters (s2kparams)
@@ -215,14 +216,22 @@ func GetKeyFromPassword(passwd string, cn types.PrincipalName, realm string, ety
 	return key, etype, nil
 }
 
-func GetIntegrityHash(pt, key []byte, usage uint32, etype EType) ([]byte, error) {
-	k, err := etype.DeriveKey(key, GetUsageKi(usage))
+func getHash(pt, key []byte, usage []byte, etype EType) ([]byte, error) {
+	k, err := etype.DeriveKey(key, usage)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to derive key for checksum: %v", err)
 	}
 	mac := hmac.New(etype.GetHash, k)
 	mac.Write(pt)
 	return mac.Sum(nil)[:etype.GetHMACBitLength()/8], nil
+}
+
+func GetChecksumHash(pt, key []byte, usage uint32, etype EType) ([]byte, error) {
+	return getHash(pt, key, GetUsageKc(usage), etype)
+}
+
+func GetIntegrityHash(pt, key []byte, usage uint32, etype EType) ([]byte, error) {
+	return getHash(pt, key, GetUsageKi(usage), etype)
 }
 
 func VerifyIntegrity(key, ct, pt []byte, usage uint32, etype EType) bool {

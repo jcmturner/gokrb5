@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"hash"
+	"github.com/jcmturner/gokrb5/iana/chksumtype"
+	"github.com/jcmturner/gokrb5/iana/etype"
 )
 
 //RFC: 3961 Section 6.3
@@ -50,7 +52,11 @@ type Des3CbcSha1Kd struct {
 }
 
 func (e Des3CbcSha1Kd) GetETypeID() int {
-	return 16
+	return etype.DES3_CBC_SHA1_KD
+}
+
+func (e Des3CbcSha1Kd) GetHashID() int {
+	return chksumtype.HMAC_SHA1_DES3_KD
 }
 
 func (e Des3CbcSha1Kd) GetKeyByteSize() int {

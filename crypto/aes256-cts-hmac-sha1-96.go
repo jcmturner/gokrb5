@@ -4,6 +4,8 @@ import (
 	"crypto/aes"
 	"crypto/sha1"
 	"hash"
+	"github.com/jcmturner/gokrb5/iana/etype"
+	"github.com/jcmturner/gokrb5/iana/chksumtype"
 )
 
 // RFC 3962
@@ -56,7 +58,11 @@ type Aes256CtsHmacSha96 struct {
 }
 
 func (e Aes256CtsHmacSha96) GetETypeID() int {
-	return 18
+	return etype.AES256_CTS_HMAC_SHA1_96
+}
+
+func (e Aes256CtsHmacSha96) GetHashID() int {
+	return chksumtype.HMAC_SHA1_96_AES256
 }
 
 func (e Aes256CtsHmacSha96) GetKeyByteSize() int {

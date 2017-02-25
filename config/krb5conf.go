@@ -375,7 +375,7 @@ func (d *DomainRealm) parseLines(lines []string) error {
 		}
 		p := strings.Split(line, "=")
 		domain := strings.Replace(strings.ToLower(p[0]), " ", "", -1)
-		realm := strings.Replace(p[1], " ", "", -1)
+		realm := strings.Replace(strings.ToUpper(p[1]), " ", "", -1)
 		d.addMapping(domain, realm)
 	}
 	return nil

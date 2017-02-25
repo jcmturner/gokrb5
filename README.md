@@ -4,6 +4,8 @@ This is work in progress and does not yet work...
 
 [![GoDoc](https://godoc.org/github.com/jcmturner/gokrb5?status.svg)](https://godoc.org/github.com/jcmturner/gokrb5)
 
+## Compatibility
+Go version 1.8+ is needed.
 
 ## References
 ### RFCs
@@ -23,12 +25,12 @@ This is work in progress and does not yet work...
 * https://en.wikipedia.org/wiki/Ciphertext_stealing#CBC_ciphertext_stealing
 
 ## Thanks
-* Greg Hudson from the MIT Consortium for Kerberos and Internet Trust for providing useful test vectors.
+* Greg Hudson from the MIT Consortium for Kerberos and Internet Trust for providing useful advice.
 
 ## Known Issues
 | Issue | Worked around? | References |
 |-------|-------------|------------|
-| Cannot unmarshal into slice of asn1.RawValue | Yes | https://github.com/golang/go/issues/17321 |
-| Cannot marshal into a GeneralString | Yes - using https://github.com/jcmturner/asn1 | https://github.com/golang/go/issues/18832 |
-| Cannot marshal into slice of strings and pass stringtype parameter tags to members | Yes - using https://github.com/jcmturner/asn1 | https://github.com/golang/go/issues/18834 |
-| Cannot marshal with application tags | Yes | |
+| Golang's ASN1 package cannot unmarshal into slice of asn1.RawValue | Yes | https://github.com/golang/go/issues/17321 |
+| Golang's ASN1 package cannot marshal into a GeneralString | Yes - using https://github.com/jcmturner/asn1 | https://github.com/golang/go/issues/18832 |
+| Golang's ASN1 package cannot marshal into slice of strings and pass stringtype parameter tags to members | Yes - using https://github.com/jcmturner/asn1 | https://github.com/golang/go/issues/18834 |
+| Golang's ASN1 package cannot marshal with application tags | Yes | |

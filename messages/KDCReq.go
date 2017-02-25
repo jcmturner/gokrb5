@@ -17,6 +17,8 @@ import (
 	"math/rand"
 	"time"
 	"strings"
+	"github.com/jcmturner/gokrb5/iana/keyusage"
+	"github.com/jcmturner/gokrb5/crypto"
 )
 
 type marshalKDCReq struct {
@@ -111,19 +113,13 @@ func NewASReq(c *config.Config, username string) ASReq {
 	return a
 }
 
-func NewTGSReq(c *config.Config, spn string) TGSReq {
-	pas := types.PADataSequence{
-		types.PAData{
-			PADataType: patype.PA_REQ_ENC_PA_REP,
-		},
-	}
+func NewTGSReq(username string, c *config.Config, TGT types.Ticket, sessionKey types.EncryptionKey, spn string) (TGSReq, error) {
 	nonce := int(rand.Int31())
 	t := time.Now()
 	s := strings.Split(spn, "/")
 	a := TGSReq{
 		PVNO:    iana.PVNO,
 		MsgType: msgtype.KRB_TGS_REQ,
-		PAData:  pas,
 		ReqBody: KDCReqBody{
 			KDCOptions: c.LibDefaults.Kdc_default_options,
 			Realm:      c.ResolveRealm(s[len(s)-1]),
@@ -148,7 +144,33 @@ func NewTGSReq(c *config.Config, spn string) TGSReq {
 	if c.LibDefaults.Renew_lifetime != 0 {
 		a.ReqBody.RTime = t.Add(c.LibDefaults.Renew_lifetime)
 	}
-	return a
+	b, err := a.ReqBody.Marshal()
+	if err != nil {
+		return a, fmt.Errorf("Error marshalling request body: %v", err)
+	}
+	auth := types.NewAuthenticator(c.LibDefaults.Default_realm, username)
+	etype, err := crypto.GetEtype(sessionKey.KeyType)
+	if err != nil {
+		return a, fmt.Errorf("Error getting etype to encrypt authenticator: %v", err)
+	}
+	cb, err := crypto.GetChecksumHash(b, sessionKey.KeyValue, keyusage.TGS_REQ_PA_TGS_REQ_AP_REQ_AUTHENTICATOR_CHKSUM, etype)
+	auth.Cksum = types.Checksum {
+		CksumType: etype.GetHashID(),
+		Checksum: cb,
+	}
+	apReq, err := NewAPReq(TGT, sessionKey, auth)
+	apb, err := apReq.Marshal()
+	if err != nil {
+		return a, fmt.Errorf("Error marshalling AP_REQ for pre-authentication data: %v", err)
+	}
+	pas := types.PADataSequence{
+		types.PAData{
+			PADataType: patype.PA_TGS_REQ,
+			PADataValue: apb,
+		},
+	}
+	a.PAData = pas
+	return a, nil
 }
 
 func (k *ASReq) Unmarshal(b []byte) error {

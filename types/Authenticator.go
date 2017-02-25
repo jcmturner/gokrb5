@@ -3,8 +3,11 @@ package types
 import (
 	"fmt"
 	"github.com/jcmturner/asn1"
+	"github.com/jcmturner/gokrb5/iana"
 	"github.com/jcmturner/gokrb5/iana/asnAppTag"
+	"github.com/jcmturner/gokrb5/iana/nametype"
 	"time"
+	"github.com/jcmturner/gokrb5/asn1tools"
 )
 
 /*Authenticator   ::= [APPLICATION 2] SEQUENCE  {
@@ -39,7 +42,31 @@ type Authenticator struct {
 	AuthorizationData AuthorizationData `asn1:"explicit,optional,tag:8"`
 }
 
+func NewAuthenticator(realm, username string) Authenticator {
+	t := time.Now()
+	return Authenticator{
+		AVNO:   iana.PVNO,
+		CRealm: realm,
+		CName: PrincipalName{
+			NameType:   nametype.KRB_NT_PRINCIPAL,
+			NameString: []string{username},
+		},
+		Cksum: Checksum{},
+		Cusec: int((t.UnixNano() / int64(time.Microsecond)) - (t.Unix() * 1e6)),
+		CTime: t,
+	}
+}
+
 func (a *Authenticator) Unmarshal(b []byte) error {
 	_, err := asn1.UnmarshalWithParams(b, a, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.Authenticator))
 	return err
+}
+
+func (a *Authenticator) Marshal() ([]byte, error) {
+	b, err := asn1.Marshal(*a)
+	if err != nil {
+		return nil, err
+	}
+	b = asn1tools.AddASNAppTag(b, asnAppTag.Authenticator)
+	return b, nil
 }
