@@ -1,11 +1,11 @@
 package client
 
 import (
-	"net"
-	"fmt"
-	"time"
 	"bytes"
+	"fmt"
 	"math/rand"
+	"net"
+	"time"
 )
 
 func (cl *Client) SendToKDC(b []byte) ([]byte, error) {
@@ -78,7 +78,7 @@ func sendUDP(kdc string, b []byte) ([]byte, error) {
 		return r, fmt.Errorf("Error establishing connection to KDC: %v", err)
 	}
 	defer conn.Close()
-	conn.SetDeadline(time.Now().Add(time.Duration(5) * time.Second))
+	conn.SetDeadline(time.Now().Add(time.Duration(5 * time.Second)))
 	_, err = conn.Write(b)
 	if err != nil {
 		return r, fmt.Errorf("Error sending to KDC: %v", err)
@@ -103,7 +103,7 @@ func sendTCP(kdc string, b []byte) ([]byte, error) {
 		return r, fmt.Errorf("Error establishing connection to KDC: %v", err)
 	}
 	defer conn.Close()
-	conn.SetDeadline(time.Now().Add(time.Duration(5) * time.Second))
+	conn.SetDeadline(time.Now().Add(time.Duration(5 * time.Second)))
 	_, err = conn.Write(b)
 	if err != nil {
 		return r, fmt.Errorf("Error sending to KDC: %v", err)
@@ -116,4 +116,3 @@ func sendTCP(kdc string, b []byte) ([]byte, error) {
 	}
 	return r, nil
 }
-

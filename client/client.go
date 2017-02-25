@@ -1,41 +1,30 @@
 package client
 
 import (
-	"github.com/jcmturner/gokrb5/keytab"
 	"github.com/jcmturner/gokrb5/config"
+	"github.com/jcmturner/gokrb5/credentials"
+	"github.com/jcmturner/gokrb5/keytab"
 )
+
 type Client struct {
-	Username string
-	Password string
-	Keytab   keytab.Keytab
-	Config   *config.Config
+	Credentials *credentials.Credentials
+	Config      *config.Config
 }
 
 func NewClientWithPassword(username, password string) Client {
+	creds := credentials.NewCredentials(username)
 	return Client{
-		Username: username,
-		Password: password,
-		Keytab: keytab.NewKeytab(),
-		Config: config.NewConfig(),
+		Credentials: creds.WithPassword(password),
+		Config:      config.NewConfig(),
 	}
 }
 
 func NewClientWithKeytab(username string, kt keytab.Keytab) Client {
+	creds := credentials.NewCredentials(username)
 	return Client{
-		Username: username,
-		Keytab:   kt,
-		Config: config.NewConfig(),
+		Credentials: creds.WithKeytab(kt),
+		Config:      config.NewConfig(),
 	}
-}
-
-func (cl *Client) WithPassword(p string) *Client {
-	cl.Password = p
-	return cl
-}
-
-func (cl *Client) WithKeytab(kt keytab.Keytab) *Client {
-	cl.Keytab = kt
-	return cl
 }
 
 func (cl *Client) WithConfig(cfg *config.Config) *Client {
@@ -53,10 +42,10 @@ func (cl *Client) LoadConfig(cfgPath string) (*Client, error) {
 }
 
 func (cl *Client) IsConfigured() bool {
-	if cl.Password == "" && len(cl.Keytab.Entries) < 1 {
+	if !cl.Credentials.HasPassword() && !cl.Credentials.HasKeytab() {
 		return false
 	}
-	if cl.Username == "" {
+	if cl.Credentials.Username == "" {
 		return false
 	}
 	if cl.Config.LibDefaults.Default_realm == "" {
@@ -73,6 +62,3 @@ func (cl *Client) IsConfigured() bool {
 	}
 	return false
 }
-
-
-

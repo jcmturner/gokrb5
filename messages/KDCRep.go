@@ -7,12 +7,15 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jcmturner/asn1"
+	"github.com/jcmturner/gokrb5/config"
+	"github.com/jcmturner/gokrb5/credentials"
 	"github.com/jcmturner/gokrb5/crypto"
 	"github.com/jcmturner/gokrb5/iana/asnAppTag"
 	"github.com/jcmturner/gokrb5/iana/keyusage"
 	"github.com/jcmturner/gokrb5/iana/msgtype"
 	"github.com/jcmturner/gokrb5/keytab"
 	"github.com/jcmturner/gokrb5/types"
+	"sort"
 	"time"
 )
 
@@ -125,8 +128,66 @@ func (e *EncKDCRepPart) Unmarshal(b []byte) error {
 	return err
 }
 
-func (k *ASRep) DecryptEncPartWithPassword(passwd string) error {
-	key, etype, err := crypto.GetKeyFromPassword(passwd, k.CName, k.CRealm, k.EncPart.EType, k.PAData)
+//func (k *ASRep) DecryptEncPartWithPassword(passwd string) error {
+//	key, etype, err := crypto.GetKeyFromPassword(passwd, k.CName, k.CRealm, k.EncPart.EType, k.PAData)
+//	b, err := crypto.DecryptEncPart(key, k.EncPart, etype, keyusage.AS_REP_ENCPART)
+//	if err != nil {
+//		return fmt.Errorf("Error decrypting KDC_REP EncPart: %v", err)
+//	}
+//	var denc EncKDCRepPart
+//	err = denc.Unmarshal(b)
+//	if err != nil {
+//		return fmt.Errorf("Error unmarshalling encrypted part: %v", err)
+//	}
+//	k.DecryptedEncPart = denc
+//	return nil
+//}
+//
+//func (k *ASRep) DecryptEncPartWithKeytab(kt keytab.Keytab) error {
+//	etype, err := crypto.GetEtype(k.EncPart.EType)
+//	if err != nil {
+//		return fmt.Errorf("Error getting encryption type: %v", err)
+//	}
+//	key, err := kt.GetKey(k.CName.NameString[0], k.CRealm, k.EncPart.KVNO, k.EncPart.EType)
+//	if err != nil {
+//		return fmt.Errorf("Could not get key from keytab: %v", err)
+//	}
+//	b, err := crypto.DecryptEncPart(key, k.EncPart, etype, keyusage.AS_REP_ENCPART)
+//	if err != nil {
+//		return fmt.Errorf("Error decrypting KDC_REP EncPart: %v", err)
+//	}
+//	var denc EncKDCRepPart
+//	err = denc.Unmarshal(b)
+//	if err != nil {
+//		return fmt.Errorf("Error unmarshalling encrypted part: %v", err)
+//	}
+//	k.DecryptedEncPart = denc
+//	return nil
+//}
+
+func (k *ASRep) DecryptEncPart(c *credentials.Credentials) error {
+	var etype crypto.EType
+	var key []byte
+	var err error
+	if c.HasKeytab() {
+		etype, err = crypto.GetEtype(k.EncPart.EType)
+		if err != nil {
+			return fmt.Errorf("Error getting encryption type: %v", err)
+		}
+		key, err = c.Keytab.GetKey(k.CName.NameString[0], k.CRealm, k.EncPart.KVNO, k.EncPart.EType)
+		if err != nil {
+			return fmt.Errorf("Could not get key from keytab: %v", err)
+		}
+	}
+	if c.HasPassword() {
+		key, etype, err = crypto.GetKeyFromPassword(c.Password, k.CName, k.CRealm, k.EncPart.EType, k.PAData)
+		if err != nil {
+			return fmt.Errorf("Could not derive key from password: %v", err)
+		}
+	}
+	if !c.HasKeytab() && !c.HasPassword() {
+		return errors.New("No secret available in credentials to preform decryption")
+	}
 	b, err := crypto.DecryptEncPart(key, k.EncPart, etype, keyusage.AS_REP_ENCPART)
 	if err != nil {
 		return fmt.Errorf("Error decrypting KDC_REP EncPart: %v", err)
@@ -140,26 +201,45 @@ func (k *ASRep) DecryptEncPartWithPassword(passwd string) error {
 	return nil
 }
 
-func (k *ASRep) DecryptEncPartWithKeytab(kt keytab.Keytab) error {
-	etype, err := crypto.GetEtype(k.EncPart.EType)
-	if err != nil {
-		return fmt.Errorf("Error getting encryption type: %v", err)
+func (k *ASRep) IsValid(cfg *config.Config, asReq ASReq) (bool, error) {
+	//Ref RFC 4120 Section 3.1.5
+	//TODO change the following to a contains check or slice compare
+	if k.CName.NameType != asReq.ReqBody.CName.NameType {
+		return false, fmt.Errorf("CName in response does not match what was requested. Requested: %+v; Reply: %+v", asReq.ReqBody.CName, k.CName)
 	}
-	key, err := kt.GetKey(k.CName.NameString[0], k.CRealm, k.EncPart.KVNO, k.EncPart.EType)
-	if err != nil {
-		return fmt.Errorf("Could not get key from keytab: %v", err)
+	sort.Strings(k.CName.NameString)
+	sort.Strings(asReq.ReqBody.CName.NameString)
+	for i := range k.CName.NameString {
+		if k.CName.NameString[i] != asReq.ReqBody.CName.NameString[i] {
+			return false, fmt.Errorf("CName in response does not match what was requested. Requested: %+v; Reply: %+v", asReq.ReqBody.CName, k.CName)
+		}
 	}
-	b, err := crypto.DecryptEncPart(key, k.EncPart, etype, keyusage.AS_REP_ENCPART)
-	if err != nil {
-		return fmt.Errorf("Error decrypting KDC_REP EncPart: %v", err)
+	if k.CRealm != asReq.ReqBody.Realm {
+		return false, fmt.Errorf("CRealm in response does not match what was requested. Requested: %s; Reply: %s", asReq.ReqBody.Realm, k.CRealm)
 	}
-	var denc EncKDCRepPart
-	err = denc.Unmarshal(b)
-	if err != nil {
-		return fmt.Errorf("Error unmarshalling encrypted part: %v", err)
+	if k.DecryptedEncPart.Nonce != asReq.ReqBody.Nonce {
+		return false, errors.New("Possible replay attack, nonce in response does not match that in request")
 	}
-	k.DecryptedEncPart = denc
-	return nil
+	if k.DecryptedEncPart.SName.NameType != asReq.ReqBody.SName.NameType {
+		return false, fmt.Errorf("SName in response does not match what was requested. Requested: %v; Reply: %v", asReq.ReqBody.SName, k.DecryptedEncPart.SName)
+	}
+	sort.Strings(k.DecryptedEncPart.SName.NameString)
+	sort.Strings(asReq.ReqBody.SName.NameString)
+	for i := range k.CName.NameString {
+		if k.DecryptedEncPart.SName.NameString[i] != asReq.ReqBody.SName.NameString[i] {
+			return false, fmt.Errorf("SName in response does not match what was requested. Requested: %+v; Reply: %+v", asReq.ReqBody.SName, k.DecryptedEncPart.SName)
+		}
+	}
+	if k.DecryptedEncPart.SRealm != asReq.ReqBody.Realm {
+		return false, fmt.Errorf("SRealm in response does not match what was requested. Requested: %s; Reply: %s", asReq.ReqBody.Realm, k.DecryptedEncPart.SRealm)
+	}
+	if len(asReq.ReqBody.Addresses) > 0 {
+		//TODO compare if address list is the same
+	}
+	if time.Since(k.DecryptedEncPart.AuthTime) > cfg.LibDefaults.Clockskew || time.Until(k.DecryptedEncPart.AuthTime) > cfg.LibDefaults.Clockskew {
+		return false, fmt.Errorf("Clock skew with KDC too large. Greater than %d seconds", cfg.LibDefaults.Clockskew.Seconds())
+	}
+	return true, nil
 }
 
 func (k *TGSRep) DecryptEncPart(kt keytab.Keytab) error {
