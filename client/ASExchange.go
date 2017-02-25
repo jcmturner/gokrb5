@@ -12,6 +12,10 @@ import (
 	"sort"
 )
 
+func (cl *Client) Login() error {
+	return cl.ASExchange()
+}
+
 func (cl *Client) ASExchange() error {
 	if !cl.IsConfigured() {
 		return errors.New("Client is not configured correctly.")
@@ -75,6 +79,13 @@ func (cl *Client) ASExchange() error {
 	if ok, err := ar.IsValid(cl.Config, a); !ok {
 		return fmt.Errorf("AS_REQ is not valid: %v", err)
 	}
-	fmt.Fprintf(os.Stderr, "AS_REP: %+v\n", ar)
+	cl.Session = Session{
+		AuthTime:             ar.DecryptedEncPart.AuthTime,
+		EndTime:              ar.DecryptedEncPart.EndTime,
+		RenewTill:            ar.DecryptedEncPart.RenewTill,
+		TGT:                  ar.Ticket,
+		SessionKey:           ar.DecryptedEncPart.Key,
+		SessionKeyExpiration: ar.DecryptedEncPart.KeyExpiration,
+	}
 	return nil
 }

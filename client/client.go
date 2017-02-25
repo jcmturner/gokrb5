@@ -9,6 +9,7 @@ import (
 type Client struct {
 	Credentials *credentials.Credentials
 	Config      *config.Config
+	Session     *Session
 }
 
 func NewClientWithPassword(username, password string) Client {

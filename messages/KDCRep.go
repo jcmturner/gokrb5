@@ -31,12 +31,11 @@ type marshalKDCRep struct {
 }
 
 type KDCRep struct {
-	PVNO    int
-	MsgType int
-	PAData  []types.PAData
-	CRealm  string
-	CName   types.PrincipalName
-	// Ticket needs to be a raw value as it is wrapped in an APPLICATION tag
+	PVNO             int
+	MsgType          int
+	PAData           []types.PAData
+	CRealm           string
+	CName            types.PrincipalName
 	Ticket           types.Ticket
 	EncPart          types.EncryptedData
 	DecryptedEncPart EncKDCRepPart
@@ -127,43 +126,6 @@ func (e *EncKDCRepPart) Unmarshal(b []byte) error {
 	}
 	return err
 }
-
-//func (k *ASRep) DecryptEncPartWithPassword(passwd string) error {
-//	key, etype, err := crypto.GetKeyFromPassword(passwd, k.CName, k.CRealm, k.EncPart.EType, k.PAData)
-//	b, err := crypto.DecryptEncPart(key, k.EncPart, etype, keyusage.AS_REP_ENCPART)
-//	if err != nil {
-//		return fmt.Errorf("Error decrypting KDC_REP EncPart: %v", err)
-//	}
-//	var denc EncKDCRepPart
-//	err = denc.Unmarshal(b)
-//	if err != nil {
-//		return fmt.Errorf("Error unmarshalling encrypted part: %v", err)
-//	}
-//	k.DecryptedEncPart = denc
-//	return nil
-//}
-//
-//func (k *ASRep) DecryptEncPartWithKeytab(kt keytab.Keytab) error {
-//	etype, err := crypto.GetEtype(k.EncPart.EType)
-//	if err != nil {
-//		return fmt.Errorf("Error getting encryption type: %v", err)
-//	}
-//	key, err := kt.GetKey(k.CName.NameString[0], k.CRealm, k.EncPart.KVNO, k.EncPart.EType)
-//	if err != nil {
-//		return fmt.Errorf("Could not get key from keytab: %v", err)
-//	}
-//	b, err := crypto.DecryptEncPart(key, k.EncPart, etype, keyusage.AS_REP_ENCPART)
-//	if err != nil {
-//		return fmt.Errorf("Error decrypting KDC_REP EncPart: %v", err)
-//	}
-//	var denc EncKDCRepPart
-//	err = denc.Unmarshal(b)
-//	if err != nil {
-//		return fmt.Errorf("Error unmarshalling encrypted part: %v", err)
-//	}
-//	k.DecryptedEncPart = denc
-//	return nil
-//}
 
 func (k *ASRep) DecryptEncPart(c *credentials.Credentials) error {
 	var etype crypto.EType

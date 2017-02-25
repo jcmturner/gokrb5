@@ -110,6 +110,50 @@ func NewASReq(c *config.Config, username string) ASReq {
 	return a
 }
 
+func NewTGSReq(c *config.Config, sname, realm string) ASReq {
+	pas := types.PADataSequence{
+		types.PAData{
+			PADataType: patype.PA_REQ_ENC_PA_REP,
+		},
+	}
+	nonce := int(rand.Int31())
+	t := time.Now()
+
+	a := TGSReq{
+		PVNO:    iana.PVNO,
+		MsgType: msgtype.KRB_TGS_REQ,
+		PAData:  pas,
+		ReqBody: KDCReqBody{
+			KDCOptions: c.LibDefaults.Kdc_default_options,
+			Realm:      c.LibDefaults.Default_realm,
+			CName: types.PrincipalName{
+				NameType:   nametype.KRB_NT_PRINCIPAL,
+				NameString: []string{username},
+			},
+			SName: types.PrincipalName{
+				NameType:   nametype.KRB_NT_SRV_INST,
+				NameString: []string{"krbtgt", c.LibDefaults.Default_realm},
+			},
+			Till:  t.Add(c.LibDefaults.Ticket_lifetime),
+			Nonce: nonce,
+			EType: c.LibDefaults.Default_tkt_enctype_ids,
+		},
+	}
+	if c.LibDefaults.Forwardable {
+		types.SetFlag(&a.ReqBody.KDCOptions, types.Forwardable)
+	}
+	if c.LibDefaults.Canonicalize {
+		types.SetFlag(&a.ReqBody.KDCOptions, types.Canonicalize)
+	}
+	if c.LibDefaults.Proxiable {
+		types.SetFlag(&a.ReqBody.KDCOptions, types.Proxiable)
+	}
+	if c.LibDefaults.Renew_lifetime != 0 {
+		a.ReqBody.RTime = t.Add(c.LibDefaults.Renew_lifetime)
+	}
+	return a
+}
+
 func (k *ASReq) Unmarshal(b []byte) error {
 	var m marshalKDCReq
 	_, err := asn1.UnmarshalWithParams(b, &m, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.ASREQ))
