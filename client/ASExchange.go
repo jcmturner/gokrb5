@@ -8,7 +8,6 @@ import (
 	"github.com/jcmturner/gokrb5/iana/patype"
 	"github.com/jcmturner/gokrb5/messages"
 	"github.com/jcmturner/gokrb5/types"
-	"os"
 	"sort"
 )
 
@@ -77,9 +76,9 @@ func (cl *Client) ASExchange() error {
 		return fmt.Errorf("Error decrypting EncPart of AS_REP: %v", err)
 	}
 	if ok, err := ar.IsValid(cl.Config, a); !ok {
-		return fmt.Errorf("AS_REQ is not valid: %v", err)
+		return fmt.Errorf("AS_REP is not valid: %v", err)
 	}
-	cl.Session = Session{
+	cl.Session = &Session{
 		AuthTime:             ar.DecryptedEncPart.AuthTime,
 		EndTime:              ar.DecryptedEncPart.EndTime,
 		RenewTill:            ar.DecryptedEncPart.RenewTill,

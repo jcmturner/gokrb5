@@ -199,7 +199,7 @@ func (k *ASRep) IsValid(cfg *config.Config, asReq ASReq) (bool, error) {
 		//TODO compare if address list is the same
 	}
 	if time.Since(k.DecryptedEncPart.AuthTime) > cfg.LibDefaults.Clockskew || time.Until(k.DecryptedEncPart.AuthTime) > cfg.LibDefaults.Clockskew {
-		return false, fmt.Errorf("Clock skew with KDC too large. Greater than %d seconds", cfg.LibDefaults.Clockskew.Seconds())
+		return false, fmt.Errorf("Clock skew with KDC too large. Greater than %v seconds", cfg.LibDefaults.Clockskew.Seconds())
 	}
 	return true, nil
 }

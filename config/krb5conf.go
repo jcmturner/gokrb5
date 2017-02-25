@@ -389,6 +389,18 @@ func (d *DomainRealm) deleteMapping(domain, realm string) {
 	delete(*d, domain)
 }
 
+func (c *Config) ResolveRealm(domainName string) string {
+	domainName = strings.TrimSuffix(domainName, ".")
+	periods := strings.Count(domainName, ".") + 1
+	for i := 1; i <= periods; i +=1 {
+		z := strings.SplitN(domainName, ".", i)
+		if r, ok := c.DomainRealm[z[len(z)-1]]; ok {
+			return r
+		}
+	}
+	return c.LibDefaults.Default_realm
+}
+
 func Load(cfgPath string) (*Config, error) {
 	fh, err := os.Open(cfgPath)
 	if err != nil {

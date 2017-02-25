@@ -16,6 +16,7 @@ import (
 	"github.com/jcmturner/gokrb5/types"
 	"math/rand"
 	"time"
+	"strings"
 )
 
 type marshalKDCReq struct {
@@ -110,7 +111,7 @@ func NewASReq(c *config.Config, username string) ASReq {
 	return a
 }
 
-func NewTGSReq(c *config.Config, sname, realm string) ASReq {
+func NewTGSReq(c *config.Config, spn string) TGSReq {
 	pas := types.PADataSequence{
 		types.PAData{
 			PADataType: patype.PA_REQ_ENC_PA_REP,
@@ -118,25 +119,21 @@ func NewTGSReq(c *config.Config, sname, realm string) ASReq {
 	}
 	nonce := int(rand.Int31())
 	t := time.Now()
-
+	s := strings.Split(spn, "/")
 	a := TGSReq{
 		PVNO:    iana.PVNO,
 		MsgType: msgtype.KRB_TGS_REQ,
 		PAData:  pas,
 		ReqBody: KDCReqBody{
 			KDCOptions: c.LibDefaults.Kdc_default_options,
-			Realm:      c.LibDefaults.Default_realm,
-			CName: types.PrincipalName{
-				NameType:   nametype.KRB_NT_PRINCIPAL,
-				NameString: []string{username},
-			},
+			Realm:      c.ResolveRealm(s[len(s)-1]),
 			SName: types.PrincipalName{
-				NameType:   nametype.KRB_NT_SRV_INST,
-				NameString: []string{"krbtgt", c.LibDefaults.Default_realm},
+				NameType:   nametype.KRB_NT_PRINCIPAL,
+				NameString: s,
 			},
 			Till:  t.Add(c.LibDefaults.Ticket_lifetime),
 			Nonce: nonce,
-			EType: c.LibDefaults.Default_tkt_enctype_ids,
+			EType: c.LibDefaults.Default_tgs_enctype_ids,
 		},
 	}
 	if c.LibDefaults.Forwardable {
