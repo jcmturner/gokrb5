@@ -72,3 +72,21 @@ func TestUnmarshalAuthenticator_optionalsNULL(t *testing.T) {
 	assert.Equal(t, 123456, a.Cusec, "Client microseconds not as expected")
 	assert.Equal(t, tt, a.CTime, "Client time not as expected")
 }
+
+func TestMarshalAuthenticator(t *testing.T) {
+	var a Authenticator
+	v := "encode_krb5_authenticator"
+	b, err := hex.DecodeString(testdata.TestVectors[v])
+	if err != nil {
+		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+	}
+	err = a.Unmarshal(b)
+	if err != nil {
+		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+	}
+	mb, err := a.Marshal()
+	if err != nil {
+		t.Fatalf("Marshal of ticket errored: %v", err)
+	}
+	assert.Equal(t, b, mb, "Marshal bytes of Authenticator not as expected")
+}

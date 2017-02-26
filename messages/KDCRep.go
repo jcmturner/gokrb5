@@ -129,14 +129,14 @@ func (e *EncKDCRepPart) Unmarshal(b []byte) error {
 
 func (k *ASRep) DecryptEncPart(c *credentials.Credentials) error {
 	var etype crypto.EType
-	var key []byte
+	var key types.EncryptionKey
 	var err error
 	if c.HasKeytab() {
 		etype, err = crypto.GetEtype(k.EncPart.EType)
 		if err != nil {
 			return fmt.Errorf("Error getting encryption type: %v", err)
 		}
-		key, err = c.Keytab.GetKey(k.CName.NameString[0], k.CRealm, k.EncPart.KVNO, k.EncPart.EType)
+		key, err = c.Keytab.GetEncryptionKey(k.CName.NameString[0], k.CRealm, k.EncPart.KVNO, k.EncPart.EType)
 		if err != nil {
 			return fmt.Errorf("Could not get key from keytab: %v", err)
 		}
@@ -150,7 +150,7 @@ func (k *ASRep) DecryptEncPart(c *credentials.Credentials) error {
 	if !c.HasKeytab() && !c.HasPassword() {
 		return errors.New("No secret available in credentials to preform decryption")
 	}
-	b, err := crypto.DecryptEncPart(key, k.EncPart, etype, keyusage.AS_REP_ENCPART)
+	b, err := crypto.DecryptEncPart(key.KeyValue, k.EncPart, etype, keyusage.AS_REP_ENCPART)
 	if err != nil {
 		return fmt.Errorf("Error decrypting KDC_REP EncPart: %v", err)
 	}
@@ -209,11 +209,11 @@ func (k *TGSRep) DecryptEncPart(kt keytab.Keytab) error {
 	if err != nil {
 		return fmt.Errorf("Keytab error: %v", err)
 	}
-	key, err := kt.GetKey(k.CName.NameString[0], k.CRealm, k.EncPart.KVNO, k.EncPart.EType)
+	key, err := kt.GetEncryptionKey(k.CName.NameString[0], k.CRealm, k.EncPart.KVNO, k.EncPart.EType)
 	if err != nil {
 		return fmt.Errorf("Could not get key from keytab: %v", err)
 	}
-	b, err := crypto.DecryptEncPart(key, k.EncPart, etype, keyusage.AS_REP_ENCPART)
+	b, err := crypto.DecryptEncPart(key.KeyValue, k.EncPart, etype, keyusage.AS_REP_ENCPART)
 	if err != nil {
 		return fmt.Errorf("Error decrypting KDC_REP EncPart: %v", err)
 	}

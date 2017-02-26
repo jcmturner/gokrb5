@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jcmturner/gokrb5/iana/patype"
-	"github.com/jcmturner/gokrb5/keytab"
 	"github.com/jcmturner/gokrb5/types"
 	"hash"
 )
@@ -153,8 +152,8 @@ func DecryptEncPart(key []byte, pe types.EncryptedData, etype EType, usage uint3
 	return b, nil
 }
 
-func GetKeyFromPassword(passwd string, cn types.PrincipalName, realm string, etypeId int, pas types.PADataSequence) ([]byte, EType, error) {
-	var key []byte
+func GetKeyFromPassword(passwd string, cn types.PrincipalName, realm string, etypeId int, pas types.PADataSequence) (types.EncryptionKey, EType, error) {
+	var key types.EncryptionKey
 	etype, err := GetEtype(etypeId)
 	if err != nil {
 		return key, etype, fmt.Errorf("Error getting encryption type: %v", err)
@@ -209,9 +208,13 @@ func GetKeyFromPassword(passwd string, cn types.PrincipalName, realm string, ety
 	if salt == "" {
 		salt = cn.GetSalt(realm)
 	}
-	key, err = etype.StringToKey(passwd, salt, sk2p)
+	k, err := etype.StringToKey(passwd, salt, sk2p)
 	if err != nil {
 		return key, etype, fmt.Errorf("Error deriving key from string: %+v", err)
+	}
+	key = types.EncryptionKey{
+		KeyType: etypeId,
+		KeyValue: k,
 	}
 	return key, etype, nil
 }
@@ -276,16 +279,28 @@ func getUsage(un uint32, o byte) []byte {
 	return append(buf.Bytes(), o)
 }
 
-func GetEncryptedData(b []byte, etype EType, crealm, username string, kt keytab.Keytab, kvno int) ([]byte, error) {
-	key, err := kt.GetKey(username, crealm, kvno, etype.GetETypeID())
-	_, cb, err := etype.Encrypt(key, b)
+// Pass a usage value of zero to use the key provided directly rather than deriving one
+func GetEncryptedData(pt []byte, key types.EncryptionKey, usage int, kvno int) (types.EncryptedData, error) {
+	var ed types.EncryptedData
+	etype, err := GetEtype(key.KeyType)
 	if err != nil {
-		return b, fmt.Errorf("Error encrypting data to form EncryptedData: %v", err)
+		return ed, fmt.Errorf("Error getting etype to encrypt authenticator: %v", err)
 	}
-	ed := types.EncryptedData{
-		KVNO:   kvno,
-		EType:  etype.GetETypeID(),
-		Cipher: cb,
+	k := key.KeyValue
+	if usage != 0 {
+		k, err = etype.DeriveKey(key.KeyValue, GetUsageKe(uint32(usage)))
 	}
-	return ed.Marshal()
+	if err != nil {
+		return ed, fmt.Errorf("Error deriving key for authenticator: %v", err)
+	}
+	_, b, err := etype.Encrypt(k, pt)
+	if err != nil {
+		return ed, fmt.Errorf("Error encrypting authenticator: %v", err)
+	}
+	ed = types.EncryptedData{
+		EType: key.KeyType,
+		Cipher: b,
+		KVNO: kvno,
+	}
+	return ed, nil
 }

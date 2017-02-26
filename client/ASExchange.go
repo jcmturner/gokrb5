@@ -47,13 +47,15 @@ func (cl *Client) ASExchange() error {
 			if err != nil {
 				return fmt.Errorf("Error creating etype: %v", err)
 			}
-			paEncTS, err := crypto.GetEncryptedData(paTSb, etype, cl.Config.LibDefaults.Default_realm, cl.Credentials.Username, cl.Credentials.Keytab, 1)
+			//paEncTS, err := crypto.GetEncryptedData(paTSb, etype, cl.Config.LibDefaults.Default_realm, cl.Credentials.Username, cl.Credentials.Keytab, 1)
+			key, err := cl.Credentials.Keytab.GetEncryptionKey(cl.Credentials.Username, cl.Config.LibDefaults.Default_realm, 1, etype.GetETypeID())
+			paEncTS, err := crypto.GetEncryptedData(paTSb, key, 0, 1)
 			if err != nil {
 				return fmt.Errorf("Error encrypting pre-authentication timestamp: %v", err)
 			}
 			pa := types.PAData{
 				PADataType:  patype.PA_ENC_TIMESTAMP,
-				PADataValue: paEncTS,
+				PADataValue: paEncTS.Cipher,
 			}
 			a.PAData = append(a.PAData, pa)
 			b, err := a.Marshal()

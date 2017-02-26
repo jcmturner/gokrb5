@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"time"
 	"unsafe"
+	"github.com/jcmturner/gokrb5/types"
 )
 
 type Keytab struct {
@@ -20,7 +21,7 @@ type KeytabEntry struct {
 	Principal Principal
 	Timestamp time.Time
 	KVNO8     uint8
-	Key       KeyBlock
+	Key       types.EncryptionKey
 	KVNO      uint32
 }
 
@@ -29,11 +30,6 @@ type Principal struct {
 	Realm         string
 	Components    []string
 	NameType      int32
-}
-
-type KeyBlock struct {
-	EType       uint16
-	KeyMaterial []byte
 }
 
 //Create new, empty Keytab type
@@ -46,14 +42,14 @@ func NewKeytab() Keytab {
 }
 
 // Get the key material from the keytab for the newest entry with the required kvno, etype and matching principal
-func (kt *Keytab) GetKey(username, realm string, kvno, etype int) ([]byte, error) {
+/*func (kt *Keytab) GetKey(username, realm string, kvno, etype int) ([]byte, error) {
 	var key []byte
 	var t time.Time
 	for _, k := range kt.Entries {
-		if k.Principal.Realm == realm && int(k.Key.EType) == etype && (int(k.KVNO) == kvno || kvno == 0) && k.Timestamp.After(t) {
+		if k.Principal.Realm == realm && int(k.Key.KeyType) == etype && (int(k.KVNO) == kvno || kvno == 0) && k.Timestamp.After(t) {
 			for _, n := range k.Principal.Components {
 				if n == username {
-					key = k.Key.KeyMaterial
+					key = k.Key.KeyValue
 				}
 			}
 		}
@@ -62,14 +58,37 @@ func (kt *Keytab) GetKey(username, realm string, kvno, etype int) ([]byte, error
 		return key, errors.New("Matching key not found in keytab")
 	}
 	return key, nil
+}*/
+
+// Get the EncryptionKey from the keytab for the newest entry with the required kvno, etype and matching principal
+func (kt *Keytab) GetEncryptionKey(username, realm string, kvno, etype int) (types.EncryptionKey, error) {
+	var key types.EncryptionKey
+	var t time.Time
+	for _, k := range kt.Entries {
+		if k.Principal.Realm == realm && int(k.Key.KeyType) == etype && (int(k.KVNO) == kvno || kvno == 0) && k.Timestamp.After(t) {
+			for _, n := range k.Principal.Components {
+				if n == username {
+					key = k.Key
+				}
+			}
+		}
+	}
+	if len(key.KeyValue) < 1 {
+		return key, errors.New("Matching key not found in keytab")
+	}
+	return key, nil
 }
 
 func newKeytabEntry() KeytabEntry {
+	var b []byte
 	return KeytabEntry{
 		Principal: newPrincipal(),
 		Timestamp: time.Time{},
 		KVNO8:     0,
-		Key:       newKeyBlock(),
+		Key:       types.EncryptionKey{
+			KeyType: 0,
+			KeyValue: b,
+		},
 		KVNO:      0,
 	}
 }
@@ -81,14 +100,6 @@ func newPrincipal() Principal {
 		Realm:         "",
 		Components:    c,
 		NameType:      0,
-	}
-}
-
-func newKeyBlock() KeyBlock {
-	var b []byte
-	return KeyBlock{
-		EType:       0,
-		KeyMaterial: b,
 	}
 }
 
@@ -146,9 +157,9 @@ func Parse(b []byte) (kt Keytab, err error) {
 			parse_principal(eb, &p, &kt, &ke, &endian)
 			ke.Timestamp = read_timestamp(eb, &p, &endian)
 			ke.KVNO8 = uint8(read_int8(eb, &p, &endian))
-			ke.Key.EType = uint16(read_int16(eb, &p, &endian))
+			ke.Key.KeyType = int(read_int16(eb, &p, &endian))
 			key_len := int(read_int16(eb, &p, &endian))
-			ke.Key.KeyMaterial = read_Bytes(eb, &p, key_len, &endian)
+			ke.Key.KeyValue = read_Bytes(eb, &p, key_len, &endian)
 			//The 32-bit key version overrides the 8-bit key version.
 			// To determine if it is present, the implementation must check that at least 4 bytes remain in the record after the other fields are read,
 			// and that the value of the 32-bit integer contained in those bytes is non-zero.
