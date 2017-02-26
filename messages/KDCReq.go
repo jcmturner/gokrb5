@@ -121,7 +121,7 @@ func NewTGSReq(username string, c *config.Config, TGT types.Ticket, sessionKey t
 		PVNO:    iana.PVNO,
 		MsgType: msgtype.KRB_TGS_REQ,
 		ReqBody: KDCReqBody{
-			KDCOptions: c.LibDefaults.Kdc_default_options,
+			KDCOptions: types.NewKrbFlags(),
 			Realm:      c.ResolveRealm(s[len(s)-1]),
 			SName: types.PrincipalName{
 				NameType:   nametype.KRB_NT_PRINCIPAL,
@@ -132,7 +132,10 @@ func NewTGSReq(username string, c *config.Config, TGT types.Ticket, sessionKey t
 			EType: c.LibDefaults.Default_tgs_enctype_ids,
 		},
 	}
-	if c.LibDefaults.Forwardable {
+	types.SetFlag(&a.ReqBody.KDCOptions, types.Forwardable)
+	types.SetFlag(&a.ReqBody.KDCOptions, types.Renewable)
+	types.SetFlag(&a.ReqBody.KDCOptions, types.Canonicalize)
+	/*if c.LibDefaults.Forwardable {
 		types.SetFlag(&a.ReqBody.KDCOptions, types.Forwardable)
 	}
 	if c.LibDefaults.Canonicalize {
@@ -143,7 +146,7 @@ func NewTGSReq(username string, c *config.Config, TGT types.Ticket, sessionKey t
 	}
 	if c.LibDefaults.Renew_lifetime != 0 {
 		a.ReqBody.RTime = t.Add(c.LibDefaults.Renew_lifetime)
-	}
+	}*/
 	b, err := a.ReqBody.Marshal()
 	if err != nil {
 		return a, fmt.Errorf("Error marshalling request body: %v", err)

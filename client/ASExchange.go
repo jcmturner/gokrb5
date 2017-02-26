@@ -31,7 +31,7 @@ func (cl *Client) ASExchange() error {
 	var ar messages.ASRep
 	err = ar.Unmarshal(rb)
 	if err != nil {
-		//An KRBError may have been returned instead.
+		//A KRBError may have been returned instead.
 		var krberr messages.KRBError
 		err = krberr.Unmarshal(rb)
 		if err != nil {

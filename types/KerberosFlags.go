@@ -90,6 +90,13 @@ const (
 	Validate               = 31
 )
 
+func NewKrbFlags() asn1.BitString {
+	f := asn1.BitString{}
+	f.Bytes = make([]byte, 4)
+	f.BitLength = len(f.Bytes) * 8
+	return f
+}
+
 func SetFlags(f *asn1.BitString, j []int) {
 	for _, i := range j {
 		SetFlag(f, i)

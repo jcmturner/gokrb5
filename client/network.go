@@ -18,7 +18,7 @@ func (cl *Client) SendToKDC(b []byte) ([]byte, error) {
 		}
 	}
 	if len(kdcs) < 1 {
-		return rb, fmt.Errorf("No KDCs defined in configuration for realm %v", cl.Config.LibDefaults.Default_realm)
+		return rb, fmt.Errorf("No KDCs defined in configuration for realm: %v", cl.Config.LibDefaults.Default_realm)
 	}
 	var kdc string
 	if len(kdcs) > 1 {

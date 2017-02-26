@@ -10,6 +10,7 @@ import (
 	"github.com/jcmturner/gokrb5/iana/patype"
 	"github.com/jcmturner/gokrb5/types"
 	"hash"
+	"crypto/rand"
 )
 
 type EType interface {
@@ -284,19 +285,28 @@ func GetEncryptedData(pt []byte, key types.EncryptionKey, usage int, kvno int) (
 	var ed types.EncryptedData
 	etype, err := GetEtype(key.KeyType)
 	if err != nil {
-		return ed, fmt.Errorf("Error getting etype to encrypt authenticator: %v", err)
+		return ed, fmt.Errorf("Error getting etype: %v", err)
 	}
 	k := key.KeyValue
 	if usage != 0 {
 		k, err = etype.DeriveKey(key.KeyValue, GetUsageKe(uint32(usage)))
+		if err != nil {
+			return ed, fmt.Errorf("Error deriving key: %v", err)
+		}
 	}
+	//confounder
+	c := make([]byte, etype.GetConfounderByteSize())
+	_, err = rand.Read(c)
 	if err != nil {
-		return ed, fmt.Errorf("Error deriving key for authenticator: %v", err)
+		return ed, fmt.Errorf("Could not generate random confounder: %v", err)
 	}
+	pt = append(c, pt...)
 	_, b, err := etype.Encrypt(k, pt)
 	if err != nil {
-		return ed, fmt.Errorf("Error encrypting authenticator: %v", err)
+		return ed, fmt.Errorf("Error encrypting data: %v", err)
 	}
+	ih, err := GetIntegrityHash(pt, key.KeyValue, uint32(usage), etype)
+	b = append(b, ih...)
 	ed = types.EncryptedData{
 		EType: key.KeyType,
 		Cipher: b,

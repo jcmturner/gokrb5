@@ -12,6 +12,7 @@ import (
 	"github.com/jcmturner/gokrb5/keytab"
 	"github.com/jcmturner/gokrb5/messages"
 	"github.com/jcmturner/gokrb5/types"
+	"github.com/jcmturner/gokrb5/testdata"
 	"os"
 	"time"
 )
@@ -41,7 +42,7 @@ const pa149rep = "6b8202f3308202efa003020105a10302010ba22e302c302aa103020113a223
 
 func main() {
 
-	AS()
+	TestTGSReq()
 }
 
 func NoPA() {
@@ -129,4 +130,44 @@ func AS() {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "ERROR: %v", err)
 	}
+}
+
+func TestTGSReq() {
+	b, err := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	kt, _ := keytab.Parse(b)
+	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	cl := client.NewClientWithKeytab("testuser1", kt)
+	cl.WithConfig(c)
+
+	err = cl.ASExchange()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error on AS_REQ: %v", err)
+	}
+	fmt.Fprintf(os.Stderr, "Client: %+v\n", cl)
+
+/*	var a messages.TGSReq
+	b, err = hex.DecodeString(testdata.TEST_TGS_REQ)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Test vector read error: %v\n", err)
+	}
+	err = a.Unmarshal(b)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unmarshal error: %v\n", err)
+	}
+	fmt.Fprintf(os.Stderr, "TGS_REQ: %+v\n", a)*/
+
+	tgs, err := messages.NewTGSReq("testuser1", c, cl.Session.TGT, cl.Session.SessionKey, "HTTP/host.test.gokrb5")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error on New TGS_REQ: %v", err)
+	}
+	fmt.Fprintf(os.Stderr, "TGS_REQ gen: %+v\n", tgs)
+	b, err = tgs.Marshal()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error marshalling TGS_REQ: %v", err)
+	}
+	_, err = cl.SendToKDC(b)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error sending TGS_REQ to KDC: %v", err)
+	}
+
 }

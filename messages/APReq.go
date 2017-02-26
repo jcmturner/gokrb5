@@ -52,7 +52,7 @@ func NewAPReq(TGT types.Ticket, sessionKey types.EncryptionKey, auth types.Authe
 	a = APReq{
 		PVNO:    iana.PVNO,
 		MsgType: msgtype.KRB_AP_REQ,
-		APOptions: asn1.BitString{},
+		APOptions: types.NewKrbFlags(),
 		Ticket: TGT,
 		Authenticator: ed,
 	}
@@ -61,27 +61,11 @@ func NewAPReq(TGT types.Ticket, sessionKey types.EncryptionKey, auth types.Authe
 
 func encryptAuthenticator(a types.Authenticator, sessionKey types.EncryptionKey) (types.EncryptedData, error) {
 	var ed types.EncryptedData
-	etype, err := crypto.GetEtype(sessionKey.KeyType)
-	if err != nil {
-		return ed, fmt.Errorf("Error getting etype to encrypt authenticator: %v", err)
-	}
 	m, err := a.Marshal()
 	if err != nil {
 		return ed, fmt.Errorf("Error marshalling authenticator: %v", err)
 	}
-	k, err := etype.DeriveKey(sessionKey.KeyValue, crypto.GetUsageKe(uint32(keyusage.TGS_REQ_PA_TGS_REQ_AP_REQ_AUTHENTICATOR)))
-	if err != nil {
-		return ed, fmt.Errorf("Error deriving key for authenticator: %v", err)
-	}
-	_, b, err := etype.Encrypt(k, m)
-	if err != nil {
-		return ed, fmt.Errorf("Error encrypting authenticator: %v", err)
-	}
-	ed = types.EncryptedData{
-		EType: sessionKey.KeyType,
-		Cipher: b,
-	}
-	return ed, nil
+	return crypto.GetEncryptedData(m, sessionKey, keyusage.TGS_REQ_PA_TGS_REQ_AP_REQ_AUTHENTICATOR, 0)
 }
 
 func (a *APReq) Unmarshal(b []byte) error {
