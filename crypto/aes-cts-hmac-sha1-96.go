@@ -81,6 +81,9 @@ func AESCTSEncrypt(key, iv, message []byte, e EType) ([]byte, []byte, error) {
 	}
 	mode := cipher.NewCBCEncrypter(block, iv)
 
+	m := make([]byte, len(message))
+	copy(m, message)
+
 	//Ref: https://tools.ietf.org/html/rfc3962 section 5
 	/*For consistency, ciphertext stealing is always used for the last two
 	blocks of the data to be encrypted, as in [RC5].  If the data length
@@ -90,18 +93,18 @@ func AESCTSEncrypt(key, iv, message []byte, e EType) ([]byte, []byte, error) {
 	subsequent encryption is the next-to-last block of the encryption
 	output; this is the encrypted form of the last plaintext block.*/
 	if l <= aes.BlockSize {
-		message, _ = zeroPad(message, aes.BlockSize)
-		mode.CryptBlocks(message, message)
-		return message, message, nil
+		m, _ = zeroPad(m, aes.BlockSize)
+		mode.CryptBlocks(m, m)
+		return m, m, nil
 	}
 	if l%aes.BlockSize == 0 {
-		mode.CryptBlocks(message, message)
-		iv = message[len(message)-aes.BlockSize:]
-		rb, _ := swapLastTwoBlocks(message, aes.BlockSize)
+		mode.CryptBlocks(m, m)
+		iv = m[len(m)-aes.BlockSize:]
+		rb, _ := swapLastTwoBlocks(m, aes.BlockSize)
 		return iv, rb, nil
 	}
-	message, _ = zeroPad(message, aes.BlockSize)
-	rb, pb, lb, err := tailBlocks(message, aes.BlockSize)
+	m, _ = zeroPad(m, aes.BlockSize)
+	rb, pb, lb, err := tailBlocks(m, aes.BlockSize)
 	var ct []byte
 	if rb != nil {
 		// Encrpt all but the lats 2 blocks and update the rolling iv

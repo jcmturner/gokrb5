@@ -8,17 +8,17 @@ import (
 	"github.com/jcmturner/asn1"
 	"github.com/jcmturner/gokrb5/asn1tools"
 	"github.com/jcmturner/gokrb5/config"
+	"github.com/jcmturner/gokrb5/crypto"
 	"github.com/jcmturner/gokrb5/iana"
 	"github.com/jcmturner/gokrb5/iana/asnAppTag"
+	"github.com/jcmturner/gokrb5/iana/keyusage"
 	"github.com/jcmturner/gokrb5/iana/msgtype"
 	"github.com/jcmturner/gokrb5/iana/nametype"
 	"github.com/jcmturner/gokrb5/iana/patype"
 	"github.com/jcmturner/gokrb5/types"
 	"math/rand"
-	"time"
 	"strings"
-	"github.com/jcmturner/gokrb5/iana/keyusage"
-	"github.com/jcmturner/gokrb5/crypto"
+	"time"
 )
 
 type marshalKDCReq struct {
@@ -29,10 +29,10 @@ type marshalKDCReq struct {
 }
 
 type KDCReq struct {
-	PVNO    int            `asn1:"explicit,tag:1"`
-	MsgType int            `asn1:"explicit,tag:2"`
-	PAData  []types.PAData `asn1:"explicit,optional,tag:3"`
-	ReqBody KDCReqBody     `asn1:"explicit,tag:4"`
+	PVNO    int                  `asn1:"explicit,tag:1"`
+	MsgType int                  `asn1:"explicit,tag:2"`
+	PAData  types.PADataSequence `asn1:"explicit,optional,tag:3"`
+	ReqBody KDCReqBody           `asn1:"explicit,tag:4"`
 }
 
 type ASReq KDCReq
@@ -157,9 +157,9 @@ func NewTGSReq(username string, c *config.Config, TGT types.Ticket, sessionKey t
 		return a, fmt.Errorf("Error getting etype to encrypt authenticator: %v", err)
 	}
 	cb, err := crypto.GetChecksumHash(b, sessionKey.KeyValue, keyusage.TGS_REQ_PA_TGS_REQ_AP_REQ_AUTHENTICATOR_CHKSUM, etype)
-	auth.Cksum = types.Checksum {
+	auth.Cksum = types.Checksum{
 		CksumType: etype.GetHashID(),
-		Checksum: cb,
+		Checksum:  cb,
 	}
 	apReq, err := NewAPReq(TGT, sessionKey, auth)
 	apb, err := apReq.Marshal()
@@ -168,7 +168,7 @@ func NewTGSReq(username string, c *config.Config, TGT types.Ticket, sessionKey t
 	}
 	pas := types.PADataSequence{
 		types.PAData{
-			PADataType: patype.PA_TGS_REQ,
+			PADataType:  patype.PA_TGS_REQ,
 			PADataValue: apb,
 		},
 	}

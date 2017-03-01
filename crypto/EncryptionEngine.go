@@ -3,14 +3,16 @@ package crypto
 import (
 	"bytes"
 	"crypto/hmac"
+	"crypto/rand"
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/jcmturner/gokrb5/iana/chksumtype"
+	"github.com/jcmturner/gokrb5/iana/etype"
 	"github.com/jcmturner/gokrb5/iana/patype"
 	"github.com/jcmturner/gokrb5/types"
 	"hash"
-	"crypto/rand"
 )
 
 type EType interface {
@@ -35,14 +37,27 @@ type EType interface {
 
 func GetEtype(id int) (EType, error) {
 	switch id {
-	case 17:
+	case etype.AES128_CTS_HMAC_SHA1_96:
 		var et Aes128CtsHmacSha96
 		return et, nil
-	case 18:
+	case etype.AES256_CTS_HMAC_SHA1_96:
 		var et Aes256CtsHmacSha96
 		return et, nil
 	default:
 		return nil, fmt.Errorf("Unknown or unsupported EType: %d", id)
+	}
+}
+
+func GetChksumEtype(id int) (EType, error) {
+	switch id {
+	case chksumtype.HMAC_SHA1_96_AES128:
+		var et Aes128CtsHmacSha96
+		return et, nil
+	case chksumtype.HMAC_SHA1_96_AES256:
+		var et Aes256CtsHmacSha96
+		return et, nil
+	default:
+		return nil, fmt.Errorf("Unknown or unsupported checksum type: %d", id)
 	}
 }
 
@@ -143,7 +158,7 @@ func DecryptEncPart(key []byte, pe types.EncryptedData, etype EType, usage uint3
 	}
 	//Verify checksum
 	if !etype.VerifyIntegrity(key, pe.Cipher, b, usage) {
-			return nil, errors.New("Error decrypting encrypted part: integrity verification failed")
+		return nil, errors.New("Error decrypting encrypted part: integrity verification failed")
 	}
 	//Remove the confounder bytes
 	b = b[etype.GetConfounderByteSize():]
@@ -214,7 +229,7 @@ func GetKeyFromPassword(passwd string, cn types.PrincipalName, realm string, ety
 		return key, etype, fmt.Errorf("Error deriving key from string: %+v", err)
 	}
 	key = types.EncryptionKey{
-		KeyType: etypeId,
+		KeyType:  etypeId,
 		KeyValue: k,
 	}
 	return key, etype, nil
@@ -226,7 +241,9 @@ func getHash(pt, key []byte, usage []byte, etype EType) ([]byte, error) {
 		return nil, fmt.Errorf("Unable to derive key for checksum: %v", err)
 	}
 	mac := hmac.New(etype.GetHash, k)
-	mac.Write(pt)
+	p := make([]byte, len(pt))
+	copy(p, pt)
+	mac.Write(p)
 	return mac.Sum(nil)[:etype.GetHMACBitLength()/8], nil
 }
 
@@ -249,6 +266,17 @@ func VerifyIntegrity(key, ct, pt []byte, usage uint32, etype EType) bool {
 	copy(h, ct[len(ct)-etype.GetHMACBitLength()/8:])
 	expectedMAC, _ := GetIntegrityHash(pt, key, usage, etype)
 	return hmac.Equal(h, expectedMAC)
+}
+
+func VerifyChecksum(key, chksum, msg []byte, usage uint32, etype EType) bool {
+	//The ciphertext output is the concatenation of the output of the basic
+	//encryption function E and a (possibly truncated) HMAC using the
+	//specified hash function H, both applied to the plaintext with a
+	//random confounder prefix and sufficient padding to bring it to a
+	//multiple of the message block size.  When the HMAC is computed, the
+	//key is used in the protocol key form.
+	expectedMAC, _ := GetChecksumHash(msg, key, usage, etype)
+	return hmac.Equal(chksum, expectedMAC)
 }
 
 /*
@@ -308,9 +336,9 @@ func GetEncryptedData(pt []byte, key types.EncryptionKey, usage int, kvno int) (
 	ih, err := GetIntegrityHash(pt, key.KeyValue, uint32(usage), etype)
 	b = append(b, ih...)
 	ed = types.EncryptedData{
-		EType: key.KeyType,
+		EType:  key.KeyType,
 		Cipher: b,
-		KVNO: kvno,
+		KVNO:   kvno,
 	}
 	return ed, nil
 }

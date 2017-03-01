@@ -15,6 +15,7 @@ type PAData struct {
 }
 
 type PADataSequence []PAData
+
 type MethodData []PAData
 
 type PAEncTimestamp EncryptedData
@@ -22,6 +23,15 @@ type PAEncTimestamp EncryptedData
 type PAEncTSEnc struct {
 	PATimestamp time.Time `asn1:"generalized,explicit,tag:0"`
 	PAUSec      int       `asn1:"explicit,optional,tag:1"`
+}
+
+func (pas *PADataSequence) Contains(patype int) bool {
+	for _, pa := range *pas {
+		if pa.PADataType == patype {
+			return true
+		}
+	}
+	return false
 }
 
 func GetPAEncTSEncAsnMarshalled() ([]byte, error) {
@@ -63,6 +73,11 @@ func (pa *PAData) Unmarshal(b []byte) error {
 }
 
 func (pa *PADataSequence) Unmarshal(b []byte) error {
+	_, err := asn1.Unmarshal(b, pa)
+	return err
+}
+
+func (pa *PAReqEncPARep) Unmarshal(b []byte) error {
 	_, err := asn1.Unmarshal(b, pa)
 	return err
 }

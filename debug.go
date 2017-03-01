@@ -11,8 +11,8 @@ import (
 	"github.com/jcmturner/gokrb5/iana/keyusage"
 	"github.com/jcmturner/gokrb5/keytab"
 	"github.com/jcmturner/gokrb5/messages"
-	"github.com/jcmturner/gokrb5/types"
 	"github.com/jcmturner/gokrb5/testdata"
+	"github.com/jcmturner/gokrb5/types"
 	"os"
 	"time"
 )
@@ -141,33 +141,37 @@ func TestTGSReq() {
 
 	err = cl.ASExchange()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error on AS_REQ: %v", err)
+		fmt.Fprintf(os.Stderr, "Error on AS_REQ: %v\n", err)
 	}
 	fmt.Fprintf(os.Stderr, "Client: %+v\n", cl)
 
-/*	var a messages.TGSReq
-	b, err = hex.DecodeString(testdata.TEST_TGS_REQ)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Test vector read error: %v\n", err)
-	}
-	err = a.Unmarshal(b)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unmarshal error: %v\n", err)
-	}
-	fmt.Fprintf(os.Stderr, "TGS_REQ: %+v\n", a)*/
-
 	tgs, err := messages.NewTGSReq("testuser1", c, cl.Session.TGT, cl.Session.SessionKey, "HTTP/host.test.gokrb5")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error on New TGS_REQ: %v", err)
+		fmt.Fprintf(os.Stderr, "Error on New TGS_REQ: %v\n", err)
 	}
 	fmt.Fprintf(os.Stderr, "TGS_REQ gen: %+v\n", tgs)
+	var apreq messages.APReq
+	apreq.Unmarshal(tgs.PAData[0].PADataValue)
+	fmt.Fprintf(os.Stderr, "cb authenticator: %v\n", apreq.Authenticator.Cipher)
+	etype, _ := crypto.GetEtype(cl.Session.SessionKey.KeyType)
+	b, err = crypto.DecryptEncPart(cl.Session.SessionKey.KeyValue, apreq.Authenticator, etype, uint32(keyusage.TGS_REQ_PA_TGS_REQ_AP_REQ_AUTHENTICATOR))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error decrypting authenticator: %v\n", err)
+	}
+	var a types.Authenticator
+	err = a.Unmarshal(b)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error unmarshal authenticator: %v\n", err)
+	}
+	fmt.Fprintf(os.Stderr, "authenticator: %+v\n", a)
+
 	b, err = tgs.Marshal()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error marshalling TGS_REQ: %v", err)
+		fmt.Fprintf(os.Stderr, "Error marshalling TGS_REQ: %v\n", err)
 	}
 	_, err = cl.SendToKDC(b)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error sending TGS_REQ to KDC: %v", err)
+		fmt.Fprintf(os.Stderr, "Error sending TGS_REQ to KDC: %v\n", err)
 	}
 
 }

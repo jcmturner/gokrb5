@@ -13,9 +13,9 @@ import (
 	"github.com/jcmturner/gokrb5/iana/asnAppTag"
 	"github.com/jcmturner/gokrb5/iana/keyusage"
 	"github.com/jcmturner/gokrb5/iana/msgtype"
+	"github.com/jcmturner/gokrb5/iana/patype"
 	"github.com/jcmturner/gokrb5/keytab"
 	"github.com/jcmturner/gokrb5/types"
-	"sort"
 	"time"
 )
 
@@ -169,8 +169,6 @@ func (k *ASRep) IsValid(cfg *config.Config, asReq ASReq) (bool, error) {
 	if k.CName.NameType != asReq.ReqBody.CName.NameType {
 		return false, fmt.Errorf("CName in response does not match what was requested. Requested: %+v; Reply: %+v", asReq.ReqBody.CName, k.CName)
 	}
-	sort.Strings(k.CName.NameString)
-	sort.Strings(asReq.ReqBody.CName.NameString)
 	for i := range k.CName.NameString {
 		if k.CName.NameString[i] != asReq.ReqBody.CName.NameString[i] {
 			return false, fmt.Errorf("CName in response does not match what was requested. Requested: %+v; Reply: %+v", asReq.ReqBody.CName, k.CName)
@@ -185,8 +183,6 @@ func (k *ASRep) IsValid(cfg *config.Config, asReq ASReq) (bool, error) {
 	if k.DecryptedEncPart.SName.NameType != asReq.ReqBody.SName.NameType {
 		return false, fmt.Errorf("SName in response does not match what was requested. Requested: %v; Reply: %v", asReq.ReqBody.SName, k.DecryptedEncPart.SName)
 	}
-	sort.Strings(k.DecryptedEncPart.SName.NameString)
-	sort.Strings(asReq.ReqBody.SName.NameString)
 	for i := range k.CName.NameString {
 		if k.DecryptedEncPart.SName.NameString[i] != asReq.ReqBody.SName.NameString[i] {
 			return false, fmt.Errorf("SName in response does not match what was requested. Requested: %+v; Reply: %+v", asReq.ReqBody.SName, k.DecryptedEncPart.SName)
@@ -200,6 +196,28 @@ func (k *ASRep) IsValid(cfg *config.Config, asReq ASReq) (bool, error) {
 	}
 	if time.Since(k.DecryptedEncPart.AuthTime) > cfg.LibDefaults.Clockskew || time.Until(k.DecryptedEncPart.AuthTime) > cfg.LibDefaults.Clockskew {
 		return false, fmt.Errorf("Clock skew with KDC too large. Greater than %v seconds", cfg.LibDefaults.Clockskew.Seconds())
+	}
+	if asReq.PAData.Contains(patype.PA_REQ_ENC_PA_REP) {
+		if len(k.DecryptedEncPart.EncPAData) < 2 || !k.DecryptedEncPart.EncPAData.Contains(patype.PA_FX_FAST) {
+			return false, errors.New("KDC did not respond appropriately to FAST negotiation")
+		}
+		for _, pa := range k.DecryptedEncPart.EncPAData {
+			if pa.PADataType == patype.PA_REQ_ENC_PA_REP {
+				var pafast types.PAReqEncPARep
+				err := pafast.Unmarshal(pa.PADataValue)
+				if err != nil {
+					return false, fmt.Errorf("KDC FAST negotiation response error, could not unmarshal PA_REQ_ENC_PA_REP: %v", err)
+				}
+				etype, err := crypto.GetChksumEtype(pafast.ChksumType)
+				if err != nil {
+					return false, fmt.Errorf("KDC FAST negotiation response error, %v", err)
+				}
+				ab, _ := asReq.Marshal()
+				if !crypto.VerifyChecksum(k.DecryptedEncPart.Key.KeyValue, pafast.Chksum, ab, keyusage.KEY_USAGE_AS_REQ, etype) {
+					return false, errors.New("KDC FAST negotiation response checksum invalid")
+				}
+			}
+		}
 	}
 	return true, nil
 }
@@ -225,35 +243,3 @@ func (k *TGSRep) DecryptEncPart(kt keytab.Keytab) error {
 	k.DecryptedEncPart = denc
 	return nil
 }
-
-// TODO put back after type tests complete to help me decide what to do with KDCRep vs ASRep and TGSRep
-//func validateKDCRep(k *KDCRep, asReq KDCReq, kt keytab.Keytab) (bool, error) {
-//	//Ref RFC 4120 Section 3.1.5
-//	//TODO change the following to a contains check or slice compare
-//	if k.CName.NameType != asReq.ReqBody.CName.NameType || k.CName.NameString[0] != asReq.ReqBody.CName.NameString[0] {
-//		return false, fmt.Errorf("CName in response does not match what was requested. Requested: %v; Reply: %v", asReq.ReqBody.CName, k.CName)
-//	}
-//	if k.CRealm != asReq.ReqBody.Realm {
-//		return false, fmt.Errorf("CRealm in response does not match what was requested. Requested: %s; Reply: %s", asReq.ReqBody.Realm, k.CRealm)
-//	}
-//	if k.DecryptedEncPart.Key.KeyType == 0 {
-//		err := k.DecryptEncPart(kt)
-//		if err != nil {
-//			return false, fmt.Errorf("Could not decrypt encrypted part of response: %v", err)
-//		}
-//	}
-//	if k.DecryptedEncPart.Nonce != asReq.ReqBody.Nonce {
-//		return false, errors.New("Possible replay attack, nonce in request does not match that in response")
-//	}
-//	//TODO change the following to a contains check or slice compare
-//	if k.DecryptedEncPart.SName.NameType != asReq.ReqBody.SName.NameType || k.DecryptedEncPart.SName.NameString[0] != asReq.ReqBody.SName.NameString[0] {
-//		return false, fmt.Errorf("SName in response does not match what was requested. Requested: %v; Reply: %v", asReq.ReqBody.SName, k.DecryptedEncPart.SName)
-//	}
-//	if k.DecryptedEncPart.SRealm != asReq.ReqBody.Realm {
-//		return false, fmt.Errorf("SRealm in response does not match what was requested. Requested: %s; Reply: %s", asReq.ReqBody.Realm, k.DecryptedEncPart.SRealm)
-//	}
-//	if len(asReq.ReqBody.Addresses) > 0 {
-//		//TODO compare if address list is the same
-//	}
-//	return true, nil
-//}
