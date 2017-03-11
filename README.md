@@ -15,6 +15,8 @@ Go version 1.8+ is needed.
 [text](https://www.ietf.org/rfc/rfc3961.txt) [html](https://tools.ietf.org/html/rfc3961)
 * RFC 3962 Advanced Encryption Standard (AES) Encryption for Kerberos 5
 [text](https://www.ietf.org/rfc/rfc3962.txt) [html](https://tools.ietf.org/html/rfc3962)
+* The Simple and Protected Generic Security Service Application Program Interface (GSS-API) Negotiation Mechanism [text](https://www.ietf.org/rfc/rfc4178.txt) [html](https://tools.ietf.org/html/rfc4178.html)
+* SPNEGO-based Kerberos and NTLM HTTP Authentication in Microsoft Windows [text](https://www.ietf.org/rfc/rfc4559.txt) [html](https://tools.ietf.org/html/rfc4559.html)
 * RFC 6806 Kerberos Principal Name Canonicalization and Cross-Realm Referrals [text](https://www.ietf.org/rfc/rfc6806.txt) [html](https://tools.ietf.org/html/rfc6806.html)
 * RFC 6113 A Generalized Framework for Kerberos Pre-Authentication [text](https://www.ietf.org/rfc/rfc6113.txt) [html](https://tools.ietf.org/html/rfc6113.html)
 * [IANA Assigned Kerberos Numbers](http://www.iana.org/assignments/kerberos-parameters/kerberos-parameters.xhtml)

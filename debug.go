@@ -143,9 +143,12 @@ func TestTGSReq() {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error on AS_REQ: %v\n", err)
 	}
-	fmt.Fprintf(os.Stderr, "Client: %+v\n", cl)
+	err = cl.TGSExchange("HTTP/host.test.gokrb5")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error on TGS_REQ: %v\n", err)
+	}
 
-	tgs, err := messages.NewTGSReq("testuser1", c, cl.Session.TGT, cl.Session.SessionKey, "HTTP/host.test.gokrb5")
+	/*tgs, err := messages.NewTGSReq("testuser1", c, cl.Session.TGT, cl.Session.SessionKey, "HTTP/host.test.gokrb5")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error on New TGS_REQ: %v\n", err)
 	}
@@ -172,6 +175,6 @@ func TestTGSReq() {
 	_, err = cl.SendToKDC(b)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error sending TGS_REQ to KDC: %v\n", err)
-	}
+	}*/
 
 }

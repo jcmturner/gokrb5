@@ -166,13 +166,12 @@ func NewTGSReq(username string, c *config.Config, TGT types.Ticket, sessionKey t
 	if err != nil {
 		return a, fmt.Errorf("Error marshalling AP_REQ for pre-authentication data: %v", err)
 	}
-	pas := types.PADataSequence{
+	a.PAData = types.PADataSequence{
 		types.PAData{
 			PADataType:  patype.PA_TGS_REQ,
 			PADataValue: apb,
 		},
 	}
-	a.PAData = pas
 	return a, nil
 }
 

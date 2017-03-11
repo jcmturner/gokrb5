@@ -10,6 +10,7 @@ type Client struct {
 	Credentials *credentials.Credentials
 	Config      *config.Config
 	Session     *Session
+	Cache       *Cache
 }
 
 func NewClientWithPassword(username, password string) Client {
@@ -17,6 +18,7 @@ func NewClientWithPassword(username, password string) Client {
 	return Client{
 		Credentials: creds.WithPassword(password),
 		Config:      config.NewConfig(),
+		Cache:       NewCache(),
 	}
 }
 
@@ -25,6 +27,7 @@ func NewClientWithKeytab(username string, kt keytab.Keytab) Client {
 	return Client{
 		Credentials: creds.WithKeytab(kt),
 		Config:      config.NewConfig(),
+		Cache:       NewCache(),
 	}
 }
 

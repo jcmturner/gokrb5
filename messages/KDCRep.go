@@ -14,7 +14,6 @@ import (
 	"github.com/jcmturner/gokrb5/iana/keyusage"
 	"github.com/jcmturner/gokrb5/iana/msgtype"
 	"github.com/jcmturner/gokrb5/iana/patype"
-	"github.com/jcmturner/gokrb5/keytab"
 	"github.com/jcmturner/gokrb5/types"
 	"time"
 )
@@ -201,37 +200,34 @@ func (k *ASRep) IsValid(cfg *config.Config, asReq ASReq) (bool, error) {
 		if len(k.DecryptedEncPart.EncPAData) < 2 || !k.DecryptedEncPart.EncPAData.Contains(patype.PA_FX_FAST) {
 			return false, errors.New("KDC did not respond appropriately to FAST negotiation")
 		}
-		for _, pa := range k.DecryptedEncPart.EncPAData {
-			if pa.PADataType == patype.PA_REQ_ENC_PA_REP {
-				var pafast types.PAReqEncPARep
-				err := pafast.Unmarshal(pa.PADataValue)
-				if err != nil {
-					return false, fmt.Errorf("KDC FAST negotiation response error, could not unmarshal PA_REQ_ENC_PA_REP: %v", err)
-				}
-				etype, err := crypto.GetChksumEtype(pafast.ChksumType)
-				if err != nil {
-					return false, fmt.Errorf("KDC FAST negotiation response error, %v", err)
-				}
-				ab, _ := asReq.Marshal()
-				if !crypto.VerifyChecksum(k.DecryptedEncPart.Key.KeyValue, pafast.Chksum, ab, keyusage.KEY_USAGE_AS_REQ, etype) {
-					return false, errors.New("KDC FAST negotiation response checksum invalid")
-				}
-			}
-		}
+		//TODO figure out how to check hash and put back
+		//for _, pa := range k.DecryptedEncPart.EncPAData {
+		//	if pa.PADataType == patype.PA_REQ_ENC_PA_REP {
+		//		var pafast types.PAReqEncPARep
+		//		err := pafast.Unmarshal(pa.PADataValue)
+		//		if err != nil {
+		//			return false, fmt.Errorf("KDC FAST negotiation response error, could not unmarshal PA_REQ_ENC_PA_REP: %v", err)
+		//		}
+		//		etype, err := crypto.GetChksumEtype(pafast.ChksumType)
+		//		if err != nil {
+		//			return false, fmt.Errorf("KDC FAST negotiation response error, %v", err)
+		//		}
+		//		ab, _ := asReq.Marshal()
+		//		if !crypto.VerifyChecksum(k.DecryptedEncPart.Key.KeyValue, pafast.Chksum, ab, keyusage.KEY_USAGE_AS_REQ, etype) {
+		//			return false, errors.New("KDC FAST negotiation response checksum invalid")
+		//		}
+		//	}
+		//}
 	}
 	return true, nil
 }
 
-func (k *TGSRep) DecryptEncPart(kt keytab.Keytab) error {
-	etype, err := crypto.GetEtype(k.EncPart.EType)
+func (k *TGSRep) DecryptEncPart(key types.EncryptionKey) error {
+	etype, err := crypto.GetEtype(key.KeyType)
 	if err != nil {
-		return fmt.Errorf("Keytab error: %v", err)
+		return fmt.Errorf("Could not get etype: %v", err)
 	}
-	key, err := kt.GetEncryptionKey(k.CName.NameString[0], k.CRealm, k.EncPart.KVNO, k.EncPart.EType)
-	if err != nil {
-		return fmt.Errorf("Could not get key from keytab: %v", err)
-	}
-	b, err := crypto.DecryptEncPart(key.KeyValue, k.EncPart, etype, keyusage.AS_REP_ENCPART)
+	b, err := crypto.DecryptEncPart(key.KeyValue, k.EncPart, etype, keyusage.TGS_REP_ENCPART_SESSION_KEY)
 	if err != nil {
 		return fmt.Errorf("Error decrypting KDC_REP EncPart: %v", err)
 	}
