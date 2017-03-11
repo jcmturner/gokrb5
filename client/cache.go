@@ -8,10 +8,12 @@ import (
 	"time"
 )
 
+// Client ticket cache
 type Cache struct {
 	Entries map[string]CacheEntry
 }
 
+// Ticket cache entry
 type CacheEntry struct {
 	Ticket    types.Ticket
 	AuthTime  time.Time
@@ -20,17 +22,21 @@ type CacheEntry struct {
 	AutoRenew bool
 }
 
+// Create a new client ticket cache.
 func NewCache() *Cache {
 	return &Cache{
 		Entries: map[string]CacheEntry{},
 	}
 }
 
+// Get a cache entry that matches the SPN.
 func (c *Cache) GetEntry(spn string) (CacheEntry, bool) {
 	e, ok := (*c).Entries[spn]
 	return e, ok
 }
 
+// Get a ticket from the cache for the SPN.
+// Only a ticket that is currently valid will be returned.
 func (c *Cache) GetTicket(spn string) (types.Ticket, bool) {
 	if e, ok := c.GetEntry(spn); ok {
 		//If within time window of ticket return it
@@ -42,6 +48,7 @@ func (c *Cache) GetTicket(spn string) (types.Ticket, bool) {
 	return tkt, false
 }
 
+// Renew a ticket in the cache for the specified SPN.
 func (c *Cache) RenewEntry(spn string) error {
 	if e, ok := c.GetEntry(spn); ok {
 		return e.Renew()
@@ -49,6 +56,7 @@ func (c *Cache) RenewEntry(spn string) error {
 	return fmt.Errorf("No entry for this SPN: %s", spn)
 }
 
+// Add a ticket to the cache
 func (c *Cache) AddEntry(tkt types.Ticket, authTime, endTime, renewTill time.Time) {
 	(*c).Entries[strings.Join(tkt.SName.NameString, "/")] = CacheEntry{
 		Ticket:    tkt,
@@ -58,18 +66,22 @@ func (c *Cache) AddEntry(tkt types.Ticket, authTime, endTime, renewTill time.Tim
 	}
 }
 
+// Remove the cache entry for the defined SPN
 func (c *Cache) RemoveEntry(spn string) {
 	delete(c.Entries, spn)
 }
 
+// Enable background auto renew of the ticket for the specified SPN
 func (c *Cache) EnableAutoRenew(spn string) error {
 	return nil
 }
 
+// Disable background auto renew of the ticket for the specified SPN
 func (c *Cache) DisableAutoRenew(spn string) error {
 	return nil
 }
 
+// Renew the cache entry
 func (e *CacheEntry) Renew() error {
 	if time.Now().After(e.RenewTill) {
 		return errors.New("Past renew till time. Cannot renew.")

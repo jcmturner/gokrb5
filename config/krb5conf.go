@@ -16,6 +16,9 @@ import (
 	"time"
 )
 
+// Implements KRB5 client and service configuration as described at https://web.mit.edu/kerberos/krb5-latest/doc/admin/conf_files/krb5_conf.html
+
+// Struct representing the KRB5 configuration
 type Config struct {
 	LibDefaults *LibDefaults
 	Realms      []Realm
@@ -25,10 +28,12 @@ type Config struct {
 	//Plugins
 }
 
+// List of encryption types that have been deemed weak.
 const (
 	WEAK_ETYPE_LIST = "des-cbc-crc des-cbc-md4 des-cbc-md5 des-cbc-raw des3-cbc-raw des-hmac-sha1 arcfour-hmac-exp rc4-hmac-exp arcfour-hmac-md5-exp des"
 )
 
+// Create a new config struct
 func NewConfig() *Config {
 	d := make(DomainRealm)
 	return &Config{
@@ -37,6 +42,7 @@ func NewConfig() *Config {
 	}
 }
 
+// Struct representing the [libdefaults] section of the configuration
 type LibDefaults struct {
 	Allow_weak_crypto bool //default false
 	// ap_req_checksum_type int //unlikely to support this
@@ -77,6 +83,7 @@ type LibDefaults struct {
 	Verify_ap_req_nofail    bool          //default false
 }
 
+// Create a new LibDefaults struct
 func newLibDefaults() *LibDefaults {
 	usr, _ := user.Current()
 	opts := asn1.BitString{}
@@ -104,6 +111,7 @@ func newLibDefaults() *LibDefaults {
 	}
 }
 
+// Parse the lines of the [libdefaults] section of the configuration into the LibDefaults struct
 func (l *LibDefaults) parseLines(lines []string) error {
 	for _, line := range lines {
 		if !strings.Contains(line, "=") {
@@ -284,6 +292,7 @@ func (l *LibDefaults) parseLines(lines []string) error {
 	return nil
 }
 
+// Struct representing an entry in the [realms] section of the configuration
 type Realm struct {
 	Realm        string
 	Admin_server []string
@@ -295,6 +304,7 @@ type Realm struct {
 	Master_kdc     []string
 }
 
+// Parse the lines of a [realms] entry into the Realm struct
 func (r *Realm) parseLines(name string, lines []string) error {
 	r.Realm = name
 	var admin_server_final bool
@@ -335,6 +345,7 @@ func (r *Realm) parseLines(name string, lines []string) error {
 	return nil
 }
 
+// Parse the lines of the [realms] section of the configuration into an slice of Realm structs
 func parseRealms(lines []string) ([]Realm, error) {
 	var realms []Realm
 	start := -1
@@ -366,8 +377,10 @@ func parseRealms(lines []string) ([]Realm, error) {
 	return realms, nil
 }
 
+// Mapping of domains to realms representing the [domain_realm] section of the configuration
 type DomainRealm map[string]string
 
+// Parse the lines of the [domain_realm] section of the configuration and add to the mapping
 func (d *DomainRealm) parseLines(lines []string) error {
 	for _, line := range lines {
 		if !strings.Contains(line, "=") {
@@ -381,14 +394,18 @@ func (d *DomainRealm) parseLines(lines []string) error {
 	return nil
 }
 
+// Add a domain to realm mapping
 func (d *DomainRealm) addMapping(domain, realm string) {
 	(*d)[domain] = realm
 }
 
+// Delete a domain to realm mapping
 func (d *DomainRealm) deleteMapping(domain, realm string) {
 	delete(*d, domain)
 }
 
+// Resolve the realm for the specified domain name from the domain to realm mapping.
+// The most specific mapping is returned.
 func (c *Config) ResolveRealm(domainName string) string {
 	domainName = strings.TrimSuffix(domainName, ".")
 	periods := strings.Count(domainName, ".") + 1
@@ -401,6 +418,7 @@ func (c *Config) ResolveRealm(domainName string) string {
 	return c.LibDefaults.Default_realm
 }
 
+// Load the KRB5 configuration from the specified file path
 func Load(cfgPath string) (*Config, error) {
 	fh, err := os.Open(cfgPath)
 	if err != nil {
@@ -411,16 +429,19 @@ func Load(cfgPath string) (*Config, error) {
 	return NewConfigFromScanner(scanner)
 }
 
+// Create a new Config struct from a string
 func NewConfigFromString(s string) (*Config, error) {
 	reader := strings.NewReader(s)
 	return NewConfigFromReader(reader)
 }
 
+// Create a new Config struct from an io.Reader
 func NewConfigFromReader(r io.Reader) (*Config, error) {
 	scanner := bufio.NewScanner(r)
 	return NewConfigFromScanner(scanner)
 }
 
+// Create a new Config struct from a bufio.Scanner
 func NewConfigFromScanner(scanner *bufio.Scanner) (*Config, error) {
 	c := NewConfig()
 	sections := make(map[int]string)
@@ -484,6 +505,7 @@ func NewConfigFromScanner(scanner *bufio.Scanner) (*Config, error) {
 	return c, nil
 }
 
+// Parse a space delimited list of ETypes into a list of EType numbers optionally filtering out weak ETypes
 func parseETypes(s []string, w bool) []int {
 	var eti []int
 	for _, et := range s {
@@ -507,6 +529,7 @@ func parseETypes(s []string, w bool) []int {
 	return eti
 }
 
+// Parse a time duration string in the configuration to a golang time.Duration.
 func parseDuration(s string) (time.Duration, error) {
 	s = strings.Replace(s, " ", "", -1)
 	d, err := time.ParseDuration(s)
@@ -539,6 +562,7 @@ func parseDuration(s string) (time.Duration, error) {
 	return time.Duration(0), errors.New("Invalid time duration value")
 }
 
+// Parse possible boolean values to golang bool
 func parseBoolean(s string) (bool, error) {
 	s = strings.Replace(s, " ", "", -1)
 	v, err := strconv.ParseBool(s)
@@ -558,6 +582,7 @@ func parseBoolean(s string) (bool, error) {
 	return false, errors.New("Invalid boolean value")
 }
 
+// Parse array of strings but stop if an asterisk is placed at the end of a line
 func appendUntilFinal(s *[]string, value string, final *bool) {
 	if *final {
 		return

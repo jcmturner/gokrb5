@@ -1,10 +1,10 @@
 package asn1tools
 
 
-// ASN1 Length octets.
+// Get the ASN1 encoded bytes for the length 'l'.
 // There are two forms: short (for lengths between 0 and 127), and long definite (for lengths between 0 and 2^1008 -1).
-// Short form. One octet. Bit 8 has value "0" and bits 7-1 give the length.
-// Long form. Two to 127 octets. Bit 8 of first octet has value "1" and bits 7-1 give the number of additional length octets. Second and following octets give the length, base 256, most significant digit first.
+// Short form: One octet. Bit 8 has value "0" and bits 7-1 give the length.
+// Long form: Two to 127 octets. Bit 8 of first octet has value "1" and bits 7-1 give the number of additional length octets. Second and following octets give the length, base 256, most significant digit first.
 func MarshalLengthBytes(l int) []byte {
 	if l <= 127 {
 		return []byte{byte(l)}
@@ -22,6 +22,7 @@ func MarshalLengthBytes(l int) []byte {
 	return append([]byte{byte(128 + len(b))}, b...)
 }
 
+// Get the length of a slice of ASN1 encoded bytes from the ASN1 length header it contains.
 func GetLengthFromASN(b []byte) int {
 	if int(b[1]) <= 127 {
 		return int(b[1])
@@ -37,8 +38,8 @@ func GetLengthFromASN(b []byte) int {
 	return l
 }
 
-// The Marshal method of golang's asn1 package does not enable you to configure to wrap the output in an application tag.
-// This method adds that wrapping tag
+// The Marshal method of golang's asn1 package does not enable you to define wrapping the output in an application tag.
+// This method adds that wrapping tag.
 func AddASNAppTag(b []byte, tag int) []byte {
 	// The ASN1 wrapping consists of 2 bytes:
 	// 1st byte -> Identifier Octet - Application Tag
