@@ -11,7 +11,7 @@ type Credentials struct {
 	Password string
 }
 
-// Create a new Credentials struct
+// Create a new Credentials struct.
 func NewCredentials(username string) Credentials {
 	return Credentials{
 		Username: username,
@@ -19,19 +19,19 @@ func NewCredentials(username string) Credentials {
 	}
 }
 
-// Set the Keytab in the Credentials struct
+// Set the Keytab in the Credentials struct.
 func (c *Credentials) WithKeytab(kt keytab.Keytab) *Credentials {
 	c.Keytab = kt
 	return c
 }
 
-// Set the password in the Credentials struct
+// Set the password in the Credentials struct.
 func (c *Credentials) WithPassword(password string) *Credentials {
 	c.Password = password
 	return c
 }
 
-// Query if the Credentials has a keytab defined
+// Query if the Credentials has a keytab defined.
 func (c *Credentials) HasKeytab() bool {
 	if len(c.Keytab.Entries) > 0 {
 		return true
@@ -39,7 +39,7 @@ func (c *Credentials) HasKeytab() bool {
 	return false
 }
 
-// Query if the Credentials has a password defined
+// Query if the Credentials has a password defined.
 func (c *Credentials) HasPassword() bool {
 	if c.Password != "" {
 		return true

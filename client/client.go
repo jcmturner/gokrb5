@@ -6,7 +6,7 @@ import (
 	"github.com/jcmturner/gokrb5/keytab"
 )
 
-// Client struct
+// Client struct.
 type Client struct {
 	Credentials *credentials.Credentials
 	Config      *config.Config
@@ -14,7 +14,7 @@ type Client struct {
 	Cache       *Cache
 }
 
-// Create a new client with a password credential
+// Create a new client with a password credential.
 func NewClientWithPassword(username, password string) Client {
 	creds := credentials.NewCredentials(username)
 	return Client{
@@ -24,7 +24,7 @@ func NewClientWithPassword(username, password string) Client {
 	}
 }
 
-// Create a new client with a keytab credential
+// Create a new client with a keytab credential.
 func NewClientWithKeytab(username string, kt keytab.Keytab) Client {
 	creds := credentials.NewCredentials(username)
 	return Client{
@@ -34,13 +34,13 @@ func NewClientWithKeytab(username string, kt keytab.Keytab) Client {
 	}
 }
 
-// Set the Kerberos configuration for the client
+// Set the Kerberos configuration for the client.
 func (cl *Client) WithConfig(cfg *config.Config) *Client {
 	cl.Config = cfg
 	return cl
 }
 
-// Load the Kerberos configuration for the client from file path specified
+// Load the Kerberos configuration for the client from file path specified.
 func (cl *Client) LoadConfig(cfgPath string) (*Client, error) {
 	cfg, err := config.Load(cfgPath)
 	if err != nil {
@@ -50,7 +50,7 @@ func (cl *Client) LoadConfig(cfgPath string) (*Client, error) {
 	return cl, nil
 }
 
-// Has the client got sufficient values required
+// Has the client got sufficient values required.
 func (cl *Client) IsConfigured() bool {
 	if !cl.Credentials.HasPassword() && !cl.Credentials.HasKeytab() {
 		return false

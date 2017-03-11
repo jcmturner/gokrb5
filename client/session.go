@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// Client session struct
+// Client session struct.
 type Session struct {
 	AuthTime             time.Time
 	EndTime              time.Time

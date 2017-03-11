@@ -7,7 +7,7 @@ import (
 )
 
 // Perform a TGS exchange to retrieve a ticket to the specified SPN.
-// The ticket retrieved is added to the client's cache
+// The ticket retrieved is added to the client's cache.
 func (cl *Client) TGSExchange(spn string) error {
 	if cl.Session == nil {
 		return errors.New("Error client does not have a session. Client needs to login first")

@@ -8,12 +8,12 @@ import (
 	"time"
 )
 
-// Client ticket cache
+// Client ticket cache.
 type Cache struct {
 	Entries map[string]CacheEntry
 }
 
-// Ticket cache entry
+// Ticket cache entry.
 type CacheEntry struct {
 	Ticket    types.Ticket
 	AuthTime  time.Time
@@ -56,7 +56,7 @@ func (c *Cache) RenewEntry(spn string) error {
 	return fmt.Errorf("No entry for this SPN: %s", spn)
 }
 
-// Add a ticket to the cache
+// Add a ticket to the cache.
 func (c *Cache) AddEntry(tkt types.Ticket, authTime, endTime, renewTill time.Time) {
 	(*c).Entries[strings.Join(tkt.SName.NameString, "/")] = CacheEntry{
 		Ticket:    tkt,
@@ -66,22 +66,22 @@ func (c *Cache) AddEntry(tkt types.Ticket, authTime, endTime, renewTill time.Tim
 	}
 }
 
-// Remove the cache entry for the defined SPN
+// Remove the cache entry for the defined SPN.
 func (c *Cache) RemoveEntry(spn string) {
 	delete(c.Entries, spn)
 }
 
-// Enable background auto renew of the ticket for the specified SPN
+// Enable background auto renew of the ticket for the specified SPN.
 func (c *Cache) EnableAutoRenew(spn string) error {
 	return nil
 }
 
-// Disable background auto renew of the ticket for the specified SPN
+// Disable background auto renew of the ticket for the specified SPN.
 func (c *Cache) DisableAutoRenew(spn string) error {
 	return nil
 }
 
-// Renew the cache entry
+// Renew the cache entry.
 func (e *CacheEntry) Renew() error {
 	if time.Now().After(e.RenewTill) {
 		return errors.New("Past renew till time. Cannot renew.")

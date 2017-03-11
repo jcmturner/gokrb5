@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// Send bytes to the KDC
+// Send bytes to the KDC.
 func (cl *Client) SendToKDC(b []byte) ([]byte, error) {
 	var rb []byte
 	var kdcs []string
@@ -68,7 +68,7 @@ func (cl *Client) SendToKDC(b []byte) ([]byte, error) {
 	return rb, nil
 }
 
-// Send the bytes to the KDC over UDP
+// Send the bytes to the KDC over UDP.
 func sendUDP(kdc string, b []byte) ([]byte, error) {
 	var r []byte
 	udpAddr, err := net.ResolveUDPAddr("udp", kdc)
@@ -94,7 +94,7 @@ func sendUDP(kdc string, b []byte) ([]byte, error) {
 	return r, nil
 }
 
-// Send the bytes to the KDC over TCP
+// Send the bytes to the KDC over TCP.
 func sendTCP(kdc string, b []byte) ([]byte, error) {
 	var r []byte
 	tcpAddr, err := net.ResolveTCPAddr("tcp", kdc)
