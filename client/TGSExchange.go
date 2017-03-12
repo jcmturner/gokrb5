@@ -33,6 +33,9 @@ func (cl *Client) TGSExchange(spn string) error {
 	if err != nil {
 		return fmt.Errorf("Error decrypting EncPart of TGS_REP: %v", err)
 	}
+	if ok, err := tgsRep.IsValid(cl.Config, tgs); !ok {
+		return fmt.Errorf("TGS_REP is not valid: %v", err)
+	}
 	cl.Cache.AddEntry(tgsRep.Ticket, tgsRep.DecryptedEncPart.AuthTime, tgsRep.DecryptedEncPart.EndTime, tgsRep.DecryptedEncPart.RenewTill)
 	return nil
 }

@@ -55,7 +55,7 @@ func NoPA() {
 		fmt.Fprintf(os.Stderr, "Unmarshal err: %v\n", err)
 	}
 	//err = ar.DecryptEncPartWithKeytab(kt)
-	cred := credentials.NewCredentials("testuser1")
+	cred := credentials.NewCredentials("testuser1", "TEST.GOKRB5")
 	cred.WithPassword("passwordvalue")
 	err = ar.DecryptEncPart(cred.WithPassword("passwordvalue"))
 	if err != nil {
@@ -82,14 +82,14 @@ func Fast() {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "KT load err: %v\n\n", err)
 	}
-	cl := client.NewClientWithKeytab("testuser1", kt)
+	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 	rb, err := cl.SendToKDC(b)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error sending to KDC: %v\n", err)
 	}
 	var ar messages.ASRep
 	ar.Unmarshal(rb)
-	cred := credentials.NewCredentials("testuser1")
+	cred := credentials.NewCredentials("testuser1", "TEST.GOKRB5")
 	cred.WithPassword("passwordvalue")
 	err = ar.DecryptEncPart(cred.WithKeytab(kt))
 	if err != nil {
@@ -118,7 +118,7 @@ func AS() {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "KT load err: %v\n\n", err)
 	}
-	cl := client.NewClientWithKeytab("testuser1", kt)
+	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 	c, err := config.NewConfigFromString(krb5conf)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error creating config: %v", err)
@@ -136,7 +136,7 @@ func TestTGSReq() {
 	b, err := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
-	cl := client.NewClientWithKeytab("testuser1", kt)
+	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 
 	err = cl.ASExchange()
@@ -147,34 +147,4 @@ func TestTGSReq() {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error on TGS_REQ: %v\n", err)
 	}
-
-	/*tgs, err := messages.NewTGSReq("testuser1", c, cl.Session.TGT, cl.Session.SessionKey, "HTTP/host.test.gokrb5")
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error on New TGS_REQ: %v\n", err)
-	}
-	fmt.Fprintf(os.Stderr, "TGS_REQ gen: %+v\n", tgs)
-	var apreq messages.APReq
-	apreq.Unmarshal(tgs.PAData[0].PADataValue)
-	fmt.Fprintf(os.Stderr, "cb authenticator: %v\n", apreq.Authenticator.Cipher)
-	etype, _ := crypto.GetEtype(cl.Session.SessionKey.KeyType)
-	b, err = crypto.DecryptEncPart(cl.Session.SessionKey.KeyValue, apreq.Authenticator, etype, uint32(keyusage.TGS_REQ_PA_TGS_REQ_AP_REQ_AUTHENTICATOR))
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error decrypting authenticator: %v\n", err)
-	}
-	var a types.Authenticator
-	err = a.Unmarshal(b)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error unmarshal authenticator: %v\n", err)
-	}
-	fmt.Fprintf(os.Stderr, "authenticator: %+v\n", a)
-
-	b, err = tgs.Marshal()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error marshalling TGS_REQ: %v\n", err)
-	}
-	_, err = cl.SendToKDC(b)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error sending TGS_REQ to KDC: %v\n", err)
-	}*/
-
 }

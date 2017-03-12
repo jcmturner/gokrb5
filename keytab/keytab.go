@@ -1,6 +1,5 @@
+// Implementation of Kerberos keytabs: https://web.mit.edu/kerberos/krb5-devel/doc/formats/keytab_file_format.html
 package keytab
-
-//Ref: https://web.mit.edu/kerberos/krb5-devel/doc/formats/keytab_file_format.html
 
 import (
 	"bytes"
@@ -12,11 +11,13 @@ import (
 	"github.com/jcmturner/gokrb5/types"
 )
 
+// Keytab struct.
 type Keytab struct {
 	Version uint16
 	Entries []KeytabEntry
 }
 
+// Keytab entry struct.
 type KeytabEntry struct {
 	Principal Principal
 	Timestamp time.Time
@@ -25,6 +26,7 @@ type KeytabEntry struct {
 	KVNO      uint32
 }
 
+// Keytab entry principal struct.
 type Principal struct {
 	NumComponents int16
 	Realm         string
@@ -32,7 +34,7 @@ type Principal struct {
 	NameType      int32
 }
 
-//Create new, empty Keytab type
+//Create new, empty Keytab type.
 func NewKeytab() Keytab {
 	var e []KeytabEntry
 	return Keytab{
@@ -41,26 +43,7 @@ func NewKeytab() Keytab {
 	}
 }
 
-// Get the key material from the keytab for the newest entry with the required kvno, etype and matching principal
-/*func (kt *Keytab) GetKey(username, realm string, kvno, etype int) ([]byte, error) {
-	var key []byte
-	var t time.Time
-	for _, k := range kt.Entries {
-		if k.Principal.Realm == realm && int(k.Key.KeyType) == etype && (int(k.KVNO) == kvno || kvno == 0) && k.Timestamp.After(t) {
-			for _, n := range k.Principal.Components {
-				if n == username {
-					key = k.Key.KeyValue
-				}
-			}
-		}
-	}
-	if len(key) < 1 {
-		return key, errors.New("Matching key not found in keytab")
-	}
-	return key, nil
-}*/
-
-// Get the EncryptionKey from the keytab for the newest entry with the required kvno, etype and matching principal
+// Get the EncryptionKey from the Keytab for the newest entry with the required kvno, etype and matching principal.
 func (kt *Keytab) GetEncryptionKey(username, realm string, kvno, etype int) (types.EncryptionKey, error) {
 	var key types.EncryptionKey
 	var t time.Time
@@ -79,6 +62,7 @@ func (kt *Keytab) GetEncryptionKey(username, realm string, kvno, etype int) (typ
 	return key, nil
 }
 
+// Create a new Keytab entry.
 func newKeytabEntry() KeytabEntry {
 	var b []byte
 	return KeytabEntry{
@@ -93,6 +77,7 @@ func newKeytabEntry() KeytabEntry {
 	}
 }
 
+// Create a new principal.
 func newPrincipal() Principal {
 	var c []string
 	return Principal{
@@ -103,7 +88,7 @@ func newPrincipal() Principal {
 	}
 }
 
-//Load a keytab file into Keytab type
+// Load a Keytab file into aKeytab type.
 func Load(ktPath string) (kt Keytab, err error) {
 	k, err := ioutil.ReadFile(ktPath)
 	if err != nil {
@@ -112,7 +97,7 @@ func Load(ktPath string) (kt Keytab, err error) {
 	return Parse(k)
 }
 
-//Parse byte slice of keytab data into Keytab type
+// Parse byte slice of Keytab data into Keytab type.
 func Parse(b []byte) (kt Keytab, err error) {
 	//The first byte of the file always has the value 5
 	if int8(b[0]) != 5 {
@@ -184,6 +169,7 @@ func Parse(b []byte) (kt Keytab, err error) {
 	return
 }
 
+// Parse the Keytab bytes of a principal into a Keytab entry's principal.
 func parse_principal(b []byte, p *int, kt *Keytab, ke *KeytabEntry, e *binary.ByteOrder) (err error) {
 	ke.Principal.NumComponents = read_int16(b, p, e)
 	if kt.Version == 1 {
@@ -203,10 +189,12 @@ func parse_principal(b []byte, p *int, kt *Keytab, ke *KeytabEntry, e *binary.By
 	return
 }
 
+// Read bytes representing a timestamp.
 func read_timestamp(b []byte, p *int, e *binary.ByteOrder) time.Time {
 	return time.Unix(int64(read_int32(b, p, e)), 0)
 }
 
+// Read bytes representing an eight bit integer.
 func read_int8(b []byte, p *int, e *binary.ByteOrder) (i int8) {
 	buf := bytes.NewBuffer(b[*p : *p+1])
 	binary.Read(buf, *e, &i)
@@ -214,6 +202,7 @@ func read_int8(b []byte, p *int, e *binary.ByteOrder) (i int8) {
 	return
 }
 
+// Read bytes representing a sixteen bit integer.
 func read_int16(b []byte, p *int, e *binary.ByteOrder) (i int16) {
 	buf := bytes.NewBuffer(b[*p : *p+2])
 	binary.Read(buf, *e, &i)
@@ -221,6 +210,7 @@ func read_int16(b []byte, p *int, e *binary.ByteOrder) (i int16) {
 	return
 }
 
+// Read bytes representing a thirty two bit integer.
 func read_int32(b []byte, p *int, e *binary.ByteOrder) (i int32) {
 	buf := bytes.NewBuffer(b[*p : *p+4])
 	binary.Read(buf, *e, &i)

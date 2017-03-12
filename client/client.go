@@ -1,3 +1,4 @@
+// A client for Kerberos 5 authentication
 package client
 
 import (
@@ -15,8 +16,8 @@ type Client struct {
 }
 
 // Create a new client with a password credential.
-func NewClientWithPassword(username, password string) Client {
-	creds := credentials.NewCredentials(username)
+func NewClientWithPassword(username, realm, password string) Client {
+	creds := credentials.NewCredentials(username, realm)
 	return Client{
 		Credentials: creds.WithPassword(password),
 		Config:      config.NewConfig(),
@@ -25,8 +26,8 @@ func NewClientWithPassword(username, password string) Client {
 }
 
 // Create a new client with a keytab credential.
-func NewClientWithKeytab(username string, kt keytab.Keytab) Client {
-	creds := credentials.NewCredentials(username)
+func NewClientWithKeytab(username, realm string, kt keytab.Keytab) Client {
+	creds := credentials.NewCredentials(username, realm)
 	return Client{
 		Credentials: creds.WithKeytab(kt),
 		Config:      config.NewConfig(),

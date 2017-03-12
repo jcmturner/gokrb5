@@ -29,7 +29,7 @@ type marshalKDCRep struct {
 	EncPart types.EncryptedData `asn1:"explicit,tag:6"`
 }
 
-type KDCRep struct {
+type KDCRepFields struct {
 	PVNO             int
 	MsgType          int
 	PAData           []types.PAData
@@ -40,8 +40,12 @@ type KDCRep struct {
 	DecryptedEncPart EncKDCRepPart
 }
 
-type ASRep KDCRep
-type TGSRep KDCRep
+type ASRep struct {
+	KDCRepFields
+}
+type TGSRep struct {
+	KDCRepFields
+}
 
 type EncKDCRepPart struct {
 	Key           types.EncryptionKey  `asn1:"explicit,tag:0"`
@@ -74,16 +78,19 @@ func (k *ASRep) Unmarshal(b []byte) error {
 		return errors.New("Message ID does not indicate a KRB_AS_REP")
 	}
 	//Process the raw ticket within
-	k.Ticket, err = types.UnmarshalTicket(m.Ticket.Bytes)
+	tkt, err := types.UnmarshalTicket(m.Ticket.Bytes)
 	if err != nil {
 		return err
 	}
-	k.PVNO = m.PVNO
-	k.MsgType = m.MsgType
-	k.PAData = m.PAData
-	k.CRealm = m.CRealm
-	k.CName = m.CName
-	k.EncPart = m.EncPart
+	k.KDCRepFields = KDCRepFields{
+		PVNO:    m.PVNO,
+		MsgType: m.MsgType,
+		PAData:  m.PAData,
+		CRealm:  m.CRealm,
+		CName:   m.CName,
+		Ticket:  tkt,
+		EncPart: m.EncPart,
+	}
 	return nil
 }
 
@@ -97,16 +104,19 @@ func (k *TGSRep) Unmarshal(b []byte) error {
 		return errors.New("Message ID does not indicate a KRB_TGS_REP")
 	}
 	//Process the raw ticket within
-	k.Ticket, err = types.UnmarshalTicket(m.Ticket.Bytes)
+	tkt, err := types.UnmarshalTicket(m.Ticket.Bytes)
 	if err != nil {
 		return err
 	}
-	k.PVNO = m.PVNO
-	k.MsgType = m.MsgType
-	k.PAData = m.PAData
-	k.CRealm = m.CRealm
-	k.CName = m.CName
-	k.EncPart = m.EncPart
+	k.KDCRepFields = KDCRepFields{
+		PVNO:    m.PVNO,
+		MsgType: m.MsgType,
+		PAData:  m.PAData,
+		CRealm:  m.CRealm,
+		CName:   m.CName,
+		Ticket:  tkt,
+		EncPart: m.EncPart,
+	}
 	return nil
 }
 
@@ -164,8 +174,7 @@ func (k *ASRep) DecryptEncPart(c *credentials.Credentials) error {
 
 func (k *ASRep) IsValid(cfg *config.Config, asReq ASReq) (bool, error) {
 	//Ref RFC 4120 Section 3.1.5
-	//TODO change the following to a contains check or slice compare
-	if k.CName.NameType != asReq.ReqBody.CName.NameType {
+	if k.CName.NameType != asReq.ReqBody.CName.NameType || k.CName.NameString == nil {
 		return false, fmt.Errorf("CName in response does not match what was requested. Requested: %+v; Reply: %+v", asReq.ReqBody.CName, k.CName)
 	}
 	for i := range k.CName.NameString {
@@ -179,7 +188,7 @@ func (k *ASRep) IsValid(cfg *config.Config, asReq ASReq) (bool, error) {
 	if k.DecryptedEncPart.Nonce != asReq.ReqBody.Nonce {
 		return false, errors.New("Possible replay attack, nonce in response does not match that in request")
 	}
-	if k.DecryptedEncPart.SName.NameType != asReq.ReqBody.SName.NameType {
+	if k.DecryptedEncPart.SName.NameType != asReq.ReqBody.SName.NameType || k.DecryptedEncPart.SName.NameString == nil {
 		return false, fmt.Errorf("SName in response does not match what was requested. Requested: %v; Reply: %v", asReq.ReqBody.SName, k.DecryptedEncPart.SName)
 	}
 	for i := range k.CName.NameString {
@@ -238,4 +247,47 @@ func (k *TGSRep) DecryptEncPart(key types.EncryptionKey) error {
 	}
 	k.DecryptedEncPart = denc
 	return nil
+}
+
+func (k *TGSRep) IsValid(cfg *config.Config, tgsReq TGSReq) (bool, error) {
+	if k.CName.NameType != tgsReq.ReqBody.CName.NameType || k.CName.NameString == nil {
+		return false, fmt.Errorf("CName in response does not match what was requested. Requested: %+v; Reply: %+v", tgsReq.ReqBody.CName, k.CName)
+	}
+	for i := range k.CName.NameString {
+		if k.CName.NameString[i] != tgsReq.ReqBody.CName.NameString[i] {
+			return false, fmt.Errorf("CName in response does not match what was requested. Requested: %+v; Reply: %+v", tgsReq.ReqBody.CName, k.CName)
+		}
+	}
+	if k.CRealm != tgsReq.ReqBody.Realm {
+		return false, fmt.Errorf("CRealm in response does not match what was requested. Requested: %s; Reply: %s", tgsReq.ReqBody.Realm, k.CRealm)
+	}
+	if k.DecryptedEncPart.Nonce != tgsReq.ReqBody.Nonce {
+		return false, errors.New("Possible replay attack, nonce in response does not match that in request")
+	}
+	if k.Ticket.SName.NameType != tgsReq.ReqBody.SName.NameType || k.Ticket.SName.NameString == nil {
+		return false, fmt.Errorf("SName in response ticket does not match what was requested. Requested: %v; Reply: %v", tgsReq.ReqBody.SName, k.Ticket.SName)
+	}
+	for i := range k.Ticket.SName.NameString {
+		if k.Ticket.SName.NameString[i] != tgsReq.ReqBody.SName.NameString[i] {
+			return false, fmt.Errorf("SName in response ticket does not match what was requested. Requested: %+v; Reply: %+v", tgsReq.ReqBody.SName, k.Ticket.SName)
+		}
+	}
+	if k.DecryptedEncPart.SName.NameType != tgsReq.ReqBody.SName.NameType || k.DecryptedEncPart.SName.NameString == nil {
+		return false, fmt.Errorf("SName in response does not match what was requested. Requested: %v; Reply: %v", tgsReq.ReqBody.SName, k.DecryptedEncPart.SName)
+	}
+	for i := range k.CName.NameString {
+		if k.DecryptedEncPart.SName.NameString[i] != tgsReq.ReqBody.SName.NameString[i] {
+			return false, fmt.Errorf("SName in response does not match what was requested. Requested: %+v; Reply: %+v", tgsReq.ReqBody.SName, k.DecryptedEncPart.SName)
+		}
+	}
+	if k.DecryptedEncPart.SRealm != tgsReq.ReqBody.Realm {
+		return false, fmt.Errorf("SRealm in response does not match what was requested. Requested: %s; Reply: %s", tgsReq.ReqBody.Realm, k.DecryptedEncPart.SRealm)
+	}
+	if len(tgsReq.ReqBody.Addresses) > 0 {
+		//TODO compare if address list is the same
+	}
+	if time.Since(k.DecryptedEncPart.AuthTime) > cfg.LibDefaults.Clockskew || time.Until(k.DecryptedEncPart.AuthTime) > cfg.LibDefaults.Clockskew {
+		return false, fmt.Errorf("Clock skew with KDC too large. Greater than %v seconds", cfg.LibDefaults.Clockskew.Seconds())
+	}
+	return true, nil
 }

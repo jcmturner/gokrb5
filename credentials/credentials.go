@@ -1,20 +1,32 @@
+// Credentials for Kerberos 5 authentication
 package credentials
 
-import "github.com/jcmturner/gokrb5/keytab"
+import (
+	"github.com/jcmturner/gokrb5/keytab"
+	"github.com/jcmturner/gokrb5/types"
+	"github.com/jcmturner/gokrb5/iana/nametype"
+)
 
 // Credentials struct for a user.
 // Contains either a keytab, password or both.
 // Keytabs are used over passwords if both are defined.
 type Credentials struct {
 	Username string
+	Realm string
+	CName types.PrincipalName
 	Keytab   keytab.Keytab
 	Password string
 }
 
 // Create a new Credentials struct.
-func NewCredentials(username string) Credentials {
+func NewCredentials(username string, realm string) Credentials {
 	return Credentials{
 		Username: username,
+		Realm: realm,
+		CName: types.PrincipalName{
+			NameType: nametype.KRB_NT_PRINCIPAL,
+			NameString: []string{username},
+		},
 		Keytab:   keytab.NewKeytab(),
 	}
 }

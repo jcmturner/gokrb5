@@ -28,15 +28,20 @@ type marshalKDCReq struct {
 	ReqBody asn1.RawValue        `asn1:"explicit,tag:4"`
 }
 
-type KDCReq struct {
-	PVNO    int                  `asn1:"explicit,tag:1"`
-	MsgType int                  `asn1:"explicit,tag:2"`
-	PAData  types.PADataSequence `asn1:"explicit,optional,tag:3"`
-	ReqBody KDCReqBody           `asn1:"explicit,tag:4"`
+type KDCReqFields struct {
+	PVNO    int
+	MsgType int
+	PAData  types.PADataSequence
+	ReqBody KDCReqBody
 }
 
-type ASReq KDCReq
-type TGSReq KDCReq
+type ASReq struct {
+	KDCReqFields
+}
+
+type TGSReq struct {
+	KDCReqFields
+}
 
 type marshalKDCReqBody struct {
 	KDCOptions  asn1.BitString      `asn1:"explicit,tag:0"`
@@ -79,23 +84,25 @@ func NewASReq(c *config.Config, username string) ASReq {
 	t := time.Now()
 
 	a := ASReq{
-		PVNO:    iana.PVNO,
-		MsgType: msgtype.KRB_AS_REQ,
-		PAData:  pas,
-		ReqBody: KDCReqBody{
-			KDCOptions: c.LibDefaults.Kdc_default_options,
-			Realm:      c.LibDefaults.Default_realm,
-			CName: types.PrincipalName{
-				NameType:   nametype.KRB_NT_PRINCIPAL,
-				NameString: []string{username},
+		KDCReqFields{
+			PVNO:    iana.PVNO,
+			MsgType: msgtype.KRB_AS_REQ,
+			PAData:  pas,
+			ReqBody: KDCReqBody{
+				KDCOptions: c.LibDefaults.Kdc_default_options,
+				Realm:      c.LibDefaults.Default_realm,
+				CName: types.PrincipalName{
+					NameType:   nametype.KRB_NT_PRINCIPAL,
+					NameString: []string{username},
+				},
+				SName: types.PrincipalName{
+					NameType:   nametype.KRB_NT_SRV_INST,
+					NameString: []string{"krbtgt", c.LibDefaults.Default_realm},
+				},
+				Till:  t.Add(c.LibDefaults.Ticket_lifetime),
+				Nonce: nonce,
+				EType: c.LibDefaults.Default_tkt_enctype_ids,
 			},
-			SName: types.PrincipalName{
-				NameType:   nametype.KRB_NT_SRV_INST,
-				NameString: []string{"krbtgt", c.LibDefaults.Default_realm},
-			},
-			Till:  t.Add(c.LibDefaults.Ticket_lifetime),
-			Nonce: nonce,
-			EType: c.LibDefaults.Default_tkt_enctype_ids,
 		},
 	}
 	if c.LibDefaults.Forwardable {
@@ -118,18 +125,20 @@ func NewTGSReq(username string, c *config.Config, TGT types.Ticket, sessionKey t
 	t := time.Now()
 	s := strings.Split(spn, "/")
 	a := TGSReq{
-		PVNO:    iana.PVNO,
-		MsgType: msgtype.KRB_TGS_REQ,
-		ReqBody: KDCReqBody{
-			KDCOptions: types.NewKrbFlags(),
-			Realm:      c.ResolveRealm(s[len(s)-1]),
-			SName: types.PrincipalName{
-				NameType:   nametype.KRB_NT_PRINCIPAL,
-				NameString: s,
+		KDCReqFields{
+			PVNO:    iana.PVNO,
+			MsgType: msgtype.KRB_TGS_REQ,
+			ReqBody: KDCReqBody{
+				KDCOptions: types.NewKrbFlags(),
+				Realm:      c.ResolveRealm(s[len(s) - 1]),
+				SName: types.PrincipalName{
+					NameType:   nametype.KRB_NT_PRINCIPAL,
+					NameString: s,
+				},
+				Till:  t.Add(c.LibDefaults.Ticket_lifetime),
+				Nonce: nonce,
+				EType: c.LibDefaults.Default_tgs_enctype_ids,
 			},
-			Till:  t.Add(c.LibDefaults.Ticket_lifetime),
-			Nonce: nonce,
-			EType: c.LibDefaults.Default_tgs_enctype_ids,
 		},
 	}
 	types.SetFlag(&a.ReqBody.KDCOptions, types.Forwardable)
@@ -147,11 +156,13 @@ func NewTGSReq(username string, c *config.Config, TGT types.Ticket, sessionKey t
 	if c.LibDefaults.Renew_lifetime != 0 {
 		a.ReqBody.RTime = t.Add(c.LibDefaults.Renew_lifetime)
 	}*/
+	auth := types.NewAuthenticator(c.LibDefaults.Default_realm, username)
+	// Add the CName to make validation of the reply easier
+	a.ReqBody.CName = auth.CName
 	b, err := a.ReqBody.Marshal()
 	if err != nil {
 		return a, fmt.Errorf("Error marshalling request body: %v", err)
 	}
-	auth := types.NewAuthenticator(c.LibDefaults.Default_realm, username)
 	etype, err := crypto.GetEtype(sessionKey.KeyType)
 	if err != nil {
 		return a, fmt.Errorf("Error getting etype to encrypt authenticator: %v", err)
