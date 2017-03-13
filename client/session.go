@@ -1,10 +1,8 @@
 package client
 
 import (
-	"fmt"
 	"github.com/jcmturner/gokrb5/iana/nametype"
 	"github.com/jcmturner/gokrb5/types"
-	"os"
 	"time"
 )
 

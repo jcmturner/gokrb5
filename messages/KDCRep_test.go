@@ -249,7 +249,7 @@ func TestUnmarshalASRepDecodeAndDecrypt(t *testing.T) {
 	if err != nil {
 		t.Fatalf("keytab parse error: %v\n", err)
 	}
-	cred := credentials.NewCredentials(test_user)
+	cred := credentials.NewCredentials(test_user, test_realm)
 	err = asRep.DecryptEncPart(cred.WithKeytab(kt))
 	if err != nil {
 		t.Fatalf("Decryption of AS_REP EncPart failed: %v", err)
@@ -297,7 +297,7 @@ func TestUnmarshalASRepDecodeAndDecrypt_withPassword(t *testing.T) {
 	assert.Equal(t, 1, asRep.Ticket.EncPart.KVNO, "Ticket encrypted part KVNO not as expected")
 	assert.Equal(t, etype.AES256_CTS_HMAC_SHA1_96, asRep.EncPart.EType, "Etype of encrypted part not as expected")
 	assert.Equal(t, 0, asRep.EncPart.KVNO, "Encrypted part KVNO not as expected")
-	cred := credentials.NewCredentials(test_user)
+	cred := credentials.NewCredentials(test_user, test_realm)
 	err = asRep.DecryptEncPart(cred.WithPassword(test_user_password))
 	if err != nil {
 		t.Fatalf("Decryption of AS_REP EncPart failed: %v", err)
