@@ -17,7 +17,6 @@ import (
 	"github.com/jcmturner/gokrb5/iana/patype"
 	"github.com/jcmturner/gokrb5/types"
 	"math/rand"
-	"strings"
 	"time"
 )
 
@@ -33,6 +32,7 @@ type KDCReqFields struct {
 	MsgType int
 	PAData  types.PADataSequence
 	ReqBody KDCReqBody
+	Renewal bool
 }
 
 type ASReq struct {
@@ -115,36 +115,31 @@ func NewASReq(c *config.Config, username string) ASReq {
 		types.SetFlag(&a.ReqBody.KDCOptions, types.Proxiable)
 	}
 	if c.LibDefaults.Renew_lifetime != 0 {
+		types.SetFlag(&a.ReqBody.KDCOptions, types.Renewable)
 		a.ReqBody.RTime = t.Add(c.LibDefaults.Renew_lifetime)
 	}
 	return a
 }
 
-func NewTGSReq(username string, c *config.Config, TGT types.Ticket, sessionKey types.EncryptionKey, spn string) (TGSReq, error) {
+func NewTGSReq(username string, c *config.Config, TGT types.Ticket, sessionKey types.EncryptionKey, spn types.PrincipalName, renewal bool) (TGSReq, error) {
 	nonce := int(rand.Int31())
 	t := time.Now()
-	s := strings.Split(spn, "/")
 	a := TGSReq{
 		KDCReqFields{
 			PVNO:    iana.PVNO,
 			MsgType: msgtype.KRB_TGS_REQ,
 			ReqBody: KDCReqBody{
 				KDCOptions: types.NewKrbFlags(),
-				Realm:      c.ResolveRealm(s[len(s) - 1]),
-				SName: types.PrincipalName{
-					NameType:   nametype.KRB_NT_PRINCIPAL,
-					NameString: s,
-				},
-				Till:  t.Add(c.LibDefaults.Ticket_lifetime),
-				Nonce: nonce,
-				EType: c.LibDefaults.Default_tgs_enctype_ids,
+				Realm:      c.ResolveRealm(spn.NameString[len(spn.NameString)-1]),
+				SName:      spn,
+				Till:       t.Add(c.LibDefaults.Ticket_lifetime),
+				Nonce:      nonce,
+				EType:      c.LibDefaults.Default_tgs_enctype_ids,
 			},
+			Renewal: renewal,
 		},
 	}
-	types.SetFlag(&a.ReqBody.KDCOptions, types.Forwardable)
-	types.SetFlag(&a.ReqBody.KDCOptions, types.Renewable)
-	types.SetFlag(&a.ReqBody.KDCOptions, types.Canonicalize)
-	/*if c.LibDefaults.Forwardable {
+	if c.LibDefaults.Forwardable {
 		types.SetFlag(&a.ReqBody.KDCOptions, types.Forwardable)
 	}
 	if c.LibDefaults.Canonicalize {
@@ -154,8 +149,13 @@ func NewTGSReq(username string, c *config.Config, TGT types.Ticket, sessionKey t
 		types.SetFlag(&a.ReqBody.KDCOptions, types.Proxiable)
 	}
 	if c.LibDefaults.Renew_lifetime != 0 {
+		types.SetFlag(&a.ReqBody.KDCOptions, types.Renewable)
 		a.ReqBody.RTime = t.Add(c.LibDefaults.Renew_lifetime)
-	}*/
+	}
+	if renewal {
+		types.SetFlag(&a.ReqBody.KDCOptions, types.Renew)
+		types.SetFlag(&a.ReqBody.KDCOptions, types.Renewable)
+	}
 	auth := types.NewAuthenticator(c.LibDefaults.Default_realm, username)
 	// Add the CName to make validation of the reply easier
 	a.ReqBody.CName = auth.CName

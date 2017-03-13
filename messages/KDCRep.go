@@ -286,7 +286,7 @@ func (k *TGSRep) IsValid(cfg *config.Config, tgsReq TGSReq) (bool, error) {
 	if len(tgsReq.ReqBody.Addresses) > 0 {
 		//TODO compare if address list is the same
 	}
-	if time.Since(k.DecryptedEncPart.AuthTime) > cfg.LibDefaults.Clockskew || time.Until(k.DecryptedEncPart.AuthTime) > cfg.LibDefaults.Clockskew {
+	if !tgsReq.Renewal && (time.Since(k.DecryptedEncPart.AuthTime) > cfg.LibDefaults.Clockskew || time.Until(k.DecryptedEncPart.AuthTime) > cfg.LibDefaults.Clockskew) {
 		return false, fmt.Errorf("Clock skew with KDC too large. Greater than %v seconds", cfg.LibDefaults.Clockskew.Seconds())
 	}
 	return true, nil

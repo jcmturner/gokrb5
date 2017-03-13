@@ -1,8 +1,6 @@
 package client
 
 import (
-	"errors"
-	"fmt"
 	"github.com/jcmturner/gokrb5/types"
 	"strings"
 	"time"
@@ -19,7 +17,6 @@ type CacheEntry struct {
 	AuthTime  time.Time
 	EndTime   time.Time
 	RenewTill time.Time
-	AutoRenew bool
 }
 
 // Create a new client ticket cache.
@@ -48,14 +45,6 @@ func (c *Cache) GetTicket(spn string) (types.Ticket, bool) {
 	return tkt, false
 }
 
-// Renew a ticket in the cache for the specified SPN.
-func (c *Cache) RenewEntry(spn string) error {
-	if e, ok := c.GetEntry(spn); ok {
-		return e.Renew()
-	}
-	return fmt.Errorf("No entry for this SPN: %s", spn)
-}
-
 // Add a ticket to the cache.
 func (c *Cache) AddEntry(tkt types.Ticket, authTime, endTime, renewTill time.Time) {
 	(*c).Entries[strings.Join(tkt.SName.NameString, "/")] = CacheEntry{
@@ -71,21 +60,28 @@ func (c *Cache) RemoveEntry(spn string) {
 	delete(c.Entries, spn)
 }
 
-// Enable background auto renew of the ticket for the specified SPN.
-func (c *Cache) EnableAutoRenew(spn string) error {
-	return nil
-}
+// Renew a ticket in the cache for the specified SPN.
+//func (c *Cache) RenewEntry(spn string) error {
+//	if e, ok := c.GetEntry(spn); ok {
+//		return e.Renew()
+//	}
+//	return fmt.Errorf("No entry for this SPN: %s", spn)
+//}
 
-// Disable background auto renew of the ticket for the specified SPN.
-func (c *Cache) DisableAutoRenew(spn string) error {
-	return nil
-}
+// Enable background auto renew of the ticket for the specified SPN.
+//func (cl *Client) EnableAutoRenew(spn string) {
+//	go func() {
+//		for {
+//
+//		}
+//	}()
+//}
 
 // Renew the cache entry.
-func (e *CacheEntry) Renew() error {
-	if time.Now().After(e.RenewTill) {
-		return errors.New("Past renew till time. Cannot renew.")
-	}
-	//TODO put renew action here
-	return nil
-}
+//func (e *CacheEntry) Renew() error {
+//	if time.Now().After(e.RenewTill) {
+//		return errors.New("Past renew till time. Cannot renew.")
+//	}
+//	//TODO put renew action here
+//	return nil
+//}

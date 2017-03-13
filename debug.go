@@ -43,6 +43,7 @@ const pa149rep = "6b8202f3308202efa003020105a10302010ba22e302c302aa103020113a223
 func main() {
 
 	TestTGSReq()
+	time.Sleep(time.Duration(3) * time.Hour)
 }
 
 func NoPA() {
@@ -143,8 +144,9 @@ func TestTGSReq() {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error on AS_REQ: %v\n", err)
 	}
-	err = cl.TGSExchange("HTTP/host.test.gokrb5")
+	err = cl.GetServiceTicket("HTTP/host.test.gokrb5")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error on TGS_REQ: %v\n", err)
 	}
+	cl.EnableAutoSessionRenewal()
 }

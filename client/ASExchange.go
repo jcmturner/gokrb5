@@ -8,6 +8,7 @@ import (
 	"github.com/jcmturner/gokrb5/iana/patype"
 	"github.com/jcmturner/gokrb5/messages"
 	"github.com/jcmturner/gokrb5/types"
+	"os"
 	"sort"
 )
 
