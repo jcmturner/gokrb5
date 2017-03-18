@@ -40,7 +40,7 @@ func (cl *Client) EnableAutoSessionRenewal() {
 	go func() {
 		for {
 			//Wait until one minute before endtime
-			w := (time.Until(cl.Session.EndTime) * 5) / 6
+			w := (cl.Session.EndTime.Sub(time.Now()) * 5) / 6
 			if w < 0 {
 				return
 			}

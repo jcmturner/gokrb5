@@ -6,7 +6,6 @@ import (
 	"github.com/jcmturner/gokrb5/iana/nametype"
 	"github.com/jcmturner/gokrb5/messages"
 	"github.com/jcmturner/gokrb5/types"
-	"os"
 	"strings"
 	"time"
 )
@@ -37,7 +36,6 @@ func (cl *Client) TGSExchange(spn types.PrincipalName, tkt types.Ticket, session
 	if err != nil {
 		return tgsReq, tgsRep, fmt.Errorf("Error decrypting EncPart of TGS_REP: %v", err)
 	}
-	fmt.Fprintf(os.Stderr, "TGSRep: %+v\n", tgsRep)
 	if ok, err := tgsRep.IsValid(cl.Config, tgsReq); !ok {
 		return tgsReq, tgsRep, fmt.Errorf("TGS_REP is not valid: %v", err)
 	}
@@ -75,7 +73,5 @@ func (cl *Client) GetServiceTicket(spn string) error {
 		tgsRep.DecryptedEncPart.RenewTill,
 		tgsRep.DecryptedEncPart.Key,
 	)
-	e, _ := cl.Cache.GetEntry(spn)
-	fmt.Fprintf(os.Stderr, "ServiceTkt: %+v", e)
 	return nil
 }

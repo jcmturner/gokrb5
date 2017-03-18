@@ -1,9 +1,7 @@
 package client
 
 import (
-	"fmt"
 	"github.com/jcmturner/gokrb5/types"
-	"os"
 	"strings"
 	"time"
 )
@@ -77,7 +75,6 @@ func (cl *Client) RenewTicket(e CacheEntry) (CacheEntry, error) {
 	spn := e.Ticket.SName
 	_, tgsRep, err := cl.TGSExchange(spn, e.Ticket, e.SessionKey, true)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Renew err: %+v\n", err)
 		return e, err
 	}
 	e = cl.Cache.AddEntry(
