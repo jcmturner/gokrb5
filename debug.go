@@ -22,7 +22,8 @@ const krb5conf = `[libdefaults]
   default_realm = TEST.GOKRB5
   dns_lookup_realm = false
   dns_lookup_kdc = false
-  ticket_lifetime = 24h
+  ticket_lifetime = 3m
+  renew_lifetime = 7m
   forwardable = yes
   default_tkt_enctypes = aes256-cts-hmac-sha1-96
 
@@ -43,7 +44,7 @@ const pa149rep = "6b8202f3308202efa003020105a10302010ba22e302c302aa103020113a223
 func main() {
 
 	TestTGSReq()
-	time.Sleep(time.Duration(3) * time.Hour)
+	//time.Sleep(time.Duration(3) * time.Hour)
 }
 
 func NoPA() {
@@ -136,7 +137,7 @@ func AS() {
 func TestTGSReq() {
 	b, err := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	c, _ := config.NewConfigFromString(krb5conf)
 	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 
@@ -144,9 +145,12 @@ func TestTGSReq() {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error on AS_REQ: %v\n", err)
 	}
-	err = cl.GetServiceTicket("HTTP/host.test.gokrb5")
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error on TGS_REQ: %v\n", err)
-	}
 	cl.EnableAutoSessionRenewal()
+	for {
+		err = cl.GetServiceTicket("HTTP/host.test.gokrb5")
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error on TGS_REQ: %v\n", err)
+		}
+		time.Sleep(time.Duration(1) * time.Minute)
+	}
 }

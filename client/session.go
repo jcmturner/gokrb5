@@ -21,7 +21,7 @@ func (cl *Client) RenewTGT() error {
 		NameType:   nametype.KRB_NT_SRV_INST,
 		NameString: []string{"krbtgt", cl.Session.TGT.Realm},
 	}
-	_, tgsRep, err := cl.TGSExchange(spn, true)
+	_, tgsRep, err := cl.TGSExchange(spn, cl.Session.TGT, cl.Session.SessionKey, true)
 	if err != nil {
 		return err
 	}
@@ -45,11 +45,22 @@ func (cl *Client) EnableAutoSessionRenewal() {
 				return
 			}
 			time.Sleep(w)
-			if time.Now().Before(cl.Session.RenewTill) {
-				cl.RenewTGT()
-			} else {
-				cl.Login()
-			}
+			cl.updateTGT()
 		}
 	}()
+}
+
+func (cl *Client) updateTGT() error {
+	if time.Now().Before(cl.Session.RenewTill) {
+		err := cl.RenewTGT()
+		if err != nil {
+			return err
+		}
+	} else {
+		err := cl.Login()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

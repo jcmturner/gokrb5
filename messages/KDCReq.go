@@ -99,7 +99,8 @@ func NewASReq(c *config.Config, username string) ASReq {
 					NameType:   nametype.KRB_NT_SRV_INST,
 					NameString: []string{"krbtgt", c.LibDefaults.Default_realm},
 				},
-				Till:  t.Add(c.LibDefaults.Ticket_lifetime),
+				//Till:  t.Add(c.LibDefaults.Ticket_lifetime),
+				Till:  t.Add(time.Duration(24) * time.Hour),
 				Nonce: nonce,
 				EType: c.LibDefaults.Default_tkt_enctype_ids,
 			},
@@ -117,11 +118,13 @@ func NewASReq(c *config.Config, username string) ASReq {
 	if c.LibDefaults.Renew_lifetime != 0 {
 		types.SetFlag(&a.ReqBody.KDCOptions, types.Renewable)
 		a.ReqBody.RTime = t.Add(c.LibDefaults.Renew_lifetime)
+		a.ReqBody.RTime = t.Add(time.Duration(48) * time.Hour)
+
 	}
 	return a
 }
 
-func NewTGSReq(username string, c *config.Config, TGT types.Ticket, sessionKey types.EncryptionKey, spn types.PrincipalName, renewal bool) (TGSReq, error) {
+func NewTGSReq(username string, c *config.Config, tkt types.Ticket, sessionKey types.EncryptionKey, spn types.PrincipalName, renewal bool) (TGSReq, error) {
 	nonce := int(rand.Int31())
 	t := time.Now()
 	a := TGSReq{
@@ -132,9 +135,10 @@ func NewTGSReq(username string, c *config.Config, TGT types.Ticket, sessionKey t
 				KDCOptions: types.NewKrbFlags(),
 				Realm:      c.ResolveRealm(spn.NameString[len(spn.NameString)-1]),
 				SName:      spn,
-				Till:       t.Add(c.LibDefaults.Ticket_lifetime),
-				Nonce:      nonce,
-				EType:      c.LibDefaults.Default_tgs_enctype_ids,
+				//Till:       t.Add(c.LibDefaults.Ticket_lifetime),
+				Till:  t.Add(time.Duration(2) * time.Minute),
+				Nonce: nonce,
+				EType: c.LibDefaults.Default_tgs_enctype_ids,
 			},
 			Renewal: renewal,
 		},
@@ -148,7 +152,7 @@ func NewTGSReq(username string, c *config.Config, TGT types.Ticket, sessionKey t
 	if c.LibDefaults.Proxiable {
 		types.SetFlag(&a.ReqBody.KDCOptions, types.Proxiable)
 	}
-	if c.LibDefaults.Renew_lifetime != 0 {
+	if c.LibDefaults.Renew_lifetime > time.Duration(0) {
 		types.SetFlag(&a.ReqBody.KDCOptions, types.Renewable)
 		a.ReqBody.RTime = t.Add(c.LibDefaults.Renew_lifetime)
 	}
@@ -172,7 +176,7 @@ func NewTGSReq(username string, c *config.Config, TGT types.Ticket, sessionKey t
 		CksumType: etype.GetHashID(),
 		Checksum:  cb,
 	}
-	apReq, err := NewAPReq(TGT, sessionKey, auth)
+	apReq, err := NewAPReq(tkt, sessionKey, auth)
 	apb, err := apReq.Marshal()
 	if err != nil {
 		return a, fmt.Errorf("Error marshalling AP_REQ for pre-authentication data: %v", err)

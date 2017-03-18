@@ -4,13 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jcmturner/asn1"
+	"github.com/jcmturner/gokrb5/asn1tools"
+	"github.com/jcmturner/gokrb5/crypto"
+	"github.com/jcmturner/gokrb5/iana"
 	"github.com/jcmturner/gokrb5/iana/asnAppTag"
+	"github.com/jcmturner/gokrb5/iana/keyusage"
 	"github.com/jcmturner/gokrb5/iana/msgtype"
 	"github.com/jcmturner/gokrb5/types"
-	"github.com/jcmturner/gokrb5/iana"
-	"github.com/jcmturner/gokrb5/crypto"
-	"github.com/jcmturner/gokrb5/asn1tools"
-	"github.com/jcmturner/gokrb5/iana/keyusage"
 )
 
 /*AP-REQ          ::= [APPLICATION 14] SEQUENCE {
@@ -43,17 +43,17 @@ type APReq struct {
 	Authenticator types.EncryptedData `asn1:"explicit,tag:4"`
 }
 
-func NewAPReq(TGT types.Ticket, sessionKey types.EncryptionKey, auth types.Authenticator) (APReq, error) {
+func NewAPReq(tkt types.Ticket, sessionKey types.EncryptionKey, auth types.Authenticator) (APReq, error) {
 	var a APReq
 	ed, err := encryptAuthenticator(auth, sessionKey)
 	if err != nil {
 		return a, fmt.Errorf("Error creating authenticator for AP_REQ: %v", err)
 	}
 	a = APReq{
-		PVNO:    iana.PVNO,
-		MsgType: msgtype.KRB_AP_REQ,
-		APOptions: types.NewKrbFlags(),
-		Ticket: TGT,
+		PVNO:          iana.PVNO,
+		MsgType:       msgtype.KRB_AP_REQ,
+		APOptions:     types.NewKrbFlags(),
+		Ticket:        tkt,
 		Authenticator: ed,
 	}
 	return a, nil
@@ -90,9 +90,9 @@ func (a *APReq) Unmarshal(b []byte) error {
 
 func (a *APReq) Marshal() ([]byte, error) {
 	m := marshalAPReq{
-		PVNO:    a.PVNO,
-		MsgType: a.MsgType,
-		APOptions: a.APOptions,
+		PVNO:          a.PVNO,
+		MsgType:       a.MsgType,
+		APOptions:     a.APOptions,
 		Authenticator: a.Authenticator,
 	}
 	var b []byte
