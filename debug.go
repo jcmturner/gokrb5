@@ -147,7 +147,7 @@ func TestTGSReq() {
 	}
 	cl.EnableAutoSessionRenewal()
 	for {
-		err = cl.GetServiceTicket("HTTP/host.test.gokrb5")
+		_, err = cl.GetServiceTicket("HTTP/host.test.gokrb5")
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error on TGS_REQ: %v\n", err)
 		}

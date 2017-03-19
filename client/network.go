@@ -3,6 +3,8 @@ package client
 import (
 	"bytes"
 	"fmt"
+	"github.com/jcmturner/gokrb5/iana/errorcode"
+	"github.com/jcmturner/gokrb5/messages"
 	"math/rand"
 	"net"
 	"time"
@@ -47,6 +49,15 @@ func (cl *Client) SendToKDC(b []byte) ([]byte, error) {
 			rb, errtcp := sendTCP(kdc, b)
 			if errtcp != nil {
 				return rb, fmt.Errorf("Failed to communicate with KDC %v via UDP (%v) and then via TDP (%v)", kdc, errudp, errtcp)
+			}
+		}
+		var KRBErr messages.KRBError
+		if err := KRBErr.Unmarshal(rb); err == nil {
+			if KRBErr.ErrorCode == errorcode.KRB_ERR_RESPONSE_TOO_BIG {
+				rb, errtcp := sendTCP(kdc, b)
+				if errtcp != nil {
+					return rb, fmt.Errorf("Failed to communicate with KDC %v. Response too big for UDP and errored when using TCP: %v ", kdc, errtcp)
+				}
 			}
 		}
 		if len(rb) < 1 {

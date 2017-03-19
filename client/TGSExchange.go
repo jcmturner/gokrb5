@@ -45,16 +45,17 @@ func (cl *Client) TGSExchange(spn types.PrincipalName, tkt types.Ticket, session
 // Make a request to get a service ticket for the SPN specified
 // SPN format: <SERVICE>/<FQDN> Eg. HTTP/www.example.com
 // The ticket will be added to the client's ticket cache
-func (cl *Client) GetServiceTicket(spn string) error {
-	if _, ok := cl.GetCachedTicket(spn); ok {
+func (cl *Client) GetServiceTicket(spn string) (types.Ticket, error) {
+	var tkt types.Ticket
+	if tkt, ok := cl.GetCachedTicket(spn); ok {
 		// Already a valid ticket in the cache
-		return nil
+		return tkt, nil
 	}
 	// Ensure TGT still valid
 	if time.Now().After(cl.Session.EndTime) {
 		err := cl.updateTGT()
 		if err != nil {
-			return err
+			return tkt, err
 		}
 	}
 	s := strings.Split(spn, "/")
@@ -64,7 +65,7 @@ func (cl *Client) GetServiceTicket(spn string) error {
 	}
 	_, tgsRep, err := cl.TGSExchange(princ, cl.Session.TGT, cl.Session.SessionKey, false)
 	if err != nil {
-		return err
+		return tkt, err
 	}
 	cl.Cache.AddEntry(
 		tgsRep.Ticket,
@@ -73,5 +74,5 @@ func (cl *Client) GetServiceTicket(spn string) error {
 		tgsRep.DecryptedEncPart.RenewTill,
 		tgsRep.DecryptedEncPart.Key,
 	)
-	return nil
+	return tgsRep.Ticket, nil
 }

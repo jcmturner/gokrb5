@@ -28,7 +28,7 @@ const (
 	KDC_ERR_SERVICE_NOTYET                = 22 //Server not yet valid; try again later
 	KDC_ERR_KEY_EXPIRED                   = 23 //Password has expired; change password to reset
 	KDC_ERR_PREAUTH_FAILED                = 24 //Pre-authentication information was invalid
-	KDC_ERR_PREAUTH_REQUIRED              = 25 //Additional pre- authentication required
+	KDC_ERR_PREAUTH_REQUIRED              = 25 //Additional pre-authentication required
 	KDC_ERR_SERVER_NOMATCH                = 26 //Requested server and ticket don't match
 	KDC_ERR_MUST_USE_USER2USER            = 27 //Server principal valid for  user2user only
 	KDC_ERR_PATH_NOT_ACCEPTED             = 28 //KDC Policy rejects transited path

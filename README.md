@@ -4,8 +4,51 @@ This is work in progress and does not yet work...
 
 [![GoDoc](https://godoc.org/github.com/jcmturner/gokrb5?status.svg)](https://godoc.org/github.com/jcmturner/gokrb5)
 
-## Compatibility
-Go version 1.8+ is needed.
+## Usage
+### Configuration
+The gokrb5 libraries use the same krb5.conf configuration file format as MIT Kerberos, described [here](https://web.mit.edu/kerberos/krb5-latest/doc/admin/conf_files/krb5_conf.html)
+Config instances can be created by loading from a file path or by passing a string, io.Reader or bufio.Scanner to the relevant method:
+```go
+import "github.com/jcmturner/gokrb5/config"
+cfg, err := config.Load("/path/to/config/file")
+cfg, err := config.NewConfigFromString(krb5Str) //String must have appropriate newline separations
+cfg, err := config.NewConfigFromReader(reader)
+cfg, err := config.NewConfigFromScanner(scanner)
+```
+### Keytab files
+Standard keytab files can be read from a file or from a slice of bytes:
+```go
+import 	"github.com/jcmturner/gokrb5/keytab"
+ktFromFile, err := keytab.Load("/path/to/file.keytab")
+ktFromBytes, err := keytab.Parse(b)
+
+```
+### Kerberos Client
+Create a client instance with either a password or a keytab:
+```go
+import 	"github.com/jcmturner/gokrb5/client"
+cl := client.NewClientWithPassword("username", "REALM.COM", "password")
+cl := client.NewClientWithKeytab("username", "REALM.COM", kt)
+
+```
+Provide configuration to the client:
+```go
+cl.WithConfig(cfg)
+```
+Login:
+```go
+err := cl.Login
+```
+(Optional) Enable automatic refresh of Kerberos Ticket Granting Ticket (TGT):
+```go
+cl.EnableAutoSessionRenewal()
+```
+Request a Serivce ticket for a Service Principal Name (SPN).
+This method will use the client's cache either returning a valid cached ticket, renewing a cached ticket with the KDC or requesting a new ticket from the KDC.
+Therefore the GetServiceTicket method can be continually used for the most efficient interation with the KDC.
+```go
+tkt, err := cl.GetServiceTicket("HTTP/host.test.gokrb5")
+```
 
 ## References
 ### RFCs
