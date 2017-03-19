@@ -1,3 +1,4 @@
+// Authenticator type assigned numbers.
 package adtype
 
 const (

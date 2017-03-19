@@ -1,3 +1,4 @@
+// Kerberos 5 message type assigned numbers.
 package msgtype
 
 const (

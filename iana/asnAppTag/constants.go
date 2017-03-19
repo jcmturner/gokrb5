@@ -1,3 +1,4 @@
+// ASN1 application tag numbers.
 package asnAppTag
 
 const (

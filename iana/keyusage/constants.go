@@ -1,3 +1,4 @@
+// Key usage assigned numbers.
 package keyusage
 
 const (

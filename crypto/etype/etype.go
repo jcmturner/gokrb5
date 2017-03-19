@@ -2,6 +2,7 @@ package etype
 
 import "hash"
 
+// Interface defining the Encryption Algorithm Profile from RFC 3961.
 type EType interface {
 	GetETypeID() int
 	GetHashID() int

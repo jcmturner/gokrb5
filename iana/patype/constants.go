@@ -1,3 +1,4 @@
+// Kerberos 5 pre-authentication type assigned numbers.
 package patype
 
 const (

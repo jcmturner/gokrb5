@@ -35,6 +35,7 @@ License: http://www.apache.org/licenses/LICENSE-2.0
 */
 
 // RFC 3961: n-fold algorithm.
+//
 // m input bytes that will be "stretched" to the least common multiple of n bits and the bit length of m.
 func Nfold(m []byte, n int) []byte {
 	k := len(m) * 8
