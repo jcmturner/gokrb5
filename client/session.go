@@ -16,6 +16,22 @@ type Session struct {
 	SessionKeyExpiration time.Time
 }
 
+//Enable the automatic renewal for the client's TGT session.
+func (cl *Client) EnableAutoSessionRenewal() {
+	go func() {
+		for {
+			//Wait until one minute before endtime
+			w := (cl.Session.EndTime.Sub(time.Now()) * 5) / 6
+			if w < 0 {
+				return
+			}
+			time.Sleep(w)
+			cl.updateTGT()
+		}
+	}()
+}
+
+//Renew the client's TGT session.
 func (cl *Client) RenewTGT() error {
 	spn := types.PrincipalName{
 		NameType:   nametype.KRB_NT_SRV_INST,
@@ -34,20 +50,6 @@ func (cl *Client) RenewTGT() error {
 		SessionKeyExpiration: tgsRep.DecryptedEncPart.KeyExpiration,
 	}
 	return nil
-}
-
-func (cl *Client) EnableAutoSessionRenewal() {
-	go func() {
-		for {
-			//Wait until one minute before endtime
-			w := (cl.Session.EndTime.Sub(time.Now()) * 5) / 6
-			if w < 0 {
-				return
-			}
-			time.Sleep(w)
-			cl.updateTGT()
-		}
-	}()
 }
 
 func (cl *Client) updateTGT() error {
