@@ -1,4 +1,4 @@
-// A client for Kerberos 5 authentication
+// A client for Kerberos 5 authentication.
 package client
 
 import (

@@ -5,7 +5,7 @@ import "hash"
 type EType interface {
 	GetETypeID() int
 	GetHashID() int
-	GetKeyByteSize() int                                        // See "protocol key format" for defined values
+	GetKeyByteSize() int
 	GetKeySeedBitLength() int                                   // key-generation seed length, k
 	GetDefaultStringToKeyParams() string                        // default string-to-key parameters (s2kparams)
 	StringToKey(string, salt, s2kparams string) ([]byte, error) // string-to-key (UTF-8 string, UTF-8 string, opaque)->(protocol-key)

@@ -1,3 +1,4 @@
+// Cryptographic packages for Kerberos 5 implementation.
 package crypto
 
 import (
@@ -40,13 +41,13 @@ func GetChksumEtype(id int) (etype.EType, error) {
 	}
 }
 
-func GetKeyFromPassword(passwd string, cn types.PrincipalName, realm string, etypeId int, pas types.PADataSequence) (types.EncryptionKey, etype.EType, error) {
+func GetKeyFromPassword(passwd string, cname types.PrincipalName, realm string, etypeID int, pas types.PADataSequence) (types.EncryptionKey, etype.EType, error) {
 	var key types.EncryptionKey
-	etype, err := GetEtype(etypeId)
+	et, err := GetEtype(etypeID)
 	if err != nil {
-		return key, etype, fmt.Errorf("Error getting encryption type: %v", err)
+		return key, et, fmt.Errorf("Error getting encryption type: %v", err)
 	}
-	sk2p := etype.GetDefaultStringToKeyParams()
+	sk2p := et.GetDefaultStringToKeyParams()
 	var salt string
 	var paID int
 	for _, pa := range pas {
@@ -60,18 +61,18 @@ func GetKeyFromPassword(passwd string, cn types.PrincipalName, realm string, ety
 			if paID > pa.PADataType {
 				continue
 			}
-			var et types.ETypeInfo
-			err := et.Unmarshal(pa.PADataValue)
+			var eti types.ETypeInfo
+			err := eti.Unmarshal(pa.PADataValue)
 			if err != nil {
-				return key, etype, fmt.Errorf("Error unmashalling PA Data to PA-ETYPE-INFO2: %v", err)
+				return key, et, fmt.Errorf("Error unmashalling PA Data to PA-ETYPE-INFO2: %v", err)
 			}
-			if etypeId != et[0].EType {
-				etype, err = GetEtype(et[0].EType)
+			if etypeID != eti[0].EType {
+				et, err = GetEtype(eti[0].EType)
 				if err != nil {
-					return key, etype, fmt.Errorf("Error getting encryption type: %v", err)
+					return key, et, fmt.Errorf("Error getting encryption type: %v", err)
 				}
 			}
-			salt = string(et[0].Salt)
+			salt = string(eti[0].Salt)
 		case patype.PA_ETYPE_INFO2:
 			if paID > pa.PADataType {
 				continue
@@ -79,12 +80,12 @@ func GetKeyFromPassword(passwd string, cn types.PrincipalName, realm string, ety
 			var et2 types.ETypeInfo2
 			err := et2.Unmarshal(pa.PADataValue)
 			if err != nil {
-				return key, etype, fmt.Errorf("Error unmashalling PA Data to PA-ETYPE-INFO2: %v", err)
+				return key, et, fmt.Errorf("Error unmashalling PA Data to PA-ETYPE-INFO2: %v", err)
 			}
-			if etypeId != et2[0].EType {
-				etype, err = GetEtype(et2[0].EType)
+			if etypeID != et2[0].EType {
+				et, err = GetEtype(et2[0].EType)
 				if err != nil {
-					return key, etype, fmt.Errorf("Error getting encryption type: %v", err)
+					return key, et, fmt.Errorf("Error getting encryption type: %v", err)
 				}
 			}
 			if len(et2[0].S2KParams) == 4 {
@@ -94,45 +95,45 @@ func GetKeyFromPassword(passwd string, cn types.PrincipalName, realm string, ety
 		}
 	}
 	if salt == "" {
-		salt = cn.GetSalt(realm)
+		salt = cname.GetSalt(realm)
 	}
-	k, err := etype.StringToKey(passwd, salt, sk2p)
+	k, err := et.StringToKey(passwd, salt, sk2p)
 	if err != nil {
-		return key, etype, fmt.Errorf("Error deriving key from string: %+v", err)
+		return key, et, fmt.Errorf("Error deriving key from string: %+v", err)
 	}
 	key = types.EncryptionKey{
-		KeyType:  etypeId,
+		KeyType:  etypeID,
 		KeyValue: k,
 	}
-	return key, etype, nil
+	return key, et, nil
 }
 
 // Pass a usage value of zero to use the key provided directly rather than deriving one
-func GetEncryptedData(pt []byte, key types.EncryptionKey, usage int, kvno int) (types.EncryptedData, error) {
+func GetEncryptedData(plainBytes []byte, key types.EncryptionKey, usage uint32, kvno int) (types.EncryptedData, error) {
 	var ed types.EncryptedData
-	etype, err := GetEtype(key.KeyType)
+	et, err := GetEtype(key.KeyType)
 	if err != nil {
 		return ed, fmt.Errorf("Error getting etype: %v", err)
 	}
 	k := key.KeyValue
 	if usage != 0 {
-		k, err = etype.DeriveKey(key.KeyValue, engine.GetUsageKe(uint32(usage)))
+		k, err = et.DeriveKey(key.KeyValue, engine.GetUsageKe(uint32(usage)))
 		if err != nil {
 			return ed, fmt.Errorf("Error deriving key: %v", err)
 		}
 	}
 	//confounder
-	c := make([]byte, etype.GetConfounderByteSize())
+	c := make([]byte, et.GetConfounderByteSize())
 	_, err = rand.Read(c)
 	if err != nil {
 		return ed, fmt.Errorf("Could not generate random confounder: %v", err)
 	}
-	pt = append(c, pt...)
-	_, b, err := etype.Encrypt(k, pt)
+	plainBytes = append(c, plainBytes...)
+	_, b, err := et.Encrypt(k, plainBytes)
 	if err != nil {
 		return ed, fmt.Errorf("Error encrypting data: %v", err)
 	}
-	ih, err := engine.GetIntegrityHash(pt, key.KeyValue, uint32(usage), etype)
+	ih, err := engine.GetIntegrityHash(plainBytes, key.KeyValue, usage, et)
 	b = append(b, ih...)
 	ed = types.EncryptedData{
 		EType:  key.KeyType,
@@ -142,24 +143,24 @@ func GetEncryptedData(pt []byte, key types.EncryptionKey, usage int, kvno int) (
 	return ed, nil
 }
 
-func DecryptEncPart(pe types.EncryptedData, key types.EncryptionKey, usage uint32) ([]byte, error) {
+func DecryptEncPart(ed types.EncryptedData, key types.EncryptionKey, usage uint32) ([]byte, error) {
 	//Derive the key
-	etype, err := GetEtype(key.KeyType)
-	k, err := etype.DeriveKey(key.KeyValue, engine.GetUsageKe(usage))
+	et, err := GetEtype(key.KeyType)
+	k, err := et.DeriveKey(key.KeyValue, engine.GetUsageKe(usage))
 	if err != nil {
 		return nil, fmt.Errorf("Error deriving key: %v", err)
 	}
 	// Strip off the checksum from the end
-	b, err := etype.Decrypt(k, pe.Cipher[:len(pe.Cipher)-etype.GetHMACBitLength()/8])
+	b, err := et.Decrypt(k, ed.Cipher[:len(ed.Cipher)-et.GetHMACBitLength()/8])
 	if err != nil {
 		return nil, fmt.Errorf("Error decrypting: %v", err)
 	}
 	//Verify checksum
-	if !etype.VerifyIntegrity(key.KeyValue, pe.Cipher, b, usage) {
+	if !et.VerifyIntegrity(key.KeyValue, ed.Cipher, b, usage) {
 		return nil, errors.New("Error decrypting encrypted part: integrity verification failed")
 	}
 	//Remove the confounder bytes
-	b = b[etype.GetConfounderByteSize():]
+	b = b[et.GetConfounderByteSize():]
 	if err != nil {
 		return nil, fmt.Errorf("Error decrypting encrypted part: %v", err)
 	}

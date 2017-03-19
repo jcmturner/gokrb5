@@ -1,10 +1,10 @@
-// Credentials for Kerberos 5 authentication
+// Credentials for Kerberos 5 authentication.
 package credentials
 
 import (
+	"github.com/jcmturner/gokrb5/iana/nametype"
 	"github.com/jcmturner/gokrb5/keytab"
 	"github.com/jcmturner/gokrb5/types"
-	"github.com/jcmturner/gokrb5/iana/nametype"
 )
 
 // Credentials struct for a user.
@@ -12,8 +12,8 @@ import (
 // Keytabs are used over passwords if both are defined.
 type Credentials struct {
 	Username string
-	Realm string
-	CName types.PrincipalName
+	Realm    string
+	CName    types.PrincipalName
 	Keytab   keytab.Keytab
 	Password string
 }
@@ -22,12 +22,12 @@ type Credentials struct {
 func NewCredentials(username string, realm string) Credentials {
 	return Credentials{
 		Username: username,
-		Realm: realm,
+		Realm:    realm,
 		CName: types.PrincipalName{
-			NameType: nametype.KRB_NT_PRINCIPAL,
+			NameType:   nametype.KRB_NT_PRINCIPAL,
 			NameString: []string{username},
 		},
-		Keytab:   keytab.NewKeytab(),
+		Keytab: keytab.NewKeytab(),
 	}
 }
 

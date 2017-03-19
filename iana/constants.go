@@ -1,4 +1,4 @@
-// Assigned numbers.
+// Kerberos 5 assigned numbers.
 package iana
 
 const (

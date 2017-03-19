@@ -1,14 +1,14 @@
-// Implementation of Kerberos keytabs: https://web.mit.edu/kerberos/krb5-devel/doc/formats/keytab_file_format.html
+// Implementation of Kerberos keytabs: https://web.mit.edu/kerberos/krb5-devel/doc/formats/keytab_file_format.html.
 package keytab
 
 import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"github.com/jcmturner/gokrb5/types"
 	"io/ioutil"
 	"time"
 	"unsafe"
-	"github.com/jcmturner/gokrb5/types"
 )
 
 // Keytab struct.
@@ -69,11 +69,11 @@ func newKeytabEntry() KeytabEntry {
 		Principal: newPrincipal(),
 		Timestamp: time.Time{},
 		KVNO8:     0,
-		Key:       types.EncryptionKey{
-			KeyType: 0,
+		Key: types.EncryptionKey{
+			KeyType:  0,
 			KeyValue: b,
 		},
-		KVNO:      0,
+		KVNO: 0,
 	}
 }
 

@@ -1,3 +1,4 @@
+// Kerberos 5 message types and methods.
 package messages
 
 import (

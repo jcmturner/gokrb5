@@ -1,3 +1,4 @@
+// Kerberos 5 data types.
 package types
 
 import (

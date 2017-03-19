@@ -1,5 +1,5 @@
+// Tools for managing ASN1 marshaled data.
 package asn1tools
-
 
 // Get the ASN1 encoded bytes for the length 'l'
 // There are two forms: short (for lengths between 0 and 127), and long definite (for lengths between 0 and 2^1008 -1).
@@ -28,10 +28,10 @@ func GetLengthFromASN(b []byte) int {
 		return int(b[1])
 	}
 	// The bytes that indicate the length
-	lb := b[2:2+int(b[1]) - 128]
+	lb := b[2 : 2+int(b[1])-128]
 	base := 1
 	l := 0
-	for i := len(lb)-1; i >= 0; i-- {
+	for i := len(lb) - 1; i >= 0; i-- {
 		l += int(lb[i]) * base
 		base = base * 256
 	}
