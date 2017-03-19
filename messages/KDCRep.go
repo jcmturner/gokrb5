@@ -29,6 +29,7 @@ type marshalKDCRep struct {
 	EncPart types.EncryptedData `asn1:"explicit,tag:6"`
 }
 
+// KRB_KDC_REP struct fields.
 type KDCRepFields struct {
 	PVNO             int
 	MsgType          int
@@ -40,13 +41,17 @@ type KDCRepFields struct {
 	DecryptedEncPart EncKDCRepPart
 }
 
+// RFC 4120 KRB_AS_REP: https://tools.ietf.org/html/rfc4120#section-5.4.2.
 type ASRep struct {
 	KDCRepFields
 }
+
+// RFC 4120 KRB_TGS_REP: https://tools.ietf.org/html/rfc4120#section-5.4.2.
 type TGSRep struct {
 	KDCRepFields
 }
 
+// Encrypted part of KRB_KDC_REP.
 type EncKDCRepPart struct {
 	Key           types.EncryptionKey  `asn1:"explicit,tag:0"`
 	LastReqs      []LastReq            `asn1:"explicit,tag:1"`
@@ -63,11 +68,13 @@ type EncKDCRepPart struct {
 	EncPAData     types.PADataSequence `asn1:"explicit,optional,tag:12"`
 }
 
+// LastReq part of KRB_KDC_REP.
 type LastReq struct {
 	LRType  int       `asn1:"explicit,tag:0"`
 	LRValue time.Time `asn1:"generalized,explicit,tag:1"`
 }
 
+// Unmarshal bytes b into the ASRep struct.
 func (k *ASRep) Unmarshal(b []byte) error {
 	var m marshalKDCRep
 	_, err := asn1.UnmarshalWithParams(b, &m, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.ASREP))
@@ -94,6 +101,7 @@ func (k *ASRep) Unmarshal(b []byte) error {
 	return nil
 }
 
+// Unmarshal bytes b into the TGSRep struct.
 func (k *TGSRep) Unmarshal(b []byte) error {
 	var m marshalKDCRep
 	_, err := asn1.UnmarshalWithParams(b, &m, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.TGSREP))
@@ -120,6 +128,7 @@ func (k *TGSRep) Unmarshal(b []byte) error {
 	return nil
 }
 
+// Unmarshal bytes b into encrypted part of KRB_KDC_REP.
 func (e *EncKDCRepPart) Unmarshal(b []byte) error {
 	_, err := asn1.UnmarshalWithParams(b, e, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.EncASRepPart))
 	if err != nil {
@@ -136,6 +145,7 @@ func (e *EncKDCRepPart) Unmarshal(b []byte) error {
 	return err
 }
 
+// Decrypt the encrypted part of an AS_REP.
 func (k *ASRep) DecryptEncPart(c *credentials.Credentials) error {
 	var key types.EncryptionKey
 	var err error
@@ -170,6 +180,7 @@ func (k *ASRep) DecryptEncPart(c *credentials.Credentials) error {
 	return nil
 }
 
+// Check validity of AS_REP message.
 func (k *ASRep) IsValid(cfg *config.Config, asReq ASReq) (bool, error) {
 	//Ref RFC 4120 Section 3.1.5
 	if k.CName.NameType != asReq.ReqBody.CName.NameType || k.CName.NameString == nil {
@@ -229,6 +240,7 @@ func (k *ASRep) IsValid(cfg *config.Config, asReq ASReq) (bool, error) {
 	return true, nil
 }
 
+// Decrypt the encrypted part of an TGS_REP.
 func (k *TGSRep) DecryptEncPart(key types.EncryptionKey) error {
 	b, err := crypto.DecryptEncPart(k.EncPart, key, keyusage.TGS_REP_ENCPART_SESSION_KEY)
 	if err != nil {
@@ -243,6 +255,7 @@ func (k *TGSRep) DecryptEncPart(key types.EncryptionKey) error {
 	return nil
 }
 
+// Check validity of TGS_REP message.
 func (k *TGSRep) IsValid(cfg *config.Config, tgsReq TGSReq) (bool, error) {
 	if k.CName.NameType != tgsReq.ReqBody.CName.NameType || k.CName.NameString == nil {
 		return false, fmt.Errorf("CName in response does not match what was requested. Requested: %+v; Reply: %+v", tgsReq.ReqBody.CName, k.CName)

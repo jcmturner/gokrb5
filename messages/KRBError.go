@@ -11,6 +11,7 @@ import (
 	"time"
 )
 
+// RFC 4120 KRB_ERROR: https://tools.ietf.org/html/rfc4120#section-5.9.1.
 type KRBError struct {
 	PVNO      int                 `asn1:"explicit,tag:0"`
 	MsgType   int                 `asn1:"explicit,tag:1"`
@@ -27,6 +28,7 @@ type KRBError struct {
 	EData     []byte              `asn1:"optional,explicit,tag:12"`
 }
 
+// Unmarshal bytes b into the KRBError struct.
 func (k *KRBError) Unmarshal(b []byte) error {
 	_, err := asn1.UnmarshalWithParams(b, k, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.KRBError))
 	if err != nil {
@@ -39,6 +41,7 @@ func (k *KRBError) Unmarshal(b []byte) error {
 	return nil
 }
 
+// Error method implementing error interface on KRBError struct.
 func (k KRBError) Error() string {
 	return fmt.Sprintf("KRB Error: %s - %s", errorcode.ErrorCodeLookup(k.ErrorCode), k.EText)
 }

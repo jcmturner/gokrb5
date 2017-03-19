@@ -35,6 +35,7 @@ type marshalAPReq struct {
 	Authenticator types.EncryptedData `asn1:"explicit,tag:4"`
 }
 
+// RFC 4120 KRB_AP_REQ: https://tools.ietf.org/html/rfc4120#section-5.5.1.
 type APReq struct {
 	PVNO          int                 `asn1:"explicit,tag:0"`
 	MsgType       int                 `asn1:"explicit,tag:1"`
@@ -43,6 +44,7 @@ type APReq struct {
 	Authenticator types.EncryptedData `asn1:"explicit,tag:4"`
 }
 
+// Generate a new KRB_AP_REQ struct.
 func NewAPReq(tkt types.Ticket, sessionKey types.EncryptionKey, auth types.Authenticator) (APReq, error) {
 	var a APReq
 	ed, err := encryptAuthenticator(auth, sessionKey)
@@ -59,6 +61,7 @@ func NewAPReq(tkt types.Ticket, sessionKey types.EncryptionKey, auth types.Authe
 	return a, nil
 }
 
+// Encrypt Authenticator
 func encryptAuthenticator(a types.Authenticator, sessionKey types.EncryptionKey) (types.EncryptedData, error) {
 	var ed types.EncryptedData
 	m, err := a.Marshal()
@@ -68,6 +71,7 @@ func encryptAuthenticator(a types.Authenticator, sessionKey types.EncryptionKey)
 	return crypto.GetEncryptedData(m, sessionKey, keyusage.TGS_REQ_PA_TGS_REQ_AP_REQ_AUTHENTICATOR, 0)
 }
 
+// Unmarshal bytes b into the APReq struct.
 func (a *APReq) Unmarshal(b []byte) error {
 	var m marshalAPReq
 	_, err := asn1.UnmarshalWithParams(b, &m, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.APREQ))
@@ -88,6 +92,7 @@ func (a *APReq) Unmarshal(b []byte) error {
 	return nil
 }
 
+// ASN1 marshal APReq struct.
 func (a *APReq) Marshal() ([]byte, error) {
 	m := marshalAPReq{
 		PVNO:          a.PVNO,

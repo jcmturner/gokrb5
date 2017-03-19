@@ -18,6 +18,7 @@ type marshalKRBCred struct {
 	EncPart types.EncryptedData `asn1:"explicit,tag:3"`
 }
 
+// RFC 4120 KRB_CRED: https://tools.ietf.org/html/rfc4120#section-5.8.1.
 type KRBCred struct {
 	PVNO             int
 	MsgType          int
@@ -26,6 +27,7 @@ type KRBCred struct {
 	DecryptedEncPart EncKrbCredPart
 }
 
+// Encrypted part of KRB_CRED.
 type EncKrbCredPart struct {
 	TicketInfo []KrbCredInfo     `asn1:"explicit,tag:0"`
 	Nouce      int               `asn1:"optional,explicit,tag:1"`
@@ -35,6 +37,7 @@ type EncKrbCredPart struct {
 	RAddress   types.HostAddress `asn1:"optional,explicit,tag:5"`
 }
 
+// KRB_CRED_INFO part of KRB_CRED.
 type KrbCredInfo struct {
 	Key       types.EncryptionKey `asn1:"explicit,tag:0"`
 	PRealm    string              `asn1:"generalstring,optional,explicit,tag:1"`
@@ -49,6 +52,7 @@ type KrbCredInfo struct {
 	CAddr     types.HostAddresses `asn1:"optional,explicit,tag:10"`
 }
 
+// Unmarshal bytes b into the KRBCred struct.
 func (k *KRBCred) Unmarshal(b []byte) error {
 	var m marshalKRBCred
 	_, err := asn1.UnmarshalWithParams(b, &m, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.KRBCred))
@@ -71,6 +75,7 @@ func (k *KRBCred) Unmarshal(b []byte) error {
 	return nil
 }
 
+// Decrypt the encrypted part of a KRB_CRED.
 func (k *KRBCred) DecryptEncPart(key types.EncryptionKey) error {
 	b, err := crypto.DecryptEncPart(k.EncPart, key, keyusage.KRB_CRED_ENCPART)
 	if err != nil {
@@ -85,6 +90,7 @@ func (k *KRBCred) DecryptEncPart(key types.EncryptionKey) error {
 	return nil
 }
 
+// Unmarshal bytes b into the encrypted part of KRB_CRED.
 func (k *EncKrbCredPart) Unmarshal(b []byte) error {
 	_, err := asn1.UnmarshalWithParams(b, k, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.EncKrbCredPart))
 	if err != nil {
