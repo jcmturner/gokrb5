@@ -1,4 +1,4 @@
-package crypto
+package aes
 
 import (
 	"bytes"
@@ -9,6 +9,8 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/jcmturner/gokrb5/crypto/engine"
+	"github.com/jcmturner/gokrb5/crypto/etype"
 	"golang.org/x/crypto/pbkdf2"
 )
 
@@ -16,7 +18,7 @@ const (
 	s2kParamsZero = 4294967296
 )
 
-func AESStringToKey(secret, salt, s2kparams string, e EType) ([]byte, error) {
+func stringToKey(secret, salt, s2kparams string, e etype.EType) ([]byte, error) {
 	//process s2kparams string
 	//The parameter string is four octets indicating an unsigned
 	//number in big-endian order.  This is the number of iterations to be
@@ -36,39 +38,39 @@ func AESStringToKey(secret, salt, s2kparams string, e EType) ([]byte, error) {
 		return nil, errors.New("Invalid s2kparams, cannot convert to big endian int32")
 	}
 	if i == 0 {
-		return AESStringToKeyIter(secret, salt, s2kParamsZero, e)
+		return stringToKeyIter(secret, salt, s2kParamsZero, e)
 	}
-	return AESStringToKeyIter(secret, salt, int(i), e)
+	return stringToKeyIter(secret, salt, int(i), e)
 }
 
-func AESStringToPBKDF2(secret, salt string, iterations int, e EType) []byte {
+func stringToPBKDF2(secret, salt string, iterations int, e etype.EType) []byte {
 	return pbkdf2.Key([]byte(secret), []byte(salt), iterations, e.GetKeyByteSize(), sha1.New)
 }
 
-func AESStringToKeyIter(secret, salt string, iterations int, e EType) ([]byte, error) {
-	tkey := AESRandomToKey(AESStringToPBKDF2(secret, salt, iterations, e))
-	key, err := AESDeriveKey(tkey, []byte("kerberos"), e)
+func stringToKeyIter(secret, salt string, iterations int, e etype.EType) ([]byte, error) {
+	tkey := randomToKey(stringToPBKDF2(secret, salt, iterations, e))
+	key, err := deriveKey(tkey, []byte("kerberos"), e)
 	return key, err
 }
 
-func AESRandomToKey(b []byte) []byte {
+func randomToKey(b []byte) []byte {
 	return b
 }
 
-func AESDeriveRandom(protocolKey, usage []byte, e EType) ([]byte, error) {
-	r, err := deriveRandom(protocolKey, usage, e.GetCypherBlockBitLength(), e.GetKeySeedBitLength(), e)
+func deriveRandom(protocolKey, usage []byte, e etype.EType) ([]byte, error) {
+	r, err := engine.DeriveRandom(protocolKey, usage, e.GetCypherBlockBitLength(), e.GetKeySeedBitLength(), e)
 	return r, err
 }
 
-func AESDeriveKey(protocolKey, usage []byte, e EType) ([]byte, error) {
-	r, err := AESDeriveRandom(protocolKey, usage, e)
+func deriveKey(protocolKey, usage []byte, e etype.EType) ([]byte, error) {
+	r, err := deriveRandom(protocolKey, usage, e)
 	if err != nil {
 		return nil, err
 	}
-	return AESRandomToKey(r), nil
+	return randomToKey(r), nil
 }
 
-func AESCTSEncrypt(key, iv, message []byte, e EType) ([]byte, []byte, error) {
+func encryptCTS(key, iv, message []byte, e etype.EType) ([]byte, []byte, error) {
 	if len(key) != e.GetKeyByteSize() {
 		return nil, nil, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeyByteSize(), len(key))
 	}
@@ -93,7 +95,7 @@ func AESCTSEncrypt(key, iv, message []byte, e EType) ([]byte, []byte, error) {
 	subsequent encryption is the next-to-last block of the encryption
 	output; this is the encrypted form of the last plaintext block.*/
 	if l <= aes.BlockSize {
-		m, _ = zeroPad(m, aes.BlockSize)
+		m, _ = engine.ZeroPad(m, aes.BlockSize)
 		mode.CryptBlocks(m, m)
 		return m, m, nil
 	}
@@ -103,7 +105,7 @@ func AESCTSEncrypt(key, iv, message []byte, e EType) ([]byte, []byte, error) {
 		rb, _ := swapLastTwoBlocks(m, aes.BlockSize)
 		return iv, rb, nil
 	}
-	m, _ = zeroPad(m, aes.BlockSize)
+	m, _ = engine.ZeroPad(m, aes.BlockSize)
 	rb, pb, lb, err := tailBlocks(m, aes.BlockSize)
 	var ct []byte
 	if rb != nil {
@@ -125,7 +127,7 @@ func AESCTSEncrypt(key, iv, message []byte, e EType) ([]byte, []byte, error) {
 	//TODO do we need to add the hash to the end?
 }
 
-func AESCTSDecrypt(key, ciphertext []byte, e EType) ([]byte, error) {
+func decryptCTS(key, ciphertext []byte, e etype.EType) ([]byte, error) {
 	// Copy the cipher text as golang slices even when passed by value to this method can result in the backing arrays of the calling code value being updated.
 	ct := make([]byte, len(ciphertext))
 	copy(ct, ciphertext)

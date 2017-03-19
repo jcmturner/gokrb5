@@ -1,4 +1,4 @@
-// Assigned numbers
+// Assigned numbers.
 package iana
 
 const (

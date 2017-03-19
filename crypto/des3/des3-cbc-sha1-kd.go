@@ -1,4 +1,4 @@
-package crypto
+package des3
 
 import (
 	"crypto/cipher"
@@ -6,9 +6,10 @@ import (
 	"crypto/sha1"
 	"errors"
 	"fmt"
-	"hash"
+	"github.com/jcmturner/gokrb5/crypto/engine"
 	"github.com/jcmturner/gokrb5/iana/chksumtype"
-	"github.com/jcmturner/gokrb5/iana/etype"
+	"github.com/jcmturner/gokrb5/iana/etypeID"
+	"hash"
 )
 
 //RFC: 3961 Section 6.3
@@ -52,7 +53,7 @@ type Des3CbcSha1Kd struct {
 }
 
 func (e Des3CbcSha1Kd) GetETypeID() int {
-	return etype.DES3_CBC_SHA1_KD
+	return etypeID.DES3_CBC_SHA1_KD
 }
 
 func (e Des3CbcSha1Kd) GetHashID() int {
@@ -104,7 +105,7 @@ func (e Des3CbcSha1Kd) RandomToKey(b []byte) (protocolKey []byte) {
 }
 
 func (e Des3CbcSha1Kd) DeriveRandom(protocolKey, usage []byte) ([]byte, error) {
-	r, err := deriveRandom(protocolKey, usage, e.GetCypherBlockBitLength(), e.GetKeySeedBitLength(), e)
+	r, err := engine.DeriveRandom(protocolKey, usage, e.GetCypherBlockBitLength(), e.GetKeySeedBitLength(), e)
 	return r, err
 }
 
@@ -122,7 +123,7 @@ func (e Des3CbcSha1Kd) Encrypt(key, message []byte) ([]byte, []byte, error) {
 
 	}
 	if len(message)%e.GetMessageBlockByteSize() != 0 {
-		message, _ = pkcs7Pad(message, e.GetMessageBlockByteSize())
+		message, _ = engine.PKCS7Pad(message, e.GetMessageBlockByteSize())
 	}
 
 	block, err := des.NewTripleDESCipher(key)
@@ -163,7 +164,7 @@ func (e Des3CbcSha1Kd) Decrypt(key, ciphertext []byte) (message []byte, err erro
 
 	mode := cipher.NewCBCDecrypter(block, iv)
 	mode.CryptBlocks(message, ciphertext)
-	m, er := pkcs7Unpad(message, e.GetMessageBlockByteSize())
+	m, er := engine.PKCS7Unpad(message, e.GetMessageBlockByteSize())
 	if er == nil {
 		message = m
 	}
@@ -171,5 +172,5 @@ func (e Des3CbcSha1Kd) Decrypt(key, ciphertext []byte) (message []byte, err erro
 }
 
 func (e Des3CbcSha1Kd) VerifyIntegrity(protocolKey, ct, pt []byte, usage uint32) bool {
-	return VerifyIntegrity(protocolKey, ct, pt, usage, e)
+	return engine.VerifyIntegrity(protocolKey, ct, pt, usage, e)
 }

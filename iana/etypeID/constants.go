@@ -1,4 +1,4 @@
-package etype
+package etypeID
 
 const (
 	//RESERVED : 0

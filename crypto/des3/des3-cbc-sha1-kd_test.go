@@ -1,4 +1,4 @@
-package crypto
+package des3
 
 import (
 	"encoding/hex"

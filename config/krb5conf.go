@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jcmturner/asn1"
-	"github.com/jcmturner/gokrb5/iana/etype"
+	"github.com/jcmturner/gokrb5/iana/etypeID"
 	"io"
 	"os"
 	"os/user"
@@ -16,7 +16,6 @@ import (
 	"strings"
 	"time"
 )
-
 
 // Struct representing the KRB5 configuration.
 type Config struct {
@@ -409,7 +408,7 @@ func (d *DomainRealm) deleteMapping(domain, realm string) {
 func (c *Config) ResolveRealm(domainName string) string {
 	domainName = strings.TrimSuffix(domainName, ".")
 	periods := strings.Count(domainName, ".") + 1
-	for i := 1; i <= periods; i +=1 {
+	for i := 1; i <= periods; i += 1 {
 		z := strings.SplitN(domainName, ".", i)
 		if r, ok := c.DomainRealm[z[len(z)-1]]; ok {
 			return r
@@ -521,7 +520,7 @@ func parseETypes(s []string, w bool) []int {
 				continue
 			}
 		}
-		i := etype.ETypesByName[et]
+		i := etypeID.ETypesByName[et]
 		if i != 0 {
 			eti = append(eti, i)
 		}

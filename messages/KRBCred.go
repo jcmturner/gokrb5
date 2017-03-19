@@ -71,12 +71,8 @@ func (k *KRBCred) Unmarshal(b []byte) error {
 	return nil
 }
 
-func (k *KRBCred) DecryptEncPart(key []byte) error {
-	etype, err := crypto.GetEtype(k.EncPart.EType)
-	if err != nil {
-		return fmt.Errorf("Keytab error: %v", err)
-	}
-	b, err := crypto.DecryptEncPart(key, k.EncPart, etype, keyusage.KRB_CRED_ENCPART)
+func (k *KRBCred) DecryptEncPart(key types.EncryptionKey) error {
+	b, err := crypto.DecryptEncPart(k.EncPart, key, keyusage.KRB_CRED_ENCPART)
 	if err != nil {
 		return fmt.Errorf("Error decrypting KDC_REP EncPart: %v", err)
 	}

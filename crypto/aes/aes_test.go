@@ -1,4 +1,4 @@
-package crypto
+package aes
 
 import (
 	"encoding/hex"
@@ -25,7 +25,7 @@ func TestAesCtsHmacSha196_Encrypt_Decrypt(t *testing.T) {
 	var e Aes128CtsHmacSha96
 	for i, test := range tests {
 		m, _ := hex.DecodeString(test.plain)
-		niv, c, err := AESCTSEncrypt(key, iv, m, e)
+		niv, c, err := encryptCTS(key, iv, m, e)
 		if err != nil {
 			t.Errorf("Encryption failed for test %v: %v", i+1, err)
 		}
@@ -35,7 +35,7 @@ func TestAesCtsHmacSha196_Encrypt_Decrypt(t *testing.T) {
 	//t.Log("AES CTS Encryption tests finished")
 	for i, test := range tests {
 		b, _ := hex.DecodeString(test.cipher)
-		p, err := AESCTSDecrypt(key, b, e)
+		p, err := decryptCTS(key, b, e)
 		if err != nil {
 			t.Errorf("Decryption failed for test %v: %v", i+1, err)
 		}
@@ -68,8 +68,8 @@ func TestAes256CtsHmacSha196_StringToKey(t *testing.T) {
 	var e Aes256CtsHmacSha96
 	for i, test := range tests {
 
-		assert.Equal(t, test.pbkdf2, hex.EncodeToString(AESStringToPBKDF2(test.phrase, test.salt, test.iterations, e)), "PBKDF2 not as expected")
-		k, err := AESStringToKeyIter(test.phrase, test.salt, test.iterations, e)
+		assert.Equal(t, test.pbkdf2, hex.EncodeToString(stringToPBKDF2(test.phrase, test.salt, test.iterations, e)), "PBKDF2 not as expected")
+		k, err := stringToKeyIter(test.phrase, test.salt, test.iterations, e)
 		if err != nil {
 			t.Errorf("Error in processing string to key for test %d: %v", i, err)
 		}

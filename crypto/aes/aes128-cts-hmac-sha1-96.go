@@ -1,11 +1,12 @@
-package crypto
+package aes
 
 import (
 	"crypto/aes"
 	"crypto/sha1"
-	"hash"
+	"github.com/jcmturner/gokrb5/crypto/engine"
 	"github.com/jcmturner/gokrb5/iana/chksumtype"
-	"github.com/jcmturner/gokrb5/iana/etype"
+	"github.com/jcmturner/gokrb5/iana/etypeID"
+	"hash"
 )
 
 // RFC 3962
@@ -58,7 +59,7 @@ type Aes128CtsHmacSha96 struct {
 }
 
 func (e Aes128CtsHmacSha96) GetETypeID() int {
-	return etype.AES128_CTS_HMAC_SHA1_96
+	return etypeID.AES128_CTS_HMAC_SHA1_96
 }
 
 func (e Aes128CtsHmacSha96) GetHashID() int {
@@ -98,30 +99,30 @@ func (e Aes128CtsHmacSha96) GetCypherBlockBitLength() int {
 }
 
 func (e Aes128CtsHmacSha96) StringToKey(secret string, salt string, s2kparams string) ([]byte, error) {
-	return AESStringToKey(secret, salt, s2kparams, e)
+	return stringToKey(secret, salt, s2kparams, e)
 }
 
 func (e Aes128CtsHmacSha96) RandomToKey(b []byte) []byte {
-	return AESRandomToKey(b)
+	return randomToKey(b)
 }
 
 func (e Aes128CtsHmacSha96) Encrypt(key, message []byte) ([]byte, []byte, error) {
 	ivz := make([]byte, aes.BlockSize)
-	return AESCTSEncrypt(key, ivz, message, e)
+	return encryptCTS(key, ivz, message, e)
 }
 
 func (e Aes128CtsHmacSha96) Decrypt(key, ciphertext []byte) ([]byte, error) {
-	return AESCTSDecrypt(key, ciphertext, e)
+	return decryptCTS(key, ciphertext, e)
 }
 
 func (e Aes128CtsHmacSha96) DeriveKey(protocolKey, usage []byte) ([]byte, error) {
-	return AESDeriveKey(protocolKey, usage, e)
+	return deriveKey(protocolKey, usage, e)
 }
 
 func (e Aes128CtsHmacSha96) DeriveRandom(protocolKey, usage []byte) ([]byte, error) {
-	return AESDeriveRandom(protocolKey, usage, e)
+	return deriveRandom(protocolKey, usage, e)
 }
 
 func (e Aes128CtsHmacSha96) VerifyIntegrity(protocolKey, ct, pt []byte, usage uint32) bool {
-	return VerifyIntegrity(protocolKey, ct, pt, usage, e)
+	return engine.VerifyIntegrity(protocolKey, ct, pt, usage, e)
 }
