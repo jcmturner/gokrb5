@@ -6,7 +6,7 @@ This is work in progress and does not yet work...
 
 ## Usage
 ### Configuration
-The gokrb5 libraries use the same krb5.conf configuration file format as MIT Kerberos, described [here](https://web.mit.edu/kerberos/krb5-latest/doc/admin/conf_files/krb5_conf.html)
+The gokrb5 libraries use the same krb5.conf configuration file format as MIT Kerberos, described [here](https://web.mit.edu/kerberos/krb5-latest/doc/admin/conf_files/krb5_conf.html).
 Config instances can be created by loading from a file path or by passing a string, io.Reader or bufio.Scanner to the relevant method:
 ```go
 import "github.com/jcmturner/gokrb5/config"

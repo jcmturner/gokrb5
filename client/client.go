@@ -21,6 +21,7 @@ func NewClientWithPassword(username, realm, password string) Client {
 	return Client{
 		Credentials: creds.WithPassword(password),
 		Config:      config.NewConfig(),
+		Session:     &Session{},
 		Cache:       NewCache(),
 	}
 }
@@ -31,6 +32,7 @@ func NewClientWithKeytab(username, realm string, kt keytab.Keytab) Client {
 	return Client{
 		Credentials: creds.WithKeytab(kt),
 		Config:      config.NewConfig(),
+		Session:     &Session{},
 		Cache:       NewCache(),
 	}
 }
