@@ -72,7 +72,7 @@ func (k *ASRep) Unmarshal(b []byte) error {
 	var m marshalKDCRep
 	_, err := asn1.UnmarshalWithParams(b, &m, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.ASREP))
 	if err != nil {
-		return err
+		return processReplyError(b, err)
 	}
 	if m.MsgType != msgtype.KRB_AS_REP {
 		return errors.New("Message ID does not indicate a KRB_AS_REP")
@@ -98,7 +98,7 @@ func (k *TGSRep) Unmarshal(b []byte) error {
 	var m marshalKDCRep
 	_, err := asn1.UnmarshalWithParams(b, &m, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.TGSREP))
 	if err != nil {
-		return err
+		return processReplyError(b, err)
 	}
 	if m.MsgType != msgtype.KRB_TGS_REP {
 		return errors.New("Message ID does not indicate a KRB_TGS_REP")

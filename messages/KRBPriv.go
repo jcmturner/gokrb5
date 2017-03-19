@@ -27,7 +27,7 @@ type EncKrbPrivPart struct {
 func (k *KRBPriv) Unmarshal(b []byte) error {
 	_, err := asn1.UnmarshalWithParams(b, k, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.KRBPriv))
 	if err != nil {
-		return err
+		return processReplyError(b, err)
 	}
 	expectedMsgType := msgtype.KRB_PRIV
 	if k.MsgType != expectedMsgType {

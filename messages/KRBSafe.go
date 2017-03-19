@@ -46,7 +46,7 @@ type KRBSafeBody struct {
 func (s *KRBSafe) Unmarshal(b []byte) error {
 	_, err := asn1.UnmarshalWithParams(b, s, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.KRBSafe))
 	if err != nil {
-		return err
+		return processReplyError(b, err)
 	}
 	expectedMsgType := msgtype.KRB_SAFE
 	if s.MsgType != expectedMsgType {

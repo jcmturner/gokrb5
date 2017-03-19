@@ -53,7 +53,7 @@ func (k *KRBCred) Unmarshal(b []byte) error {
 	var m marshalKRBCred
 	_, err := asn1.UnmarshalWithParams(b, &m, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.KRBCred))
 	if err != nil {
-		return fmt.Errorf("Error unmarshalling KDC_CRED: %v", err)
+		return fmt.Errorf("Error unmarshalling KDC_CRED: %v", processReplyError(b, err))
 	}
 	expectedMsgType := msgtype.KRB_CRED
 	if m.MsgType != expectedMsgType {

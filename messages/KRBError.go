@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/jcmturner/asn1"
 	"github.com/jcmturner/gokrb5/iana/asnAppTag"
+	"github.com/jcmturner/gokrb5/iana/errorcode"
 	"github.com/jcmturner/gokrb5/iana/msgtype"
 	"github.com/jcmturner/gokrb5/types"
 	"time"
@@ -38,5 +39,19 @@ func (k *KRBError) Unmarshal(b []byte) error {
 }
 
 func (k KRBError) Error() string {
-	return fmt.Sprintf("KRB Error: %d - %s", k.ErrorCode, k.EText)
+	return fmt.Sprintf("KRB Error: %s - %s", errorcode.ErrorCodeLookup(k.ErrorCode), k.EText)
+}
+
+func processReplyError(b []byte, err error) error {
+	switch err.(type) {
+	case asn1.StructuralError:
+		var krberr KRBError
+		tmperr := krberr.Unmarshal(b)
+		if tmperr != nil {
+			return err
+		}
+		return krberr
+	default:
+		return err
+	}
 }

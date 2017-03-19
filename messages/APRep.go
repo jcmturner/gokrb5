@@ -40,7 +40,7 @@ type EncAPRepPart struct {
 func (a *APRep) Unmarshal(b []byte) error {
 	_, err := asn1.UnmarshalWithParams(b, a, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.APREP))
 	if err != nil {
-		return err
+		return processReplyError(b, err)
 	}
 	expectedMsgType := msgtype.KRB_AP_REP
 	if a.MsgType != expectedMsgType {
