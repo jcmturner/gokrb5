@@ -9,12 +9,17 @@ import (
 	"github.com/jcmturner/gokrb5/crypto/etype"
 )
 
-// RFC3961: DR(Key, Constant) = k-truncate(E(Key, Constant, initial-cipher-state))
-// key - base key or protocol key. Likely to be a key from a keytab file
-// usage - a constant
+// RFC3961: DR(Key, Constant) = k-truncate(E(Key, Constant, initial-cipher-state)).
+//
+// key - base key or protocol key. Likely to be a key from a keytab file.
+//
+// usage - a constant.
+//
 // n - block size in bits (not bytes) - note if you use something like aes.BlockSize this is in bytes.
-// k - key length / key seed length in bits. Eg. for AES256 this value is 256
-// encrypt - the encryption function to use
+//
+// k - key length / key seed length in bits. Eg. for AES256 this value is 256.
+//
+// e - the encryption etype function to use.
 func DeriveRandom(key, usage []byte, n, k int, e etype.EType) ([]byte, error) {
 	//Ensure the usage constant is at least the size of the cypher block size. Pass it through the nfold algorithm that will "stretch" it if needs be.
 	nFoldUsage := Nfold(usage, n)
@@ -41,6 +46,7 @@ func DeriveRandom(key, usage []byte, n, k int, e etype.EType) ([]byte, error) {
 	return out, nil
 }
 
+// Pad bytes b with zeros to nearest multiple of message size m.
 func ZeroPad(b []byte, m int) ([]byte, error) {
 	if m <= 0 {
 		return nil, errors.New("Invalid message block size when padding")
@@ -56,6 +62,7 @@ func ZeroPad(b []byte, m int) ([]byte, error) {
 	return b, nil
 }
 
+// Pad bytes b according to RFC 2315 to nearest multiple of message size m.
 func PKCS7Pad(b []byte, m int) ([]byte, error) {
 	if m <= 0 {
 		return nil, errors.New("Invalid message block size when padding")
@@ -70,6 +77,7 @@ func PKCS7Pad(b []byte, m int) ([]byte, error) {
 	return pb, nil
 }
 
+// Remove RFC 2315 padding from byes b where message size is m.
 func PKCS7Unpad(b []byte, m int) ([]byte, error) {
 	if m <= 0 {
 		return nil, errors.New("Invalid message block size when unpadding")
@@ -105,14 +113,17 @@ func getHash(pt, key []byte, usage []byte, etype etype.EType) ([]byte, error) {
 	return mac.Sum(nil)[:etype.GetHMACBitLength()/8], nil
 }
 
-func GetChecksumHash(pt, key []byte, usage uint32, etype etype.EType) ([]byte, error) {
-	return getHash(pt, key, GetUsageKc(usage), etype)
+// Get a keyed checksum hash of bytes b.
+func GetChecksumHash(b, key []byte, usage uint32, etype etype.EType) ([]byte, error) {
+	return getHash(b, key, GetUsageKc(usage), etype)
 }
 
-func GetIntegrityHash(pt, key []byte, usage uint32, etype etype.EType) ([]byte, error) {
-	return getHash(pt, key, GetUsageKi(usage), etype)
+// Get a keyed integrity hash of bytes b.
+func GetIntegrityHash(b, key []byte, usage uint32, etype etype.EType) ([]byte, error) {
+	return getHash(b, key, GetUsageKi(usage), etype)
 }
 
+// Verify the integrity of cipertext bytes ct.
 func VerifyIntegrity(key, ct, pt []byte, usage uint32, etype etype.EType) bool {
 	//The ciphertext output is the concatenation of the output of the basic
 	//encryption function E and a (possibly truncated) HMAC using the
@@ -126,6 +137,7 @@ func VerifyIntegrity(key, ct, pt []byte, usage uint32, etype etype.EType) bool {
 	return hmac.Equal(h, expectedMAC)
 }
 
+// Verify the checksum of the msg bytes is the same as the checksum provided.
 func VerifyChecksum(key, chksum, msg []byte, usage uint32, etype etype.EType) bool {
 	//The ciphertext output is the concatenation of the output of the basic
 	//encryption function E and a (possibly truncated) HMAC using the
@@ -145,17 +157,17 @@ Ke = DK(base-key, usage | 0xAA);
 Ki = DK(base-key, usage | 0x55);
 */
 
-// un - usage number
+// Get the checksum usage value for the usage number un
 func GetUsageKc(un uint32) []byte {
 	return getUsage(un, 0x99)
 }
 
-// un - usage number
+// Get the encryption usage value for the usage number un
 func GetUsageKe(un uint32) []byte {
 	return getUsage(un, 0xAA)
 }
 
-// un - usage number
+// Get the integrity usage value for the usage number un
 func GetUsageKi(un uint32) []byte {
 	return getUsage(un, 0x55)
 }
