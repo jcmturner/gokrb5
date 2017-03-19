@@ -53,7 +53,7 @@ cl.EnableAutoSessionRenewal()
 ```
 Request a Serivce ticket for a Service Principal Name (SPN).
 This method will use the client's cache either returning a valid cached ticket, renewing a cached ticket with the KDC or requesting a new ticket from the KDC.
-Therefore the GetServiceTicket method can be continually used for the most efficient interation with the KDC.
+Therefore the GetServiceTicket method can be continually used for the most efficient interaction with the KDC.
 ```go
 tkt, err := cl.GetServiceTicket("HTTP/host.test.gokrb5")
 ```
