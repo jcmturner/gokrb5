@@ -6,6 +6,7 @@ This is work in progress and does not yet fully work...
 
 ## Implemented Encryption & Checksum Types
 The currently implemented encrytion types are:
+
 | Implementation | Encryption ID | Checksum ID |
 |-------|-------------|------------|
 | aes128-cts-hmac-sha1-96 | 17 | 15 |
