@@ -1,8 +1,15 @@
 # gokrb5
 
-This is work in progress and does not yet work...
+This is work in progress and does not yet fully work...
 
 [![GoDoc](https://godoc.org/github.com/jcmturner/gokrb5?status.svg)](https://godoc.org/github.com/jcmturner/gokrb5)
+
+## Implemented Encryption & Checksum Types
+The currently implemented encrytion types are:
+| Implementation | Encryption ID | Checksum ID |
+|-------|-------------|------------|
+| aes128-cts-hmac-sha1-96 | 17 | 15 |
+| aes256-cts-hmac-sha1-96 | 18 | 16 |
 
 ## Usage
 ### Configuration
