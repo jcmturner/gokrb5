@@ -27,10 +27,8 @@ type Config struct {
 	//Plugins
 }
 
-const (
-	// List of encryption types that have been deemed weak.
-	WEAK_ETYPE_LIST = "des-cbc-crc des-cbc-md4 des-cbc-md5 des-cbc-raw des3-cbc-raw des-hmac-sha1 arcfour-hmac-exp rc4-hmac-exp arcfour-hmac-md5-exp des"
-)
+// List of encryption types that have been deemed weak.
+const WEAK_ETYPE_LIST = "des-cbc-crc des-cbc-md4 des-cbc-md5 des-cbc-raw des3-cbc-raw des-hmac-sha1 arcfour-hmac-exp rc4-hmac-exp arcfour-hmac-md5-exp des"
 
 // Create a new config struct.
 func NewConfig() *Config {
