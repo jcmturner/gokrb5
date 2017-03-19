@@ -34,9 +34,10 @@ https://svn.apache.org/repos/asf/directory/apacheds/tags/1.5.1/kerberos-shared/s
 License: http://www.apache.org/licenses/LICENSE-2.0
 */
 
-// n is in bits not bytes
-func Nfold(in []byte, n int) []byte {
-	k := len(in) * 8
+// RFC 3961: n-fold algorithm.
+// m input bytes that will be "stretched" to the least common multiple of n bits and the bit length of m.
+func Nfold(m []byte, n int) []byte {
+	k := len(m) * 8
 
 	//Get the lowest common multiple of the two bit sizes
 	lcm := lcm(n, k)
@@ -45,7 +46,7 @@ func Nfold(in []byte, n int) []byte {
 
 	for i := 0; i < relicate; i++ {
 		rotation := 13 * i
-		sumBytes = append(sumBytes, rotateRight(in, rotation)...)
+		sumBytes = append(sumBytes, rotateRight(m, rotation)...)
 	}
 
 	nfold := make([]byte, n/8)

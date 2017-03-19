@@ -9,17 +9,12 @@ import (
 	"github.com/jcmturner/gokrb5/crypto/etype"
 )
 
-// RFC3961: DR(Key, Constant) = k-truncate(E(Key, Constant, initial-cipher-state)).
-//
-// key - base key or protocol key. Likely to be a key from a keytab file.
-//
-// usage - a constant.
-//
-// n - block size in bits (not bytes) - note if you use something like aes.BlockSize this is in bytes.
-//
-// k - key length / key seed length in bits. Eg. for AES256 this value is 256.
-//
-// e - the encryption etype function to use.
+// RFC 3961: DR(Key, Constant) = k-truncate(E(Key, Constant, initial-cipher-state)).
+// key: base key or protocol key. Likely to be a key from a keytab file.
+// usage: a constant.
+// n: block size in bits (not bytes) - note if you use something like aes.BlockSize this is in bytes.
+// k: key length / key seed length in bits. Eg. for AES256 this value is 256.
+// e: the encryption etype function to use.
 func DeriveRandom(key, usage []byte, n, k int, e etype.EType) ([]byte, error) {
 	//Ensure the usage constant is at least the size of the cypher block size. Pass it through the nfold algorithm that will "stretch" it if needs be.
 	nFoldUsage := Nfold(usage, n)
@@ -149,25 +144,23 @@ func VerifyChecksum(key, chksum, msg []byte, usage uint32, etype etype.EType) bo
 	return hmac.Equal(chksum, expectedMAC)
 }
 
-/*
-Key Usage Numbers
-RFC 3961: The "well-known constant" used for the DK function is the key usage number, expressed as four octets in big-endian order, followed by one octet indicated below.
-Kc = DK(base-key, usage | 0x99);
-Ke = DK(base-key, usage | 0xAA);
-Ki = DK(base-key, usage | 0x55);
-*/
-
-// Get the checksum usage value for the usage number un
+// Get the checksum key usage value for the usage number un.
+// RFC 3961: The "well-known constant" used for the DK function is the key usage number, expressed as four octets in big-endian order, followed by one octet indicated below.
+// Kc = DK(base-key, usage | 0x99);
 func GetUsageKc(un uint32) []byte {
 	return getUsage(un, 0x99)
 }
 
-// Get the encryption usage value for the usage number un
+// Get the encryption key usage value for the usage number un
+// RFC 3961: The "well-known constant" used for the DK function is the key usage number, expressed as four octets in big-endian order, followed by one octet indicated below.
+// Ke = DK(base-key, usage | 0xAA);
 func GetUsageKe(un uint32) []byte {
 	return getUsage(un, 0xAA)
 }
 
-// Get the integrity usage value for the usage number un
+// Get the integrity key usage value for the usage number un
+// RFC 3961: The "well-known constant" used for the DK function is the key usage number, expressed as four octets in big-endian order, followed by one octet indicated below.
+// Ki = DK(base-key, usage | 0x55);
 func GetUsageKi(un uint32) []byte {
 	return getUsage(un, 0x55)
 }
