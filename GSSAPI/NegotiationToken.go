@@ -43,16 +43,26 @@ NegTokenResp ::= SEQUENCE {
 // Tag attribute of NegotiationToken will indicate type:
 // 0xa0 (160) - negTokenInit
 // 0xa1 (161) - negTokenResp
-type NegotiationToken asn1.RawValue
+type NegotiationToken struct {
+	Choice asn1.RawValue
+}
 
 type NegTokenInit struct {
+	Body    asn1.RawValue `asn1:"explicit,tag:0"`
+}
+
+type NegTokenResp struct {
+	Body    NegTokenRespBody `asn1:"explicit,tag:1"`
+}
+
+type NegTokenInitBody struct {
 	MechTypes    MechTypeList `asn1:"explicit,tag:0"`
 	ReqFlags     ContextFlags `asn1:"explicit,optional,tag:1"`
 	MechToken    []byte       `asn1:"explicit,optional,tag:2"`
 	MechTokenMIC []byte       `asn1:"explicit,optional,tag:3"`
 }
 
-type NegTokenResp struct {
+type NegTokenRespBody struct {
 	NegState      asn1.Enumerated `asn1:"explicit,optional,tag:0"`
 	SupportedMech MechType        `asn1:"explicit,optional,tag:1"`
 	ResponseToken []byte          `asn1:"explicit,optional,tag:2"`
@@ -70,18 +80,18 @@ func (n *NegotiationToken) Unmarshal(b []byte) (bool, interface{}, error) {
 	}
 	var negToken interface{}
 	var isInit bool
-	switch n.Tag {
+	switch n.Choice.Tag {
 	case 0:
-		negToken = &NegTokenInit{}
+		negToken = NegTokenInit{}
 		isInit = true
 	case 1:
-		negToken = &NegTokenResp{}
+		negToken = NegTokenResp{}
 	default:
 		return false, nil, errors.New("Unknown choice type for NegotiationToken")
 	}
-	_, err = asn1.Unmarshal(n.Bytes, negToken)
+	_, err = asn1.Unmarshal(b, &negToken)
 	if err != nil {
-		return nil, fmt.Errorf("Error unmarshalling NegotiationToken type %d: %v", n.Tag, err)
+		return false, nil, fmt.Errorf("Error unmarshalling NegotiationToken type %d: %v", n.Choice.Tag, err)
 	}
 	return isInit, negToken, nil
 }
@@ -93,10 +103,12 @@ func (n *NegTokenInit) Marshal() ([]byte, error) {
 		return nil, err
 	}
 	nt := NegotiationToken{
-		Tag:        0,
-		Class:      2,
-		IsCompound: true,
-		Bytes:      b,
+		Choice: asn1.RawValue{
+			Tag:        0,
+			Class:      2,
+			IsCompound: true,
+			Bytes:      b,
+		},
 	}
 	nb, err := asn1.Marshal(nt)
 	if err != nil {
@@ -112,10 +124,12 @@ func (n *NegTokenResp) Marshal() ([]byte, error) {
 		return nil, err
 	}
 	nt := NegotiationToken{
-		Tag:        1,
-		Class:      2,
-		IsCompound: true,
-		Bytes:      b,
+		Choice: asn1.RawValue{
+			Tag:        1,
+			Class:      2,
+			IsCompound: true,
+			Bytes:      b,
+		},
 	}
 	nb, err := asn1.Marshal(nt)
 	if err != nil {
