@@ -75,6 +75,8 @@ tkt, err := cl.GetServiceTicket("HTTP/host.test.gokrb5")
 * RFC 6113 A Generalized Framework for Kerberos Pre-Authentication
 [text](https://www.ietf.org/rfc/rfc6113.txt) [html](https://tools.ietf.org/html/rfc6113.html)
 * [IANA Assigned Kerberos Numbers](http://www.iana.org/assignments/kerberos-parameters/kerberos-parameters.xhtml)
+* [HTTP-Based Cross-Platform Authentication by Using the Negotiate Protocol - Part 1](https://msdn.microsoft.com/en-us/library/ms995329.aspx)
+* [HTTP-Based Cross-Platform Authentication by Using the Negotiate Protocol - Part 2](https://msdn.microsoft.com/en-us/library/ms995330.aspx)
 * [Microsoft PAC Validation](https://blogs.msdn.microsoft.com/openspecification/2009/04/24/understanding-microsoft-kerberos-pac-validation/)
 * [Microsoft Kerberos Protocol Extensions](https://msdn.microsoft.com/en-us/library/cc233855.aspx)
 
