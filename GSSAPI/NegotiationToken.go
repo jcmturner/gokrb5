@@ -48,73 +48,67 @@ type NegotiationToken struct {
 }
 
 type NegTokenInit struct {
-	Body    asn1.RawValue `asn1:"explicit,tag:0"`
+	MechTypes    []asn1.ObjectIdentifier `asn1:"explicit,tag:0"`
+	ReqFlags     ContextFlags            `asn1:"explicit,optional,tag:1"`
+	MechToken    []byte                  `asn1:"explicit,optional,tag:2"`
+	MechTokenMIC []byte                  `asn1:"explicit,optional,tag:3"`
 }
 
 type NegTokenResp struct {
-	Body    NegTokenRespBody `asn1:"explicit,tag:1"`
-}
-
-type NegTokenInitBody struct {
-	MechTypes    MechTypeList `asn1:"explicit,tag:0"`
-	ReqFlags     ContextFlags `asn1:"explicit,optional,tag:1"`
-	MechToken    []byte       `asn1:"explicit,optional,tag:2"`
-	MechTokenMIC []byte       `asn1:"explicit,optional,tag:3"`
-}
-
-type NegTokenRespBody struct {
-	NegState      asn1.Enumerated `asn1:"explicit,optional,tag:0"`
-	SupportedMech MechType        `asn1:"explicit,optional,tag:1"`
-	ResponseToken []byte          `asn1:"explicit,optional,tag:2"`
-	MechListMIC   []byte          `asn1:"explicit,optional,tag:3"`
+	NegState      asn1.Enumerated       `asn1:"explicit,optional,tag:0"`
+	SupportedMech asn1.ObjectIdentifier `asn1:"explicit,optional,tag:1"`
+	ResponseToken []byte                `asn1:"explicit,optional,tag:2"`
+	MechListMIC   []byte                `asn1:"explicit,optional,tag:3"`
 }
 
 // Unmarshal and return either a NegTokenInit or a NegTokenResp.
 //
-// The boolean indicates if the reponse is a NegTokenInit.
+// The boolean indicates if the response is a NegTokenInit.
 // If error is nil and the boolean is false the response is a NegTokenResp.
 func (n *NegotiationToken) Unmarshal(b []byte) (bool, interface{}, error) {
 	_, err := asn1.Unmarshal(b, n)
 	if err != nil {
 		return false, nil, fmt.Errorf("Error unmarshalling NegotiationToken: %v", err)
 	}
-	var negToken interface{}
-	var isInit bool
 	switch n.Choice.Tag {
 	case 0:
-		negToken = NegTokenInit{}
-		isInit = true
+		var negToken NegTokenInit
+		_, err = asn1.Unmarshal(b, &negToken)
+		if err != nil {
+			return false, nil, fmt.Errorf("Error unmarshalling NegotiationToken type %d: %v", n.Choice.Tag, err)
+		}
+		return true, negToken, nil
 	case 1:
-		negToken = NegTokenResp{}
+		var negToken NegTokenResp
+		_, err = asn1.Unmarshal(b, &negToken)
+		if err != nil {
+			return false, nil, fmt.Errorf("Error unmarshalling NegotiationToken type %d: %v", n.Choice.Tag, err)
+		}
+		return false, negToken, nil
 	default:
 		return false, nil, errors.New("Unknown choice type for NegotiationToken")
 	}
-	_, err = asn1.Unmarshal(b, &negToken)
-	if err != nil {
-		return false, nil, fmt.Errorf("Error unmarshalling NegotiationToken type %d: %v", n.Choice.Tag, err)
-	}
-	return isInit, negToken, nil
+
 }
 
-// Returns marshalled bytes of a NegotiationToken rather than the NegTokenInit
 func (n *NegTokenInit) Marshal() ([]byte, error) {
 	b, err := asn1.Marshal(*n)
 	if err != nil {
 		return nil, err
 	}
-	nt := NegotiationToken{
-		Choice: asn1.RawValue{
-			Tag:        0,
-			Class:      2,
-			IsCompound: true,
-			Bytes:      b,
-		},
-	}
-	nb, err := asn1.Marshal(nt)
-	if err != nil {
-		return nil, err
-	}
-	return nb, nil
+	//nt := NegotiationToken{
+	//	Choice: asn1.RawValue{
+	//		Tag:        0,
+	//		Class:      2,
+	//		IsCompound: true,
+	//		Bytes:      b,
+	//	},
+	//}
+	//nb, err := asn1.Marshal(nt)
+	//if err != nil {
+	//	return nil, err
+	//}
+	return b, nil
 }
 
 // Returns marshalled bytes of a NegotiationToken rather than the NegTokenResp

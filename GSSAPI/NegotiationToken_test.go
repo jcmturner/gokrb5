@@ -1,9 +1,10 @@
 package GSSAPI
 
 import (
-	"testing"
 	"encoding/hex"
+	"github.com/jcmturner/asn1"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 const (
@@ -12,16 +13,41 @@ const (
 
 func TestUnmarshal_negTokenInit(t *testing.T) {
 	b, err := hex.DecodeString(test_negTokenInit)
-	if err != nil{
+	if err != nil {
 		t.Fatalf("Error converting hex string test data to bytes: %v", err)
 	}
 	var n NegotiationToken
-
 	isInit, nt, err := n.Unmarshal(b)
 	if err != nil {
 		t.Fatalf("Error unmarshalling negotiation token: %v", err)
 	}
-	nInit := nt.(NegTokenInit)
+	assert.IsType(t, NegTokenInit{}, nt, "Not the expected type NegTokenInit")
 	assert.True(t, isInit, "Boolean indicating type is negTokenInit is not true")
-	assert.Equal(t, 4, len(nInit.Body.MechTypes))
+	nInit := nt.(NegTokenInit)
+	assert.Equal(t, 4, len(nInit.MechTypes))
+	expectMechTypes := []asn1.ObjectIdentifier{
+		[]int{1, 2, 840, 113554, 1, 2, 2},
+		[]int{1, 3, 5, 1, 5, 2},
+		[]int{1, 2, 840, 48018, 1, 2, 2},
+		[]int{1, 3, 6, 1, 5, 2, 5},
+	}
+	assert.Equal(t, expectMechTypes, nInit.MechTypes, "MechTypes list in NegTokenInit not as expected")
+}
+
+func TestMarshal_negTokenInit(t *testing.T) {
+	b, err := hex.DecodeString(test_negTokenInit)
+	if err != nil {
+		t.Fatalf("Error converting hex string test data to bytes: %v", err)
+	}
+	var n NegotiationToken
+	_, nt, err := n.Unmarshal(b)
+	if err != nil {
+		t.Fatalf("Error unmarshalling negotiation token: %v", err)
+	}
+	nInit := nt.(NegTokenInit)
+	mb, err := nInit.Marshal()
+	if err != nil {
+		t.Fatalf("Error marshalling negotiation init token: %v", err)
+	}
+	assert.Equal(t, b, mb, "Marshalled bytes not as expected for NegTokenInit")
 }
