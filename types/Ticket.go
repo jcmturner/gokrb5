@@ -66,8 +66,8 @@ func UnmarshalTicketsSequence(in asn1.RawValue) ([]Ticket, error) {
 	//This is a workaround to a asn1 decoding issue in golang - https://github.com/golang/go/issues/17321. It's not pretty I'm afraid
 	//We pull out raw values from the larger raw value (that is actually the data of the sequence of raw values) and track our position moving along the data.
 	b := in.Bytes
-	// Ignore the head of the asn1 stream (3bytes) as this is what tells us its a sequence but we're handling it ourselves
-	p := 3
+	// Ignore the head of the asn1 stream (1 byte for tag and those for the length) as this is what tells us its a sequence but we're handling it ourselves
+	p := 1 + asn1tools.GetNumberBytesInLengthHeader(in.Bytes)
 	var tkts []Ticket
 	var raw asn1.RawValue
 	for p < (len(b)) {

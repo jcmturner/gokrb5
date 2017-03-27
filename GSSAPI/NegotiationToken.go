@@ -61,6 +61,8 @@ type NegTokenResp struct {
 	MechListMIC   []byte                `asn1:"explicit,optional,tag:3"`
 }
 
+type NegTokenTarg NegTokenResp
+
 // Unmarshal and return either a NegTokenInit or a NegTokenResp.
 //
 // The boolean indicates if the response is a NegTokenInit.

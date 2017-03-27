@@ -41,6 +41,14 @@ func GetLengthFromASN(b []byte) int {
 	return l
 }
 
+func GetNumberBytesInLengthHeader(b []byte) int {
+	if int(b[1]) <= 127 {
+		return 1
+	}
+	// The bytes that indicate the length
+	return 1 + int(b[1]) - 128
+}
+
 // The Marshal method of golang's asn1 package does not enable you to define wrapping the output in an application tag.
 // This method adds that wrapping tag.
 func AddASNAppTag(b []byte, tag int) []byte {
