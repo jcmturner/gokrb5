@@ -66,6 +66,7 @@ tkt, err := cl.GetServiceTicket("HTTP/host.test.gokrb5")
 [text](https://www.ietf.org/rfc/rfc3961.txt) [html](https://tools.ietf.org/html/rfc3961)
 * RFC 3962 Advanced Encryption Standard (AES) Encryption for Kerberos 5
 [text](https://www.ietf.org/rfc/rfc3962.txt) [html](https://tools.ietf.org/html/rfc3962)
+* RFC 4121 The Kerberos Version 5 GSS-API Mechanism [text](https://www.ietf.org/rfc/rfc4121.txt) [html](https://tools.ietf.org/html/rfc4121)
 * RFC 4178 The Simple and Protected Generic Security Service Application Program Interface (GSS-API) Negotiation Mechanism
 [text](https://www.ietf.org/rfc/rfc4178.txt) [html](https://tools.ietf.org/html/rfc4178.html)
 * RFC 4559 SPNEGO-based Kerberos and NTLM HTTP Authentication in Microsoft Windows
