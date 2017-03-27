@@ -106,7 +106,7 @@ func (a *APReq) Marshal() ([]byte, error) {
 		return b, err
 	}
 	m.Ticket = asn1.RawValue{
-		Class:      2,
+		Class:      asn1.ClassContextSpecific,
 		IsCompound: true,
 		Tag:        3,
 		Bytes:      b,

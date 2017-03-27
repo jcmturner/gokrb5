@@ -1,6 +1,10 @@
 // Tools for managing ASN1 marshaled data.
 package asn1tools
 
+import (
+	"github.com/jcmturner/asn1"
+)
+
 // Get the ASN1 encoded bytes for the length 'l'
 //
 // There are two forms: short (for lengths between 0 and 127), and long definite (for lengths between 0 and 2^1008 -1).
@@ -49,6 +53,18 @@ func GetNumberBytesInLengthHeader(b []byte) int {
 	return 1 + int(b[1]) - 128
 }
 
+func AddASNAppTag(b []byte, tag int) []byte {
+	r := asn1.RawValue{
+		Class:      asn1.ClassApplication,
+		IsCompound: true,
+		Tag:        tag,
+		Bytes:      b,
+	}
+	ab, _ := asn1.Marshal(r)
+	return ab
+}
+
+/*
 // The Marshal method of golang's asn1 package does not enable you to define wrapping the output in an application tag.
 // This method adds that wrapping tag.
 func AddASNAppTag(b []byte, tag int) []byte {
@@ -65,3 +81,4 @@ func AddASNAppTag(b []byte, tag int) []byte {
 	b = append([]byte{byte(96 + tag)}, b...)
 	return b
 }
+*/

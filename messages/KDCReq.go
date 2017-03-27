@@ -288,7 +288,7 @@ func (k *ASReq) Marshal() ([]byte, error) {
 		return mk, err
 	}
 	m.ReqBody = asn1.RawValue{
-		Class:      2,
+		Class:      asn1.ClassContextSpecific,
 		IsCompound: true,
 		Tag:        4,
 		Bytes:      b,
@@ -314,7 +314,7 @@ func (k *TGSReq) Marshal() ([]byte, error) {
 		return mk, err
 	}
 	m.ReqBody = asn1.RawValue{
-		Class:      2,
+		Class:      asn1.ClassContextSpecific,
 		IsCompound: true,
 		Tag:        4,
 		Bytes:      b,

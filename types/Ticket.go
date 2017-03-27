@@ -113,7 +113,7 @@ func MarshalTicketSequence(tkts []Ticket) (asn1.RawValue, error) {
 	btkts = append(asn1tools.MarshalLengthBytes(len(btkts)), btkts...)
 	btkts = append([]byte{byte(32 + asn1.TagSequence)}, btkts...)
 	raw.Bytes = btkts
-	// If we need to create teh full bytes then identifier octect is "context-specific" = 128 + "constructed" + 32 + the wrapping explicit tag (11)
+	// If we need to create teh full bytes then identifier octet is "context-specific" = 128 + "constructed" + 32 + the wrapping explicit tag (11)
 	//fmt.Fprintf(os.Stderr, "mRaw fb: %v\n", raw.FullBytes)
 	return raw, nil
 }
