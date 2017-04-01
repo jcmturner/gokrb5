@@ -10,6 +10,7 @@ import (
 	"github.com/jcmturner/gokrb5/iana/chksumtype"
 	"github.com/jcmturner/gokrb5/messages"
 	"github.com/jcmturner/gokrb5/types"
+	"math/rand"
 	"os"
 )
 
@@ -27,9 +28,11 @@ const (
 )
 
 func NewKRB5APREQMechToken(APReq messages.APReq) ([]byte, error) {
+	// Create the header
 	tb, _ := hex.DecodeString(TOK_ID_KRB_AP_REQ)
 	b, _ := asn1.Marshal(MechTypeOID_Krb5)
 	b = append(b, tb...)
+	// Add the token
 	tb, err := APReq.Marshal()
 	if err != nil {
 		return []byte{}, fmt.Errorf("Could not marshal AP_REQ: %v", err)
@@ -46,6 +49,7 @@ func newAuthenticator(c config.Config, username string) {
 		CksumType: chksumtype.GSSAPI,
 		Checksum:  newAuthenticatorChksum([]int{GSS_C_INTEG_FLAG, GSS_C_CONF_FLAG}),
 	}
+	auth.SeqNumber = rand.Int63()
 }
 
 func newAuthenticatorChksum(flags []int) []byte {
