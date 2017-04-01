@@ -16,7 +16,7 @@ func (cl *Client) TGSExchange(spn types.PrincipalName, tkt types.Ticket, session
 	if cl.Session == nil {
 		return tgsReq, tgsRep, errors.New("Error client does not have a session. Client needs to login first")
 	}
-	tgsReq, err = messages.NewTGSReq(cl.Credentials.Username, cl.Config, tkt, sessionKey, spn, renewal)
+	tgsReq, err = messages.NewTGSReq(cl.Credentials.CName, cl.Config, tkt, sessionKey, spn, renewal)
 	if err != nil {
 		return tgsReq, tgsRep, fmt.Errorf("Error generating New TGS_REQ: %v", err)
 	}
@@ -45,17 +45,18 @@ func (cl *Client) TGSExchange(spn types.PrincipalName, tkt types.Ticket, session
 // Make a request to get a service ticket for the SPN specified
 // SPN format: <SERVICE>/<FQDN> Eg. HTTP/www.example.com
 // The ticket will be added to the client's ticket cache
-func (cl *Client) GetServiceTicket(spn string) (types.Ticket, error) {
+func (cl *Client) GetServiceTicket(spn string) (types.Ticket, types.EncryptionKey, error) {
 	var tkt types.Ticket
-	if tkt, ok := cl.GetCachedTicket(spn); ok {
+	var skey types.EncryptionKey
+	if tkt, skey, ok := cl.GetCachedTicket(spn); ok {
 		// Already a valid ticket in the cache
-		return tkt, nil
+		return tkt, skey, nil
 	}
 	// Ensure TGT still valid
 	if time.Now().After(cl.Session.EndTime) {
 		err := cl.updateTGT()
 		if err != nil {
-			return tkt, err
+			return tkt, skey, err
 		}
 	}
 	s := strings.Split(spn, "/")
@@ -65,7 +66,7 @@ func (cl *Client) GetServiceTicket(spn string) (types.Ticket, error) {
 	}
 	_, tgsRep, err := cl.TGSExchange(princ, cl.Session.TGT, cl.Session.SessionKey, false)
 	if err != nil {
-		return tkt, err
+		return tkt, skey, err
 	}
 	cl.Cache.AddEntry(
 		tgsRep.Ticket,
@@ -74,5 +75,5 @@ func (cl *Client) GetServiceTicket(spn string) (types.Ticket, error) {
 		tgsRep.DecryptedEncPart.RenewTill,
 		tgsRep.DecryptedEncPart.Key,
 	)
-	return tgsRep.Ticket, nil
+	return tgsRep.Ticket, tgsRep.DecryptedEncPart.Key, nil
 }

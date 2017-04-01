@@ -2,8 +2,6 @@ package GSSAPI
 
 import (
 	"encoding/hex"
-	"github.com/jcmturner/gokrb5/asn1tools"
-	"github.com/jcmturner/gokrb5/messages"
 	"github.com/jcmturner/gokrb5/testdata"
 	"github.com/jcmturner/gokrb5/types"
 	"testing"
@@ -38,7 +36,4 @@ func TestKrb5Token_NewAPREQ(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unmarshal error of %s: %v\n", "encode_krb5_keyblock", err)
 	}
-	APReq, err := messages.NewAPReq(tkt, k, a)
-	mb, err := NewKRB5APREQMechToken(APReq)
-	t.Logf("Mechtoken: %v, %v, %v", len(mb), asn1tools.GetLengthFromASN(mb), hex.EncodeToString(mb))
 }

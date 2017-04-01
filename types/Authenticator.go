@@ -5,7 +5,6 @@ import (
 	"github.com/jcmturner/asn1"
 	"github.com/jcmturner/gokrb5/iana"
 	"github.com/jcmturner/gokrb5/iana/asnAppTag"
-	"github.com/jcmturner/gokrb5/iana/nametype"
 	"time"
 	"github.com/jcmturner/gokrb5/asn1tools"
 )
@@ -42,15 +41,12 @@ type Authenticator struct {
 	AuthorizationData AuthorizationData `asn1:"explicit,optional,tag:8"`
 }
 
-func NewAuthenticator(realm, username string) Authenticator {
+func NewAuthenticator(realm string, cname PrincipalName) Authenticator {
 	t := time.Now()
 	return Authenticator{
 		AVNO:   iana.PVNO,
 		CRealm: realm,
-		CName: PrincipalName{
-			NameType:   nametype.KRB_NT_PRINCIPAL,
-			NameString: []string{username},
-		},
+		CName: cname,
 		Cksum: Checksum{},
 		Cusec: int((t.UnixNano() / int64(time.Microsecond)) - (t.Unix() * 1e6)),
 		CTime: t,

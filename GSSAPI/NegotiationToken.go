@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jcmturner/asn1"
+	"github.com/jcmturner/gokrb5/config"
+	"github.com/jcmturner/gokrb5/types"
 )
 
 /*
@@ -124,8 +126,13 @@ func (n *NegTokenResp) Marshal() ([]byte, error) {
 	return nb, nil
 }
 
-func NewNegTokenInitKrb5() NegTokenInit {
+func NewNegTokenInitKrb5(c config.Config, cname types.PrincipalName, tkt types.Ticket, sessionKey types.EncryptionKey) (NegTokenInit, error) {
+	mt, err := NewKRB5APREQMechToken(c, cname, tkt, sessionKey)
+	if err != nil {
+		return NegTokenInit{}, fmt.Errorf("Error getting MechToken; %v", err)
+	}
 	return NegTokenInit{
 		MechTypes: []asn1.ObjectIdentifier{MechTypeOID_Krb5},
-	}
+		MechToken: mt,
+	}, nil
 }

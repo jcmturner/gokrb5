@@ -40,7 +40,7 @@ func (cl *Client) SendToKDC(b []byte) ([]byte, error) {
 		if len(rb) < 1 {
 			return rb, fmt.Errorf("No response data from KDC %v", kdc)
 		}
-		return rb, nil
+		return checkForKRBError(rb)
 	}
 	if len(b) <= cl.Config.LibDefaults.Udp_preference_limit {
 		//Try UDP first, TCP second
@@ -63,7 +63,7 @@ func (cl *Client) SendToKDC(b []byte) ([]byte, error) {
 		if len(rb) < 1 {
 			return rb, fmt.Errorf("No response data from KDC %v", kdc)
 		}
-		return rb, nil
+		return checkForKRBError(rb)
 	}
 	//Try TCP first, UDP second
 	rb, errtcp := sendTCP(kdc, b)
@@ -76,7 +76,7 @@ func (cl *Client) SendToKDC(b []byte) ([]byte, error) {
 	if len(rb) < 1 {
 		return rb, fmt.Errorf("No response data from KDC %v", kdc)
 	}
-	return rb, nil
+	return checkForKRBError(rb)
 }
 
 // Send the bytes to the KDC over UDP.
@@ -102,7 +102,7 @@ func sendUDP(kdc string, b []byte) ([]byte, error) {
 	if err != nil {
 		return r, fmt.Errorf("Sending over UDP failed: %v", err)
 	}
-	return r, nil
+	return checkForKRBError(r)
 }
 
 // Send the bytes to the KDC over TCP.
@@ -128,5 +128,14 @@ func sendTCP(kdc string, b []byte) ([]byte, error) {
 	if err != nil {
 		return r, fmt.Errorf("Sending over TCP failed: %v", err)
 	}
-	return r, nil
+	return checkForKRBError(r)
+}
+
+func checkForKRBError(b []byte) ([]byte, error) {
+	var KRBErr messages.KRBError
+	if err := KRBErr.Unmarshal(b); err == nil {
+		return b, KRBErr
+	} else {
+	}
+	return b, nil
 }

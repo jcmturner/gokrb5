@@ -11,7 +11,6 @@ import (
 	"github.com/jcmturner/gokrb5/messages"
 	"github.com/jcmturner/gokrb5/types"
 	"math/rand"
-	"os"
 )
 
 const (
@@ -27,29 +26,34 @@ const (
 	GSS_C_INTEG_FLAG    = 32
 )
 
-func NewKRB5APREQMechToken(APReq messages.APReq) ([]byte, error) {
+func NewKRB5APREQMechToken(c config.Config, cname types.PrincipalName, tkt types.Ticket, sessionKey types.EncryptionKey) ([]byte, error) {
 	// Create the header
 	tb, _ := hex.DecodeString(TOK_ID_KRB_AP_REQ)
 	b, _ := asn1.Marshal(MechTypeOID_Krb5)
 	b = append(b, tb...)
 	// Add the token
-	tb, err := APReq.Marshal()
+	APReq, err := messages.NewAPReq(
+		tkt,
+		sessionKey,
+		newAuthenticator(c, cname),
+	)
+	tb, err = APReq.Marshal()
 	if err != nil {
 		return []byte{}, fmt.Errorf("Could not marshal AP_REQ: %v", err)
 	}
 	b = append(b, tb...)
-	fmt.Fprintf(os.Stderr, "len %v\n", len(b))
 	return asn1tools.AddASNAppTag(b, 0), nil
 }
 
-func newAuthenticator(c config.Config, username string) {
+func newAuthenticator(c config.Config, username types.PrincipalName) types.Authenticator {
 	//RFC 4121 Section 4.1.1
 	auth := types.NewAuthenticator(c.LibDefaults.Default_realm, username)
 	auth.Cksum = types.Checksum{
 		CksumType: chksumtype.GSSAPI,
 		Checksum:  newAuthenticatorChksum([]int{GSS_C_INTEG_FLAG, GSS_C_CONF_FLAG}),
 	}
-	auth.SeqNumber = rand.Int63()
+	auth.SeqNumber = int(rand.Int63())
+	return auth
 }
 
 func newAuthenticatorChksum(flags []int) []byte {

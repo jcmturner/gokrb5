@@ -80,7 +80,7 @@ type KDCReqBody struct {
 }
 
 // Generate a new KRB_AS_REQ struct.
-func NewASReq(c *config.Config, username string) ASReq {
+func NewASReq(c *config.Config, cname types.PrincipalName) ASReq {
 	pas := types.PADataSequence{
 		types.PAData{
 			PADataType: patype.PA_REQ_ENC_PA_REP,
@@ -97,10 +97,7 @@ func NewASReq(c *config.Config, username string) ASReq {
 			ReqBody: KDCReqBody{
 				KDCOptions: c.LibDefaults.Kdc_default_options,
 				Realm:      c.LibDefaults.Default_realm,
-				CName: types.PrincipalName{
-					NameType:   nametype.KRB_NT_PRINCIPAL,
-					NameString: []string{username},
-				},
+				CName: cname,
 				SName: types.PrincipalName{
 					NameType:   nametype.KRB_NT_SRV_INST,
 					NameString: []string{"krbtgt", c.LibDefaults.Default_realm},
@@ -131,7 +128,7 @@ func NewASReq(c *config.Config, username string) ASReq {
 }
 
 // Generate a new KRB_TGS_REQ struct.
-func NewTGSReq(username string, c *config.Config, tkt types.Ticket, sessionKey types.EncryptionKey, spn types.PrincipalName, renewal bool) (TGSReq, error) {
+func NewTGSReq(cname types.PrincipalName, c *config.Config, tkt types.Ticket, sessionKey types.EncryptionKey, spn types.PrincipalName, renewal bool) (TGSReq, error) {
 	nonce := int(rand.Int31())
 	t := time.Now()
 	a := TGSReq{
@@ -167,7 +164,7 @@ func NewTGSReq(username string, c *config.Config, tkt types.Ticket, sessionKey t
 		types.SetFlag(&a.ReqBody.KDCOptions, types.Renew)
 		types.SetFlag(&a.ReqBody.KDCOptions, types.Renewable)
 	}
-	auth := types.NewAuthenticator(c.LibDefaults.Default_realm, username)
+	auth := types.NewAuthenticator(c.LibDefaults.Default_realm, cname)
 	// Add the CName to make validation of the reply easier
 	a.ReqBody.CName = auth.CName
 	b, err := a.ReqBody.Marshal()

@@ -21,7 +21,7 @@ func (cl *Client) ASExchange() error {
 	if !cl.IsConfigured() {
 		return errors.New("Client is not configured correctly.")
 	}
-	a := messages.NewASReq(cl.Config, cl.Credentials.Username)
+	a := messages.NewASReq(cl.Config, cl.Credentials.CName)
 	b, err := a.Marshal()
 	if err != nil {
 		return fmt.Errorf("Error marshalling AS_REQ: %v", err)

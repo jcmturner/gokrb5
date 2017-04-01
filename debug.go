@@ -9,6 +9,7 @@ import (
 	"github.com/jcmturner/gokrb5/testdata"
 	"os"
 	"time"
+	"net/http"
 )
 
 const krb5conf = `[libdefaults]
@@ -33,7 +34,8 @@ const krb5conf = `[libdefaults]
  `
 
 func main() {
-	runClient()
+	httpRequest()
+	//runClient()
 }
 
 func runClient() {
@@ -49,7 +51,7 @@ func runClient() {
 	}
 	cl.EnableAutoSessionRenewal()
 	for i := 0; i < 15; i++ {
-		tkt, err := cl.GetServiceTicket("HTTP/host.test.gokrb5")
+		tkt, _, err := cl.GetServiceTicket("HTTP/host.test.gokrb5")
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error on TGS_REQ: %v\n", err)
 		} else {
@@ -57,4 +59,21 @@ func runClient() {
 		}
 		time.Sleep(time.Duration(1) * time.Minute)
 	}
+}
+
+func httpRequest() {
+	b, err := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	kt, _ := keytab.Parse(b)
+	c, _ := config.NewConfigFromString(krb5conf)
+	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
+	cl.WithConfig(c)
+
+	err = cl.Login()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error on AS_REQ: %v\n", err)
+	}
+	r, _ := http.NewRequest("GET", "http://10.80.88.90/index.html", nil)
+	cl.SetKRB5NegotiationHeader(r, "HTTP/host.test.gokrb5")
+	httpResp, err := http.DefaultClient.Do(r)
+	fmt.Fprintf(os.Stderr, "RESPONSE CODE: %v\n", httpResp.StatusCode)
 }

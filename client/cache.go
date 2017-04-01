@@ -53,21 +53,22 @@ func (c *Cache) RemoveEntry(spn string) {
 
 // Get a ticket from the cache for the SPN.
 // Only a ticket that is currently valid will be returned.
-func (cl *Client) GetCachedTicket(spn string) (types.Ticket, bool) {
+func (cl *Client) GetCachedTicket(spn string) (types.Ticket, types.EncryptionKey, bool) {
 	if e, ok := cl.Cache.GetEntry(spn); ok {
 		//If within time window of ticket return it
 		if time.Now().After(e.AuthTime) && time.Now().Before(e.EndTime) {
-			return e.Ticket, true
+			return e.Ticket, e.SessionKey, true
 		} else if time.Now().Before(e.RenewTill) {
 			e, err := cl.RenewTicket(e)
 			if err != nil {
-				return e.Ticket, false
+				return e.Ticket, e.SessionKey, false
 			}
-			return e.Ticket, true
+			return e.Ticket, e.SessionKey, true
 		}
 	}
 	var tkt types.Ticket
-	return tkt, false
+	var key types.EncryptionKey
+	return tkt, key, false
 }
 
 // Renew a cache entry ticket
