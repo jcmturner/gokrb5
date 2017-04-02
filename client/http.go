@@ -1,13 +1,13 @@
 package client
 
 import (
-	"github.com/jcmturner/gokrb5/GSSAPI"
-	"fmt"
-	"net/http"
 	"encoding/base64"
+	"fmt"
+	"github.com/jcmturner/gokrb5/GSSAPI"
+	"net/http"
 )
 
-func (cl *Client) SetKRB5NegotiationHeader(HTTPReq *http.Request, spn string) error {
+func (cl *Client) SetSPNEGOHeader(HTTPReq *http.Request, spn string) error {
 	tkt, skey, err := cl.GetServiceTicket(spn)
 	if err != nil {
 		return fmt.Errorf("Could not get service ticket: %v", err)
@@ -16,9 +16,13 @@ func (cl *Client) SetKRB5NegotiationHeader(HTTPReq *http.Request, spn string) er
 	if err != nil {
 		return fmt.Errorf("Could not create NegTokenInit: %v", err)
 	}
-	nb, err := negTokenInit.Marshal()
+	SPNEGOToken := GSSAPI.SPNEGO{
+		Init:         true,
+		NegTokenInit: negTokenInit,
+	}
+	nb, err := SPNEGOToken.Marshal()
 	if err != nil {
-		return fmt.Errorf("Could marshal NegTokenInit: %v", err)
+		return fmt.Errorf("Could marshal SPNEGO: %v", err)
 	}
 
 	hs := "Negotiate " + base64.StdEncoding.EncodeToString(nb)

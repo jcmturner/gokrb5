@@ -34,8 +34,8 @@ const krb5conf = `[libdefaults]
  `
 
 func main() {
-	//httpRequest()
-	runClient()
+	httpRequest()
+	//runClient()
 }
 
 func runClient() {
@@ -73,7 +73,7 @@ func httpRequest() {
 		fmt.Fprintf(os.Stderr, "Error on AS_REQ: %v\n", err)
 	}
 	r, _ := http.NewRequest("GET", "http://10.80.88.90/index.html", nil)
-	cl.SetKRB5NegotiationHeader(r, "HTTP/host.test.gokrb5")
+	cl.SetSPNEGOHeader(r, "HTTP/host.test.gokrb5")
 	httpResp, err := http.DefaultClient.Do(r)
 	fmt.Fprintf(os.Stderr, "RESPONSE CODE: %v\n", httpResp.StatusCode)
 }

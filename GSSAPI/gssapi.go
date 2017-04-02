@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jcmturner/asn1"
+	"github.com/jcmturner/gokrb5/asn1tools"
 )
 
 const (
@@ -58,4 +59,27 @@ func (s *SPNEGO) Unmarshal(b []byte) error {
 		return errors.New("Unknown choice type for NegotiationToken")
 	}
 	return nil
+}
+
+func (s *SPNEGO) Marshal() ([]byte, error) {
+	var b []byte
+	if !s.Init && !s.Resp {
+		return b, errors.New("SPNEGO cannot be marshalled. It contains neither a NegTokenInit or NegTokenResp")
+	}
+	hb, _ := asn1.Marshal(MechTypeOID_Krb5)
+	if s.Init {
+		tb, err := s.NegTokenInit.Marshal()
+		if err != nil {
+			return b, fmt.Errorf("Could not marshal NegTokenInit: %v", err)
+		}
+		b = append(hb, tb...)
+	}
+	if s.Resp {
+		tb, err := s.NegTokenResp.Marshal()
+		if err != nil {
+			return b, fmt.Errorf("Could not marshal NegTokenResp: %v", err)
+		}
+		b = append(hb, tb...)
+	}
+	return asn1tools.AddASNAppTag(b, 0), nil
 }
