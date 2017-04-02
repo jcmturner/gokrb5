@@ -56,9 +56,9 @@ func (c *Cache) RemoveEntry(spn string) {
 func (cl *Client) GetCachedTicket(spn string) (types.Ticket, types.EncryptionKey, bool) {
 	if e, ok := cl.Cache.GetEntry(spn); ok {
 		//If within time window of ticket return it
-		if time.Now().After(e.AuthTime) && time.Now().Before(e.EndTime) {
+		if time.Now().UTC().After(e.AuthTime) && time.Now().UTC().Before(e.EndTime) {
 			return e.Ticket, e.SessionKey, true
-		} else if time.Now().Before(e.RenewTill) {
+		} else if time.Now().UTC().Before(e.RenewTill) {
 			e, err := cl.RenewTicket(e)
 			if err != nil {
 				return e.Ticket, e.SessionKey, false

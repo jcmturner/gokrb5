@@ -7,9 +7,9 @@ import (
 	"github.com/jcmturner/gokrb5/config"
 	"github.com/jcmturner/gokrb5/keytab"
 	"github.com/jcmturner/gokrb5/testdata"
+	"net/http"
 	"os"
 	"time"
-	"net/http"
 )
 
 const krb5conf = `[libdefaults]
@@ -34,8 +34,8 @@ const krb5conf = `[libdefaults]
  `
 
 func main() {
-	httpRequest()
-	//runClient()
+	//httpRequest()
+	runClient()
 }
 
 func runClient() {

@@ -211,7 +211,7 @@ func (k *ASRep) IsValid(cfg *config.Config, asReq ASReq) (bool, error) {
 	if len(asReq.ReqBody.Addresses) > 0 {
 		//TODO compare if address list is the same
 	}
-	if time.Since(k.DecryptedEncPart.AuthTime) > cfg.LibDefaults.Clockskew || k.DecryptedEncPart.AuthTime.Sub(time.Now()) > cfg.LibDefaults.Clockskew {
+	if time.Since(k.DecryptedEncPart.AuthTime) > cfg.LibDefaults.Clockskew || k.DecryptedEncPart.AuthTime.Sub(time.Now().UTC()) > cfg.LibDefaults.Clockskew {
 		return false, fmt.Errorf("Clock skew with KDC too large. Greater than %v seconds", cfg.LibDefaults.Clockskew.Seconds())
 	}
 	if asReq.PAData.Contains(patype.PA_REQ_ENC_PA_REP) {
@@ -293,8 +293,8 @@ func (k *TGSRep) IsValid(cfg *config.Config, tgsReq TGSReq) (bool, error) {
 	if len(tgsReq.ReqBody.Addresses) > 0 {
 		//TODO compare if address list is the same
 	}
-	if time.Since(k.DecryptedEncPart.StartTime) > cfg.LibDefaults.Clockskew || k.DecryptedEncPart.StartTime.Sub(time.Now()) > cfg.LibDefaults.Clockskew {
-		if time.Since(k.DecryptedEncPart.AuthTime) > cfg.LibDefaults.Clockskew || k.DecryptedEncPart.AuthTime.Sub(time.Now()) > cfg.LibDefaults.Clockskew {
+	if time.Since(k.DecryptedEncPart.StartTime) > cfg.LibDefaults.Clockskew || k.DecryptedEncPart.StartTime.Sub(time.Now().UTC()) > cfg.LibDefaults.Clockskew {
+		if time.Since(k.DecryptedEncPart.AuthTime) > cfg.LibDefaults.Clockskew || k.DecryptedEncPart.AuthTime.Sub(time.Now().UTC()) > cfg.LibDefaults.Clockskew {
 			return false, fmt.Errorf("Clock skew with KDC too large. Greater than %v seconds.", cfg.LibDefaults.Clockskew.Seconds())
 		}
 	}

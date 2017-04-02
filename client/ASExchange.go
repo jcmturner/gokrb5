@@ -11,11 +11,6 @@ import (
 	"sort"
 )
 
-// Login the client with the KDC via an AS exchange.
-func (cl *Client) Login() error {
-	return cl.ASExchange()
-}
-
 // Perform an AS exchange for the client to retrieve a TGT.
 func (cl *Client) ASExchange() error {
 	if !cl.IsConfigured() {

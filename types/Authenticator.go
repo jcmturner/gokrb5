@@ -3,10 +3,10 @@ package types
 import (
 	"fmt"
 	"github.com/jcmturner/asn1"
+	"github.com/jcmturner/gokrb5/asn1tools"
 	"github.com/jcmturner/gokrb5/iana"
 	"github.com/jcmturner/gokrb5/iana/asnAppTag"
 	"time"
-	"github.com/jcmturner/gokrb5/asn1tools"
 )
 
 /*Authenticator   ::= [APPLICATION 2] SEQUENCE  {
@@ -42,14 +42,14 @@ type Authenticator struct {
 }
 
 func NewAuthenticator(realm string, cname PrincipalName) Authenticator {
-	t := time.Now()
+	t := time.Now().UTC()
 	return Authenticator{
 		AVNO:   iana.PVNO,
 		CRealm: realm,
-		CName: cname,
-		Cksum: Checksum{},
-		Cusec: int((t.UnixNano() / int64(time.Microsecond)) - (t.Unix() * 1e6)),
-		CTime: t,
+		CName:  cname,
+		Cksum:  Checksum{},
+		Cusec:  int((t.UnixNano() / int64(time.Microsecond)) - (t.Unix() * 1e6)),
+		CTime:  t,
 	}
 }
 

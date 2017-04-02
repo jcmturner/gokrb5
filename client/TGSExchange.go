@@ -53,7 +53,7 @@ func (cl *Client) GetServiceTicket(spn string) (types.Ticket, types.EncryptionKe
 		return tkt, skey, nil
 	}
 	// Ensure TGT still valid
-	if time.Now().After(cl.Session.EndTime) {
+	if time.Now().UTC().After(cl.Session.EndTime) {
 		err := cl.updateTGT()
 		if err != nil {
 			return tkt, skey, err

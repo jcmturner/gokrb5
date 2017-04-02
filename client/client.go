@@ -75,3 +75,8 @@ func (cl *Client) IsConfigured() bool {
 	}
 	return false
 }
+
+// Login the client with the KDC via an AS exchange.
+func (cl *Client) Login() error {
+	return cl.ASExchange()
+}

@@ -87,7 +87,7 @@ func NewASReq(c *config.Config, cname types.PrincipalName) ASReq {
 		},
 	}
 	nonce := int(rand.Int31())
-	t := time.Now()
+	t := time.Now().UTC()
 
 	a := ASReq{
 		KDCReqFields{
@@ -97,7 +97,7 @@ func NewASReq(c *config.Config, cname types.PrincipalName) ASReq {
 			ReqBody: KDCReqBody{
 				KDCOptions: c.LibDefaults.Kdc_default_options,
 				Realm:      c.LibDefaults.Default_realm,
-				CName: cname,
+				CName:      cname,
 				SName: types.PrincipalName{
 					NameType:   nametype.KRB_NT_SRV_INST,
 					NameString: []string{"krbtgt", c.LibDefaults.Default_realm},
@@ -130,7 +130,7 @@ func NewASReq(c *config.Config, cname types.PrincipalName) ASReq {
 // Generate a new KRB_TGS_REQ struct.
 func NewTGSReq(cname types.PrincipalName, c *config.Config, tkt types.Ticket, sessionKey types.EncryptionKey, spn types.PrincipalName, renewal bool) (TGSReq, error) {
 	nonce := int(rand.Int31())
-	t := time.Now()
+	t := time.Now().UTC()
 	a := TGSReq{
 		KDCReqFields{
 			PVNO:    iana.PVNO,

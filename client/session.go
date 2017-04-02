@@ -21,7 +21,7 @@ func (cl *Client) EnableAutoSessionRenewal() {
 	go func() {
 		for {
 			//Wait until one minute before endtime
-			w := (cl.Session.EndTime.Sub(time.Now()) * 5) / 6
+			w := (cl.Session.EndTime.Sub(time.Now().UTC()) * 5) / 6
 			if w < 0 {
 				return
 			}
@@ -53,7 +53,7 @@ func (cl *Client) RenewTGT() error {
 }
 
 func (cl *Client) updateTGT() error {
-	if time.Now().Before(cl.Session.RenewTill) {
+	if time.Now().UTC().Before(cl.Session.RenewTill) {
 		err := cl.RenewTGT()
 		if err != nil {
 			return err

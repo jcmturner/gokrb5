@@ -35,7 +35,7 @@ func (pas *PADataSequence) Contains(patype int) bool {
 }
 
 func GetPAEncTSEncAsnMarshalled() ([]byte, error) {
-	t := time.Now()
+	t := time.Now().UTC()
 	p := PAEncTSEnc{
 		PATimestamp: t,
 		PAUSec:      int((t.UnixNano() / int64(time.Microsecond)) - (t.Unix() * 1e6)),
