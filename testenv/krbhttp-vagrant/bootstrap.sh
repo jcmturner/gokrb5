@@ -9,7 +9,8 @@ yum update -y
 yum install -y \
    httpd \
    mod_auth_kerb \
-   mod_ssl
+   mod_ssl \
+   ntp
 
 systemctl stop firewalld
 systemctl disable firewalld
@@ -27,8 +28,8 @@ echo "10.80.88.90 http.test.gokrb5" >> /etc/hosts
 sh /vagrant/krb-setup.sh
 mv /vagrant/httpd-krb5.conf /etc/httpd/conf.d/
 chcon system_u:object_r:httpd_config_t:s0 /etc/httpd/conf.d/*
-chcon system_u:object_r:httpd_config_t:s0 /vagrant/http.keytab
-chmod 644 /vagrant/http.keytab
+chcon system_u:object_r:httpd_config_t:s0 /vagrant/http.testtab
+chmod 644 /vagrant/http.testtab
 
 systemctl restart httpd
 systemctl enable httpd

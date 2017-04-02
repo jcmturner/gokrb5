@@ -7,7 +7,7 @@ SERVER_HOST=kdc.test.gokrb5
 ADMIN_USERNAME=adminuser
 HOST_PRINCIPALS="kdc.test.gokrb5 host.test.gokrb5"
 SPNs="HTTP/host.test.gokrb5"
-KEYTABS="http.keytab!0:48!HTTP/host.test.gokrb5"
+KEYTABS="http.testtab!0:48!HTTP/host.test.gokrb5"
 INITIAL_USERS="testuser1 testuser2 testuser3"
 
 cp /vagrant/krb5.conf /etc/krb5.conf
@@ -22,10 +22,20 @@ sed -i "s/__REALM__/${REALM}/g" /etc/krb5.conf
 sed -i "s/__DOMAIN__/${DOMAIN}/g" /etc/krb5.conf
 sed -i "s/__SERVER_HOST__/${SERVER_HOST}/g" /etc/krb5.conf
 
+create_entropy() {
+   while true
+   do
+     sleep $(( ( RANDOM % 10 )  + 1 ))
+     echo "Generating Entropy... $RANDOM"
+   done
+}
+
+create_entropy &
+
 #Check and initialise if needs be
 if [ ! -f /opt/krb5/data/principal ]; then
   echo "Kerberos initialisation required. Creating database for ${REALM} ..."
-  echo "This can take some time if there is little entropy. SSH in another terminal and hit some keys..."
+  echo "This can take a long time if there is little entropy. A process has been started to create some."
   MASTER_PASSWORD=$(echo $RANDOM$RANDOM$RANDOM | md5sum | awk '{print $1}')
   /usr/sbin/kdb5_util create -r ${REALM} -s -P ${MASTER_PASSWORD}
   echo "Kerberos database created."
@@ -38,7 +48,7 @@ if [ ! -f /opt/krb5/data/principal ]; then
   if [ ! -z "${HOST_PRINCIPALS}" ]; then
     for host in ${HOST_PRINCIPALS}
     do
-      /usr/sbin/kadmin.local -q "add_principal -randkey host/$host"
+      /usr/sbin/kadmin.local -q "add_principal -pw passwordvalue host/$host"
       /usr/sbin/kadmin.local -q "ktadd -k ${KEYTAB_DIR}/${host}.keytab host/$host"
       chmod 600 ${KEYTAB_DIR}/${host}.keytab
       echo "Created host principal host/$host"
@@ -48,7 +58,7 @@ if [ ! -f /opt/krb5/data/principal ]; then
   if [ ! -z "${SPNs}" ]; then
     for service in ${SPNs}
     do
-      /usr/sbin/kadmin.local -q "add_principal -randkey ${service}"
+      /usr/sbin/kadmin.local -q "add_principal -pw passwordvalue ${service}"
       echo "Created principal for service $service"
     done
   fi
@@ -57,6 +67,7 @@ if [ ! -f /opt/krb5/data/principal ]; then
     for user in $INITIAL_USERS
     do
       /usr/sbin/kadmin.local -q "add_principal -pw passwordvalue $user"
+      /usr/sbin/kadmin.local -q "ktadd -k ${KEYTAB_DIR}/${user}.testtab $user"
       echo "User $user added to kerberos database with random password. To update password: sudo /usr/sbin/kadmin.local -q \"change_password $user\""
     done
   fi
