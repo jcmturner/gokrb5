@@ -23,7 +23,7 @@ net.ipv6.conf.lo.disable_ipv6 = 1
 EOF
 
 echo "10.80.88.89 client.test.gokrb5" >> /etc/hosts
-echo "10.80.88.90 http.test.gokrb5" >> /etc/hosts
+echo "10.80.88.90 host.test.gokrb5" >> /etc/hosts
 
 sh /vagrant/krb-setup.sh
 mv /vagrant/httpd-krb5.conf /etc/httpd/conf.d/

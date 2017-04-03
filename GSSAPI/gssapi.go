@@ -11,6 +11,8 @@ const (
 	SPNEGO_OIDHex = "2b0601050502" //1.3.6.1.5.5.2
 )
 
+var SPNEGO_OID = asn1.ObjectIdentifier{1, 3, 6, 1, 5, 5, 2}
+
 type SPNEGO struct {
 	Init         bool
 	Resp         bool
@@ -66,7 +68,7 @@ func (s *SPNEGO) Marshal() ([]byte, error) {
 	if !s.Init && !s.Resp {
 		return b, errors.New("SPNEGO cannot be marshalled. It contains neither a NegTokenInit or NegTokenResp")
 	}
-	hb, _ := asn1.Marshal(MechTypeOID_Krb5)
+	hb, _ := asn1.Marshal(SPNEGO_OID)
 	if s.Init {
 		tb, err := s.NegTokenInit.Marshal()
 		if err != nil {

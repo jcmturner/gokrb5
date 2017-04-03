@@ -58,20 +58,17 @@ func newAuthenticator(c config.Config, username types.PrincipalName) types.Authe
 
 func newAuthenticatorChksum(flags []int) []byte {
 	a := make([]byte, 24)
-	for i := range flags {
+	binary.LittleEndian.PutUint32(a[:4], 16)
+	for _, i := range flags {
 		if i == GSS_C_DELEG_FLAG {
 			x := make([]byte, 28-len(a))
 			a = append(a, x...)
 		}
-		setAuthenticatorChksumFlag(a, uint32(i))
+		f := binary.LittleEndian.Uint32(a[20:24])
+		f |= uint32(i)
+		binary.LittleEndian.PutUint32(a[20:24], f)
 	}
 	return a
-}
-
-func setAuthenticatorChksumFlag(a []byte, i uint32) {
-	f := binary.LittleEndian.Uint32(a[20:24])
-	f |= i
-	binary.LittleEndian.PutUint32(a[20:24], f)
 }
 
 /*
