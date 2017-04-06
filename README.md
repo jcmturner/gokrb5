@@ -67,7 +67,7 @@ tkt, err := cl.GetServiceTicket("HTTP/host.test.gokrb5")
 Create the HTTP request object and then call the client's SetSPNEGOHeader method passing the Service Principal Name (SPN)
 ```go
 r, _ := http.NewRequest("GET", "http://host.test.gokrb5/index.html", nil)
-cl.SetSPNEGOHeader(r, "HTTP/host.test.gokrb5")
+cl.SetSPNEGOHeader(r)
 HTTPResp, err := http.DefaultClient.Do(r)
 ```
 

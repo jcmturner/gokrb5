@@ -7,8 +7,8 @@ import (
 	"net/http"
 )
 
-func (cl *Client) SetSPNEGOHeader(HTTPReq *http.Request, spn string) error {
-	tkt, skey, err := cl.GetServiceTicket(spn)
+func (cl *Client) SetSPNEGOHeader(HTTPReq *http.Request) error {
+	tkt, skey, err := cl.GetServiceTicket("HTTP/" + HTTPReq.Host)
 	if err != nil {
 		return fmt.Errorf("Could not get service ticket: %v", err)
 	}
