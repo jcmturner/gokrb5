@@ -59,6 +59,7 @@ if [ ! -f /opt/krb5/data/principal ]; then
     for service in ${SPNs}
     do
       /usr/sbin/kadmin.local -q "add_principal -pw passwordvalue ${service}"
+      /usr/sbin/kadmin.local -q "cpw -pw passwordvalue ${service}"
       echo "Created principal for service $service"
     done
   fi
@@ -90,7 +91,7 @@ if [ ! -f /opt/krb5/data/principal ]; then
       done
       IFS=";"
       chown $permissions ${KEYTAB_DIR}/${keytabFileName}
-      chmod 440 ${KEYTAB_DIR}/${keytabFileName}
+      chmod 660 ${KEYTAB_DIR}/${keytabFileName}
     done
     IFS=$OLDIFS
   fi

@@ -10,7 +10,8 @@ yum install -y \
    httpd \
    mod_auth_kerb \
    mod_ssl \
-   ntp
+   ntp \
+   krb5-workstation
 
 systemctl stop firewalld
 systemctl disable firewalld
@@ -31,6 +32,7 @@ mv /vagrant/httpd-krb5.conf /etc/httpd/conf.d/
 chcon system_u:object_r:httpd_config_t:s0 /etc/httpd/conf.d/*
 chcon system_u:object_r:httpd_config_t:s0 /vagrant/http.testtab
 chmod 644 /vagrant/http.testtab
+echo "<html>TEST.GOKRB5</html>" > /var/www/html/index.html
 
 systemctl restart httpd
 systemctl enable httpd
