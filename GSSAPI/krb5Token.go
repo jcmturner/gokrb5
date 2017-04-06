@@ -7,6 +7,7 @@ import (
 	"github.com/jcmturner/asn1"
 	"github.com/jcmturner/gokrb5/asn1tools"
 	"github.com/jcmturner/gokrb5/config"
+	"github.com/jcmturner/gokrb5/crypto"
 	"github.com/jcmturner/gokrb5/iana/chksumtype"
 	"github.com/jcmturner/gokrb5/messages"
 	"github.com/jcmturner/gokrb5/types"
@@ -35,7 +36,7 @@ func NewKRB5APREQMechToken(c config.Config, cname types.PrincipalName, tkt types
 	APReq, err := messages.NewAPReq(
 		tkt,
 		sessionKey,
-		newAuthenticator(c, cname),
+		newAuthenticator(c, cname, sessionKey.KeyType),
 	)
 	tb, err = APReq.Marshal()
 	if err != nil {
@@ -45,14 +46,22 @@ func NewKRB5APREQMechToken(c config.Config, cname types.PrincipalName, tkt types
 	return asn1tools.AddASNAppTag(b, 0), nil
 }
 
-func newAuthenticator(c config.Config, username types.PrincipalName) types.Authenticator {
+func newAuthenticator(c config.Config, username types.PrincipalName, keyType int) types.Authenticator {
 	//RFC 4121 Section 4.1.1
 	auth := types.NewAuthenticator(c.LibDefaults.Default_realm, username)
 	auth.Cksum = types.Checksum{
 		CksumType: chksumtype.GSSAPI,
 		Checksum:  newAuthenticatorChksum([]int{GSS_C_INTEG_FLAG, GSS_C_CONF_FLAG}),
 	}
-	auth.SeqNumber = int(rand.Int63())
+	auth.SeqNumber = int(rand.Int31())
+	//Generate subkey value
+	etype, _ := crypto.GetEtype(keyType)
+	sk := make([]byte, etype.GetKeyByteSize())
+	rand.Read(sk)
+	auth.SubKey = types.EncryptionKey{
+		KeyType:  keyType,
+		KeyValue: sk,
+	}
 	return auth
 }
 

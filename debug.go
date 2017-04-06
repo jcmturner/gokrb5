@@ -72,7 +72,7 @@ func httpRequest() {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error on AS_REQ: %v\n", err)
 	}
-	r, _ := http.NewRequest("GET", "http://10.80.88.90/index.html", nil)
+	r, _ := http.NewRequest("GET", "http://host.test.gokrb5/index.html", nil)
 	cl.SetSPNEGOHeader(r, "HTTP/host.test.gokrb5")
 	httpResp, err := http.DefaultClient.Do(r)
 	fmt.Fprintf(os.Stderr, "RESPONSE CODE: %v\n", httpResp.StatusCode)

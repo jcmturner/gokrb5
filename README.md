@@ -1,6 +1,10 @@
 # gokrb5
 
-This is work in progress and does not yet fully work...
+This is work in progress and may have some issues.
+
+Currently the following is working/tested:
+* Works with a KDC that supports [PA FAST](https://tools.ietf.org/html/rfc6806.html#section-11)
+* Client side authentication to HTTP servers that implement SPNEGO using Kerberos 5
 
 [![GoDoc](https://godoc.org/github.com/jcmturner/gokrb5?status.svg)](https://godoc.org/github.com/jcmturner/gokrb5)
 
@@ -51,11 +55,20 @@ err := cl.Login
 ```go
 cl.EnableAutoSessionRenewal()
 ```
+#### Authenticate to a Service
+##### Native Kerberos
 Request a Serivce ticket for a Service Principal Name (SPN).
 This method will use the client's cache either returning a valid cached ticket, renewing a cached ticket with the KDC or requesting a new ticket from the KDC.
 Therefore the GetServiceTicket method can be continually used for the most efficient interaction with the KDC.
 ```go
 tkt, err := cl.GetServiceTicket("HTTP/host.test.gokrb5")
+```
+##### HTTP SPNEGO
+Create the HTTP request object and then call the client's SetSPNEGOHeader method passing the Service Principal Name (SPN)
+```go
+r, _ := http.NewRequest("GET", "http://host.test.gokrb5/index.html", nil)
+cl.SetSPNEGOHeader(r, "HTTP/host.test.gokrb5")
+HTTPResp, err := http.DefaultClient.Do(r)
 ```
 
 ## References

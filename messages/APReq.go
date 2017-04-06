@@ -10,6 +10,7 @@ import (
 	"github.com/jcmturner/gokrb5/iana/asnAppTag"
 	"github.com/jcmturner/gokrb5/iana/keyusage"
 	"github.com/jcmturner/gokrb5/iana/msgtype"
+	"github.com/jcmturner/gokrb5/iana/nametype"
 	"github.com/jcmturner/gokrb5/types"
 )
 
@@ -47,7 +48,7 @@ type APReq struct {
 // Generate a new KRB_AP_REQ struct.
 func NewAPReq(tkt types.Ticket, sessionKey types.EncryptionKey, auth types.Authenticator) (APReq, error) {
 	var a APReq
-	ed, err := encryptAuthenticator(auth, sessionKey)
+	ed, err := encryptAuthenticator(auth, sessionKey, tkt)
 	if err != nil {
 		return a, fmt.Errorf("Error creating authenticator for AP_REQ: %v", err)
 	}
@@ -62,13 +63,20 @@ func NewAPReq(tkt types.Ticket, sessionKey types.EncryptionKey, auth types.Authe
 }
 
 // Encrypt Authenticator
-func encryptAuthenticator(a types.Authenticator, sessionKey types.EncryptionKey) (types.EncryptedData, error) {
+func encryptAuthenticator(a types.Authenticator, sessionKey types.EncryptionKey, tkt types.Ticket) (types.EncryptedData, error) {
 	var ed types.EncryptedData
 	m, err := a.Marshal()
 	if err != nil {
 		return ed, fmt.Errorf("Error marshalling authenticator: %v", err)
 	}
-	return crypto.GetEncryptedData(m, sessionKey, keyusage.TGS_REQ_PA_TGS_REQ_AP_REQ_AUTHENTICATOR, 0)
+	var usage int
+	switch tkt.SName.NameType {
+	case nametype.KRB_NT_PRINCIPAL:
+		usage = keyusage.AP_REQ_AUTHENTICATOR
+	case nametype.KRB_NT_SRV_INST:
+		usage = keyusage.TGS_REQ_PA_TGS_REQ_AP_REQ_AUTHENTICATOR
+	}
+	return crypto.GetEncryptedData(m, sessionKey, uint32(usage), tkt.EncPart.KVNO)
 }
 
 // Unmarshal bytes b into the APReq struct.
