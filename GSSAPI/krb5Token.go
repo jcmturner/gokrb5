@@ -27,6 +27,7 @@ const (
 	GSS_C_INTEG_FLAG    = 32
 )
 
+// Create new kerberos AP_REQ MechToken
 func NewKRB5APREQMechToken(c config.Config, cname types.PrincipalName, tkt types.Ticket, sessionKey types.EncryptionKey) ([]byte, error) {
 	// Create the header
 	tb, _ := hex.DecodeString(TOK_ID_KRB_AP_REQ)
@@ -46,6 +47,7 @@ func NewKRB5APREQMechToken(c config.Config, cname types.PrincipalName, tkt types
 	return asn1tools.AddASNAppTag(b, 0), nil
 }
 
+// Create new kerberos authenticator for kerberos MechToken
 func newAuthenticator(c config.Config, username types.PrincipalName, keyType int) types.Authenticator {
 	//RFC 4121 Section 4.1.1
 	auth := types.NewAuthenticator(c.LibDefaults.Default_realm, username)
@@ -65,6 +67,7 @@ func newAuthenticator(c config.Config, username types.PrincipalName, keyType int
 	return auth
 }
 
+// Create new authenticator checksum for kerberos MechToken
 func newAuthenticatorChksum(flags []int) []byte {
 	a := make([]byte, 24)
 	binary.LittleEndian.PutUint32(a[:4], 16)

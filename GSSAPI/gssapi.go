@@ -1,3 +1,4 @@
+// Generic Security Services Application Program Interface implementation required for SPNEGO kerberos authentication
 package GSSAPI
 
 import (
@@ -5,10 +6,6 @@ import (
 	"fmt"
 	"github.com/jcmturner/asn1"
 	"github.com/jcmturner/gokrb5/asn1tools"
-)
-
-const (
-	SPNEGO_OIDHex = "2b0601050502" //1.3.6.1.5.5.2
 )
 
 var SPNEGO_OID = asn1.ObjectIdentifier{1, 3, 6, 1, 5, 5, 2}
@@ -20,6 +17,7 @@ type SPNEGO struct {
 	NegTokenResp NegTokenResp
 }
 
+// Unmarshal SPNEGO negotiation token
 func (s *SPNEGO) Unmarshal(b []byte) error {
 	var r []byte
 	var err error
@@ -63,6 +61,7 @@ func (s *SPNEGO) Unmarshal(b []byte) error {
 	return nil
 }
 
+// Marshal SPNEGO negotiation token
 func (s *SPNEGO) Marshal() ([]byte, error) {
 	var b []byte
 	if !s.Init && !s.Resp {

@@ -42,6 +42,7 @@ NegTokenResp ::= SEQUENCE {
 }
 */
 
+// Negotiation Token - Init
 type NegTokenInit struct {
 	MechTypes    []asn1.ObjectIdentifier `asn1:"explicit,tag:0"`
 	ReqFlags     ContextFlags            `asn1:"explicit,optional,tag:1"`
@@ -49,6 +50,7 @@ type NegTokenInit struct {
 	MechTokenMIC []byte                  `asn1:"explicit,optional,tag:3"`
 }
 
+// Negotiation Token - Resp/Targ
 type NegTokenResp struct {
 	NegState      asn1.Enumerated       `asn1:"explicit,tag:0"`
 	SupportedMech asn1.ObjectIdentifier `asn1:"explicit,optional,tag:1"`
@@ -89,6 +91,7 @@ func UnmarshalNegToken(b []byte) (bool, interface{}, error) {
 
 }
 
+// Marshal an Init negotiation token
 func (n *NegTokenInit) Marshal() ([]byte, error) {
 	b, err := asn1.Marshal(*n)
 	if err != nil {
@@ -107,7 +110,7 @@ func (n *NegTokenInit) Marshal() ([]byte, error) {
 	return nb, nil
 }
 
-// Returns marshalled bytes of a NegotiationToken rather than the NegTokenResp
+// Marshal a Resp/Targ negotiation token
 func (n *NegTokenResp) Marshal() ([]byte, error) {
 	b, err := asn1.Marshal(*n)
 	if err != nil {
@@ -126,6 +129,7 @@ func (n *NegTokenResp) Marshal() ([]byte, error) {
 	return nb, nil
 }
 
+// Create new Init negotiation token for Kerberos 5
 func NewNegTokenInitKrb5(c config.Config, cname types.PrincipalName, tkt types.Ticket, sessionKey types.EncryptionKey) (NegTokenInit, error) {
 	mt, err := NewKRB5APREQMechToken(c, cname, tkt, sessionKey)
 	if err != nil {

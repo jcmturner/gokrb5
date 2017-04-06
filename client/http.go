@@ -7,6 +7,7 @@ import (
 	"net/http"
 )
 
+// Get service ticket and set as the SPNEGO authorization header on HTTP request object
 func (cl *Client) SetSPNEGOHeader(HTTPReq *http.Request) error {
 	tkt, skey, err := cl.GetServiceTicket("HTTP/" + HTTPReq.Host)
 	if err != nil {
