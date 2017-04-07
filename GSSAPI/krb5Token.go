@@ -27,6 +27,11 @@ const (
 	GSS_C_INTEG_FLAG    = 32
 )
 
+type MechToken struct {
+	TokID []byte
+	OID asn1.ObjectIdentifier
+}
+
 // Create new kerberos AP_REQ MechToken
 func NewKRB5APREQMechToken(c config.Config, cname types.PrincipalName, tkt types.Ticket, sessionKey types.EncryptionKey) ([]byte, error) {
 	// Create the header
