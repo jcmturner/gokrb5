@@ -36,7 +36,7 @@ type KDCRepFields struct {
 	PAData           []types.PAData
 	CRealm           string
 	CName            types.PrincipalName
-	Ticket           types.Ticket
+	Ticket           Ticket
 	EncPart          types.EncryptedData
 	DecryptedEncPart EncKDCRepPart
 }
@@ -85,7 +85,7 @@ func (k *ASRep) Unmarshal(b []byte) error {
 		return errors.New("Message ID does not indicate a KRB_AS_REP")
 	}
 	//Process the raw ticket within
-	tkt, err := types.UnmarshalTicket(m.Ticket.Bytes)
+	tkt, err := UnmarshalTicket(m.Ticket.Bytes)
 	if err != nil {
 		return err
 	}
@@ -112,7 +112,7 @@ func (k *TGSRep) Unmarshal(b []byte) error {
 		return errors.New("Message ID does not indicate a KRB_TGS_REP")
 	}
 	//Process the raw ticket within
-	tkt, err := types.UnmarshalTicket(m.Ticket.Bytes)
+	tkt, err := UnmarshalTicket(m.Ticket.Bytes)
 	if err != nil {
 		return err
 	}
@@ -150,10 +150,7 @@ func (k *ASRep) DecryptEncPart(c *credentials.Credentials) error {
 	var key types.EncryptionKey
 	var err error
 	if c.HasKeytab() {
-		if err != nil {
-			return fmt.Errorf("Error getting encryption type: %v", err)
-		}
-		key, err = c.Keytab.GetEncryptionKey(k.CName.NameString[0], k.CRealm, k.EncPart.KVNO, k.EncPart.EType)
+		key, err = c.Keytab.GetEncryptionKey(k.CName.NameString, k.CRealm, k.EncPart.KVNO, k.EncPart.EType)
 		if err != nil {
 			return fmt.Errorf("Could not get key from keytab: %v", err)
 		}

@@ -1,6 +1,7 @@
 package client
 
 import (
+	"github.com/jcmturner/gokrb5/messages"
 	"github.com/jcmturner/gokrb5/types"
 	"strings"
 	"time"
@@ -13,7 +14,7 @@ type Cache struct {
 
 // Ticket cache entry.
 type CacheEntry struct {
-	Ticket     types.Ticket
+	Ticket     messages.Ticket
 	AuthTime   time.Time
 	EndTime    time.Time
 	RenewTill  time.Time
@@ -34,7 +35,7 @@ func (c *Cache) GetEntry(spn string) (CacheEntry, bool) {
 }
 
 // Add a ticket to the cache.
-func (c *Cache) AddEntry(tkt types.Ticket, authTime, endTime, renewTill time.Time, sessionKey types.EncryptionKey) CacheEntry {
+func (c *Cache) AddEntry(tkt messages.Ticket, authTime, endTime, renewTill time.Time, sessionKey types.EncryptionKey) CacheEntry {
 	spn := strings.Join(tkt.SName.NameString, "/")
 	(*c).Entries[spn] = CacheEntry{
 		Ticket:     tkt,
@@ -53,7 +54,7 @@ func (c *Cache) RemoveEntry(spn string) {
 
 // Get a ticket from the cache for the SPN.
 // Only a ticket that is currently valid will be returned.
-func (cl *Client) GetCachedTicket(spn string) (types.Ticket, types.EncryptionKey, bool) {
+func (cl *Client) GetCachedTicket(spn string) (messages.Ticket, types.EncryptionKey, bool) {
 	if e, ok := cl.Cache.GetEntry(spn); ok {
 		//If within time window of ticket return it
 		if time.Now().UTC().After(e.AuthTime) && time.Now().UTC().Before(e.EndTime) {
@@ -66,7 +67,7 @@ func (cl *Client) GetCachedTicket(spn string) (types.Ticket, types.EncryptionKey
 			return e.Ticket, e.SessionKey, true
 		}
 	}
-	var tkt types.Ticket
+	var tkt messages.Ticket
 	var key types.EncryptionKey
 	return tkt, key, false
 }

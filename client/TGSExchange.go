@@ -12,7 +12,7 @@ import (
 
 // Perform a TGS exchange to retrieve a ticket to the specified SPN.
 // The ticket retrieved is added to the client's cache.
-func (cl *Client) TGSExchange(spn types.PrincipalName, tkt types.Ticket, sessionKey types.EncryptionKey, renewal bool) (tgsReq messages.TGSReq, tgsRep messages.TGSRep, err error) {
+func (cl *Client) TGSExchange(spn types.PrincipalName, tkt messages.Ticket, sessionKey types.EncryptionKey, renewal bool) (tgsReq messages.TGSReq, tgsRep messages.TGSRep, err error) {
 	if cl.Session == nil {
 		return tgsReq, tgsRep, errors.New("Error client does not have a session. Client needs to login first")
 	}
@@ -45,8 +45,8 @@ func (cl *Client) TGSExchange(spn types.PrincipalName, tkt types.Ticket, session
 // Make a request to get a service ticket for the SPN specified
 // SPN format: <SERVICE>/<FQDN> Eg. HTTP/www.example.com
 // The ticket will be added to the client's ticket cache
-func (cl *Client) GetServiceTicket(spn string) (types.Ticket, types.EncryptionKey, error) {
-	var tkt types.Ticket
+func (cl *Client) GetServiceTicket(spn string) (messages.Ticket, types.EncryptionKey, error) {
+	var tkt messages.Ticket
 	var skey types.EncryptionKey
 	if tkt, skey, ok := cl.GetCachedTicket(spn); ok {
 		// Already a valid ticket in the cache

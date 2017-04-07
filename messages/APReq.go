@@ -41,12 +41,12 @@ type APReq struct {
 	PVNO          int                 `asn1:"explicit,tag:0"`
 	MsgType       int                 `asn1:"explicit,tag:1"`
 	APOptions     asn1.BitString      `asn1:"explicit,tag:2"`
-	Ticket        types.Ticket        `asn1:"explicit,tag:3"`
+	Ticket        Ticket              `asn1:"explicit,tag:3"`
 	Authenticator types.EncryptedData `asn1:"explicit,tag:4"`
 }
 
 // Generate a new KRB_AP_REQ struct.
-func NewAPReq(tkt types.Ticket, sessionKey types.EncryptionKey, auth types.Authenticator) (APReq, error) {
+func NewAPReq(tkt Ticket, sessionKey types.EncryptionKey, auth types.Authenticator) (APReq, error) {
 	var a APReq
 	ed, err := encryptAuthenticator(auth, sessionKey, tkt)
 	if err != nil {
@@ -63,7 +63,7 @@ func NewAPReq(tkt types.Ticket, sessionKey types.EncryptionKey, auth types.Authe
 }
 
 // Encrypt Authenticator
-func encryptAuthenticator(a types.Authenticator, sessionKey types.EncryptionKey, tkt types.Ticket) (types.EncryptedData, error) {
+func encryptAuthenticator(a types.Authenticator, sessionKey types.EncryptionKey, tkt Ticket) (types.EncryptedData, error) {
 	var ed types.EncryptedData
 	m, err := a.Marshal()
 	if err != nil {
@@ -93,7 +93,7 @@ func (a *APReq) Unmarshal(b []byte) error {
 	a.MsgType = m.MsgType
 	a.APOptions = m.APOptions
 	a.Authenticator = m.Authenticator
-	a.Ticket, err = types.UnmarshalTicket(m.Ticket.Bytes)
+	a.Ticket, err = UnmarshalTicket(m.Ticket.Bytes)
 	if err != nil {
 		return fmt.Errorf("Error unmarshalling ticket in AP_REQ; %v", err)
 	}

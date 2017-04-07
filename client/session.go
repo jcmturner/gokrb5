@@ -2,6 +2,7 @@ package client
 
 import (
 	"github.com/jcmturner/gokrb5/iana/nametype"
+	"github.com/jcmturner/gokrb5/messages"
 	"github.com/jcmturner/gokrb5/types"
 	"time"
 )
@@ -11,7 +12,7 @@ type Session struct {
 	AuthTime             time.Time
 	EndTime              time.Time
 	RenewTill            time.Time
-	TGT                  types.Ticket
+	TGT                  messages.Ticket
 	SessionKey           types.EncryptionKey
 	SessionKeyExpiration time.Time
 }

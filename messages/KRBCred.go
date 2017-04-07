@@ -22,7 +22,7 @@ type marshalKRBCred struct {
 type KRBCred struct {
 	PVNO             int
 	MsgType          int
-	Tickets          []types.Ticket
+	Tickets          []Ticket
 	EncPart          types.EncryptedData
 	DecryptedEncPart EncKrbCredPart
 }
@@ -67,7 +67,7 @@ func (k *KRBCred) Unmarshal(b []byte) error {
 	k.MsgType = m.MsgType
 	k.EncPart = m.EncPart
 	if len(m.Tickets.Bytes) > 0 {
-		k.Tickets, err = types.UnmarshalTicketsSequence(m.Tickets)
+		k.Tickets, err = UnmarshalTicketsSequence(m.Tickets)
 		if err != nil {
 			return fmt.Errorf("Error unmarshalling tickets within KRB_CRED: %v", err)
 		}

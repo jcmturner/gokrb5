@@ -45,7 +45,7 @@ func (cl *Client) ASExchange() error {
 				return fmt.Errorf("Error creating etype: %v", err)
 			}
 			//paEncTS, err := crypto.GetEncryptedData(paTSb, etype, cl.Config.LibDefaults.Default_realm, cl.Credentials.Username, cl.Credentials.Keytab, 1)
-			key, err := cl.Credentials.Keytab.GetEncryptionKey(cl.Credentials.Username, cl.Config.LibDefaults.Default_realm, 1, etype.GetETypeID())
+			key, err := cl.Credentials.Keytab.GetEncryptionKey(cl.Credentials.CName.NameString, cl.Config.LibDefaults.Default_realm, 1, etype.GetETypeID())
 			paEncTS, err := crypto.GetEncryptedData(paTSb, key, 0, 1)
 			if err != nil {
 				return fmt.Errorf("Error encrypting pre-authentication timestamp: %v", err)

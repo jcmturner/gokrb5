@@ -1,11 +1,14 @@
-// Kerberos 5 data types.
-package types
+package messages
 
 import (
 	"fmt"
 	"github.com/jcmturner/asn1"
 	"github.com/jcmturner/gokrb5/asn1tools"
+	"github.com/jcmturner/gokrb5/crypto"
 	"github.com/jcmturner/gokrb5/iana/asnAppTag"
+	"github.com/jcmturner/gokrb5/iana/keyusage"
+	"github.com/jcmturner/gokrb5/keytab"
+	"github.com/jcmturner/gokrb5/types"
 	"time"
 )
 
@@ -13,24 +16,25 @@ import (
 // Section: 5.3
 
 type Ticket struct {
-	TktVNO  int           `asn1:"explicit,tag:0"`
-	Realm   string        `asn1:"generalstring,explicit,tag:1"`
-	SName   PrincipalName `asn1:"explicit,tag:2"`
-	EncPart EncryptedData `asn1:"explicit,tag:3"`
+	TktVNO           int                 `asn1:"explicit,tag:0"`
+	Realm            string              `asn1:"generalstring,explicit,tag:1"`
+	SName            types.PrincipalName `asn1:"explicit,tag:2"`
+	EncPart          types.EncryptedData `asn1:"explicit,tag:3"`
+	DecryptedEncPart EncTicketPart       `asn1:"optional"` // Not part of ASN1 bytes so marked as optional so unmarshalling works
 }
 
 type EncTicketPart struct {
-	Flags             asn1.BitString    `asn1:"explicit,tag:0"`
-	Key               EncryptionKey     `asn1:"explicit,tag:1"`
-	CRealm            string            `asn1:"generalstring,explicit,tag:2"`
-	CName             PrincipalName     `asn1:"explicit,tag:3"`
-	Transited         TransitedEncoding `asn1:"explicit,tag:4"`
-	AuthTime          time.Time         `asn1:"generalized,explicit,tag:5"`
-	StartTime         time.Time         `asn1:"generalized,explicit,optional,tag:6"`
-	EndTime           time.Time         `asn1:"generalized,explicit,tag:7"`
-	RenewTill         time.Time         `asn1:"generalized,explicit,optional,tag:8"`
-	CAddr             HostAddresses     `asn1:"explicit,optional,tag:9"`
-	AuthorizationData AuthorizationData `asn1:"explicit,optional,tag:10"`
+	Flags             asn1.BitString          `asn1:"explicit,tag:0"`
+	Key               types.EncryptionKey     `asn1:"explicit,tag:1"`
+	CRealm            string                  `asn1:"generalstring,explicit,tag:2"`
+	CName             types.PrincipalName     `asn1:"explicit,tag:3"`
+	Transited         TransitedEncoding       `asn1:"explicit,tag:4"`
+	AuthTime          time.Time               `asn1:"generalized,explicit,tag:5"`
+	StartTime         time.Time               `asn1:"generalized,explicit,optional,tag:6"`
+	EndTime           time.Time               `asn1:"generalized,explicit,tag:7"`
+	RenewTill         time.Time               `asn1:"generalized,explicit,optional,tag:8"`
+	CAddr             types.HostAddresses     `asn1:"explicit,optional,tag:9"`
+	AuthorizationData types.AuthorizationData `asn1:"explicit,optional,tag:10"`
 }
 
 type TransitedEncoding struct {
@@ -116,4 +120,22 @@ func MarshalTicketSequence(tkts []Ticket) (asn1.RawValue, error) {
 	// If we need to create teh full bytes then identifier octet is "context-specific" = 128 + "constructed" + 32 + the wrapping explicit tag (11)
 	//fmt.Fprintf(os.Stderr, "mRaw fb: %v\n", raw.FullBytes)
 	return raw, nil
+}
+
+func (t *Ticket) DecryptEncPart(keytab keytab.Keytab) error {
+	key, err := keytab.GetEncryptionKey(t.SName.NameString, t.Realm, t.EncPart.KVNO, t.EncPart.EType)
+	if err != nil {
+		return fmt.Errorf("Could not get key from keytab: %v", err)
+	}
+	b, err := crypto.DecryptEncPart(t.EncPart, key, keyusage.KDC_REP_TICKET)
+	if err != nil {
+		return fmt.Errorf("Error decrypting Ticket EncPart: %v", err)
+	}
+	var denc EncTicketPart
+	err = denc.Unmarshal(b)
+	if err != nil {
+		return fmt.Errorf("Error unmarshalling encrypted part: %v", err)
+	}
+	t.DecryptedEncPart = denc
+	return nil
 }

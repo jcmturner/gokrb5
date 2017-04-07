@@ -76,7 +76,7 @@ type KDCReqBody struct {
 	EType             []int               `asn1:"explicit,tag:8"`
 	Addresses         []types.HostAddress `asn1:"explicit,optional,tag:9"`
 	EncAuthData       types.EncryptedData `asn1:"explicit,optional,tag:10"`
-	AdditionalTickets []types.Ticket      `asn1:"explicit,optional,tag:11"`
+	AdditionalTickets []Ticket            `asn1:"explicit,optional,tag:11"`
 }
 
 // Generate a new KRB_AS_REQ struct.
@@ -128,7 +128,7 @@ func NewASReq(c *config.Config, cname types.PrincipalName) ASReq {
 }
 
 // Generate a new KRB_TGS_REQ struct.
-func NewTGSReq(cname types.PrincipalName, c *config.Config, tkt types.Ticket, sessionKey types.EncryptionKey, spn types.PrincipalName, renewal bool) (TGSReq, error) {
+func NewTGSReq(cname types.PrincipalName, c *config.Config, tkt Ticket, sessionKey types.EncryptionKey, spn types.PrincipalName, renewal bool) (TGSReq, error) {
 	nonce := int(rand.Int31())
 	t := time.Now().UTC()
 	a := TGSReq{
@@ -264,7 +264,7 @@ func (k *KDCReqBody) Unmarshal(b []byte) error {
 	k.Addresses = m.Addresses
 	k.EncAuthData = m.EncAuthData
 	if len(m.AdditionalTickets.Bytes) > 0 {
-		k.AdditionalTickets, err = types.UnmarshalTicketsSequence(m.AdditionalTickets)
+		k.AdditionalTickets, err = UnmarshalTicketsSequence(m.AdditionalTickets)
 		if err != nil {
 			return fmt.Errorf("Error unmarshalling additional tickets: %v", err)
 		}
@@ -340,7 +340,7 @@ func (k *KDCReqBody) Marshal() ([]byte, error) {
 		Addresses:   k.Addresses,
 		EncAuthData: k.EncAuthData,
 	}
-	rawtkts, err := types.MarshalTicketSequence(k.AdditionalTickets)
+	rawtkts, err := MarshalTicketSequence(k.AdditionalTickets)
 	//The asn1.rawValue needs the tag setting on it for where it is in the KDCReqBody
 	rawtkts.Tag = 11
 	if err != nil {

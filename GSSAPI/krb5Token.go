@@ -28,15 +28,73 @@ const (
 )
 
 type MechToken struct {
-	TokID []byte
-	OID asn1.ObjectIdentifier
+	OID      asn1.ObjectIdentifier
+	TokID    []byte
+	APReq    messages.APReq
+	APRep    messages.APRep
+	KRBError messages.KRBError
+}
+
+func (m *MechToken) Unmarshal(b []byte) error {
+	var oid asn1.ObjectIdentifier
+	r, err := asn1.UnmarshalWithParams(b, &oid, fmt.Sprintf("application,explicit,tag:%v", 0))
+	if err != nil {
+		return fmt.Errorf("Error unmarshalling MechToken OID: %v", err)
+	}
+	m.OID = oid
+	m.TokID = r[0:2]
+	switch hex.EncodeToString(m.TokID) {
+	case TOK_ID_KRB_AP_REQ:
+		var a messages.APReq
+		err = a.Unmarshal(r[2:])
+		if err != nil {
+			return fmt.Errorf("Error unmarshalling MechToken AP_REQ: %v", err)
+		}
+		m.APReq = a
+	case TOK_ID_KRB_AP_REP:
+		var a messages.APRep
+		err = a.Unmarshal(r[2:])
+		if err != nil {
+			return fmt.Errorf("Error unmarshalling MechToken AP_REP: %v", err)
+		}
+		m.APRep = a
+	case TOK_ID_KRB_ERROR:
+		var a messages.KRBError
+		err = a.Unmarshal(r[2:])
+		if err != nil {
+			return fmt.Errorf("Error unmarshalling MechToken KRBError: %v", err)
+		}
+		m.KRBError = a
+	}
+	return nil
+}
+
+func (m *MechToken) IsAPReq() bool {
+	if hex.EncodeToString(m.TokID) == TOK_ID_KRB_AP_REQ {
+		return true
+	}
+	return false
+}
+
+func (m *MechToken) IsAPRep() bool {
+	if hex.EncodeToString(m.TokID) == TOK_ID_KRB_AP_REP {
+		return true
+	}
+	return false
+}
+
+func (m *MechToken) IsKRBError() bool {
+	if hex.EncodeToString(m.TokID) == TOK_ID_KRB_ERROR {
+		return true
+	}
+	return false
 }
 
 // Create new kerberos AP_REQ MechToken
-func NewKRB5APREQMechToken(c config.Config, cname types.PrincipalName, tkt types.Ticket, sessionKey types.EncryptionKey) ([]byte, error) {
+func NewKRB5APREQMechToken(c config.Config, cname types.PrincipalName, tkt messages.Ticket, sessionKey types.EncryptionKey) ([]byte, error) {
 	// Create the header
-	tb, _ := hex.DecodeString(TOK_ID_KRB_AP_REQ)
 	b, _ := asn1.Marshal(MechTypeOID_Krb5)
+	tb, _ := hex.DecodeString(TOK_ID_KRB_AP_REQ)
 	b = append(b, tb...)
 	// Add the token
 	APReq, err := messages.NewAPReq(

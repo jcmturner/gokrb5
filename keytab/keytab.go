@@ -44,15 +44,20 @@ func NewKeytab() Keytab {
 }
 
 // Get the EncryptionKey from the Keytab for the newest entry with the required kvno, etype and matching principal.
-func (kt *Keytab) GetEncryptionKey(username, realm string, kvno, etype int) (types.EncryptionKey, error) {
+func (kt *Keytab) GetEncryptionKey(nameString []string, realm string, kvno, etype int) (types.EncryptionKey, error) {
 	var key types.EncryptionKey
 	var t time.Time
 	for _, k := range kt.Entries {
 		if k.Principal.Realm == realm && int(k.Key.KeyType) == etype && (int(k.KVNO) == kvno || kvno == 0) && k.Timestamp.After(t) {
-			for _, n := range k.Principal.Components {
-				if n == username {
-					key = k.Key
+			p := true
+			for i, n := range k.Principal.Components {
+				if nameString[i] != n {
+					p = false
+					break
 				}
+			}
+			if p {
+				key = k.Key
 			}
 		}
 	}
