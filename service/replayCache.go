@@ -61,7 +61,7 @@ func GetReplayCache(d time.Duration) *ServiceCache {
 
 func (c *ServiceCache) AddEntry(sname types.PrincipalName, a types.Authenticator) {
 	ct := a.CTime.Add(time.Duration(a.Cusec) * time.Microsecond)
-	if ce, ok := c[a.CName.GetPrincipalNameString()]; ok {
+	if ce, ok := (*c)[a.CName.GetPrincipalNameString()]; ok {
 		ce.ReplayMap[ct] = ReplayCacheEntry{
 			PresentedTime: time.Now().UTC(),
 			SName:         sname,
@@ -70,7 +70,7 @@ func (c *ServiceCache) AddEntry(sname types.PrincipalName, a types.Authenticator
 		ce.SeqNumber = a.SeqNumber
 		ce.SubKey = a.SubKey
 	} else {
-		c[a.CName.GetPrincipalNameString()] = ClientEntries{
+		(*c)[a.CName.GetPrincipalNameString()] = ClientEntries{
 			ReplayMap: map[time.Time]ReplayCacheEntry{
 				ct: {
 					PresentedTime: time.Now().UTC(),
@@ -86,22 +86,22 @@ func (c *ServiceCache) AddEntry(sname types.PrincipalName, a types.Authenticator
 
 func (c *ServiceCache) ClearOldEntries(d time.Duration) {
 	for ck := range *c {
-		for ct, e := range c[ck].ReplayMap {
+		for ct, e := range (*c)[ck].ReplayMap {
 			if time.Now().UTC().Sub(e.PresentedTime) > d {
-				delete(c[ck].ReplayMap, ct)
+				delete((*c)[ck].ReplayMap, ct)
 			}
 		}
-		if len(c[ck]) == 0 {
-			delete(c, ck)
+		if len((*c)[ck].ReplayMap) == 0 {
+			delete((*c), ck)
 		}
 	}
 }
 
 func (c *ServiceCache) IsReplay(d time.Duration, sname types.PrincipalName, a types.Authenticator) bool {
-	if ck, ok := c[a.CName.GetPrincipalNameString()]; ok {
+	if ck, ok := (*c)[a.CName.GetPrincipalNameString()]; ok {
 		ct := a.CTime.Add(time.Duration(a.Cusec) * time.Microsecond)
 		if e, ok := ck.ReplayMap[ct]; ok {
-			if e.SName == sname {
+			if e.SName.Equal(sname) {
 				return true
 			}
 		}

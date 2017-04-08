@@ -51,5 +51,4 @@ func TestMechToken_Unmarshal(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error unmarshalling MechToken: %v", err)
 	}
-	t.Logf("MechToken: %+v", mt)
 }
