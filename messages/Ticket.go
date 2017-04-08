@@ -6,6 +6,7 @@ import (
 	"github.com/jcmturner/gokrb5/asn1tools"
 	"github.com/jcmturner/gokrb5/crypto"
 	"github.com/jcmturner/gokrb5/iana/asnAppTag"
+	"github.com/jcmturner/gokrb5/iana/errorcode"
 	"github.com/jcmturner/gokrb5/iana/keyusage"
 	"github.com/jcmturner/gokrb5/keytab"
 	"github.com/jcmturner/gokrb5/types"
@@ -125,7 +126,7 @@ func MarshalTicketSequence(tkts []Ticket) (asn1.RawValue, error) {
 func (t *Ticket) DecryptEncPart(keytab keytab.Keytab) error {
 	key, err := keytab.GetEncryptionKey(t.SName.NameString, t.Realm, t.EncPart.KVNO, t.EncPart.EType)
 	if err != nil {
-		return fmt.Errorf("Could not get key from keytab: %v", err)
+		return NewKRBError(t.SName, t.Realm, errorcode.KRB_AP_ERR_NOKEY, fmt.Sprintf("Could not get key from keytab: %v", err))
 	}
 	b, err := crypto.DecryptEncPart(t.EncPart, key, keyusage.KDC_REP_TICKET)
 	if err != nil {

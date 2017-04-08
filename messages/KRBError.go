@@ -4,6 +4,7 @@ package messages
 import (
 	"fmt"
 	"github.com/jcmturner/asn1"
+	"github.com/jcmturner/gokrb5/iana"
 	"github.com/jcmturner/gokrb5/iana/asnAppTag"
 	"github.com/jcmturner/gokrb5/iana/errorcode"
 	"github.com/jcmturner/gokrb5/iana/msgtype"
@@ -26,6 +27,20 @@ type KRBError struct {
 	SName     types.PrincipalName `asn1:"explicit,tag:10"`
 	EText     string              `asn1:"generalstring,optional,explicit,tag:11"`
 	EData     []byte              `asn1:"optional,explicit,tag:12"`
+}
+
+func NewKRBError(sname types.PrincipalName, realm string, code int, etext string) KRBError {
+	t := time.Now().UTC()
+	return KRBError{
+		PVNO:      iana.PVNO,
+		MsgType:   msgtype.KRB_ERROR,
+		STime:     t,
+		Susec:     int((t.UnixNano() / int64(time.Microsecond)) - (t.Unix() * 1e6)),
+		ErrorCode: code,
+		SName:     sname,
+		Realm:     realm,
+		EText:     etext,
+	}
 }
 
 // Unmarshal bytes b into the KRBError struct.
