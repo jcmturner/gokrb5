@@ -111,9 +111,9 @@ func NewKRB5APREQMechToken(c config.Config, cname types.PrincipalName, tkt messa
 }
 
 // Create new kerberos authenticator for kerberos MechToken
-func newAuthenticator(c config.Config, username types.PrincipalName, keyType int) types.Authenticator {
+func newAuthenticator(c config.Config, cname types.PrincipalName, keyType int) types.Authenticator {
 	//RFC 4121 Section 4.1.1
-	auth := types.NewAuthenticator(c.LibDefaults.Default_realm, username)
+	auth := types.NewAuthenticator(c.LibDefaults.Default_realm, cname)
 	auth.Cksum = types.Checksum{
 		CksumType: chksumtype.GSSAPI,
 		Checksum:  newAuthenticatorChksum([]int{GSS_C_INTEG_FLAG, GSS_C_CONF_FLAG}),

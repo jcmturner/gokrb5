@@ -1,3 +1,4 @@
+// Service integrations for Kerberos authentication.
 package service
 
 import (
