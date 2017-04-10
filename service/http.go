@@ -75,11 +75,16 @@ func SPNEGOKRB5Authenticate(f http.HandlerFunc, ktab keytab.Keytab, l *log.Logge
 			return
 		}
 		if ok, err := validateAPREQ(a, mt.APReq); ok {
+			cnameStr := a.CName.GetPrincipalNameString()
 			ctx := r.Context()
-			ctx = context.WithValue(ctx, "cname", a.CName.GetPrincipalNameString())
+			ctx = context.WithValue(ctx, "cname", cnameStr)
 			ctx = context.WithValue(ctx, "crealm", a.CRealm)
 			ctx = context.WithValue(ctx, "authenticated", true)
+			if l != nil {
+				l.Printf("SPNEGO authentication succeeded: %v %s@%s", r.RemoteAddr, cnameStr, a.CRealm)
+			}
 			w.Header().Set("WWW-Authenticate", SPNEGO_NegTokenResp_Krb_Accept_Completed)
+
 			f(w, r.WithContext(ctx))
 		} else {
 			rejectSPNEGO(w, l, fmt.Sprintf("%v - SPNEGO Kerberos authentication failed: %v", r.RemoteAddr, err))
