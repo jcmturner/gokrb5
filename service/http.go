@@ -13,7 +13,6 @@ import (
 	"github.com/jcmturner/gokrb5/types"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 )
@@ -82,10 +81,9 @@ func SPNEGOKRB5Authenticate(f http.Handler, ktab keytab.Keytab, l *log.Logger) h
 			ctx = context.WithValue(ctx, "crealm", a.CRealm)
 			ctx = context.WithValue(ctx, "authenticated", true)
 			if l != nil {
-				l.Printf("SPNEGO authentication succeeded: %v %s@%s", r.RemoteAddr, cnameStr, a.CRealm)
+				l.Printf("%v %s@%s - SPNEGO authentication succeeded", r.RemoteAddr, cnameStr, a.CRealm)
 			}
 			w.Header().Set("WWW-Authenticate", SPNEGO_NegTokenResp_Krb_Accept_Completed)
-			fmt.Fprintln(os.Stderr, "AUTHED")
 			f.ServeHTTP(w, r.WithContext(ctx))
 		} else {
 			rejectSPNEGO(w, l, fmt.Sprintf("%v - SPNEGO Kerberos authentication failed: %v", r.RemoteAddr, err))

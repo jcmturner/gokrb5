@@ -71,6 +71,23 @@ cl.SetSPNEGOHeader(r)
 HTTPResp, err := http.DefaultClient.Do(r)
 ```
 
+### Kerberos Web Service
+A HTTP handler wrapper can be used to implement Kerberos SPNEGO authentication for web services.
+To configure the wrapper the keytab of for the service SPN and a Logger are required:
+```go
+kt, err := keytab.Load("/path/to/file.keytab")
+l := log.New(os.Stderr, "GOKRB5 Service: ", log.Ldate|log.Ltime|log.Lshortfile)
+```
+Create a handler function of the application's handling method (apphandler in the example below):
+```go
+h := http.HandlerFunc(apphandler)
+```
+Configure the HTTP handler:
+```go
+http.Handler("/", service.SPNEGOKRB5Authenticate(h, kt, l))
+```
+
+
 ## References
 ### RFCs
 * RFC 4120 The Kerberos Network Authentication Service (V5)
