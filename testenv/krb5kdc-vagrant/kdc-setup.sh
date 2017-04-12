@@ -48,9 +48,9 @@ if [ ! -f /opt/krb5/data/principal ]; then
   if [ ! -z "${HOST_PRINCIPALS}" ]; then
     for host in ${HOST_PRINCIPALS}
     do
-      /usr/sbin/kadmin.local -q "add_principal -pw passwordvalue host/$host"
-      /usr/sbin/kadmin.local -q "ktadd -k ${KEYTAB_DIR}/${host}.keytab host/$host"
-      chmod 600 ${KEYTAB_DIR}/${host}.keytab
+      /usr/sbin/kadmin.local -q "add_principal -pw hostpasswordvalue -kvno 1 host/$host"
+      #/usr/sbin/kadmin.local -q "ktadd -k ${KEYTAB_DIR}/${host}.keytab host/$host"
+      #chmod 600 ${KEYTAB_DIR}/${host}.keytab
       echo "Created host principal host/$host"
     done
   fi
@@ -58,8 +58,8 @@ if [ ! -f /opt/krb5/data/principal ]; then
   if [ ! -z "${SPNs}" ]; then
     for service in ${SPNs}
     do
-      /usr/sbin/kadmin.local -q "add_principal -pw passwordvalue ${service}"
-      /usr/sbin/kadmin.local -q "cpw -pw passwordvalue ${service}"
+      /usr/sbin/kadmin.local -q "add_principal -pw spnpasswordvalue -kvno 1 ${service}"
+      #/usr/sbin/kadmin.local -q "cpw -pw passwordvalue ${service}"
       echo "Created principal for service $service"
     done
   fi
@@ -67,34 +67,34 @@ if [ ! -f /opt/krb5/data/principal ]; then
   if [ ! -z "$INITIAL_USERS" ]; then
     for user in $INITIAL_USERS
     do
-      /usr/sbin/kadmin.local -q "add_principal -pw passwordvalue $user"
-      /usr/sbin/kadmin.local -q "ktadd -k ${KEYTAB_DIR}/${user}.testtab $user"
-      echo "User $user added to kerberos database with random password. To update password: sudo /usr/sbin/kadmin.local -q \"change_password $user\""
+      /usr/sbin/kadmin.local -q "add_principal -pw passwordvalue -kvno 1 $user"
+      #/usr/sbin/kadmin.local -q "ktadd -k ${KEYTAB_DIR}/${user}.testtab $user"
+      echo "User $user added to kerberos database. To update password: sudo /usr/sbin/kadmin.local -q \"change_password $user\""
     done
   fi
 
-  if [ ! -z "$KEYTABS" ]; then
-    echo "Exporting keytabs"
-    OLDIFS=$IFS
-    IFS=";"
-    KEYTAB=($KEYTABS)
-    for keytabInst in ${KEYTAB[@]}
-    do
-      keytabFileName=$(echo $keytabInst | cut -d! -f1)
-      permissions=$(echo $keytabInst | cut -d! -f2)
-      principals=$(echo $keytabInst | cut -d! -f3)
-      IFS=" "
-      for princ in $principals
-      do
-        /usr/sbin/kadmin.local -q "ktadd -k ${KEYTAB_DIR}/${keytabFileName} $princ"
-        echo "Add principal ${princ} to ${keytabFileName}"
-      done
-      IFS=";"
-      chown $permissions ${KEYTAB_DIR}/${keytabFileName}
-      chmod 660 ${KEYTAB_DIR}/${keytabFileName}
-    done
-    IFS=$OLDIFS
-  fi
+#  if [ ! -z "$KEYTABS" ]; then
+#    echo "Exporting keytabs"
+#    OLDIFS=$IFS
+#    IFS=";"
+#    KEYTAB=($KEYTABS)
+#    for keytabInst in ${KEYTAB[@]}
+#    do
+#      keytabFileName=$(echo $keytabInst | cut -d! -f1)
+#      permissions=$(echo $keytabInst | cut -d! -f2)
+#      principals=$(echo $keytabInst | cut -d! -f3)
+#      IFS=" "
+#      for princ in $principals
+#      do
+#        /usr/sbin/kadmin.local -q "ktadd -k ${KEYTAB_DIR}/${keytabFileName} $princ"
+#        echo "Add principal ${princ} to ${keytabFileName}"
+#      done
+#      IFS=";"
+#      chown $permissions ${KEYTAB_DIR}/${keytabFileName}
+#      chmod 660 ${KEYTAB_DIR}/${keytabFileName}
+#    done
+#    IFS=$OLDIFS
+#  fi
 
   echo "Kerberos initialisation complete"
 fi

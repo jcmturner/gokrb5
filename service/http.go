@@ -20,10 +20,11 @@ import (
 const (
 	// The response on successful authentication always has this header. Capturing as const so we don't have marshaling and encoding overhead.
 	SPNEGO_NegTokenResp_Krb_Accept_Completed = "Negotiate oRQwEqADCgEAoQsGCSqGSIb3EgECAg=="
+	// The response on a failed authentication always has this rejection header. Capturing as const so we don't have marshaling and encoding overhead.
 	SPNEGO_NegTokenResp_Reject               = "Negotiate oQcwBaADCgEC"
 )
 
-// SPNEGO Kerberos HTTP handler wrapper
+// Kerberos SPNEGO authentication HTTP handler wrapper.
 func SPNEGOKRB5Authenticate(f http.Handler, ktab keytab.Keytab, l *log.Logger) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		s := strings.SplitN(r.Header.Get("Authorization"), " ", 2)
@@ -92,6 +93,7 @@ func SPNEGOKRB5Authenticate(f http.Handler, ktab keytab.Keytab, l *log.Logger) h
 	})
 }
 
+// Validate the AP_REQ provided in the SPNEGO NegTokenInit.
 func validateAPREQ(a types.Authenticator, APReq messages.APReq) (bool, error) {
 	// Check CName in Authenticator is the same as that in the ticket
 	if !a.CName.Equal(APReq.Ticket.DecryptedEncPart.CName) {
@@ -136,6 +138,7 @@ func validateAPREQ(a types.Authenticator, APReq messages.APReq) (bool, error) {
 	return true, nil
 }
 
+// Set the headers for a rejected SPNEGO negotiation and return an unauthorized status code.
 func rejectSPNEGO(w http.ResponseWriter, l *log.Logger, logMsg string) {
 	if l != nil {
 		l.Println(logMsg)

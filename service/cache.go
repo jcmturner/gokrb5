@@ -29,22 +29,27 @@ and authenticator sent over the network to a server and replaying
 them following an event that caused the server to lose track of
 recently seen authenticators.*/
 
+// Cache for tickets received from clients keyed by fully qualified client name. Used to track replay of tickets.
 type ServiceCache map[string]ClientEntries
 
+// Entries for client details sent to the service.
 type ClientEntries struct {
 	ReplayMap map[time.Time]ReplayCacheEntry
 	SeqNumber int
 	SubKey    types.EncryptionKey
 }
 
+// Cache entry tracking client time values of tickets sent to the service.
 type ReplayCacheEntry struct {
 	PresentedTime time.Time
 	SName         types.PrincipalName
 	CTime         time.Time // This combines the ticket's CTime and Cusec
 }
 
+// Instance of the ServiceCache. This needs to be a singleton.
 var replayCache ServiceCache
 
+// Get a pointer to the ServiceCache singleton.
 func GetReplayCache(d time.Duration) *ServiceCache {
 	// Create a singleton of the ReplayCache and start a background thread to regularly clean out old entries
 	var once sync.Once
@@ -52,6 +57,7 @@ func GetReplayCache(d time.Duration) *ServiceCache {
 		replayCache = make(ServiceCache)
 		go func() {
 			for {
+				// TODO consider using a context here.
 				time.Sleep(d)
 				replayCache.ClearOldEntries(d)
 			}
@@ -60,6 +66,7 @@ func GetReplayCache(d time.Duration) *ServiceCache {
 	return &replayCache
 }
 
+// Add an entry to the ServiceCache.
 func (c *ServiceCache) AddEntry(sname types.PrincipalName, a types.Authenticator) {
 	ct := a.CTime.Add(time.Duration(a.Cusec) * time.Microsecond)
 	if ce, ok := (*c)[a.CName.GetPrincipalNameString()]; ok {
@@ -85,6 +92,7 @@ func (c *ServiceCache) AddEntry(sname types.PrincipalName, a types.Authenticator
 	}
 }
 
+// Clear entries from the ServiceCache that are older than the duration provided.
 func (c *ServiceCache) ClearOldEntries(d time.Duration) {
 	for ck := range *c {
 		for ct, e := range (*c)[ck].ReplayMap {
@@ -98,6 +106,7 @@ func (c *ServiceCache) ClearOldEntries(d time.Duration) {
 	}
 }
 
+// Check if the Authenticator provided is a replay within the duration defined. If this is not a replay add the entry to the cache for tracking.
 func (c *ServiceCache) IsReplay(d time.Duration, sname types.PrincipalName, a types.Authenticator) bool {
 	if ck, ok := (*c)[a.CName.GetPrincipalNameString()]; ok {
 		ct := a.CTime.Add(time.Duration(a.Cusec) * time.Microsecond)
