@@ -19,6 +19,7 @@ type Session struct {
 
 //Enable the automatic renewal for the client's TGT session.
 func (cl *Client) EnableAutoSessionRenewal() {
+	// TODO look into using a context here
 	go func() {
 		for {
 			//Wait until one minute before endtime
