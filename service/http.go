@@ -13,6 +13,7 @@ import (
 	"github.com/jcmturner/gokrb5/types"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 )
@@ -24,8 +25,8 @@ const (
 )
 
 // SPNEGO Kerberos HTTP handler wrapper
-func SPNEGOKRB5Authenticate(f http.HandlerFunc, ktab keytab.Keytab, l *log.Logger) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func SPNEGOKRB5Authenticate(f http.Handler, ktab keytab.Keytab, l *log.Logger) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		s := strings.SplitN(r.Header.Get("Authorization"), " ", 2)
 		if len(s) != 2 || s[0] != "Negotiate" {
 			w.Header().Set("WWW-Authenticate", "Negotiate")
@@ -38,18 +39,18 @@ func SPNEGOKRB5Authenticate(f http.HandlerFunc, ktab keytab.Keytab, l *log.Logge
 			rejectSPNEGO(w, l, fmt.Sprintf("%v - SPNEGO error in base64 decoding negotiation header: %v", r.RemoteAddr, err))
 			return
 		}
-		isInit, nt, err := GSSAPI.UnmarshalNegToken(b)
-		if err != nil || !isInit {
+		var spnego GSSAPI.SPNEGO
+		err = spnego.Unmarshal(b)
+		if !spnego.Init {
 			rejectSPNEGO(w, l, fmt.Sprintf("%v - SPNEGO negotiation token is not a NegTokenInit: %v", r.RemoteAddr, err))
 			return
 		}
-		nInit := nt.(GSSAPI.NegTokenInit)
-		if !nInit.MechTypes[0].Equal(GSSAPI.MechTypeOID_Krb5) {
+		if !spnego.NegTokenInit.MechTypes[0].Equal(GSSAPI.MechTypeOID_Krb5) {
 			rejectSPNEGO(w, l, fmt.Sprintf("%v - SPNEGO OID of MechToken is not of type KRB5", r.RemoteAddr))
 			return
 		}
 		var mt GSSAPI.MechToken
-		err = mt.Unmarshal(nInit.MechToken)
+		err = mt.Unmarshal(spnego.NegTokenInit.MechToken)
 		if err != nil {
 			rejectSPNEGO(w, l, fmt.Sprintf("%v - SPNEGO error unmarshaling MechToken: %v", r.RemoteAddr, err))
 			return
@@ -84,13 +85,13 @@ func SPNEGOKRB5Authenticate(f http.HandlerFunc, ktab keytab.Keytab, l *log.Logge
 				l.Printf("SPNEGO authentication succeeded: %v %s@%s", r.RemoteAddr, cnameStr, a.CRealm)
 			}
 			w.Header().Set("WWW-Authenticate", SPNEGO_NegTokenResp_Krb_Accept_Completed)
-
-			f(w, r.WithContext(ctx))
+			fmt.Fprintln(os.Stderr, "AUTHED")
+			f.ServeHTTP(w, r.WithContext(ctx))
 		} else {
 			rejectSPNEGO(w, l, fmt.Sprintf("%v - SPNEGO Kerberos authentication failed: %v", r.RemoteAddr, err))
 			return
 		}
-	}
+	})
 }
 
 func validateAPREQ(a types.Authenticator, APReq messages.APReq) (bool, error) {
@@ -134,7 +135,7 @@ func validateAPREQ(a types.Authenticator, APReq messages.APReq) (bool, error) {
 		err := messages.NewKRBError(APReq.Ticket.SName, APReq.Ticket.Realm, errorcode.KRB_AP_ERR_TKT_EXPIRED, "Service ticket provided has expired")
 		return false, err
 	}
-	return true
+	return true, nil
 }
 
 func rejectSPNEGO(w http.ResponseWriter, l *log.Logger, logMsg string) {
@@ -142,6 +143,6 @@ func rejectSPNEGO(w http.ResponseWriter, l *log.Logger, logMsg string) {
 		l.Println(logMsg)
 	}
 	w.Header().Set("WWW-Authenticate", SPNEGO_NegTokenResp_Reject)
-	w.WriteHeader(401)
+	w.WriteHeader(http.StatusUnauthorized)
 	w.Write([]byte("Unauthorised.\n"))
 }

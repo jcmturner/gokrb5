@@ -6,8 +6,12 @@ import (
 	"github.com/jcmturner/gokrb5/client"
 	"github.com/jcmturner/gokrb5/config"
 	"github.com/jcmturner/gokrb5/keytab"
+	"github.com/jcmturner/gokrb5/service"
 	"github.com/jcmturner/gokrb5/testdata"
+	"io/ioutil"
+	"log"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"time"
 )
@@ -34,7 +38,10 @@ const krb5conf = `[libdefaults]
  `
 
 func main() {
-	httpRequest()
+	s := httpServer(false)
+	defer s.Close()
+	//httpRequest("http://host.test.gokrb5/index.html")
+	httpRequest(s.URL)
 	//runClient()
 }
 
@@ -61,7 +68,7 @@ func runClient() {
 	}
 }
 
-func httpRequest() {
+func httpRequest(url string) {
 	b, err := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(krb5conf)
@@ -72,8 +79,34 @@ func httpRequest() {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error on AS_REQ: %v\n", err)
 	}
-	r, _ := http.NewRequest("GET", "http://host.test.gokrb5/index.html", nil)
-	cl.SetSPNEGOHeader(r)
+	r, _ := http.NewRequest("GET", url, nil)
+	err = cl.SetSPNEGOHeader(r, "HTTP/host.test.gokrb5")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error setting client SPNEGO header: %v", err)
+	}
 	httpResp, err := http.DefaultClient.Do(r)
-	fmt.Fprintf(os.Stderr, "RESPONSE CODE: %v\n", httpResp.StatusCode)
+	fmt.Fprintf(os.Stderr, "Request error: %v\n", err)
+	fmt.Fprintf(os.Stdout, "RESPONSE CODE: %v\n", httpResp.StatusCode)
+	content, _ := ioutil.ReadAll(httpResp.Body)
+	fmt.Fprintf(os.Stdout, "ResponseBody: %s\n", content)
+}
+
+func httpServer(tls bool) *httptest.Server {
+	l := log.New(os.Stderr, "GOKRB5: ", log.Ldate|log.Ltime|log.Lshortfile)
+	ks := "0502000000580002000b544553542e474f4b5242350004485454500010686f73742e746573742e676f6b7262350000000158e7d0360300120020c2bcd4abcde0d2608d5f505e7ab5dc92df5f627e5819703c0b0f1d2c05d51c1600000003000000480002000b544553542e474f4b5242350004485454500010686f73742e746573742e676f6b7262350000000158e7d0360300110010da152175c7a73f49e5ce4ece7068856400000003000000500002000b544553542e474f4b5242350004485454500010686f73742e746573742e676f6b7262350000000158e7d03603001000187fc8ef5276e083da6bf89e676d7f98fd1acb9ec2cb20083d00000003000000480002000b544553542e474f4b5242350004485454500010686f73742e746573742e676f6b7262350000000158e7d0360300170010011f2ef8e75e8378a94154beb002163200000003000000580002000b544553542e474f4b5242350004485454500010686f73742e746573742e676f6b7262350000000158e7d03603001a0020f9db4e36aad9688d9ea30dbcc269c7ee46bf4f8bd6250f203a9f3836f0a673a600000003000000480002000b544553542e474f4b5242350004485454500010686f73742e746573742e676f6b7262350000000158e7d0360300190010434981c9dce61ae1012f808bb60fc1c900000003000000400002000b544553542e474f4b5242350004485454500010686f73742e746573742e676f6b7262350000000158e7d03603000800080b0d4f31e061529800000003000000400002000b544553542e474f4b5242350004485454500010686f73742e746573742e676f6b7262350000000158e7d0360300030008f7df40f457aec42c00000003"
+	b, _ := hex.DecodeString(ks)
+	kt, _ := keytab.Parse(b)
+	th := http.HandlerFunc(testAppHandler)
+	if tls {
+		s := httptest.NewTLSServer(service.SPNEGOKRB5Authenticate(th, kt, l))
+		return s
+	} else {
+		s := httptest.NewServer(service.SPNEGOKRB5Authenticate(th, kt, l))
+		return s
+	}
+}
+
+func testAppHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintln(w, "TEST.GOKRB5 Handler")
 }

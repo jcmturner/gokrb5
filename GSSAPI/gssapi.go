@@ -46,13 +46,13 @@ func (s *SPNEGO) Unmarshal(b []byte) error {
 	case 0:
 		_, err = asn1.Unmarshal(a.Bytes, &s.NegTokenInit)
 		if err != nil {
-			return fmt.Errorf("Error unmarshalling NegotiationToken type %d: %v", a.Tag, err)
+			return fmt.Errorf("Error unmarshalling NegotiationToken type %d (Init): %v", a.Tag, err)
 		}
 		s.Init = true
 	case 1:
 		_, err = asn1.Unmarshal(a.Bytes, &s.NegTokenResp)
 		if err != nil {
-			return fmt.Errorf("Error unmarshalling NegotiationToken type %d: %v", a.Tag, err)
+			return fmt.Errorf("Error unmarshalling NegotiationToken type %d (Resp/Targ): %v", a.Tag, err)
 		}
 		s.Resp = true
 	default:

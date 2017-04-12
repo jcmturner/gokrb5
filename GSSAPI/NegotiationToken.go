@@ -76,14 +76,14 @@ func UnmarshalNegToken(b []byte) (bool, interface{}, error) {
 		var negToken NegTokenInit
 		_, err = asn1.Unmarshal(a.Bytes, &negToken)
 		if err != nil {
-			return false, nil, fmt.Errorf("Error unmarshalling NegotiationToken type %d: %v", a.Tag, err)
+			return false, nil, fmt.Errorf("Error unmarshalling NegotiationToken type %d (Init): %v", a.Tag, err)
 		}
 		return true, negToken, nil
 	case 1:
 		var negToken NegTokenResp
 		_, err = asn1.Unmarshal(a.Bytes, &negToken)
 		if err != nil {
-			return false, nil, fmt.Errorf("Error unmarshalling NegotiationToken type %d: %v", a.Tag, err)
+			return false, nil, fmt.Errorf("Error unmarshalling NegotiationToken type %d (Resp/Targ): %v", a.Tag, err)
 		}
 		return false, negToken, nil
 	default:

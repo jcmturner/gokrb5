@@ -5,11 +5,16 @@ import (
 	"fmt"
 	"github.com/jcmturner/gokrb5/GSSAPI"
 	"net/http"
+	"strings"
 )
 
-// Get service ticket and set as the SPNEGO authorization header on HTTP request object
-func (cl *Client) SetSPNEGOHeader(HTTPReq *http.Request) error {
-	tkt, skey, err := cl.GetServiceTicket("HTTP/" + HTTPReq.Host)
+// Get service ticket and set as the SPNEGO authorization header on HTTP request object.
+// To auto generate the SPN from the request object pass a null string "".
+func (cl *Client) SetSPNEGOHeader(HTTPReq *http.Request, spn string) error {
+	if spn == "" {
+		spn = "HTTP/" + strings.SplitN(HTTPReq.Host, ":", 2)[0]
+	}
+	tkt, skey, err := cl.GetServiceTicket(spn)
 	if err != nil {
 		return fmt.Errorf("Could not get service ticket: %v", err)
 	}
