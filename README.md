@@ -1,10 +1,11 @@
 # gokrb5
 
-This is work in progress and may have some issues.
+This is work in progress and may have some issues. Full testing is still required.
 
 Currently the following is working/tested:
-* Works with a KDC that supports [PA FAST](https://tools.ietf.org/html/rfc6806.html#section-11)
-* Client side authentication to HTTP servers that implement SPNEGO using Kerberos 5
+* Works with a KDC that supports [PA FAST](https://tools.ietf.org/html/rfc6806.html#section-11). Older KDCs need testing.
+* Client side authentication to HTTP servers that implement SPNEGO using Kerberos 5.
+* Service side handling for Kerberos SPNEGO seems to be working but not yet fully tested.
 
 [![GoDoc](https://godoc.org/github.com/jcmturner/gokrb5?status.svg)](https://godoc.org/github.com/jcmturner/gokrb5)
 
@@ -68,7 +69,7 @@ Create the HTTP request object and then call the client's SetSPNEGOHeader method
 ```go
 r, _ := http.NewRequest("GET", "http://host.test.gokrb5/index.html", nil)
 cl.SetSPNEGOHeader(r)
-HTTPResp, err := http.DefaultClient.Do(r)
+HTTPResp, err := http.DefaultClient.Do(r, "")
 ```
 
 ### Kerberos Web Service
