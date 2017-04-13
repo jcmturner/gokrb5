@@ -124,7 +124,6 @@ func encryptCTS(key, iv, message []byte, e etype.EType) ([]byte, []byte, error) 
 	ct = append(ct, lb...)
 	ct = append(ct, pb...)
 	return lb, ct[:l], nil
-	//TODO do we need to add the hash to the end?
 }
 
 func decryptCTS(key, ciphertext []byte, e etype.EType) ([]byte, error) {

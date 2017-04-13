@@ -265,14 +265,6 @@ func TestUnmarshalASRepDecodeAndDecrypt(t *testing.T) {
 	assert.Equal(t, test_realm, asRep.DecryptedEncPart.SRealm, "Service realm not as expected")
 	assert.Equal(t, 2, asRep.DecryptedEncPart.SName.NameType, "Name type for AS_REP not as expected")
 	assert.Equal(t, []string{"krbtgt", test_realm}, asRep.DecryptedEncPart.SName.NameString, "Service name string not as expected")
-	//t.Log("Finished testing ecrypted parts of AS REP")
-
-	//TODO should we be able to decrypt this part with the client key?
-	/*s, err = etype.Decrypt(key, asRep.Ticket.EncPart.Cipher)
-	if err != nil {
-		t.Fatalf("Error decrypting ticket encrypted part: %v\n", err)
-	}
-	t.Logf("Decypted Ticket EncPart %+v", s)*/
 }
 
 func TestUnmarshalASRepDecodeAndDecrypt_withPassword(t *testing.T) {
@@ -313,14 +305,6 @@ func TestUnmarshalASRepDecodeAndDecrypt_withPassword(t *testing.T) {
 	assert.Equal(t, test_realm, asRep.DecryptedEncPart.SRealm, "Service realm not as expected")
 	assert.Equal(t, 2, asRep.DecryptedEncPart.SName.NameType, "Name type for AS_REP not as expected")
 	assert.Equal(t, []string{"krbtgt", test_realm}, asRep.DecryptedEncPart.SName.NameString, "Service name string not as expected")
-	//t.Log("Finished testing ecrypted parts of AS REP")
-
-	//TODO should we be able to decrypt this part with the client key?
-	/*s, err = etype.Decrypt(key, asRep.Ticket.EncPart.Cipher)
-	if err != nil {
-		t.Fatalf("Error decrypting ticket encrypted part: %v\n", err)
-	}
-	t.Logf("Decypted Ticket EncPart %+v", s)*/
 }
 
 //func TestKDCRep_Validate(t *testing.T) {

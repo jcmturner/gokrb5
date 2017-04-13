@@ -21,5 +21,3 @@ const (
 	EncKrbCredPart = 29
 	KRBError       = 30
 )
-
-//TODO review if we want to consolidate with the MsgTypes in the dictionary

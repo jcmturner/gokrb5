@@ -206,7 +206,9 @@ func (k *ASRep) IsValid(cfg *config.Config, asReq ASReq) (bool, error) {
 		return false, fmt.Errorf("SRealm in response does not match what was requested. Requested: %s; Reply: %s", asReq.ReqBody.Realm, k.DecryptedEncPart.SRealm)
 	}
 	if len(asReq.ReqBody.Addresses) > 0 {
-		//TODO compare if address list is the same
+		if !types.HostAddressesEqual(k.DecryptedEncPart.CAddr, asReq.ReqBody.Addresses) {
+			return false, errors.New("Addresses listed in the AS_REP does not match those listed in the AS_REQ")
+		}
 	}
 	t := time.Now().UTC()
 	if t.Sub(k.DecryptedEncPart.AuthTime) > cfg.LibDefaults.Clockskew || k.DecryptedEncPart.AuthTime.Sub(t) > cfg.LibDefaults.Clockskew {
@@ -289,7 +291,9 @@ func (k *TGSRep) IsValid(cfg *config.Config, tgsReq TGSReq) (bool, error) {
 		return false, fmt.Errorf("SRealm in response does not match what was requested. Requested: %s; Reply: %s", tgsReq.ReqBody.Realm, k.DecryptedEncPart.SRealm)
 	}
 	if len(tgsReq.ReqBody.Addresses) > 0 {
-		//TODO compare if address list is the same
+		if !types.HostAddressesEqual(k.DecryptedEncPart.CAddr, tgsReq.ReqBody.Addresses) {
+			return false, errors.New("Addresses listed in the TGS_REP does not match those listed in the TGS_REQ")
+		}
 	}
 	if time.Since(k.DecryptedEncPart.StartTime) > cfg.LibDefaults.Clockskew || k.DecryptedEncPart.StartTime.Sub(time.Now().UTC()) > cfg.LibDefaults.Clockskew {
 		if time.Since(k.DecryptedEncPart.AuthTime) > cfg.LibDefaults.Clockskew || k.DecryptedEncPart.AuthTime.Sub(time.Now().UTC()) > cfg.LibDefaults.Clockskew {

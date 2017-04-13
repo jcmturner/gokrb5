@@ -4,6 +4,7 @@ package types
 // Section: 5.2.5
 
 import (
+	"bytes"
 	"github.com/jcmturner/asn1"
 )
 
@@ -31,6 +32,18 @@ address
 	This field encodes a single address of type addr-type.
 */
 
+const (
+	AddrType_IPv4            = 2
+	AddrType_Directional     = 3
+	AddrType_ChaosNet        = 5
+	AddrType_XNS             = 6
+	AddrType_ISO             = 7
+	AddrType_DECNET_Phase_IV = 12
+	AddrType_AppleTalk_DDP   = 16
+	AddrType_NetBios         = 20
+	AddrType_IPv6            = 24
+)
+
 type HostAddresses []HostAddress
 
 type HostAddress struct {
@@ -42,4 +55,61 @@ func (h *HostAddress) GetAddress() (string, error) {
 	var b []byte
 	_, err := asn1.Unmarshal(h.Address, &b)
 	return string(b), err
+}
+
+func HostAddressesEqual(h, a []HostAddress) bool {
+	if len(h) != len(a) {
+		return false
+	}
+	for _, e := range a {
+		var found bool
+		found = false
+		for _, i := range h {
+			if e.Equal(i) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
+}
+
+func HostAddressesContains(h []HostAddress, a HostAddress) bool {
+	for _, e := range h {
+		if e.Equal(a) {
+			return true
+		}
+	}
+	return false
+}
+
+func (h *HostAddress) Equal(a HostAddress) bool {
+	if h.AddrType != a.AddrType {
+		return false
+	}
+	return bytes.Equal(h.Address, a.Address)
+}
+
+func (h *HostAddresses) Contains(a HostAddress) bool {
+	for _, e := range *h {
+		if e.Equal(a) {
+			return true
+		}
+	}
+	return false
+}
+
+func (h *HostAddresses) Equal(a []HostAddress) bool {
+	if len(*h) != len(a) {
+		return false
+	}
+	for _, e := range a {
+		if !h.Contains(e) {
+			return false
+		}
+	}
+	return true
 }
