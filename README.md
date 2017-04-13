@@ -129,3 +129,4 @@ If authentication succeeds then the request's context will have the following va
 | Golang's ASN1 package cannot marshal into a GeneralString | Yes - using https://github.com/jcmturner/asn1 | https://github.com/golang/go/issues/18832 |
 | Golang's ASN1 package cannot marshal into slice of strings and pass stringtype parameter tags to members | Yes - using https://github.com/jcmturner/asn1 | https://github.com/golang/go/issues/18834 |
 | Golang's ASN1 package cannot marshal with application tags | Yes | |
+| Client's verification of PA-REQ-ENC-PA-REP PA Data checksum fails | Yes - check currently disabled | |
