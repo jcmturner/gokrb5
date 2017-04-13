@@ -57,9 +57,9 @@ func httpRequest(url string) {
 	if err != nil {
 		l.Printf("Request error: %v\n", err)
 	}
-	fmt.Fprintf(os.Stdout, "Response Body: %v\n", httpResp.StatusCode)
+	fmt.Fprintf(os.Stdout, "Response Code: %v\n", httpResp.StatusCode)
 	content, _ := ioutil.ReadAll(httpResp.Body)
-	fmt.Fprintf(os.Stdout, "Response Body: %s\n", content)
+	fmt.Fprintf(os.Stdout, "Response Body:\n%s\n", content)
 }
 
 func httpServer() *httptest.Server {
@@ -73,6 +73,7 @@ func httpServer() *httptest.Server {
 
 func testAppHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprintln(w, "TEST.GOKRB5 Handler")
+	ctx := r.Context()
+	fmt.Fprintf(w, "<html>\nTEST.GOKRB5 Handler\nAuthenticed user: %s\nUser's realm: %s\n</html>", ctx.Value("cname").(string), ctx.Value("crealm").(string))
 	return
 }

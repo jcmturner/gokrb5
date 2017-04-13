@@ -229,7 +229,7 @@ func (k *ASRep) IsValid(cfg *config.Config, asReq ASReq) (bool, error) {
 		//			return false, fmt.Errorf("KDC FAST negotiation response error, %v", err)
 		//		}
 		//		ab, _ := asReq.Marshal()
-		//		if !crypto.VerifyChecksum(k.DecryptedEncPart.Key.KeyValue, pafast.Chksum, ab, keyusage.KEY_USAGE_AS_REQ, etype) {
+		//		if !engine.VerifyChecksum(k.DecryptedEncPart.Key.KeyValue, pafast.Chksum, ab, keyusage.KEY_USAGE_AS_REQ, etype) {
 		//			return false, errors.New("KDC FAST negotiation response checksum invalid")
 		//		}
 		//	}

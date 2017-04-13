@@ -21,11 +21,17 @@ const (
 	//16-18.  Reserved for future use in Kerberos and related protocols.
 	AD_KDC_ISSUED_CHKSUM = 19
 	//20-21.  Reserved for future use in Kerberos and related protocols.
-	GSSAPI_ACCEPTOR_SEAL  = 22
-	GSSAPI_ACCEPTOR_SIGN  = 23
-	GSSAPI_INITIATOR_SEAL = 24
-	GSSAPI_INITIATOR_SIGN = 25
-	KEY_USAGE_AS_REQ      = 56
+	GSSAPI_ACCEPTOR_SEAL           = 22
+	GSSAPI_ACCEPTOR_SIGN           = 23
+	GSSAPI_INITIATOR_SEAL          = 24
+	GSSAPI_INITIATOR_SIGN          = 25
+	KEY_USAGE_FAST_REQ_CHKSUM      = 50
+	KEY_USAGE_FAST_ENC             = 51
+	KEY_USAGE_FAST_REP             = 52
+	KEY_USAGE_FAST_FINISHED        = 53
+	KEY_USAGE_ENC_CHALLENGE_CLIENT = 54
+	KEY_USAGE_ENC_CHALLENGE_KDC    = 55
+	KEY_USAGE_AS_REQ               = 56
 	//26-511.  Reserved for future use in Kerberos and related protocols.
 	//512-1023.  Reserved for uses internal to a Kerberos implementation.
 	//1024.  Encryption for application use in protocols that do not specify key usage values
