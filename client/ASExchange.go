@@ -70,11 +70,7 @@ func (cl *Client) ASExchange() error {
 		}
 		return krberr
 	}
-	err = ar.DecryptEncPart(cl.Credentials)
-	if err != nil {
-		return fmt.Errorf("Error decrypting EncPart of AS_REP: %v", err)
-	}
-	if ok, err := ar.IsValid(cl.Config, a); !ok {
+	if ok, err := ar.IsValid(cl.Config, cl.Credentials, a); !ok {
 		return fmt.Errorf("AS_REP is not valid: %v", err)
 	}
 	cl.Session = &Session{

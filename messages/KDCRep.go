@@ -10,6 +10,7 @@ import (
 	"github.com/jcmturner/gokrb5/config"
 	"github.com/jcmturner/gokrb5/credentials"
 	"github.com/jcmturner/gokrb5/crypto"
+	"github.com/jcmturner/gokrb5/crypto/engine"
 	"github.com/jcmturner/gokrb5/iana/asnAppTag"
 	"github.com/jcmturner/gokrb5/iana/keyusage"
 	"github.com/jcmturner/gokrb5/iana/msgtype"
@@ -146,39 +147,39 @@ func (e *EncKDCRepPart) Unmarshal(b []byte) error {
 }
 
 // Decrypt the encrypted part of an AS_REP.
-func (k *ASRep) DecryptEncPart(c *credentials.Credentials) error {
+func (k *ASRep) DecryptEncPart(c *credentials.Credentials) (types.EncryptionKey, error) {
 	var key types.EncryptionKey
 	var err error
 	if c.HasKeytab() {
 		key, err = c.Keytab.GetEncryptionKey(k.CName.NameString, k.CRealm, k.EncPart.KVNO, k.EncPart.EType)
 		if err != nil {
-			return fmt.Errorf("Could not get key from keytab: %v", err)
+			return key, fmt.Errorf("Could not get key from keytab: %v", err)
 		}
 	}
 	if c.HasPassword() {
 		key, _, err = crypto.GetKeyFromPassword(c.Password, k.CName, k.CRealm, k.EncPart.EType, k.PAData)
 		if err != nil {
-			return fmt.Errorf("Could not derive key from password: %v", err)
+			return key, fmt.Errorf("Could not derive key from password: %v", err)
 		}
 	}
 	if !c.HasKeytab() && !c.HasPassword() {
-		return errors.New("No secret available in credentials to preform decryption")
+		return key, errors.New("No secret available in credentials to preform decryption")
 	}
 	b, err := crypto.DecryptEncPart(k.EncPart, key, keyusage.AS_REP_ENCPART)
 	if err != nil {
-		return fmt.Errorf("Error decrypting KDC_REP EncPart: %v", err)
+		return key, fmt.Errorf("Error decrypting KDC_REP EncPart: %v", err)
 	}
 	var denc EncKDCRepPart
 	err = denc.Unmarshal(b)
 	if err != nil {
-		return fmt.Errorf("Error unmarshalling encrypted part: %v", err)
+		return key, fmt.Errorf("Error unmarshalling encrypted part: %v", err)
 	}
 	k.DecryptedEncPart = denc
-	return nil
+	return key, nil
 }
 
 // Check validity of AS_REP message.
-func (k *ASRep) IsValid(cfg *config.Config, asReq ASReq) (bool, error) {
+func (k *ASRep) IsValid(cfg *config.Config, creds *credentials.Credentials, asReq ASReq) (bool, error) {
 	//Ref RFC 4120 Section 3.1.5
 	if k.CName.NameType != asReq.ReqBody.CName.NameType || k.CName.NameString == nil {
 		return false, fmt.Errorf("CName in response does not match what was requested. Requested: %+v; Reply: %+v", asReq.ReqBody.CName, k.CName)
@@ -190,6 +191,10 @@ func (k *ASRep) IsValid(cfg *config.Config, asReq ASReq) (bool, error) {
 	}
 	if k.CRealm != asReq.ReqBody.Realm {
 		return false, fmt.Errorf("CRealm in response does not match what was requested. Requested: %s; Reply: %s", asReq.ReqBody.Realm, k.CRealm)
+	}
+	key, err := k.DecryptEncPart(creds)
+	if err != nil {
+		return false, fmt.Errorf("Error decrypting EncPart of AS_REP: %v", err)
 	}
 	if k.DecryptedEncPart.Nonce != asReq.ReqBody.Nonce {
 		return false, errors.New("Possible replay attack, nonce in response does not match that in request")
@@ -214,28 +219,28 @@ func (k *ASRep) IsValid(cfg *config.Config, asReq ASReq) (bool, error) {
 	if t.Sub(k.DecryptedEncPart.AuthTime) > cfg.LibDefaults.Clockskew || k.DecryptedEncPart.AuthTime.Sub(t) > cfg.LibDefaults.Clockskew {
 		return false, fmt.Errorf("Clock skew with KDC too large. Greater than %v seconds", cfg.LibDefaults.Clockskew.Seconds())
 	}
+	// RFC 6806 https://tools.ietf.org/html/rfc6806.html#section-11
 	if asReq.PAData.Contains(patype.PA_REQ_ENC_PA_REP) {
 		if len(k.DecryptedEncPart.EncPAData) < 2 || !k.DecryptedEncPart.EncPAData.Contains(patype.PA_FX_FAST) {
 			return false, errors.New("KDC did not respond appropriately to FAST negotiation")
 		}
-		//TODO figure out how to check hash and put back
-		//for _, pa := range k.DecryptedEncPart.EncPAData {
-		//	if pa.PADataType == patype.PA_REQ_ENC_PA_REP {
-		//		var pafast types.PAReqEncPARep
-		//		err := pafast.Unmarshal(pa.PADataValue)
-		//		if err != nil {
-		//			return false, fmt.Errorf("KDC FAST negotiation response error, could not unmarshal PA_REQ_ENC_PA_REP: %v", err)
-		//		}
-		//		etype, err := crypto.GetChksumEtype(pafast.ChksumType)
-		//		if err != nil {
-		//			return false, fmt.Errorf("KDC FAST negotiation response error, %v", err)
-		//		}
-		//		ab, _ := asReq.Marshal()
-		//		if !engine.VerifyChecksum(k.DecryptedEncPart.Key.KeyValue, pafast.Chksum, ab, keyusage.KEY_USAGE_AS_REQ, etype) {
-		//			return false, errors.New("KDC FAST negotiation response checksum invalid")
-		//		}
-		//	}
-		//}
+		for _, pa := range k.DecryptedEncPart.EncPAData {
+			if pa.PADataType == patype.PA_REQ_ENC_PA_REP {
+				var pafast types.PAReqEncPARep
+				err := pafast.Unmarshal(pa.PADataValue)
+				if err != nil {
+					return false, fmt.Errorf("KDC FAST negotiation response error, could not unmarshal PA_REQ_ENC_PA_REP: %v", err)
+				}
+				etype, err := crypto.GetChksumEtype(pafast.ChksumType)
+				if err != nil {
+					return false, fmt.Errorf("KDC FAST negotiation response error, %v", err)
+				}
+				ab, _ := asReq.Marshal()
+				if !engine.VerifyChecksum(key.KeyValue, pafast.Chksum, ab, keyusage.KEY_USAGE_AS_REQ, etype) {
+					return false, errors.New("KDC FAST negotiation response checksum invalid")
+				}
+			}
+		}
 	}
 	return true, nil
 }
