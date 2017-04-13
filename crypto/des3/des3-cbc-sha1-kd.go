@@ -1,3 +1,4 @@
+// DES3 Kerberos Encryption Types.
 package des3
 
 import (

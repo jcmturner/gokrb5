@@ -15,7 +15,6 @@ import (
 	"net/http"
 	"strings"
 	"time"
-	"net"
 )
 
 const (
@@ -107,29 +106,10 @@ func validateAPREQ(a types.Authenticator, APReq messages.APReq, r *http.Request)
 		//address of the client.  If no match is found or the server insists on
 		//ticket addresses but none are present in the ticket, the
 		//KRB_AP_ERR_BADADDR error is returned.
-		cAddr, _, err := net.SplitHostPort(r.RemoteAddr)
+		h, err := types.GetHostAddress(r.RemoteAddr)
 		if err != nil {
-			err := messages.NewKRBError(APReq.Ticket.SName, APReq.Ticket.Realm, errorcode.KRB_AP_ERR_BADADDR, "Invalid format of client address.")
+			err := messages.NewKRBError(APReq.Ticket.SName, APReq.Ticket.Realm, errorcode.KRB_AP_ERR_BADADDR, err.Error())
 			return false, err
-		}
-		ip := net.ParseIP(cAddr)
-		hb, err := ip.MarshalText()
-		if err != nil {
-			err := messages.NewKRBError(APReq.Ticket.SName, APReq.Ticket.Realm, errorcode.KRB_AP_ERR_BADADDR, "Could not marshal client's address into bytes.")
-			return false, err
-		}
-		var ht int
-		if ip.To4() != nil {
-			ht = types.AddrType_IPv4
-		} else if ip.To16() != nil {
-			ht = types.AddrType_IPv6
-		} else {
-			err := messages.NewKRBError(APReq.Ticket.SName, APReq.Ticket.Realm, errorcode.KRB_AP_ERR_BADADDR, "Could not determine client's address type.")
-			return false, err
-		}
-		h := types.HostAddress{
-			AddrType: ht,
-			Address: hb,
 		}
 		if !types.HostAddressesContains(APReq.Ticket.DecryptedEncPart.CAddr, h) {
 			err := messages.NewKRBError(APReq.Ticket.SName, APReq.Ticket.Realm, errorcode.KRB_AP_ERR_BADADDR, "Client address not within the list contained in the service ticket")

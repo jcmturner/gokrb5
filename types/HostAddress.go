@@ -6,6 +6,8 @@ package types
 import (
 	"bytes"
 	"github.com/jcmturner/asn1"
+	"net"
+	"fmt"
 )
 
 /*
@@ -49,6 +51,32 @@ type HostAddresses []HostAddress
 type HostAddress struct {
 	AddrType int    `asn1:"explicit,tag:0"`
 	Address  []byte `asn1:"explicit,tag:1"`
+}
+
+func GetHostAddress(s string) (HostAddress, error) {
+	var h HostAddress
+	cAddr, _, err := net.SplitHostPort(s)
+	if err != nil {
+		return h, fmt.Errorf("Invalid format of client address: %v", err)
+	}
+	ip := net.ParseIP(cAddr)
+	hb, err := ip.MarshalText()
+	if err != nil {
+		return h, fmt.Errorf("Could not marshal client's address into bytes: %v", err)
+	}
+	var ht int
+	if ip.To4() != nil {
+		ht = AddrType_IPv4
+	} else if ip.To16() != nil {
+		ht = AddrType_IPv6
+	} else {
+		return h, fmt.Errorf("Could not determine client's address types: %v", err)
+	}
+	h = HostAddress{
+		AddrType: ht,
+		Address: hb,
+	}
+	return h, nil
 }
 
 func (h *HostAddress) GetAddress() (string, error) {

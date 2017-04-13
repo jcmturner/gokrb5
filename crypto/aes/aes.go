@@ -1,3 +1,4 @@
+// AES Kerberos Encryption Types.
 package aes
 
 import (

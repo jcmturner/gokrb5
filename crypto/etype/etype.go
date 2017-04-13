@@ -1,3 +1,4 @@
+// Kerberos EType interface.
 package etype
 
 import "hash"

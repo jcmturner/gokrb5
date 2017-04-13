@@ -1,3 +1,4 @@
+// Cryptography methods for Kerberos.
 package engine
 
 import (
