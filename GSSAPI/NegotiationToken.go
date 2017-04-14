@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jcmturner/asn1"
-	"github.com/jcmturner/gokrb5/config"
+	"github.com/jcmturner/gokrb5/credentials"
 	"github.com/jcmturner/gokrb5/messages"
 	"github.com/jcmturner/gokrb5/types"
 )
@@ -131,8 +131,8 @@ func (n *NegTokenResp) Marshal() ([]byte, error) {
 }
 
 // Create new Init negotiation token for Kerberos 5
-func NewNegTokenInitKrb5(c config.Config, cname types.PrincipalName, tkt messages.Ticket, sessionKey types.EncryptionKey) (NegTokenInit, error) {
-	mt, err := NewKRB5APREQMechToken(c, cname, tkt, sessionKey)
+func NewNegTokenInitKrb5(creds credentials.Credentials, tkt messages.Ticket, sessionKey types.EncryptionKey) (NegTokenInit, error) {
+	mt, err := NewKRB5APREQMechToken(creds, tkt, sessionKey)
 	if err != nil {
 		return NegTokenInit{}, fmt.Errorf("Error getting MechToken; %v", err)
 	}

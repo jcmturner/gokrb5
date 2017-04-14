@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/jcmturner/asn1"
 	"github.com/jcmturner/gokrb5/asn1tools"
-	"github.com/jcmturner/gokrb5/config"
+	"github.com/jcmturner/gokrb5/credentials"
 	"github.com/jcmturner/gokrb5/crypto"
 	"github.com/jcmturner/gokrb5/iana/chksumtype"
 	"github.com/jcmturner/gokrb5/messages"
@@ -91,7 +91,7 @@ func (m *MechToken) IsKRBError() bool {
 }
 
 // Create new kerberos AP_REQ MechToken
-func NewKRB5APREQMechToken(c config.Config, cname types.PrincipalName, tkt messages.Ticket, sessionKey types.EncryptionKey) ([]byte, error) {
+func NewKRB5APREQMechToken(creds credentials.Credentials, tkt messages.Ticket, sessionKey types.EncryptionKey) ([]byte, error) {
 	// Create the header
 	b, _ := asn1.Marshal(MechTypeOID_Krb5)
 	tb, _ := hex.DecodeString(TOK_ID_KRB_AP_REQ)
@@ -100,7 +100,7 @@ func NewKRB5APREQMechToken(c config.Config, cname types.PrincipalName, tkt messa
 	APReq, err := messages.NewAPReq(
 		tkt,
 		sessionKey,
-		newAuthenticator(c, cname, sessionKey.KeyType),
+		newAuthenticator(creds, sessionKey.KeyType),
 	)
 	tb, err = APReq.Marshal()
 	if err != nil {
@@ -111,9 +111,9 @@ func NewKRB5APREQMechToken(c config.Config, cname types.PrincipalName, tkt messa
 }
 
 // Create new kerberos authenticator for kerberos MechToken
-func newAuthenticator(c config.Config, cname types.PrincipalName, keyType int) types.Authenticator {
+func newAuthenticator(creds credentials.Credentials, keyType int) types.Authenticator {
 	//RFC 4121 Section 4.1.1
-	auth := types.NewAuthenticator(c.LibDefaults.Default_realm, cname)
+	auth := types.NewAuthenticator(creds.Realm, creds.CName)
 	auth.Cksum = types.Checksum{
 		CksumType: chksumtype.GSSAPI,
 		Checksum:  newAuthenticatorChksum([]int{GSS_C_INTEG_FLAG, GSS_C_CONF_FLAG}),

@@ -64,23 +64,21 @@ func (s *SPNEGO) Unmarshal(b []byte) error {
 // Marshal SPNEGO negotiation token
 func (s *SPNEGO) Marshal() ([]byte, error) {
 	var b []byte
-	if !s.Init && !s.Resp {
-		return b, errors.New("SPNEGO cannot be marshalled. It contains neither a NegTokenInit or NegTokenResp")
-	}
-	hb, _ := asn1.Marshal(SPNEGO_OID)
 	if s.Init {
+		hb, _ := asn1.Marshal(SPNEGO_OID)
 		tb, err := s.NegTokenInit.Marshal()
 		if err != nil {
 			return b, fmt.Errorf("Could not marshal NegTokenInit: %v", err)
 		}
 		b = append(hb, tb...)
+		return asn1tools.AddASNAppTag(b, 0), nil
 	}
 	if s.Resp {
-		tb, err := s.NegTokenResp.Marshal()
+		b, err := s.NegTokenResp.Marshal()
 		if err != nil {
 			return b, fmt.Errorf("Could not marshal NegTokenResp: %v", err)
 		}
-		b = append(hb, tb...)
+		return b, nil
 	}
-	return asn1tools.AddASNAppTag(b, 0), nil
+	return b, errors.New("SPNEGO cannot be marshalled. It contains neither a NegTokenInit or NegTokenResp")
 }

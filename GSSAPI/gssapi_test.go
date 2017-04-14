@@ -50,3 +50,37 @@ func TestUnmarshal_SPNEGO_RespTarg(t *testing.T) {
 	assert.Equal(t, asn1.Enumerated(0), s.NegTokenResp.NegState, "Negtiation state not as expected.")
 	assert.Equal(t, MechTypeOID_Krb5, s.NegTokenResp.SupportedMech, "SupportedMech type not as expected.")
 }
+
+func TestMarshal_SPNEGO_Init(t *testing.T) {
+	b, err := hex.DecodeString(test_gssapi_init)
+	if err != nil {
+		t.Fatalf("Error converting hex string test data to bytes: %v", err)
+	}
+	var s SPNEGO
+	err = s.Unmarshal(b)
+	if err != nil {
+		t.Fatalf("Error unmarshalling SPNEGO with NegTokenInit: %v", err)
+	}
+	mb, err := s.Marshal()
+	if err != nil {
+		t.Fatalf("Error marshalling SPNEGO containing NegTokenInit: %v", err)
+	}
+	assert.Equal(t, b, mb, "Marshaled bytes not as expected")
+}
+
+func TestMarshal_SPNEGO_RespTarg(t *testing.T) {
+	b, err := hex.DecodeString(test_gssapi_resp)
+	if err != nil {
+		t.Fatalf("Error converting hex string test data to bytes: %v", err)
+	}
+	var s SPNEGO
+	err = s.Unmarshal(b)
+	if err != nil {
+		t.Fatalf("Error unmarshalling SPNEGO with NegTokenResp: %v", err)
+	}
+	mb, err := s.Marshal()
+	if err != nil {
+		t.Fatalf("Error marshalling SPNEGO containing NegTokenResp: %v", err)
+	}
+	assert.Equal(t, b, mb, "Marshaled bytes not as expected")
+}
