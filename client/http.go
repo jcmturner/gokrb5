@@ -18,7 +18,7 @@ func (cl *Client) SetSPNEGOHeader(HTTPReq *http.Request, spn string) error {
 	if err != nil {
 		return fmt.Errorf("Could not get service ticket: %v", err)
 	}
-	negTokenInit, err := GSSAPI.NewNegTokenInitKrb5(*cl.Config, cl.Credentials.CName, tkt, skey)
+	negTokenInit, err := GSSAPI.NewNegTokenInitKrb5(*cl.Credentials, tkt, skey)
 	if err != nil {
 		return fmt.Errorf("Could not create NegTokenInit: %v", err)
 	}
