@@ -2,6 +2,7 @@ package client
 
 import (
 	"bytes"
+	"encoding/binary"
 	"fmt"
 	"github.com/jcmturner/gokrb5/iana/errorcode"
 	"github.com/jcmturner/gokrb5/messages"
@@ -118,24 +119,40 @@ func sendTCP(kdc string, b []byte) ([]byte, error) {
 	}
 	defer conn.Close()
 	conn.SetDeadline(time.Now().Add(time.Duration(5 * time.Second)))
+
+	/*
+		RFC https://tools.ietf.org/html/rfc4120#section-7.2.2
+		Each request (KRB_KDC_REQ) and response (KRB_KDC_REP or KRB_ERROR)
+		sent over the TCP stream is preceded by the length of the request as
+		4 octets in network byte order.  The high bit of the length is
+		reserved for future expansion and MUST currently be set to zero.  If
+		a KDC that does not understand how to interpret a set high bit of the
+		length encoding receives a request with the high order bit of the
+		length set, it MUST return a KRB-ERROR message with the error
+		KRB_ERR_FIELD_TOOLONG and MUST close the TCP stream.
+		NB: network byte order == big endian
+	*/
+	var buf bytes.Buffer
+	binary.Write(&buf, binary.BigEndian, uint32(len(b)))
+	b = append(buf.Bytes(), b...)
+
 	_, err = conn.Write(b)
 	if err != nil {
 		return r, fmt.Errorf("Error sending to KDC: %v", err)
 	}
-	tcpbuf := bytes.NewBuffer(make([]byte, 4096))
-	n, err := conn.ReadFrom(tcpbuf)
-	r = tcpbuf.Bytes()[:n]
+	tcpbuf := make([]byte, 4096)
+	n, err := conn.Read(tcpbuf)
 	if err != nil {
 		return r, fmt.Errorf("Sending over TCP failed: %v", err)
 	}
-	return checkForKRBError(r)
+	r = tcpbuf[:n]
+	return checkForKRBError(r[4:])
 }
 
 func checkForKRBError(b []byte) ([]byte, error) {
 	var KRBErr messages.KRBError
 	if err := KRBErr.Unmarshal(b); err == nil {
 		return b, KRBErr
-	} else {
 	}
 	return b, nil
 }

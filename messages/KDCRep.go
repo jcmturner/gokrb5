@@ -220,7 +220,7 @@ func (k *ASRep) IsValid(cfg *config.Config, creds *credentials.Credentials, asRe
 		return false, fmt.Errorf("Clock skew with KDC too large. Greater than %v seconds", cfg.LibDefaults.Clockskew.Seconds())
 	}
 	// RFC 6806 https://tools.ietf.org/html/rfc6806.html#section-11
-	if asReq.PAData.Contains(patype.PA_REQ_ENC_PA_REP) {
+	if asReq.PAData.Contains(patype.PA_REQ_ENC_PA_REP) && types.IsFlagSet(&k.DecryptedEncPart.Flags, types.EncPARep) {
 		if len(k.DecryptedEncPart.EncPAData) < 2 || !k.DecryptedEncPart.EncPAData.Contains(patype.PA_FX_FAST) {
 			return false, errors.New("KDC did not respond appropriately to FAST negotiation")
 		}
