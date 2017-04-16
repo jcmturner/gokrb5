@@ -93,8 +93,7 @@ APReq, err := messages.NewAPReq(tkt, key, auth)
 ##### HTTP SPNEGO
 Create the HTTP request object and then call the client's SetSPNEGOHeader method passing the Service Principal Name (SPN)
 ```go
-r, _ := http.
-}NewRequest("GET", "http://host.test.gokrb5/index.html", nil)
+r, _ := http.NewRequest("GET", "http://host.test.gokrb5/index.html", nil)
 cl.SetSPNEGOHeader(r, "")
 HTTPResp, err := http.DefaultClient.Do(r)
 ```
@@ -103,7 +102,8 @@ HTTPResp, err := http.DefaultClient.Do(r)
 #### Validating Client Details
 To validate the AP_REQ sent by the client on the service side call this method:
 ```go
-if ok, creds, err := ValidateAPREQ(mt.APReq, kt, r.RemoteAddr); ok {
+import 	"github.com/jcmturner/gokrb5/service"
+if ok, creds, err := serivce.ValidateAPREQ(mt.APReq, kt, r.RemoteAddr); ok {
         // Perform application specifc actions
         // creds object has details about the client identity
 }
