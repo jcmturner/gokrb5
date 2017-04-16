@@ -85,6 +85,10 @@ auth.Cksum = types.Checksum{
 		Checksum:  checksumBytesSlice,
 	}
 ```
+* Create the AP_REQ:
+```go
+APReq, err := messages.NewAPReq(tkt, key, auth)
+```
 
 ##### HTTP SPNEGO
 Create the HTTP request object and then call the client's SetSPNEGOHeader method passing the Service Principal Name (SPN)
