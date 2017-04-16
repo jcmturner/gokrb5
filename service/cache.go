@@ -30,17 +30,17 @@ them following an event that caused the server to lose track of
 recently seen authenticators.*/
 
 // Cache for tickets received from clients keyed by fully qualified client name. Used to track replay of tickets.
-type ServiceCache map[string]ClientEntries
+type ServiceCache map[string]clientEntries
 
 // Entries for client details sent to the service.
-type ClientEntries struct {
-	ReplayMap map[time.Time]ReplayCacheEntry
+type clientEntries struct {
+	ReplayMap map[time.Time]replayCacheEntry
 	SeqNumber int
 	SubKey    types.EncryptionKey
 }
 
 // Cache entry tracking client time values of tickets sent to the service.
-type ReplayCacheEntry struct {
+type replayCacheEntry struct {
 	PresentedTime time.Time
 	SName         types.PrincipalName
 	CTime         time.Time // This combines the ticket's CTime and Cusec
@@ -70,7 +70,7 @@ func GetReplayCache(d time.Duration) *ServiceCache {
 func (c *ServiceCache) AddEntry(sname types.PrincipalName, a types.Authenticator) {
 	ct := a.CTime.Add(time.Duration(a.Cusec) * time.Microsecond)
 	if ce, ok := (*c)[a.CName.GetPrincipalNameString()]; ok {
-		ce.ReplayMap[ct] = ReplayCacheEntry{
+		ce.ReplayMap[ct] = replayCacheEntry{
 			PresentedTime: time.Now().UTC(),
 			SName:         sname,
 			CTime:         ct,
@@ -78,8 +78,8 @@ func (c *ServiceCache) AddEntry(sname types.PrincipalName, a types.Authenticator
 		ce.SeqNumber = a.SeqNumber
 		ce.SubKey = a.SubKey
 	} else {
-		(*c)[a.CName.GetPrincipalNameString()] = ClientEntries{
-			ReplayMap: map[time.Time]ReplayCacheEntry{
+		(*c)[a.CName.GetPrincipalNameString()] = clientEntries{
+			ReplayMap: map[time.Time]replayCacheEntry{
 				ct: {
 					PresentedTime: time.Now().UTC(),
 					SName:         sname,

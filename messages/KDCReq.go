@@ -12,6 +12,7 @@ import (
 	"github.com/jcmturner/gokrb5/crypto/engine"
 	"github.com/jcmturner/gokrb5/iana"
 	"github.com/jcmturner/gokrb5/iana/asnAppTag"
+	"github.com/jcmturner/gokrb5/iana/flags"
 	"github.com/jcmturner/gokrb5/iana/keyusage"
 	"github.com/jcmturner/gokrb5/iana/msgtype"
 	"github.com/jcmturner/gokrb5/iana/nametype"
@@ -105,16 +106,16 @@ func NewASReq(c *config.Config, cname types.PrincipalName) ASReq {
 		},
 	}
 	if c.LibDefaults.Forwardable {
-		types.SetFlag(&a.ReqBody.KDCOptions, types.Forwardable)
+		types.SetFlag(&a.ReqBody.KDCOptions, flags.Forwardable)
 	}
 	if c.LibDefaults.Canonicalize {
-		types.SetFlag(&a.ReqBody.KDCOptions, types.Canonicalize)
+		types.SetFlag(&a.ReqBody.KDCOptions, flags.Canonicalize)
 	}
 	if c.LibDefaults.Proxiable {
-		types.SetFlag(&a.ReqBody.KDCOptions, types.Proxiable)
+		types.SetFlag(&a.ReqBody.KDCOptions, flags.Proxiable)
 	}
 	if c.LibDefaults.Renew_lifetime != 0 {
-		types.SetFlag(&a.ReqBody.KDCOptions, types.Renewable)
+		types.SetFlag(&a.ReqBody.KDCOptions, flags.Renewable)
 		a.ReqBody.RTime = t.Add(c.LibDefaults.Renew_lifetime)
 		a.ReqBody.RTime = t.Add(time.Duration(48) * time.Hour)
 
@@ -143,21 +144,21 @@ func NewTGSReq(cname types.PrincipalName, c *config.Config, tkt Ticket, sessionK
 		},
 	}
 	if c.LibDefaults.Forwardable {
-		types.SetFlag(&a.ReqBody.KDCOptions, types.Forwardable)
+		types.SetFlag(&a.ReqBody.KDCOptions, flags.Forwardable)
 	}
 	if c.LibDefaults.Canonicalize {
-		types.SetFlag(&a.ReqBody.KDCOptions, types.Canonicalize)
+		types.SetFlag(&a.ReqBody.KDCOptions, flags.Canonicalize)
 	}
 	if c.LibDefaults.Proxiable {
-		types.SetFlag(&a.ReqBody.KDCOptions, types.Proxiable)
+		types.SetFlag(&a.ReqBody.KDCOptions, flags.Proxiable)
 	}
 	if c.LibDefaults.Renew_lifetime > time.Duration(0) {
-		types.SetFlag(&a.ReqBody.KDCOptions, types.Renewable)
+		types.SetFlag(&a.ReqBody.KDCOptions, flags.Renewable)
 		a.ReqBody.RTime = t.Add(c.LibDefaults.Renew_lifetime)
 	}
 	if renewal {
-		types.SetFlag(&a.ReqBody.KDCOptions, types.Renew)
-		types.SetFlag(&a.ReqBody.KDCOptions, types.Renewable)
+		types.SetFlag(&a.ReqBody.KDCOptions, flags.Renew)
+		types.SetFlag(&a.ReqBody.KDCOptions, flags.Renewable)
 	}
 	auth := types.NewAuthenticator(c.LibDefaults.Default_realm, cname)
 	// Add the CName to make validation of the reply easier

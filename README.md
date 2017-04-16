@@ -1,4 +1,5 @@
 # gokrb5
+[![GoDoc](https://godoc.org/github.com/jcmturner/gokrb5?status.svg)](https://godoc.org/github.com/jcmturner/gokrb5)
 
 #### This is work in progress and may have some issues. Full testing is still required.
 
@@ -8,8 +9,6 @@ Currently the following is working/tested:
 * Tested against users that have pre-authentication required using PA-ENC-TIMESTAMP.
 * Client side support for authentication to HTTP servers that implement SPNEGO using Kerberos 5.
 * Service side handling for Kerberos SPNEGO seems to be working but not yet fully tested with a browser such as firefox or chrome.
-
-[![GoDoc](https://godoc.org/github.com/jcmturner/gokrb5?status.svg)](https://godoc.org/github.com/jcmturner/gokrb5)
 
 ## Implemented Encryption & Checksum Types
 The currently implemented encrytion types are:
@@ -59,22 +58,54 @@ err := cl.Login
 cl.EnableAutoSessionRenewal()
 ```
 #### Authenticate to a Service
-##### Native Kerberos
+##### Generic Kerberos
 Request a Serivce ticket for a Service Principal Name (SPN).
 This method will use the client's cache either returning a valid cached ticket, renewing a cached ticket with the KDC or requesting a new ticket from the KDC.
 Therefore the GetServiceTicket method can be continually used for the most efficient interaction with the KDC.
 ```go
 tkt, err := cl.GetServiceTicket("HTTP/host.test.gokrb5")
 ```
+The steps after this will be specifc to the application protocol but it will likely involve a client/server Authentication Protocol exchange (AP exchange).
+This will involve these steps:
+* Getting the service ticket and session key for the service the client is authenticating to:
+```go
+tkt, key, err := cl.GetServiceTicket(spnStr)
+```
+* Generate a new Authenticator and generate a sequence number and subkey:
+```go
+auth := types.NewAuthenticator(cl.Credentials.Realm, cl.Credentials.CName)
+etype, _ := crypto.GetEtype(key.KeyType)
+auth.GenerateSeqNumberAndSubKey(key.KeyType, etype.GetKeyByteSize())
+```
+* Set the checksum on the authenticator
+The checksum is an application specific value. Set as follows:
+```go
+auth.Cksum = types.Checksum{
+		CksumType: checksumIDint,
+		Checksum:  checksumBytesSlice,
+	}
+```
+
 ##### HTTP SPNEGO
 Create the HTTP request object and then call the client's SetSPNEGOHeader method passing the Service Principal Name (SPN)
 ```go
-r, _ := http.NewRequest("GET", "http://host.test.gokrb5/index.html", nil)
+r, _ := http.
+}NewRequest("GET", "http://host.test.gokrb5/index.html", nil)
 cl.SetSPNEGOHeader(r, "")
 HTTPResp, err := http.DefaultClient.Do(r)
 ```
 
-### Kerberos Web Service
+### Kerberised Service
+#### Validating Client Details
+To validate the AP_REQ sent by the client on the service side call this method:
+```go
+if ok, creds, err := ValidateAPREQ(mt.APReq, kt, r.RemoteAddr); ok {
+        // Perform application specifc actions
+        // creds object has details about the client identity
+}
+```
+
+#### Kerberos Web Service
 A HTTP handler wrapper can be used to implement Kerberos SPNEGO authentication for web services.
 To configure the wrapper the keytab for the SPN and a Logger are required:
 ```go

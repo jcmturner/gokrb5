@@ -11,11 +11,12 @@ import (
 // Contains either a keytab, password or both.
 // Keytabs are used over passwords if both are defined.
 type Credentials struct {
-	Username string
-	Realm    string
-	CName    types.PrincipalName
-	Keytab   keytab.Keytab
-	Password string
+	Username   string
+	Realm      string
+	CName      types.PrincipalName
+	Keytab     keytab.Keytab
+	Password   string
+	Attributes []string
 }
 
 // Create a new Credentials struct.
@@ -28,6 +29,15 @@ func NewCredentials(username string, realm string) Credentials {
 			NameString: []string{username},
 		},
 		Keytab: keytab.NewKeytab(),
+	}
+}
+
+func NewCredentialsFromPrincipal(cname types.PrincipalName, realm string) Credentials {
+	return Credentials{
+		Username: cname.GetPrincipalNameString(),
+		Realm:    realm,
+		CName:    cname,
+		Keytab:   keytab.NewKeytab(),
 	}
 }
 

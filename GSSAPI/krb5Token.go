@@ -11,7 +11,6 @@ import (
 	"github.com/jcmturner/gokrb5/iana/chksumtype"
 	"github.com/jcmturner/gokrb5/messages"
 	"github.com/jcmturner/gokrb5/types"
-	"math/rand"
 )
 
 const (
@@ -114,18 +113,11 @@ func NewKRB5APREQMechToken(creds credentials.Credentials, tkt messages.Ticket, s
 func newAuthenticator(creds credentials.Credentials, keyType int) types.Authenticator {
 	//RFC 4121 Section 4.1.1
 	auth := types.NewAuthenticator(creds.Realm, creds.CName)
+	etype, _ := crypto.GetEtype(keyType)
+	auth.GenerateSeqNumberAndSubKey(keyType, etype.GetKeyByteSize())
 	auth.Cksum = types.Checksum{
 		CksumType: chksumtype.GSSAPI,
 		Checksum:  newAuthenticatorChksum([]int{GSS_C_INTEG_FLAG, GSS_C_CONF_FLAG}),
-	}
-	auth.SeqNumber = int(rand.Int31())
-	//Generate subkey value
-	etype, _ := crypto.GetEtype(keyType)
-	sk := make([]byte, etype.GetKeyByteSize())
-	rand.Read(sk)
-	auth.SubKey = types.EncryptionKey{
-		KeyType:  keyType,
-		KeyValue: sk,
 	}
 	return auth
 }

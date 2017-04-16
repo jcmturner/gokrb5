@@ -7,6 +7,7 @@ import (
 	"github.com/jcmturner/gokrb5/asn1tools"
 	"github.com/jcmturner/gokrb5/iana"
 	"github.com/jcmturner/gokrb5/iana/asnAppTag"
+	"math/rand"
 	"time"
 )
 
@@ -45,12 +46,24 @@ type Authenticator struct {
 func NewAuthenticator(realm string, cname PrincipalName) Authenticator {
 	t := time.Now().UTC()
 	return Authenticator{
-		AVNO:   iana.PVNO,
-		CRealm: realm,
-		CName:  cname,
-		Cksum:  Checksum{},
-		Cusec:  int((t.UnixNano() / int64(time.Microsecond)) - (t.Unix() * 1e6)),
-		CTime:  t,
+		AVNO:      iana.PVNO,
+		CRealm:    realm,
+		CName:     cname,
+		Cksum:     Checksum{},
+		Cusec:     int((t.UnixNano() / int64(time.Microsecond)) - (t.Unix() * 1e6)),
+		CTime:     t,
+		SeqNumber: int(rand.Int31()),
+	}
+}
+
+func (a *Authenticator) GenerateSeqNumberAndSubKey(keyType, keySize int) {
+	a.SeqNumber = int(rand.Int31())
+	//Generate subkey value
+	sk := make([]byte, keySize)
+	rand.Read(sk)
+	a.SubKey = EncryptionKey{
+		KeyType:  keyType,
+		KeyValue: sk,
 	}
 }
 
