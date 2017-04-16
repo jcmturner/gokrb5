@@ -59,18 +59,19 @@ cl.EnableAutoSessionRenewal()
 ```
 #### Authenticate to a Service
 ##### Generic Kerberos
-Request a Serivce ticket for a Service Principal Name (SPN).
-This method will use the client's cache either returning a valid cached ticket, renewing a cached ticket with the KDC or requesting a new ticket from the KDC.
+To authenticate to a service a client will need to request a serivce ticket for a Service Principal Name (SPN) and form into an AP_REQ message along with an authenticator encrypted with the session key that was delivered from the KDC along with the service ticket.
+
+The steps below outline how to do this.
+* Get the service ticket and session key for the service the client is authenticating to.
+The following method will use the client's cache either returning a valid cached ticket, renewing a cached ticket with the KDC or requesting a new ticket from the KDC.
 Therefore the GetServiceTicket method can be continually used for the most efficient interaction with the KDC.
 ```go
-tkt, err := cl.GetServiceTicket("HTTP/host.test.gokrb5")
+tkt, key, err := cl.GetServiceTicket("HTTP/host.test.gokrb5")
 ```
+
 The steps after this will be specifc to the application protocol but it will likely involve a client/server Authentication Protocol exchange (AP exchange).
 This will involve these steps:
-* Getting the service ticket and session key for the service the client is authenticating to:
-```go
-tkt, key, err := cl.GetServiceTicket(spnStr)
-```
+
 * Generate a new Authenticator and generate a sequence number and subkey:
 ```go
 auth := types.NewAuthenticator(cl.Credentials.Realm, cl.Credentials.CName)
@@ -89,6 +90,8 @@ auth.Cksum = types.Checksum{
 ```go
 APReq, err := messages.NewAPReq(tkt, key, auth)
 ```
+
+Now send the AP_REQ to the serivce. How this is done will be specific to the application use case.
 
 ##### HTTP SPNEGO
 Create the HTTP request object and then call the client's SetSPNEGOHeader method passing the Service Principal Name (SPN)
