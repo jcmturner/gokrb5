@@ -36,48 +36,60 @@ func (cl *Client) SendToKDC(b []byte) ([]byte, error) {
 		//1 means we should always use TCP
 		rb, errtcp := sendTCP(kdc, b)
 		if errtcp != nil {
-			return rb, fmt.Errorf("Failed to communicate with KDC %v via TDP (%v)", kdc, errtcp)
+			if e, ok := errtcp.(messages.KRBError); ok {
+				return rb, e
+			}
+			return rb, fmt.Errorf("Failed to communicate with KDC %v via TCP (%v)", kdc, errtcp)
 		}
 		if len(rb) < 1 {
 			return rb, fmt.Errorf("No response data from KDC %v", kdc)
 		}
-		return checkForKRBError(rb)
+		return rb, nil
 	}
 	if len(b) <= cl.Config.LibDefaults.Udp_preference_limit {
 		//Try UDP first, TCP second
 		rb, errudp := sendUDP(kdc, b)
 		if errudp != nil {
+			if e, ok := errudp.(messages.KRBError); ok && e.ErrorCode != errorcode.KRB_ERR_RESPONSE_TOO_BIG {
+				// Got a KRBError from KDC
+				// If this is not a KRB_ERR_RESPONSE_TOO_BIG we will return immediately otherwise will try TCP.
+				return rb, e
+			}
+			// Try TCP
 			rb, errtcp := sendTCP(kdc, b)
 			if errtcp != nil {
-				return rb, fmt.Errorf("Failed to communicate with KDC %v via UDP (%v) and then via TDP (%v)", kdc, errudp, errtcp)
-			}
-		}
-		var KRBErr messages.KRBError
-		if err := KRBErr.Unmarshal(rb); err == nil {
-			if KRBErr.ErrorCode == errorcode.KRB_ERR_RESPONSE_TOO_BIG {
-				rb, errtcp := sendTCP(kdc, b)
-				if errtcp != nil {
-					return rb, fmt.Errorf("Failed to communicate with KDC %v. Response too big for UDP and errored when using TCP: %v ", kdc, errtcp)
+				if e, ok := errtcp.(messages.KRBError); ok {
+					// Got a KRBError
+					return rb, e
 				}
+				return rb, fmt.Errorf("Failed to communicate with KDC %v. Attempts made with UDP (%v) and then TCP (%v)", kdc, errudp, errtcp)
 			}
 		}
 		if len(rb) < 1 {
 			return rb, fmt.Errorf("No response data from KDC %v", kdc)
 		}
-		return checkForKRBError(rb)
+		return rb, nil
 	}
 	//Try TCP first, UDP second
 	rb, errtcp := sendTCP(kdc, b)
 	if errtcp != nil {
+		if e, ok := errtcp.(messages.KRBError); ok {
+			// Got a KRBError from KDC so returning and not trying UDP.
+			return rb, e
+		}
 		rb, errudp := sendUDP(kdc, b)
 		if errudp != nil {
-			return rb, fmt.Errorf("Failed to communicate with KDC %v via TCP (%v) and then via UDP (%v)", kdc, errtcp, errudp)
+			if e, ok := errudp.(messages.KRBError); ok {
+				// Got a KRBError
+				return rb, e
+			}
+			return rb, fmt.Errorf("Failed to communicate with KDC %v. Attempts made with TCP (%v) and then UDP (%v)", kdc, errtcp, errudp)
 		}
 	}
 	if len(rb) < 1 {
 		return rb, fmt.Errorf("No response data from KDC %v", kdc)
 	}
-	return checkForKRBError(rb)
+	return rb, nil
 }
 
 // Send the bytes to the KDC over UDP.

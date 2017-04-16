@@ -8,7 +8,6 @@ ADMIN_USERNAME=adminuser
 HOST_PRINCIPALS="kdc.test.gokrb5 host.test.gokrb5"
 SPNs="HTTP/host.test.gokrb5"
 KEYTABS="http.testtab!0:48!HTTP/host.test.gokrb5"
-INITIAL_USERS="testuser1 testuser2 testuser3"
 
 cp /vagrant/krb5.conf /etc/krb5.conf
 cp /var/kerberos/krb5kdc/kdc.conf /var/kerberos/krb5kdc/kdc.conf-old
@@ -32,8 +31,6 @@ create_entropy() {
 
 create_entropy &
 
-#Check and initialise if needs be
-if [ ! -f /opt/krb5/data/principal ]; then
   echo "Kerberos initialisation required. Creating database for ${REALM} ..."
   echo "This can take a long time if there is little entropy. A process has been started to create some."
   MASTER_PASSWORD=$(echo $RANDOM$RANDOM$RANDOM | md5sum | awk '{print $1}')
@@ -64,40 +61,12 @@ if [ ! -f /opt/krb5/data/principal ]; then
     done
   fi
 
-  if [ ! -z "$INITIAL_USERS" ]; then
-    for user in $INITIAL_USERS
-    do
-      /usr/sbin/kadmin.local -q "add_principal -pw passwordvalue -kvno 1 $user"
-      #/usr/sbin/kadmin.local -q "ktadd -k ${KEYTAB_DIR}/${user}.testtab $user"
-      echo "User $user added to kerberos database. To update password: sudo /usr/sbin/kadmin.local -q \"change_password $user\""
-    done
-  fi
+  /usr/sbin/kadmin.local -q "add_principal -pw passwordvalue -kvno 1 testuser1"
+  /usr/sbin/kadmin.local -q "add_principal +requires_preauth -pw passwordvalue -kvno 1 testuser2"
+  /usr/sbin/kadmin.local -q "add_principal -pw passwordvalue -kvno 1 testuser3"
 
-#  if [ ! -z "$KEYTABS" ]; then
-#    echo "Exporting keytabs"
-#    OLDIFS=$IFS
-#    IFS=";"
-#    KEYTAB=($KEYTABS)
-#    for keytabInst in ${KEYTAB[@]}
-#    do
-#      keytabFileName=$(echo $keytabInst | cut -d! -f1)
-#      permissions=$(echo $keytabInst | cut -d! -f2)
-#      principals=$(echo $keytabInst | cut -d! -f3)
-#      IFS=" "
-#      for princ in $principals
-#      do
-#        /usr/sbin/kadmin.local -q "ktadd -k ${KEYTAB_DIR}/${keytabFileName} $princ"
-#        echo "Add principal ${princ} to ${keytabFileName}"
-#      done
-#      IFS=";"
-#      chown $permissions ${KEYTAB_DIR}/${keytabFileName}
-#      chmod 660 ${KEYTAB_DIR}/${keytabFileName}
-#    done
-#    IFS=$OLDIFS
-#  fi
 
   echo "Kerberos initialisation complete"
-fi
 
 
 

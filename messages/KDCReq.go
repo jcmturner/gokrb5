@@ -81,11 +81,6 @@ type KDCReqBody struct {
 
 // Generate a new KRB_AS_REQ struct.
 func NewASReq(c *config.Config, cname types.PrincipalName) ASReq {
-	pas := types.PADataSequence{
-		types.PAData{
-			PADataType: patype.PA_REQ_ENC_PA_REP,
-		},
-	}
 	nonce := int(rand.Int31())
 	t := time.Now().UTC()
 
@@ -93,7 +88,7 @@ func NewASReq(c *config.Config, cname types.PrincipalName) ASReq {
 		KDCReqFields{
 			PVNO:    iana.PVNO,
 			MsgType: msgtype.KRB_AS_REQ,
-			PAData:  pas,
+			PAData:  types.PADataSequence{},
 			ReqBody: KDCReqBody{
 				KDCOptions: c.LibDefaults.Kdc_default_options,
 				Realm:      c.LibDefaults.Default_realm,

@@ -11,8 +11,15 @@ import (
 type Client struct {
 	Credentials *credentials.Credentials
 	Config      *config.Config
+	GoKrb5Conf  *Config
 	Session     *Session
 	Cache       *Cache
+}
+
+// GoKRB5 specific client configurations.
+type Config struct {
+	Disable_PA_FX_FAST               bool
+	Assume_PA_ENC_TIMESTAMP_Required bool
 }
 
 // Create a new client with a password credential.
@@ -21,6 +28,7 @@ func NewClientWithPassword(username, realm, password string) Client {
 	return Client{
 		Credentials: creds.WithPassword(password),
 		Config:      config.NewConfig(),
+		GoKrb5Conf:  &Config{},
 		Session:     &Session{},
 		Cache:       NewCache(),
 	}
@@ -32,6 +40,7 @@ func NewClientWithKeytab(username, realm string, kt keytab.Keytab) Client {
 	return Client{
 		Credentials: creds.WithKeytab(kt),
 		Config:      config.NewConfig(),
+		GoKrb5Conf:  &Config{},
 		Session:     &Session{},
 		Cache:       NewCache(),
 	}

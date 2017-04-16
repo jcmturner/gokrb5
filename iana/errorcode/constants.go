@@ -107,7 +107,7 @@ var errorcodeLookup = map[int]string{
 	KDC_ERR_SERVICE_NOTYET:                "KDC_ERR_SERVICE_NOTYET Server not yet valid; try again later",
 	KDC_ERR_KEY_EXPIRED:                   "KDC_ERR_KEY_EXPIRED Password has expired; change password to reset",
 	KDC_ERR_PREAUTH_FAILED:                "KDC_ERR_PREAUTH_FAILED Pre-authentication information was invalid",
-	KDC_ERR_PREAUTH_REQUIRED:              "KDC_ERR_PREAUTH_REQUIRED Additional pre- authentication required",
+	KDC_ERR_PREAUTH_REQUIRED:              "KDC_ERR_PREAUTH_REQUIRED Additional pre-authentication required",
 	KDC_ERR_SERVER_NOMATCH:                "KDC_ERR_SERVER_NOMATCH Requested server and ticket don't match",
 	KDC_ERR_MUST_USE_USER2USER:            "KDC_ERR_MUST_USE_USER2USER Server principal valid for  user2user only",
 	KDC_ERR_PATH_NOT_ACCEPTED:             "KDC_ERR_PATH_NOT_ACCEPTED KDC Policy rejects transited path",
