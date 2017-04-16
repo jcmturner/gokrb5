@@ -1,11 +1,13 @@
 # gokrb5
 
-This is work in progress and may have some issues. Full testing is still required.
+#### This is work in progress and may have some issues. Full testing is still required.
 
 Currently the following is working/tested:
-* Works with a KDC that supports [PA FAST](https://tools.ietf.org/html/rfc6806.html#section-11). Older KDCs need testing.
-* Client side authentication to HTTP servers that implement SPNEGO using Kerberos 5.
-* Service side handling for Kerberos SPNEGO seems to be working but not yet fully tested.
+* Tested against MIT KDC only. MIT KDC 1.6.3 is the oldest version tested against.
+* Tested against a KDC that supports PA-FX-FAST.
+* Tested against users that have pre-authentication required using PA-ENC-TIMESTAMP.
+* Client side support for authentication to HTTP servers that implement SPNEGO using Kerberos 5.
+* Service side handling for Kerberos SPNEGO seems to be working but not yet fully tested with a browser such as firefox or chrome.
 
 [![GoDoc](https://godoc.org/github.com/jcmturner/gokrb5?status.svg)](https://godoc.org/github.com/jcmturner/gokrb5)
 
