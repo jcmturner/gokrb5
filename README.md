@@ -1,17 +1,15 @@
 # gokrb5
 [![GoDoc](https://godoc.org/github.com/jcmturner/gokrb5?status.svg)](https://godoc.org/github.com/jcmturner/gokrb5)
 
-#### This is work in progress and may have some issues. Full testing is still required.
-
 Currently the following is working/tested:
-* Tested against MIT KDC only. MIT KDC 1.6.3 is the oldest version tested against.
+* Client side libraries that supports authentication to HTTP servers that implement SPNEGO using Kerberos 5.
+* Service side libraries for implementing HTTP web servers using Kerberos SPNEGO authentication.
+* Tested against MIT KDC only (please let me know if you find it works against Microsoft Active Directory). MIT KDC 1.6.3 is the oldest version tested against.
 * Tested against a KDC that supports PA-FX-FAST.
 * Tested against users that have pre-authentication required using PA-ENC-TIMESTAMP.
-* Client side support for authentication to HTTP servers that implement SPNEGO using Kerberos 5.
-* Service side handling for Kerberos SPNEGO seems to be working but not yet fully tested with a browser such as firefox or chrome.
 
-## Implemented Encryption & Checksum Types
-The currently implemented encrytion types are:
+#### Implemented Encryption & Checksum Types
+The currently implemented encryption types are:
 
 | Implementation | Encryption ID | Checksum ID |
 |-------|-------------|------------|

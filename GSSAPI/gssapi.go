@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"github.com/jcmturner/asn1"
 	"github.com/jcmturner/gokrb5/asn1tools"
+	"github.com/jcmturner/gokrb5/credentials"
+	"github.com/jcmturner/gokrb5/messages"
+	"github.com/jcmturner/gokrb5/types"
 )
 
 var SPNEGO_OID = asn1.ObjectIdentifier{1, 3, 6, 1, 5, 5, 2}
@@ -81,4 +84,15 @@ func (s *SPNEGO) Marshal() ([]byte, error) {
 		return b, nil
 	}
 	return b, errors.New("SPNEGO cannot be marshalled. It contains neither a NegTokenInit or NegTokenResp")
+}
+
+func GetSPNEGOKrbNegTokenInit(creds credentials.Credentials, tkt messages.Ticket, sessionKey types.EncryptionKey) (SPNEGO, error) {
+	negTokenInit, err := NewNegTokenInitKrb5(creds, tkt, sessionKey)
+	if err != nil {
+		return SPNEGO{}, fmt.Errorf("Could not create NegTokenInit: %v", err)
+	}
+	return SPNEGO{
+		Init:         true,
+		NegTokenInit: negTokenInit,
+	}, nil
 }

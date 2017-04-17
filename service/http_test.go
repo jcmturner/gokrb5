@@ -1,30 +1,26 @@
-// +build integration
-// To turn on this test use -tags=integration in go test command
-
 package service
 
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/jcmturner/gokrb5/client"
+	"github.com/jcmturner/gokrb5/iana/nametype"
 	"github.com/jcmturner/gokrb5/keytab"
+	"github.com/jcmturner/gokrb5/messages"
 	"github.com/jcmturner/gokrb5/testdata"
+	"github.com/jcmturner/gokrb5/types"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 )
 
 func TestService_SPNEGOKRB_NoAuthHeader(t *testing.T) {
 	s := httpServer()
 	defer s.Close()
-
-	cl := getClient()
-	err := cl.Login()
-	if err != nil {
-		t.Fatalf("Error on AS_REQ: %v\n", err)
-	}
 	r, _ := http.NewRequest("GET", s.URL, nil)
 	httpResp, err := http.DefaultClient.Do(r)
 	if err != nil {
@@ -39,12 +35,30 @@ func TestService_SPNEGOKRB_ValidUser(t *testing.T) {
 	defer s.Close()
 
 	cl := getClient()
-	err := cl.Login()
-	if err != nil {
-		t.Fatalf("Error on AS_REQ: %v\n", err)
+	sname := types.PrincipalName{
+		NameType:   nametype.KRB_NT_PRINCIPAL,
+		NameString: []string{"HTTP", "host.test.gokrb5"},
 	}
+	b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
+	kt, _ := keytab.Parse(b)
+	st := time.Now().UTC()
+	tkt, sessionKey, err := messages.NewTicket(cl.Credentials.CName, cl.Credentials.Realm,
+		sname, "TEST.GOKRB5",
+		types.NewKrbFlags(),
+		kt,
+		18,
+		1,
+		st,
+		st,
+		st.Add(time.Duration(24)*time.Hour),
+		st.Add(time.Duration(48)*time.Hour),
+	)
+	if err != nil {
+		t.Fatalf("Error getting test ticket: %v", err)
+	}
+
 	r, _ := http.NewRequest("GET", s.URL, nil)
-	err = cl.SetSPNEGOHeader(r, "HTTP/host.test.gokrb5")
+	err = client.SetSPNEGOHeader(*cl.Credentials, tkt, sessionKey, r)
 	if err != nil {
 		t.Fatalf("Error setting client SPNEGO header: %v", err)
 	}
@@ -60,12 +74,30 @@ func TestService_SPNEGOKRB_Replay(t *testing.T) {
 	defer s.Close()
 
 	cl := getClient()
-	err := cl.Login()
-	if err != nil {
-		t.Fatalf("Error on AS_REQ: %v\n", err)
+	sname := types.PrincipalName{
+		NameType:   nametype.KRB_NT_PRINCIPAL,
+		NameString: []string{"HTTP", "host.test.gokrb5"},
 	}
+	b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
+	kt, _ := keytab.Parse(b)
+	st := time.Now().UTC()
+	tkt, sessionKey, err := messages.NewTicket(cl.Credentials.CName, cl.Credentials.Realm,
+		sname, "TEST.GOKRB5",
+		types.NewKrbFlags(),
+		kt,
+		18,
+		1,
+		st,
+		st,
+		st.Add(time.Duration(24)*time.Hour),
+		st.Add(time.Duration(48)*time.Hour),
+	)
+	if err != nil {
+		t.Fatalf("Error getting test ticket: %v", err)
+	}
+
 	r, _ := http.NewRequest("GET", s.URL, nil)
-	err = cl.SetSPNEGOHeader(r, "HTTP/host.test.gokrb5")
+	err = client.SetSPNEGOHeader(*cl.Credentials, tkt, sessionKey, r)
 	if err != nil {
 		t.Fatalf("Error setting client SPNEGO header: %v", err)
 	}

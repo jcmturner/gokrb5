@@ -16,6 +16,7 @@ type Cache struct {
 type CacheEntry struct {
 	Ticket     messages.Ticket
 	AuthTime   time.Time
+	StartTime  time.Time
 	EndTime    time.Time
 	RenewTill  time.Time
 	SessionKey types.EncryptionKey
@@ -35,11 +36,12 @@ func (c *Cache) GetEntry(spn string) (CacheEntry, bool) {
 }
 
 // Add a ticket to the cache.
-func (c *Cache) AddEntry(tkt messages.Ticket, authTime, endTime, renewTill time.Time, sessionKey types.EncryptionKey) CacheEntry {
+func (c *Cache) AddEntry(tkt messages.Ticket, authTime, startTime, endTime, renewTill time.Time, sessionKey types.EncryptionKey) CacheEntry {
 	spn := strings.Join(tkt.SName.NameString, "/")
 	(*c).Entries[spn] = CacheEntry{
 		Ticket:     tkt,
 		AuthTime:   authTime,
+		StartTime:  startTime,
 		EndTime:    endTime,
 		RenewTill:  renewTill,
 		SessionKey: sessionKey,
@@ -57,7 +59,7 @@ func (c *Cache) RemoveEntry(spn string) {
 func (cl *Client) GetCachedTicket(spn string) (messages.Ticket, types.EncryptionKey, bool) {
 	if e, ok := cl.Cache.GetEntry(spn); ok {
 		//If within time window of ticket return it
-		if time.Now().UTC().After(e.AuthTime) && time.Now().UTC().Before(e.EndTime) {
+		if time.Now().UTC().After(e.StartTime) && time.Now().UTC().Before(e.EndTime) {
 			return e.Ticket, e.SessionKey, true
 		} else if time.Now().UTC().Before(e.RenewTill) {
 			e, err := cl.RenewTicket(e)
@@ -82,6 +84,7 @@ func (cl *Client) RenewTicket(e CacheEntry) (CacheEntry, error) {
 	e = cl.Cache.AddEntry(
 		tgsRep.Ticket,
 		tgsRep.DecryptedEncPart.AuthTime,
+		tgsRep.DecryptedEncPart.StartTime,
 		tgsRep.DecryptedEncPart.EndTime,
 		tgsRep.DecryptedEncPart.RenewTill,
 		tgsRep.DecryptedEncPart.Key,

@@ -71,6 +71,7 @@ func (cl *Client) GetServiceTicket(spn string) (messages.Ticket, types.Encryptio
 	cl.Cache.AddEntry(
 		tgsRep.Ticket,
 		tgsRep.DecryptedEncPart.AuthTime,
+		tgsRep.DecryptedEncPart.StartTime,
 		tgsRep.DecryptedEncPart.EndTime,
 		tgsRep.DecryptedEncPart.RenewTill,
 		tgsRep.DecryptedEncPart.Key,
