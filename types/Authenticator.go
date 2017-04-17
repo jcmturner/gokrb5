@@ -59,7 +59,7 @@ func NewAuthenticator(realm string, cname PrincipalName) Authenticator {
 func (a *Authenticator) GenerateSeqNumberAndSubKey(keyType, keySize int) {
 	a.SeqNumber = int(rand.Int31())
 	//Generate subkey value
-	sk := make([]byte, keySize)
+	sk := make([]byte, keySize, keySize)
 	rand.Read(sk)
 	a.SubKey = EncryptionKey{
 		KeyType:  keyType,

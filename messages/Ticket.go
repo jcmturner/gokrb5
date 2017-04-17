@@ -1,10 +1,12 @@
 package messages
 
 import (
+	"crypto/rand"
 	"fmt"
 	"github.com/jcmturner/asn1"
 	"github.com/jcmturner/gokrb5/asn1tools"
 	"github.com/jcmturner/gokrb5/crypto"
+	"github.com/jcmturner/gokrb5/iana"
 	"github.com/jcmturner/gokrb5/iana/asnAppTag"
 	"github.com/jcmturner/gokrb5/iana/errorcode"
 	"github.com/jcmturner/gokrb5/iana/keyusage"
@@ -41,6 +43,45 @@ type EncTicketPart struct {
 type TransitedEncoding struct {
 	TRType   int    `asn1:"explicit,tag:0"`
 	Contents []byte `asn1:"explicit,tag:1"`
+}
+
+func NewTicket(cname types.PrincipalName, crealm string, sname types.PrincipalName, srealm string, flags asn1.BitString, sktab keytab.Keytab, eTypeID, kvno int, authTime, startTime, endTime, renewTill time.Time) (Ticket, types.EncryptionKey, error) {
+	etype, err := crypto.GetEtype(eTypeID)
+	if err != nil {
+		return Ticket{}, types.EncryptionKey{}, err
+	}
+	ks := etype.GetKeyByteSize()
+	kv := make([]byte, ks, ks)
+	rand.Read(kv)
+	sessionKey := types.EncryptionKey{
+		KeyType:  eTypeID,
+		KeyValue: kv,
+	}
+	etp := EncTicketPart{
+		Flags:     flags,
+		Key:       sessionKey,
+		CRealm:    crealm,
+		CName:     cname,
+		Transited: TransitedEncoding{},
+		AuthTime:  authTime,
+		StartTime: startTime,
+		EndTime:   endTime,
+		RenewTill: renewTill,
+	}
+	b, err := asn1.Marshal(etp)
+	b = asn1tools.AddASNAppTag(b, asnAppTag.EncTicketPart)
+	skey, err := sktab.GetEncryptionKey(sname.NameString, srealm, kvno, eTypeID)
+	if err != nil {
+		return Ticket{}, types.EncryptionKey{}, err
+	}
+	ed, err := crypto.GetEncryptedData(b, skey, keyusage.KDC_REP_TICKET, kvno)
+	tkt := Ticket{
+		TktVNO:  iana.PVNO,
+		Realm:   srealm,
+		SName:   sname,
+		EncPart: ed,
+	}
+	return tkt, sessionKey, nil
 }
 
 func (t *Ticket) Unmarshal(b []byte) error {
