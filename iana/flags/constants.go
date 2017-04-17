@@ -1,3 +1,4 @@
+//Kerberos 5 flag values.
 package flags
 
 const (
