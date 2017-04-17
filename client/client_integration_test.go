@@ -9,6 +9,7 @@ import (
 	"github.com/jcmturner/gokrb5/keytab"
 	"github.com/jcmturner/gokrb5/testdata"
 	"github.com/stretchr/testify/assert"
+	"net/http"
 	"testing"
 )
 
@@ -136,12 +137,32 @@ func TestClient_GetServiceTicket_OlderKDC(t *testing.T) {
 	}
 	assert.Equal(t, spn, tkt.SName.GetPrincipalNameString())
 	assert.Equal(t, 18, key.KeyType)
+}
 
-	//Check cache use - should get the same values back again
-	tkt2, key2, err := cl.GetServiceTicket(spn)
+func TestClient_SetSPNEGOHeader(t *testing.T) {
+	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	kt, _ := keytab.Parse(b)
+	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
+	cl.WithConfig(c)
+
+	err := cl.Login()
 	if err != nil {
-		t.Fatalf("Error getting service ticket: %v\n", err)
+		t.Fatalf("Error on AS_REQ: %v\n", err)
 	}
-	assert.Equal(t, tkt.EncPart.Cipher, tkt2.EncPart.Cipher)
-	assert.Equal(t, key.KeyValue, key2.KeyValue)
+	r, _ := http.NewRequest("GET", "http://10.80.88.90/index.html", nil)
+	httpResp, err := http.DefaultClient.Do(r)
+	if err != nil {
+		t.Fatalf("Request error: %v\n", err)
+	}
+	assert.Equal(t, http.StatusUnauthorized, httpResp.StatusCode, "Status code in response to client with no SPNEGO not as expected")
+	err = cl.SetSPNEGOHeader(r, "HTTP/host.test.gokrb5")
+	if err != nil {
+		t.Fatalf("Error setting client SPNEGO header: %v", err)
+	}
+	httpResp, err = http.DefaultClient.Do(r)
+	if err != nil {
+		t.Fatalf("Request error: %v\n", err)
+	}
+	assert.Equal(t, http.StatusOK, httpResp.StatusCode, "Status code in response to client SPNEGO request not as expected")
 }

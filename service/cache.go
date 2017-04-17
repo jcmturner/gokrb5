@@ -48,11 +48,11 @@ type replayCacheEntry struct {
 
 // Instance of the ServiceCache. This needs to be a singleton.
 var replayCache ServiceCache
+var once sync.Once
 
 // Get a pointer to the ServiceCache singleton.
 func GetReplayCache(d time.Duration) *ServiceCache {
 	// Create a singleton of the ReplayCache and start a background thread to regularly clean out old entries
-	var once sync.Once
 	once.Do(func() {
 		replayCache = make(ServiceCache)
 		go func() {
@@ -107,7 +107,7 @@ func (c *ServiceCache) ClearOldEntries(d time.Duration) {
 }
 
 // Check if the Authenticator provided is a replay within the duration defined. If this is not a replay add the entry to the cache for tracking.
-func (c *ServiceCache) IsReplay(d time.Duration, sname types.PrincipalName, a types.Authenticator) bool {
+func (c *ServiceCache) IsReplay(sname types.PrincipalName, a types.Authenticator) bool {
 	if ck, ok := (*c)[a.CName.GetPrincipalNameString()]; ok {
 		ct := a.CTime.Add(time.Duration(a.Cusec) * time.Microsecond)
 		if e, ok := ck.ReplayMap[ct]; ok {

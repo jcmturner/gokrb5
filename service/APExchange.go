@@ -64,7 +64,7 @@ func ValidateAPREQ(APReq messages.APReq, kt keytab.Keytab, cAddr string) (bool, 
 
 	// Check for replay
 	rc := GetReplayCache(d)
-	if rc.IsReplay(d, APReq.Ticket.SName, a) {
+	if rc.IsReplay(APReq.Ticket.SName, a) {
 		err := messages.NewKRBError(APReq.Ticket.SName, APReq.Ticket.Realm, errorcode.KRB_AP_ERR_REPEAT, "Replay detected")
 		return false, creds, err
 	}
