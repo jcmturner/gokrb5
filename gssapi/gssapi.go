@@ -1,5 +1,5 @@
 // Generic Security Services Application Program Interface implementation required for SPNEGO kerberos authentication.
-package GSSAPI
+package gssapi
 
 import (
 	"errors"

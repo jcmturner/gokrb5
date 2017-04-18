@@ -3,8 +3,8 @@ package client
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/jcmturner/gokrb5/GSSAPI"
 	"github.com/jcmturner/gokrb5/credentials"
+	"github.com/jcmturner/gokrb5/gssapi"
 	"github.com/jcmturner/gokrb5/messages"
 	"github.com/jcmturner/gokrb5/types"
 	"net/http"
@@ -29,7 +29,7 @@ func (cl *Client) SetSPNEGOHeader(r *http.Request, spn string) error {
 }
 
 func SetSPNEGOHeader(creds credentials.Credentials, tkt messages.Ticket, sessionKey types.EncryptionKey, r *http.Request) error {
-	SPNEGOToken, err := GSSAPI.GetSPNEGOKrbNegTokenInit(creds, tkt, sessionKey)
+	SPNEGOToken, err := gssapi.GetSPNEGOKrbNegTokenInit(creds, tkt, sessionKey)
 	nb, err := SPNEGOToken.Marshal()
 	if err != nil {
 		return fmt.Errorf("Could marshal SPNEGO: %v", err)

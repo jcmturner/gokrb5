@@ -1,4 +1,4 @@
-package GSSAPI
+package gssapi
 
 import "github.com/jcmturner/asn1"
 

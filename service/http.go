@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"github.com/jcmturner/gokrb5/GSSAPI"
+	"github.com/jcmturner/gokrb5/gssapi"
 	"github.com/jcmturner/gokrb5/keytab"
 	"log"
 	"net/http"
@@ -33,17 +33,17 @@ func SPNEGOKRB5Authenticate(f http.Handler, kt keytab.Keytab, l *log.Logger) htt
 			rejectSPNEGO(w, l, fmt.Sprintf("%v - SPNEGO error in base64 decoding negotiation header: %v", r.RemoteAddr, err))
 			return
 		}
-		var spnego GSSAPI.SPNEGO
+		var spnego gssapi.SPNEGO
 		err = spnego.Unmarshal(b)
 		if !spnego.Init {
 			rejectSPNEGO(w, l, fmt.Sprintf("%v - SPNEGO negotiation token is not a NegTokenInit: %v", r.RemoteAddr, err))
 			return
 		}
-		if !spnego.NegTokenInit.MechTypes[0].Equal(GSSAPI.MechTypeOID_Krb5) {
+		if !spnego.NegTokenInit.MechTypes[0].Equal(gssapi.MechTypeOID_Krb5) {
 			rejectSPNEGO(w, l, fmt.Sprintf("%v - SPNEGO OID of MechToken is not of type KRB5", r.RemoteAddr))
 			return
 		}
-		var mt GSSAPI.MechToken
+		var mt gssapi.MechToken
 		err = mt.Unmarshal(spnego.NegTokenInit.MechToken)
 		if err != nil {
 			rejectSPNEGO(w, l, fmt.Sprintf("%v - SPNEGO error unmarshaling MechToken: %v", r.RemoteAddr, err))
