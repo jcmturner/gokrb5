@@ -56,8 +56,7 @@ func SPNEGOKRB5Authenticate(f http.Handler, kt keytab.Keytab, l *log.Logger) htt
 
 		if ok, creds, err := ValidateAPREQ(mt.APReq, kt, r.RemoteAddr); ok {
 			ctx := r.Context()
-			ctx = context.WithValue(ctx, "cname", creds.Username)
-			ctx = context.WithValue(ctx, "crealm", creds.Realm)
+			ctx = context.WithValue(ctx, "credentials", creds)
 			ctx = context.WithValue(ctx, "authenticated", true)
 			if l != nil {
 				l.Printf("%v %s@%s - SPNEGO authentication succeeded", r.RemoteAddr, creds.Username, creds.Realm)

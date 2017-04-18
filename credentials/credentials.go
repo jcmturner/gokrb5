@@ -16,7 +16,7 @@ type Credentials struct {
 	CName      types.PrincipalName
 	Keytab     keytab.Keytab
 	Password   string
-	Attributes []string
+	Attributes map[string]interface{}
 }
 
 // Create a new Credentials struct.

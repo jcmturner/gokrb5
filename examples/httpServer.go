@@ -5,6 +5,7 @@ package main
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/jcmturner/gokrb5/credentials"
 	"github.com/jcmturner/gokrb5/keytab"
 	"github.com/jcmturner/gokrb5/service"
 	"github.com/jcmturner/gokrb5/testdata"
@@ -36,6 +37,6 @@ func main() {
 func testAppHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	ctx := r.Context()
-	fmt.Fprintf(w, "<html>\nTEST.GOKRB5 Handler\nAuthenticed user: %s\nUser's realm: %s\n</html>", ctx.Value("cname").(string), ctx.Value("crealm").(string))
+	fmt.Fprintf(w, "<html>\nTEST.GOKRB5 Handler\nAuthenticed user: %s\nUser's realm: %s\n</html>", ctx.Value("credentials").(credentials.Credentials).Username, ctx.Value("credentials").(credentials.Credentials).Realm)
 	return
 }
