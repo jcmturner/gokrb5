@@ -18,7 +18,9 @@ const (
 	KRB_PRIV_ENCPART                               = 13
 	KRB_CRED_ENCPART                               = 14
 	KRB_SAFE_CHKSUM                                = 15
-	//16-18.  Reserved for future use in Kerberos and related protocols.
+	KERB_NON_KERB_SALT                             = 16
+	KERB_NON_KERB_CKSUM_SALT                       = 17
+	//18.  Reserved for future use in Kerberos and related protocols.
 	AD_KDC_ISSUED_CHKSUM = 19
 	//20-21.  Reserved for future use in Kerberos and related protocols.
 	GSSAPI_ACCEPTOR_SEAL           = 22
