@@ -16,5 +16,5 @@ type KerbSidAndAttributes struct {
 }
 
 func SetFlag(a *ULong, i uint) {
-	a = a | (1 << (31 - i))
+	*a = *a | (1 << (31 - i))
 }
