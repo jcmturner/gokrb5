@@ -26,4 +26,5 @@ const (
 	//UNASSIGNED : 21-32770
 	GSSAPI = 32771
 	//UNASSIGNED : 32772-2147483647
+	KERB_CHECKSUM_HMAC_MD5 = 4294967158 // 0xFFFFFF76 documentation says this is -138 but in an unsigned int this is 4294967158
 )
