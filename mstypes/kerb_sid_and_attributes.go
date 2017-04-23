@@ -1,5 +1,10 @@
 package mstypes
 
+import (
+	"encoding/binary"
+	"github.com/jcmturner/gokrb5/ndr"
+)
+
 const (
 	SE_GROUP_MANDATORY          = 31
 	SE_GROUP_ENABLED_BY_DEFAULT = 30
@@ -12,9 +17,18 @@ const (
 // https://msdn.microsoft.com/en-us/library/cc237947.aspx
 type KerbSidAndAttributes struct {
 	SID        RPC_SID // A pointer to an RPC_SID structure.
-	Attributes ULong
+	Attributes uint32
 }
 
-func SetFlag(a *ULong, i uint) {
+func Read_KerbSidAndAttributes(b []byte, p *int, e *binary.ByteOrder) KerbSidAndAttributes {
+	s := Read_RPC_SID(b, p, e)
+	a := ndr.Read_uint32(b, p, e)
+	return KerbSidAndAttributes{
+		SID:        s,
+		Attributes: a,
+	}
+}
+
+func SetFlag(a *uint32, i uint) {
 	*a = *a | (1 << (31 - i))
 }

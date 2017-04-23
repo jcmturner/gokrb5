@@ -15,21 +15,21 @@ type PAC_CredentialsInfo struct {
 // Once serialized, the data is encrypted using the key and cryptographic system selected through the AS protocol and the KRB_AS_REP message
 // Fields (for capturing this information) and cryptographic parameters are specified in PAC_CREDENTIAL_INFO (section 2.6.1).
 type PAC_CredentialData struct {
-	CredentialCount ULong
+	CredentialCount uint32
 	Credentials     []SECPKG_SupplementalCred // Size is the value of CredentialCount
 }
 
 // https://msdn.microsoft.com/en-us/library/cc237956.aspx
 type SECPKG_SupplementalCred struct {
 	PackageName    RPC_UnicodeString
-	CredentialSize ULong
-	Credentials    []UChar // Is a ptr. Size is the value of CredentialSize
+	CredentialSize uint32
+	Credentials    []uint8 // Is a ptr. Size is the value of CredentialSize
 }
 
 // https://msdn.microsoft.com/en-us/library/cc237949.aspx
 type NTLM_SupplementalCred struct {
-	Version    ULong // A 32-bit unsigned integer that defines the credential version.This field MUST be 0x00000000.
-	Flags      ULong
+	Version    uint32 // A 32-bit unsigned integer that defines the credential version.This field MUST be 0x00000000.
+	Flags      uint32
 	LMPassword []byte // A 16-element array of unsigned 8-bit integers that define the LM OWF. The LmPassword member MUST be ignored if the L flag is not set in the Flags member.
 	NTPassword []byte // A 16-element array of unsigned 8-bit integers that define the NT OWF. The LtPassword member MUST be ignored if the N flag is not set in the Flags member.
 }

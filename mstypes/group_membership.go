@@ -1,11 +1,25 @@
 package mstypes
 
+import (
+	"encoding/binary"
+	"github.com/jcmturner/gokrb5/ndr"
+)
+
 // https://msdn.microsoft.com/en-us/library/cc237945.aspx
 // RelativeID : A 32-bit unsigned integer that contains the RID of a particular group.
 // The possible values for the Attributes flags are identical to those specified in KERB_SID_AND_ATTRIBUTES
 type GroupMembership struct {
-	RelativeID ULong
-	Attributes ULong
+	RelativeID uint32
+	Attributes uint32
+}
+
+func Read_GroupMembership(b []byte, p *int, e *binary.ByteOrder) GroupMembership {
+	r := ndr.Read_uint32(b, p, e)
+	a := ndr.Read_uint32(b, p, e)
+	return GroupMembership{
+		RelativeID: r,
+		Attributes: a,
+	}
 }
 
 // https://msdn.microsoft.com/en-us/library/hh536344.aspx
@@ -14,6 +28,20 @@ type GroupMembership struct {
 // GroupIds: A pointer to a list of GROUP_MEMBERSHIP structures that contain the groups to which the account belongs in the domain. The number of groups in this list MUST be equal to GroupCount.
 type DomainGroupMembership struct {
 	DomainID   RPC_SID
-	GroupCount ULong
+	GroupCount uint32
 	GroupIDs   []GroupMembership // Size is value of GroupCount
+}
+
+func Read_DomainGroupMembership(b []byte, p *int, e *binary.ByteOrder) DomainGroupMembership {
+	d := Read_RPC_SID(b, p, e)
+	c := ndr.Read_uint32(b, p, e)
+	g := make([]GroupMembership, c, c)
+	for i := range g {
+		g[i] = Read_GroupMembership(b, p, e)
+	}
+	return DomainGroupMembership{
+		DomainID:   d,
+		GroupCount: c,
+		GroupIDs:   g,
+	}
 }
