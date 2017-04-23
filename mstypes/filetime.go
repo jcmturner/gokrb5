@@ -1,6 +1,8 @@
 package mstypes
 
 import (
+	"encoding/binary"
+	"github.com/jcmturner/gokrb5/ndr"
 	"time"
 )
 
@@ -46,5 +48,14 @@ func GetFileTime(t time.Time) FileTime {
 	return FileTime{
 		LowDateTime:  uint32(ld),
 		HighDateTime: uint32(hd),
+	}
+}
+
+func Read_FileTime(b []byte, p *int, e *binary.ByteOrder) FileTime {
+	l := ndr.Read_uint32(b, p, e)
+	h := ndr.Read_uint32(b, p, e)
+	return FileTime{
+		LowDateTime:  l,
+		HighDateTime: h,
 	}
 }
