@@ -1,5 +1,10 @@
 package mstypes
 
+import (
+	"encoding/binary"
+	"github.com/jcmturner/gokrb5/ndr"
+)
+
 const (
 	ULTYPE_KERB_VALIDATION_INFO      = 1
 	ULTYPE_CREDENTIALS               = 2
@@ -18,4 +23,15 @@ type PACInfoBuffer struct {
 	ULType       uint32 // A 32-bit unsigned integer in little-endian format that describes the type of data present in the buffer contained at Offset.
 	CBBufferSize uint32 // A 32-bit unsigned integer in little-endian format that contains the size, in bytes, of the buffer in the PAC located at Offset.
 	Offset       uint64 // A 64-bit unsigned integer in little-endian format that contains the offset to the beginning of the buffer, in bytes, from the beginning of the PACTYPE structure. The data offset MUST be a multiple of eight. The following sections specify the format of each type of element.
+}
+
+func Read_PACInfoBuffer(b []byte, p *int, e *binary.ByteOrder) PACInfoBuffer {
+	u := ndr.Read_uint32(b, p, e)
+	s := ndr.Read_uint32(b, p, e)
+	o := ndr.Read_uint64(b, p, e)
+	return PACInfoBuffer{
+		ULType:       u,
+		CBBufferSize: s,
+		Offset:       o,
+	}
 }

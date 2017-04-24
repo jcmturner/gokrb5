@@ -1,5 +1,10 @@
 package mstypes
 
+import (
+	"encoding/binary"
+	"github.com/jcmturner/gokrb5/ndr"
+)
+
 // https://msdn.microsoft.com/en-us/library/hh536402.aspx
 type PAC_DeviceInfo struct {
 	UserID            uint32                  // A 32-bit unsigned integer that contains the RID of the account. If the UserId member equals 0x00000000, the first group SID in this member is the SID for this account.
@@ -11,6 +16,38 @@ type PAC_DeviceInfo struct {
 	ExtraSIDs         []KerbSidAndAttributes  // A pointer to a list of KERB_SID_AND_ATTRIBUTES structures that contain a list of SIDs corresponding to groups not in domains. If the UserId member equals 0x00000000, the first group SID in this member is the SID for this account.
 	DomainGroupCount  uint32                  // A 32-bit unsigned integer that contains the number of domains with groups to which the account belongs.
 	DomainGroup       []DomainGroupMembership // A pointer to a list of DOMAIN_GROUP_MEMBERSHIP structures (section 2.2.3) that contains the domains to which the account belongs to a group. The number of sets in this list MUST be equal to DomainCount.
+}
+
+func Read_PAC_DeviceInfo(b []byte, p *int, e *binary.ByteOrder) PAC_DeviceInfo {
+	u := ndr.Read_uint32(b, p, e)
+	pg := ndr.Read_uint32(b, p, e)
+	aSid := Read_RPC_SID(b, p, e)
+	c := ndr.Read_uint32(b, p, e)
+	ag := make([]GroupMembership, c, c)
+	for i := range ag {
+		ag[i] = Read_GroupMembership(b, p, e)
+	}
+	sc := ndr.Read_uint32(b, p, e)
+	eSid := make([]KerbSidAndAttributes, sc, sc)
+	for i := range eSid {
+		eSid[i] = Read_KerbSidAndAttributes(b, p, e)
+	}
+	dc := ndr.Read_uint32(b, p, e)
+	dg := make([]GroupMembership, dc, dc)
+	for i := range dg {
+		dg[i] = Read_DomainGroupMembership(b, p, e)
+	}
+	return PAC_DeviceInfo{
+		UserID:            u,
+		PrimaryGroupID:    pg,
+		AccountDomainID:   aSid,
+		AccountGroupCount: c,
+		AccountGroupIDs:   ag,
+		SIDCount:          sc,
+		ExtraSIDs:         eSid,
+		DomainGroupCount:  dc,
+		DomainGroup:       dg,
+	}
 }
 
 // TODO come back to this struct
