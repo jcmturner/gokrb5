@@ -1,5 +1,11 @@
 package mstypes
 
+import (
+	"encoding/binary"
+	"github.com/jcmturner/gokrb5/iana/chksumtype"
+	"github.com/jcmturner/gokrb5/ndr"
+)
+
 /*
 https://msdn.microsoft.com/en-us/library/cc237955.aspx
 
@@ -24,8 +30,28 @@ The cryptographic system that is used to calculate the checksum depends on which
 - Does not support RC4-HMAC, AES128-CTS-HMAC-SHA1-96 or AES256-CTS-HMAC-SHA1-96 -->  None. The checksum operation will fail.
 */
 
-type PAC_SignatureDate struct {
+type PAC_SignatureData struct {
 	SignatureType  uint32 // A 32-bit unsigned integer value in little-endian format that defines the cryptographic system used to calculate the checksum. This MUST be one of the following checksum types: KERB_CHECKSUM_HMAC_MD5 (signature size = 16), HMAC_SHA1_96_AES128 (signature size = 12), HMAC_SHA1_96_AES256 (signature size = 12).
 	Signature      []byte // Size depends on the type. See comment above.
 	RODCIdentifier uint16 // A 16-bit unsigned integer value in little-endian format that contains the first 16 bits of the key version number ([MS-KILE] section 3.1.5.8) when the KDC is an RODC. When the KDC is not an RODC, this field does not exist.
+}
+
+func Read_PAC_SignatureData(b []byte, p *int, e *binary.ByteOrder) PAC_SignatureData {
+	t := ndr.Read_uint32(b, p, e)
+	var c int
+	switch t {
+	case chksumtype.KERB_CHECKSUM_HMAC_MD5:
+		c = 16
+	case chksumtype.HMAC_SHA1_96_AES128:
+		c = 12
+	case chksumtype.HMAC_SHA1_96_AES256:
+		c = 12
+	}
+	s := ndr.Read_bytes(b, p, c, e)
+	r := ndr.Read_uint16(b, p, e)
+	return PAC_SignatureData{
+		SignatureType:  t,
+		Signature:      s,
+		RODCIdentifier: r,
+	}
 }
