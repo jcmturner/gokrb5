@@ -3,7 +3,9 @@ package messages
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/jcmturner/gokrb5/iana/adtype"
 	"github.com/jcmturner/gokrb5/testdata"
+	"github.com/jcmturner/gokrb5/types"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -110,4 +112,25 @@ func TestMarshalTicket(t *testing.T) {
 		t.Fatalf("Marshal of ticket errored: %v", err)
 	}
 	assert.Equal(t, b, mb, "Marshalled bytes not as expected")
+}
+
+func TestAuthorizationData_GetPACType(t *testing.T) {
+	v := "PAC_AuthorizationData"
+	b, err := hex.DecodeString(testdata.TestVectors[v])
+	if err != nil {
+		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+	}
+	//TODO should the test data need to be wrapped up again?
+	a := types.AuthorizationData{
+		types.AuthorizationDataEntry{
+			ADType: adtype.AD_IF_RELEVANT,
+			ADData: b,
+		},
+	}
+	tkt := Ticket{DecryptedEncPart: EncTicketPart{AuthorizationData: a}}
+	pactype, err := tkt.GetPACType()
+	if err != nil {
+		t.Fatalf("Error getting PAC Type: %v\n", err)
+	}
+	t.Logf("PACType: %+v", pactype)
 }

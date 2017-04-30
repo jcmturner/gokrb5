@@ -20,7 +20,7 @@ type KerbSidAndAttributes struct {
 	Attributes uint32
 }
 
-func Read_KerbSidAndAttributes(b []byte, p *int, e *binary.ByteOrder) (KerbSidAndAttributes, error) {
+func Read_KerbSidAndAttributes(b *[]byte, p *int, e *binary.ByteOrder) (KerbSidAndAttributes, error) {
 	s, err := Read_RPC_SID(b, p, e)
 	if err != nil {
 		return KerbSidAndAttributes{}, err

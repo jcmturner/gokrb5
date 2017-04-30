@@ -13,7 +13,7 @@ type GroupMembership struct {
 	Attributes uint32
 }
 
-func Read_GroupMembership(b []byte, p *int, e *binary.ByteOrder) GroupMembership {
+func Read_GroupMembership(b *[]byte, p *int, e *binary.ByteOrder) GroupMembership {
 	r := ndr.Read_uint32(b, p, e)
 	a := ndr.Read_uint32(b, p, e)
 	return GroupMembership{
@@ -32,7 +32,7 @@ type DomainGroupMembership struct {
 	GroupIDs   []GroupMembership // Size is value of GroupCount
 }
 
-func Read_DomainGroupMembership(b []byte, p *int, e *binary.ByteOrder) (DomainGroupMembership, error) {
+func Read_DomainGroupMembership(b *[]byte, p *int, e *binary.ByteOrder) (DomainGroupMembership, error) {
 	d, err := Read_RPC_SID(b, p, e)
 	if err != nil {
 		return DomainGroupMembership{}, err

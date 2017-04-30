@@ -20,8 +20,8 @@ type RPC_SIDIdentifierAuthority struct {
 	Value []byte // 6 bytes
 }
 
-func Read_RPC_SID(b []byte, p *int, e *binary.ByteOrder) (RPC_SID, error) {
-	size := int(ndr.Read_uint32(b, p, e))
+func Read_RPC_SID(b *[]byte, p *int, e *binary.ByteOrder) (RPC_SID, error) {
+	size := int(ndr.Read_uint32(b, p, e)) // This is part of the NDR encoding rather than the data type.
 	r := ndr.Read_uint8(b, p)
 	if r != uint8(1) {
 		return RPC_SID{}, ndr.NDRMalformed{EText: fmt.Sprintf("SID revision value read as %d when it must be 1", r)}
@@ -43,7 +43,7 @@ func Read_RPC_SID(b []byte, p *int, e *binary.ByteOrder) (RPC_SID, error) {
 	}, nil
 }
 
-func Read_RPC_SIDIdentifierAuthority(b []byte, p *int, e *binary.ByteOrder) RPC_SIDIdentifierAuthority {
+func Read_RPC_SIDIdentifierAuthority(b *[]byte, p *int, e *binary.ByteOrder) RPC_SIDIdentifierAuthority {
 	return RPC_SIDIdentifierAuthority{
 		Value: ndr.Read_bytes(b, p, 6, e),
 	}

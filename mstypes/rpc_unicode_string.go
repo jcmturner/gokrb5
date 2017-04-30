@@ -13,7 +13,7 @@ type RPC_UnicodeString struct {
 	Value         string
 }
 
-func Read_RPC_UnicodeString(b []byte, p *int, e *binary.ByteOrder) (RPC_UnicodeString, error) {
+func Read_RPC_UnicodeString(b *[]byte, p *int, e *binary.ByteOrder) (RPC_UnicodeString, error) {
 	l := ndr.Read_uint16(b, p, e)
 	ml := ndr.Read_uint16(b, p, e)
 	if ml < l || l%2 != 0 || ml%2 != 0 {
@@ -27,7 +27,7 @@ func Read_RPC_UnicodeString(b []byte, p *int, e *binary.ByteOrder) (RPC_UnicodeS
 	}, nil
 }
 
-func (s *RPC_UnicodeString) UnmarshalString(b []byte, p *int, e *binary.ByteOrder) (err error) {
+func (s *RPC_UnicodeString) UnmarshalString(b *[]byte, p *int, e *binary.ByteOrder) (err error) {
 	s.Value, err = ndr.Read_ConformantVaryingString(b, p, e)
 	return
 }
