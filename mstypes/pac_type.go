@@ -12,7 +12,7 @@ type PACType struct {
 	Buffers  []PACInfoBuffer // Size 1
 }
 
-func Read_PACType(b []byte, p *int, e *binary.ByteOrder) PACType {
+func Read_PACType(b *[]byte, p *int, e *binary.ByteOrder) PACType {
 	c := ndr.Read_uint32(b, p, e)
 	v := ndr.Read_uint32(b, p, e)
 	buf := make([]PACInfoBuffer, c, c)

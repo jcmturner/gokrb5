@@ -166,3 +166,27 @@ func DecryptEncPart(ed types.EncryptedData, key types.EncryptionKey, usage uint3
 	}
 	return b, nil
 }
+
+func DecryptBytes(ed []byte, key types.EncryptionKey, usage uint32) ([]byte, error) {
+	//Derive the key
+	et, err := GetEtype(key.KeyType)
+	k, err := et.DeriveKey(key.KeyValue, engine.GetUsageKe(usage))
+	if err != nil {
+		return nil, fmt.Errorf("Error deriving key: %v", err)
+	}
+	// Strip off the checksum from the end
+	b, err := et.Decrypt(k, ed[:len(ed)-et.GetHMACBitLength()/8])
+	if err != nil {
+		return nil, fmt.Errorf("Error decrypting: %v", err)
+	}
+	//Verify checksum
+	if !et.VerifyIntegrity(key.KeyValue, ed, b, usage) {
+		return nil, errors.New("Error decrypting encrypted part: integrity verification failed")
+	}
+	//Remove the confounder bytes
+	b = b[et.GetConfounderByteSize():]
+	if err != nil {
+		return nil, fmt.Errorf("Error decrypting encrypted part: %v", err)
+	}
+	return b, nil
+}

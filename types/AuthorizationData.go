@@ -1,13 +1,7 @@
 package types
 
 import (
-	"encoding/binary"
-	"errors"
-	"fmt"
 	"github.com/jcmturner/asn1"
-	"github.com/jcmturner/gokrb5/iana/adtype"
-	"github.com/jcmturner/gokrb5/mstypes"
-	"os"
 )
 
 // Reference: https://www.ietf.org/rfc/rfc4120.txt
@@ -117,61 +111,4 @@ func (a *AuthorizationData) Unmarshal(b []byte) error {
 func (a *AuthorizationDataEntry) Unmarshal(b []byte) error {
 	_, err := asn1.Unmarshal(b, a)
 	return err
-}
-
-func (a AuthorizationData) GetPACType() (mstypes.PACType, error) {
-	for _, ad := range a {
-		if ad.ADType == adtype.AD_IF_RELEVANT {
-			var ad2 AuthorizationData
-			err := ad2.Unmarshal(ad.ADData)
-			if err != nil {
-				continue
-			}
-			// TODO note does tthe entry contain and AuthorizationData or AuthorizationDataEntry. Assuming the former atm.
-			if ad2[0].ADType == adtype.AD_WIN2K_PAC {
-				var p int
-				var endian binary.ByteOrder
-				endian = binary.LittleEndian
-				pt := mstypes.Read_PACType(ad2[0].ADData, &p, &endian)
-				err = processPAC(pt, ad2[0].ADData)
-				return pt, err
-			}
-		}
-	}
-	return mstypes.PACType{}, errors.New("AuthorizationData within the ticket does not contain PAC data.")
-}
-
-func processPAC(pt mstypes.PACType, b []byte) error {
-	for _, buf := range pt.Buffers {
-		p := make([]byte, buf.CBBufferSize, buf.CBBufferSize)
-		copy(p, b[int(buf.Offset):int(buf.Offset)+int(buf.CBBufferSize)])
-		switch int(buf.ULType) {
-		case mstypes.ULTYPE_KERB_VALIDATION_INFO:
-			var bi mstypes.KerbValidationInfo
-			err := bi.ReadFromStream(p)
-			fmt.Fprintf(os.Stderr, "\nKInfo: %+v\n", bi)
-			if err != nil {
-				return err
-			}
-		case mstypes.ULTYPE_CREDENTIALS:
-
-		case mstypes.ULTYPE_PAC_SERVER_SIGNATURE_DATA:
-
-		case mstypes.ULTYPE_PAC_KDC_SIGNATURE_DATA:
-
-		case mstypes.ULTYPE_PAC_CLIENT_INFO:
-
-		case mstypes.ULTYPE_S4U_DELEGATION_INFO:
-
-		case mstypes.ULTYPE_UPN_DNS_INFO:
-
-		case mstypes.ULTYPE_PAC_CLIENT_CLAIMS_INFO:
-
-		case mstypes.ULTYPE_PAC_DEVICE_INFO:
-
-		case mstypes.ULTYPE_PAC_DEVICE_CLAIMS_INFO:
-
-		}
-	}
-	return nil
 }

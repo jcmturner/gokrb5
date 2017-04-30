@@ -25,7 +25,7 @@ type PACInfoBuffer struct {
 	Offset       uint64 // A 64-bit unsigned integer in little-endian format that contains the offset to the beginning of the buffer, in bytes, from the beginning of the PACTYPE structure. The data offset MUST be a multiple of eight. The following sections specify the format of each type of element.
 }
 
-func Read_PACInfoBuffer(b []byte, p *int, e *binary.ByteOrder) PACInfoBuffer {
+func Read_PACInfoBuffer(b *[]byte, p *int, e *binary.ByteOrder) PACInfoBuffer {
 	u := ndr.Read_uint32(b, p, e)
 	s := ndr.Read_uint32(b, p, e)
 	o := ndr.Read_uint64(b, p, e)

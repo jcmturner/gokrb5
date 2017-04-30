@@ -51,7 +51,7 @@ func GetFileTime(t time.Time) FileTime {
 	}
 }
 
-func Read_FileTime(b []byte, p *int, e *binary.ByteOrder) FileTime {
+func Read_FileTime(b *[]byte, p *int, e *binary.ByteOrder) FileTime {
 	l := ndr.Read_uint32(b, p, e)
 	h := ndr.Read_uint32(b, p, e)
 	return FileTime{

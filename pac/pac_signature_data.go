@@ -1,7 +1,7 @@
-package mstypes
+package pac
 
 import (
-	"encoding/binary"
+	"fmt"
 	"github.com/jcmturner/gokrb5/iana/chksumtype"
 	"github.com/jcmturner/gokrb5/ndr"
 )
@@ -36,10 +36,19 @@ type PAC_SignatureData struct {
 	RODCIdentifier uint16 // A 16-bit unsigned integer value in little-endian format that contains the first 16 bits of the key version number ([MS-KILE] section 3.1.5.8) when the KDC is an RODC. When the KDC is not an RODC, this field does not exist.
 }
 
-func Read_PAC_SignatureData(b []byte, p *int, e *binary.ByteOrder) PAC_SignatureData {
-	t := ndr.Read_uint32(b, p, e)
+func (k *PAC_SignatureData) Unmarshal(b []byte) error {
+	ch, _, p, err := ndr.ReadHeaders(&b)
+	if err != nil {
+		return fmt.Errorf("Error parsing byte stream headers: %v", err)
+	}
+	e := &ch.Endianness
+
+	//The next 4 bytes are an RPC unique pointer referent. We just skip these
+	p += 4
+
+	k.SignatureType = ndr.Read_uint32(&b, &p, e)
 	var c int
-	switch t {
+	switch k.SignatureType {
 	case chksumtype.KERB_CHECKSUM_HMAC_MD5:
 		c = 16
 	case chksumtype.HMAC_SHA1_96_AES128:
@@ -47,11 +56,15 @@ func Read_PAC_SignatureData(b []byte, p *int, e *binary.ByteOrder) PAC_Signature
 	case chksumtype.HMAC_SHA1_96_AES256:
 		c = 12
 	}
-	s := ndr.Read_bytes(b, p, c, e)
-	r := ndr.Read_uint16(b, p, e)
-	return PAC_SignatureData{
-		SignatureType:  t,
-		Signature:      s,
-		RODCIdentifier: r,
+	k.Signature = ndr.Read_bytes(&b, &p, c, e)
+	k.RODCIdentifier = ndr.Read_uint16(&b, &p, e)
+
+	//Check that there is only zero padding left
+	for _, v := range b[p:] {
+		if v != 0 {
+			return ndr.NDRMalformed{EText: "Non-zero padding left over at end of data stream"}
+		}
 	}
+
+	return nil
 }

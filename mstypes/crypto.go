@@ -13,7 +13,7 @@ type UserSessionKey struct {
 	Data []CypherBlock // size = 2
 }
 
-func Read_UserSessionKey(b []byte, p *int, e *binary.ByteOrder) UserSessionKey {
+func Read_UserSessionKey(b *[]byte, p *int, e *binary.ByteOrder) UserSessionKey {
 	cb1 := CypherBlock{
 		Data: ndr.Read_bytes(b, p, 8, e),
 	}
