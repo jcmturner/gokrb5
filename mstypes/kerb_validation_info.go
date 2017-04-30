@@ -1,7 +1,8 @@
 package mstypes
 
 import (
-	"encoding/binary"
+	"errors"
+	"fmt"
 	"github.com/jcmturner/gokrb5/ndr"
 )
 
@@ -27,126 +28,192 @@ const (
 // It is a subset due to historical reasons and to the use of the common Active Directory to generate this information.
 // The KERB_VALIDATION_INFO structure is marshaled by RPC [MS-RPCE].
 type KerbValidationInfo struct {
-	LogOnTime              FileTime
-	LogOffTime             FileTime
-	KickOffTime            FileTime
-	PasswordLastSet        FileTime
-	PasswordCanChange      FileTime
-	PasswordMustChange     FileTime
-	EffectiveName          RPC_UnicodeString
-	FullName               RPC_UnicodeString
-	LogonScript            RPC_UnicodeString
-	ProfilePath            RPC_UnicodeString
-	HomeDirectory          RPC_UnicodeString
-	HomeDirectoryDrive     RPC_UnicodeString
-	LogonCount             uint16
-	BadPasswordCount       uint16
-	UserID                 uint32
-	PrimaryGroupID         uint32
-	GroupCount             uint32
-	GroupIDs               []GroupMembership
-	UserFlags              uint32
-	UserSessionKey         UserSessionKey
-	LogonServer            RPC_UnicodeString
-	LogonDomainName        RPC_UnicodeString
-	LogonDomainID          RPC_SID
-	Reserved1              []uint32 // Has 2 elements
-	UserAccountControl     uint32
-	Reserved3              []uint32
-	SIDCount               uint32
-	ExtraSIDs              KerbSidAndAttributes
-	ResourceGroupDomainSID RPC_SID
-	ResourceGroupCount     uint32
-	ResourceGroupIDs       []GroupMembership
-	//SubAuthStatus          uint32
-	//LastSuccessfullILogon   FileTime
-	//LastFailedILogon       FileTime
-	//FailedILogonCount      uint32
+	LogOnTime               FileTime
+	LogOffTime              FileTime
+	KickOffTime             FileTime
+	PasswordLastSet         FileTime
+	PasswordCanChange       FileTime
+	PasswordMustChange      FileTime
+	EffectiveName           RPC_UnicodeString
+	FullName                RPC_UnicodeString
+	LogonScript             RPC_UnicodeString
+	ProfilePath             RPC_UnicodeString
+	HomeDirectory           RPC_UnicodeString
+	HomeDirectoryDrive      RPC_UnicodeString
+	LogonCount              uint16
+	BadPasswordCount        uint16
+	UserID                  uint32
+	PrimaryGroupID          uint32
+	GroupCount              uint32
+	pGroupIDs               uint32
+	GroupIDs                []GroupMembership
+	UserFlags               uint32
+	UserSessionKey          UserSessionKey
+	LogonServer             RPC_UnicodeString
+	LogonDomainName         RPC_UnicodeString
+	pLogonDomainID          uint32
+	LogonDomainID           RPC_SID
+	Reserved1               []uint32 // Has 2 elements
+	UserAccountControl      uint32
+	SubAuthStatus           uint32
+	LastSuccessfulILogon    FileTime
+	LastFailedILogon        FileTime
+	FailedILogonCount       uint32
+	Reserved3               uint32
+	SIDCount                uint32
+	pExtraSIDs              uint32
+	ExtraSIDs               []KerbSidAndAttributes
+	pResourceGroupDomainSID uint32
+	ResourceGroupDomainSID  RPC_SID
+	ResourceGroupCount      uint32
+	pResourceGroupIDs       uint32
+	ResourceGroupIDs        []GroupMembership
 }
 
-func (k *KerbValidationInfo) ReadFromStream(b []byte, p *int, e *binary.ByteOrder) (err error) {
-	k.LogOnTime = Read_FileTime(b, p, e)
-	k.LogOffTime = Read_FileTime(b, p, e)
-	k.KickOffTime = Read_FileTime(b, p, e)
-	k.PasswordLastSet = Read_FileTime(b, p, e)
-	k.PasswordCanChange = Read_FileTime(b, p, e)
-	k.PasswordMustChange = Read_FileTime(b, p, e)
+func (k *KerbValidationInfo) ReadFromStream(b []byte) (err error) {
+	ch, p, err := ndr.GetCommonHeader(b)
+	if err != nil {
+		return fmt.Errorf("Error parsing common header: %v", err)
+	}
+	e := &ch.Endianness
+	_, err = ndr.GetPrivateHeader(b, &p, e)
+	if err != nil {
+		return fmt.Errorf("Error parsing private header: %v", err)
+	}
 
-	k.EffectiveName, err = Read_RPC_UnicodeString(b, p, e)
-	k.FullName, err = Read_RPC_UnicodeString(b, p, e)
-	k.LogonScript, err = Read_RPC_UnicodeString(b, p, e)
-	k.ProfilePath, err = Read_RPC_UnicodeString(b, p, e)
-	k.HomeDirectory, err = Read_RPC_UnicodeString(b, p, e)
-	k.HomeDirectoryDrive, err = Read_RPC_UnicodeString(b, p, e)
+	//The next 4 bytes are an RPC unique pointer referent. We just skip these
+	p += 4
+
+	k.LogOnTime = Read_FileTime(b, &p, e)
+	k.LogOffTime = Read_FileTime(b, &p, e)
+	k.KickOffTime = Read_FileTime(b, &p, e)
+	k.PasswordLastSet = Read_FileTime(b, &p, e)
+	k.PasswordCanChange = Read_FileTime(b, &p, e)
+	k.PasswordMustChange = Read_FileTime(b, &p, e)
+
+	k.EffectiveName, err = Read_RPC_UnicodeString(b, &p, e)
+	k.FullName, err = Read_RPC_UnicodeString(b, &p, e)
+	k.LogonScript, err = Read_RPC_UnicodeString(b, &p, e)
+	k.ProfilePath, err = Read_RPC_UnicodeString(b, &p, e)
+	k.HomeDirectory, err = Read_RPC_UnicodeString(b, &p, e)
+	k.HomeDirectoryDrive, err = Read_RPC_UnicodeString(b, &p, e)
 	if err != nil {
 		return
 	}
 
-	k.LogonCount = ndr.Read_uint16(b, p, e)
-	k.BadPasswordCount = ndr.Read_uint16(b, p, e)
-	k.UserID = ndr.Read_uint32(b, p, e)
-	k.PrimaryGroupID = ndr.Read_uint32(b, p, e)
-	k.GroupCount = ndr.Read_uint32(b, p, e)
+	k.LogonCount = ndr.Read_uint16(b, &p, e)
+	k.BadPasswordCount = ndr.Read_uint16(b, &p, e)
+	k.UserID = ndr.Read_uint32(b, &p, e)
+	k.PrimaryGroupID = ndr.Read_uint32(b, &p, e)
+	k.GroupCount = ndr.Read_uint32(b, &p, e)
+	k.pGroupIDs = ndr.Read_uint32(b, &p, e)
 
-	if k.GroupCount > 0 {
-		g := make([]GroupMembership, k.GroupCount, k.GroupCount)
-		for i := range g {
-			if grpMemPtr := ndr.Read_uint32(b, p, e); grpMemPtr != 0 {
-				g[i] = Read_GroupMembership(b, grpMemPtr, e)
-			}
-			k.GroupIDs = g
-		}
-	}
+	k.UserFlags = ndr.Read_uint32(b, &p, e)
+	k.UserSessionKey = Read_UserSessionKey(b, &p, e)
 
-	k.UserFlags = ndr.Read_uint32(b, p, e)
-	k.UserSessionKey = Read_UserSessionKey(b, p, e)
-
-	k.LogonServer, err = Read_RPC_UnicodeString(b, p, e)
-	k.LogonDomainName, err = Read_RPC_UnicodeString(b, p, e)
+	k.LogonServer, err = Read_RPC_UnicodeString(b, &p, e)
+	k.LogonDomainName, err = Read_RPC_UnicodeString(b, &p, e)
 	if err != nil {
 		return
 	}
 
-	if lDomIDPtr := ndr.Read_uint32(b, p, e); lDomIDPtr != 0 {
-		k.LogonDomainID = Read_RPC_SID(b, lDomIDPtr, e)
-	}
+	k.pLogonDomainID = ndr.Read_uint32(b, &p, e)
 
 	k.Reserved1 = []uint32{
-		ndr.Read_uint32(b, p, e),
-		ndr.Read_uint32(b, p, e),
+		ndr.Read_uint32(b, &p, e),
+		ndr.Read_uint32(b, &p, e),
 	}
 
-	k.UserAccountControl = ndr.Read_uint32(b, p, e)
+	k.UserAccountControl = ndr.Read_uint32(b, &p, e)
+	k.SubAuthStatus = ndr.Read_uint32(b, &p, e)
+	k.LastSuccessfulILogon = Read_FileTime(b, &p, e)
+	k.LastFailedILogon = Read_FileTime(b, &p, e)
+	k.FailedILogonCount = ndr.Read_uint32(b, &p, e)
+	k.Reserved3 = ndr.Read_uint32(b, &p, e)
 
-	r := make([]uint32, 7, 7)
-	for i := range r {
-		r[i] = ndr.Read_uint32(b, p, e)
+	k.SIDCount = ndr.Read_uint32(b, &p, e)
+	k.pExtraSIDs = ndr.Read_uint32(b, &p, e)
+
+	k.pResourceGroupDomainSID = ndr.Read_uint32(b, &p, e)
+	k.ResourceGroupCount = ndr.Read_uint32(b, &p, e)
+	k.pResourceGroupIDs = ndr.Read_uint32(b, &p, e)
+
+	// Populate pointers
+	err = k.EffectiveName.UnmarshalString(b, &p, e)
+	err = k.FullName.UnmarshalString(b, &p, e)
+	err = k.LogonScript.UnmarshalString(b, &p, e)
+	err = k.ProfilePath.UnmarshalString(b, &p, e)
+	err = k.HomeDirectory.UnmarshalString(b, &p, e)
+	err = k.HomeDirectoryDrive.UnmarshalString(b, &p, e)
+
+	if k.GroupCount > 0 {
+		ac := ndr.Read_UniDimensionalConformantArrayHeader(b, &p, e)
+		if ac != int(k.GroupCount) {
+			return errors.New("Error with size of group list")
+		}
+		g := make([]GroupMembership, k.GroupCount, k.GroupCount)
+		for i := range g {
+			g[i] = Read_GroupMembership(b, &p, e)
+		}
+		k.GroupIDs = g
 	}
-	k.Reserved3 = r
 
-	k.SIDCount = ndr.Read_uint32(b, p, e)
+	err = k.LogonServer.UnmarshalString(b, &p, e)
+	err = k.LogonDomainName.UnmarshalString(b, &p, e)
+
+	//p += 4 //TODO what is this??? SID size
+	k.LogonDomainID, err = Read_RPC_SID(b, &p, e)
+	if err != nil {
+		return err
+	}
+
 	if k.SIDCount > 0 {
+		ac := ndr.Read_UniDimensionalConformantArrayHeader(b, &p, e)
+		if ac != int(k.SIDCount) {
+			return fmt.Errorf("Error with size of ExtraSIDs list. Expected: %d, Actual: %d", k.SIDCount, ac)
+		}
 		es := make([]KerbSidAndAttributes, k.SIDCount, k.SIDCount)
+		attr := make([]uint32, k.SIDCount, k.SIDCount)
+		ptr := make([]uint32, k.SIDCount, k.SIDCount)
+		for i := range attr {
+			ptr[i] = ndr.Read_uint32(b, &p, e)
+			attr[i] = ndr.Read_uint32(b, &p, e)
+		}
 		for i := range es {
-			if eSIDPtr := ndr.Read_uint32(b, p, e); eSIDPtr != 0 {
-				es[i] = Read_KerbSidAndAttributes(b, eSIDPtr, e)
+			if ptr[i] != 0 {
+				s, err := Read_RPC_SID(b, &p, e)
+				es[i] = KerbSidAndAttributes{SID: s, Attributes: attr[i]}
+				if err != nil {
+					return ndr.NDRMalformed{EText: fmt.Sprintf("Could not read ExtraSIDs: %v", err)}
+				}
 			}
-			k.ExtraSIDs = es
+		}
+		k.ExtraSIDs = es
+	}
+
+	if k.pResourceGroupDomainSID != 0 {
+		k.ResourceGroupDomainSID, err = Read_RPC_SID(b, &p, e)
+		if err != nil {
+			return err
 		}
 	}
 
-	if rGrpDomSIDPtr := ndr.Read_uint32(b, p, e); rGrpDomSIDPtr != 0 {
-		k.ResourceGroupDomainSID = Read_RPC_SID(b, rGrpDomSIDPtr, e)
+	if k.ResourceGroupCount > 0 {
+		ac := ndr.Read_UniDimensionalConformantArrayHeader(b, &p, e)
+		if ac != int(k.ResourceGroupCount) {
+			return fmt.Errorf("Error with size of ResourceGroup list. Expected: %d, Actual: %d", k.ResourceGroupCount, ac)
+		}
+		g := make([]GroupMembership, ac, ac)
+		for i := range g {
+			g[i] = Read_GroupMembership(b, &p, e)
+		}
+		k.ResourceGroupIDs = g
 	}
 
-	k.ResourceGroupCount = ndr.Read_uint32(b, p, e)
-	if k.ResourceGroupCount > 0 {
-		rg := make([]GroupMembership, k.ResourceGroupCount, k.ResourceGroupCount)
-		for i := range rg {
-			if resGrpIDPtr := ndr.Read_uint32(b, p, e); resGrpIDPtr != 0 {
-				rg[i] = Read_GroupMembership(b, resGrpIDPtr, e)
-			}
-			k.ResourceGroupIDs = rg
+	//Check that there is only zero padding left
+	for _, v := range b[p:] {
+		if v != 0 {
+			return ndr.NDRMalformed{EText: "Non-zero padding left over at end of data stream"}
 		}
 	}
 

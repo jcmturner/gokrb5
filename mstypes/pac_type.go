@@ -15,9 +15,13 @@ type PACType struct {
 func Read_PACType(b []byte, p *int, e *binary.ByteOrder) PACType {
 	c := ndr.Read_uint32(b, p, e)
 	v := ndr.Read_uint32(b, p, e)
+	buf := make([]PACInfoBuffer, c, c)
+	for i := range buf {
+		buf[i] = Read_PACInfoBuffer(b, p, e)
+	}
 	return PACType{
 		CBuffers: c,
 		Version:  v,
-		Buffers:  []PACInfoBuffer{Read_PACInfoBuffer(b, p, e)},
+		Buffers:  buf,
 	}
 }

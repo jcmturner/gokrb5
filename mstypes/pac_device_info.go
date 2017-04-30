@@ -21,7 +21,7 @@ type PAC_DeviceInfo struct {
 func Read_PAC_DeviceInfo(b []byte, p *int, e *binary.ByteOrder) PAC_DeviceInfo {
 	u := ndr.Read_uint32(b, p, e)
 	pg := ndr.Read_uint32(b, p, e)
-	aSid := Read_RPC_SID(b, p, e)
+	aSid, _ := Read_RPC_SID(b, p, e)
 	c := ndr.Read_uint32(b, p, e)
 	ag := make([]GroupMembership, c, c)
 	for i := range ag {
@@ -30,12 +30,12 @@ func Read_PAC_DeviceInfo(b []byte, p *int, e *binary.ByteOrder) PAC_DeviceInfo {
 	sc := ndr.Read_uint32(b, p, e)
 	eSid := make([]KerbSidAndAttributes, sc, sc)
 	for i := range eSid {
-		eSid[i] = Read_KerbSidAndAttributes(b, p, e)
+		eSid[i], _ = Read_KerbSidAndAttributes(b, p, e)
 	}
 	dc := ndr.Read_uint32(b, p, e)
-	dg := make([]GroupMembership, dc, dc)
+	dg := make([]DomainGroupMembership, dc, dc)
 	for i := range dg {
-		dg[i] = Read_DomainGroupMembership(b, p, e)
+		dg[i], _ = Read_DomainGroupMembership(b, p, e)
 	}
 	return PAC_DeviceInfo{
 		UserID:            u,

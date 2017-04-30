@@ -41,12 +41,12 @@ const (
 )
 
 type CommonHeader struct {
-	Version             uint8
-	Endianness          binary.ByteOrder
-	CharacterEncoding   uint8
-	FloatRepresentation uint8
-	HeaderLength        uint8
-	Filler              []byte
+	Version           uint8
+	Endianness        binary.ByteOrder
+	CharacterEncoding uint8
+	//FloatRepresentation uint8
+	HeaderLength uint16
+	Filler       []byte
 }
 
 type PrivateHeader struct {
@@ -54,24 +54,21 @@ type PrivateHeader struct {
 	Filler             []byte
 }
 
-func GetCommonHeader(b []byte) (CommonHeader, []byte, error) {
+func GetCommonHeader(b []byte) (CommonHeader, int, error) {
 	//The first 8 bytes comprise the Common RPC Header for type marshalling.
 	if len(b) < COMMON_HEADER_BYTES {
-		return NDRMalformed{EText: "Not enough bytes."}
+		return CommonHeader{}, 0, NDRMalformed{EText: "Not enough bytes."}
 	}
 	if b[0] != PROTOCOL_VERSION {
-		return NDRMalformed{EText: fmt.Sprintf("Stream does not indicate a RPC Type serialization of version %v", PROTOCOL_VERSION)}
+		return CommonHeader{}, 0, NDRMalformed{EText: fmt.Sprintf("Stream does not indicate a RPC Type serialization of version %v", PROTOCOL_VERSION)}
 	}
 	endian := int(b[1] >> 4 & 0xF)
-	if endian != 0 || endian != 1 {
-		return NDRMalformed{EText: "Common header does not indicate a valid endianness"}
+	if endian != 0 && endian != 1 {
+		return CommonHeader{}, 1, NDRMalformed{EText: "Common header does not indicate a valid endianness"}
 	}
 	charEncoding := uint8(b[1] & 0xF)
-	if charEncoding != 0 || charEncoding != 1 {
-		return NDRMalformed{EText: "Common header does not indicate a valid charater encoding"}
-	}
-	if uint8(b[3]) != COMMON_HEADER_BYTES {
-		return NDRMalformed{EText: "Common header does not indicate a valid length"}
+	if charEncoding != 0 && charEncoding != 1 {
+		return CommonHeader{}, 1, NDRMalformed{EText: "Common header does not indicate a valid charater encoding"}
 	}
 	var bo binary.ByteOrder
 	switch endian {
@@ -80,90 +77,66 @@ func GetCommonHeader(b []byte) (CommonHeader, []byte, error) {
 	case BIG_ENDIAN:
 		bo = binary.BigEndian
 	}
+	l := bo.Uint16(b[2:4])
+	if l != COMMON_HEADER_BYTES {
+		return CommonHeader{}, 4, NDRMalformed{EText: fmt.Sprintf("Common header does not indicate a valid length: %v instead of %v", uint8(b[3]), COMMON_HEADER_BYTES)}
+	}
 
 	return CommonHeader{
-		Version:             uint8(b[0]),
-		Endianness:          bo,
-		CharacterEncoding:   charEncoding,
-		FloatRepresentation: uint8(b[2]),
-		HeaderLength:        uint8(b[3]),
-		Filler:              b[4:7],
-	}, b[8:], nil
+		Version:           uint8(b[0]),
+		Endianness:        bo,
+		CharacterEncoding: charEncoding,
+		//FloatRepresentation: uint8(b[2]),
+		HeaderLength: l,
+		Filler:       b[4:8],
+	}, 8, nil
 }
 
-func GetPrivateHeader(b []byte, bo binary.ByteOrder) (PrivateHeader, []byte, error) {
+func GetPrivateHeader(b []byte, p *int, bo *binary.ByteOrder) (PrivateHeader, error) {
 	//The next 8 bytes comprise the RPC type marshalling private header for constructed types.
 	if len(b) < (PRIVATE_HEADER_BYTES) {
-		return NDRMalformed{EText: "Not enough bytes."}
+		return PrivateHeader{}, NDRMalformed{EText: "Not enough bytes."}
 	}
 	var l uint32
-	buf := bytes.NewBuffer(b[:3])
-	binary.Read(buf, bo, &l)
+	buf := bytes.NewBuffer(b[*p : *p+4])
+	binary.Read(buf, *bo, &l)
 	if l%8 != 0 {
-		return NDRMalformed{EText: "Object buffer length not a multiple of 8"}
+		return PrivateHeader{}, NDRMalformed{EText: "Object buffer length not a multiple of 8"}
 	}
-
+	*p += 8
 	return PrivateHeader{
 		ObjectBufferLength: l,
-		Filler:             b[4:7],
-	}, b[8:], nil
+		Filler:             b[4:8],
+	}, nil
 }
-
-// Read bytes representing an eight bit integer.
-//func Read_uint8(b []byte, p *int, e *binary.ByteOrder) (i uint8) {
-//	buf := bytes.NewBuffer(b[*p : *p+1])
-//	binary.Read(buf, *e, &i)
-//	*p += 1
-//	return
-//}
 
 // Read bytes representing a thirty two bit integer.
 func Read_uint8(b []byte, p *int) (i uint8) {
+	ensureAlignment(p, 1)
 	i = uint8(b[*p])
 	*p += 1
 	return
 }
 
-// Read bytes representing a sixteen bit integer.
-//func Read_uint16(b []byte, p *int, e *binary.ByteOrder) (i uint16) {
-//	buf := bytes.NewBuffer(b[*p : *p+2])
-//	binary.Read(buf, *e, &i)
-//	*p += 2
-//	return
-//}
-
 // Read bytes representing a thirty two bit integer.
 func Read_uint16(b []byte, p *int, e *binary.ByteOrder) (i uint16) {
+	ensureAlignment(p, 2)
 	i = (*e).Uint16(b[*p : *p+2])
 	*p += 2
 	return
 }
 
 // Read bytes representing a thirty two bit integer.
-//func Read_uint32(b []byte, p *int, e *binary.ByteOrder) (i uint32) {
-//	buf := bytes.NewBuffer(b[*p : *p+4])
-//	binary.Read(buf, *e, &i)
-//	*p += 4
-//	return
-//}
-
-// Read bytes representing a thirty two bit integer.
 func Read_uint32(b []byte, p *int, e *binary.ByteOrder) (i uint32) {
+	ensureAlignment(p, 4)
 	i = (*e).Uint32(b[*p : *p+4])
 	*p += 4
 	return
 }
 
 // Read bytes representing a thirty two bit integer.
-//func Read_uint64(b []byte, p *int, e *binary.ByteOrder) (i uint64) {
-//	buf := bytes.NewBuffer(b[*p : *p+8])
-//	binary.Read(buf, *e, &i)
-//	*p += 8
-//	return (*e).Uint64(b[*p : *p+8])
-//}
-
-// Read bytes representing a thirty two bit integer.
 func Read_uint64(b []byte, p *int, e *binary.ByteOrder) (i uint64) {
+	ensureAlignment(p, 8)
 	i = (*e).Uint64(b[*p : *p+8])
 	*p += 8
 	return
@@ -185,10 +158,12 @@ func Read_bool(b []byte, p *int) bool {
 }
 
 func Read_IEEEfloat32(b []byte, p *int, e *binary.ByteOrder) float32 {
-	return math.Float32frombits(Read_uint64(b, p, e))
+	ensureAlignment(p, 4)
+	return math.Float32frombits(Read_uint32(b, p, e))
 }
 
 func Read_IEEEfloat64(b []byte, p *int, e *binary.ByteOrder) float64 {
+	ensureAlignment(p, 8)
 	return math.Float64frombits(Read_uint64(b, p, e))
 }
 
@@ -203,16 +178,29 @@ func Read_ConformantVaryingString(b []byte, p *int, e *binary.ByteOrder) (string
 	o := Read_uint32(b, p, e) // Offset
 	a := Read_uint32(b, p, e) // Actual count
 	if a > (m-o) || o > m {
-		return "", NDRMalformed{EText: "Not enough bytes."}
+		return "", NDRMalformed{EText: fmt.Sprintf("Not enough bytes. Max: %d, Offset: %d, Actual: %d", m, o, a)}
 	}
 	//Unicode string so each element is 2 bytes
 	//move position based on the offset
 	if o > 0 {
-		p += int(o * 2)
+		*p += int(o * 2)
 	}
 	s := make([]rune, a, a)
-	for i := 0; i < a; i++ {
+	for i := 0; i < len(s); i++ {
 		s[i] = rune(Read_uint16(b, p, e))
 	}
+	ensureAlignment(p, 4)
 	return string(s), nil
+}
+
+func Read_UniDimensionalConformantArrayHeader(b []byte, p *int, e *binary.ByteOrder) int {
+	return int(Read_uint32(b, p, e))
+}
+
+func ensureAlignment(p *int, byteSize int) {
+	if byteSize > 0 {
+		if s := *p % byteSize; s != 0 {
+			*p += byteSize - s
+		}
+	}
 }
