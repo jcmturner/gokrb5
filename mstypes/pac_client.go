@@ -16,7 +16,7 @@ func Read_PAC_ClientInfo(b []byte, p *int, e *binary.ByteOrder) PAC_ClientInfo {
 	c := Read_FileTime(b, p, e)
 	l := ndr.Read_uint16(b, p, e)
 	s := make([]rune, l, l)
-	for i := 0; i < l; i++ {
+	for i := 0; i < int(l); i++ {
 		s[i] = rune(ndr.Read_uint16(b, p, e))
 	}
 	return PAC_ClientInfo{

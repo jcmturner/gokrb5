@@ -2,15 +2,19 @@ package messages
 
 import (
 	"crypto/rand"
+	"encoding/binary"
+	"errors"
 	"fmt"
 	"github.com/jcmturner/asn1"
 	"github.com/jcmturner/gokrb5/asn1tools"
 	"github.com/jcmturner/gokrb5/crypto"
 	"github.com/jcmturner/gokrb5/iana"
+	"github.com/jcmturner/gokrb5/iana/adtype"
 	"github.com/jcmturner/gokrb5/iana/asnAppTag"
 	"github.com/jcmturner/gokrb5/iana/errorcode"
 	"github.com/jcmturner/gokrb5/iana/keyusage"
 	"github.com/jcmturner/gokrb5/keytab"
+	"github.com/jcmturner/gokrb5/mstypes"
 	"github.com/jcmturner/gokrb5/types"
 	"time"
 )
@@ -180,4 +184,18 @@ func (t *Ticket) DecryptEncPart(keytab keytab.Keytab) error {
 	}
 	t.DecryptedEncPart = denc
 	return nil
+}
+
+func (t *Ticket) GetPACType() (mstypes.PACType, error) {
+	for _, ad := range t.DecryptedEncPart.AuthorizationData {
+		if ad.ADType == adtype.AD_IF_RELEVANT {
+			var ad2 types.AuthorizationData
+			// TODO note does tthe entry contain and AuthorizationData or AuthorizationDataEntry. Assuming the former atm.
+			if err := ad2.Unmarshal(ad.ADData); err != nil && ad2[0].ADType == adtype.AD_WIN2K_PAC {
+				var p int
+				return mstypes.Read_PACType(ad2[0].ADData, &p, binary.LittleEndian), nil
+			}
+		}
+	}
+	return mstypes.PACType{}, errors.New("AuthorizationData within the ticket does not contain PAC data.")
 }

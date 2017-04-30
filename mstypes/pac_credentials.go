@@ -16,12 +16,12 @@ type PAC_CredentialsInfo struct {
 
 func Read_PAC_CredentialsInfo(b []byte, p *int, e *binary.ByteOrder) PAC_CredentialsInfo {
 	v := ndr.Read_uint32(b, p, e)
-	e := ndr.Read_uint32(b, p, e)
+	et := ndr.Read_uint32(b, p, e)
 	// TODO review bytes provided to this method as we have to read to the end
-	d := ndr.Read_bytes(b, p, len(b)-p, e)
+	d := ndr.Read_bytes(b, p, len(b)-*p, e)
 	return PAC_CredentialsInfo{
 		Version: v,
-		EType:   e,
+		EType:   et,
 		PAC_CredentialData_Encrypted: d,
 	}
 }

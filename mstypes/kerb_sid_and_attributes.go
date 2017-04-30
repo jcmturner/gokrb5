@@ -20,13 +20,16 @@ type KerbSidAndAttributes struct {
 	Attributes uint32
 }
 
-func Read_KerbSidAndAttributes(b []byte, p *int, e *binary.ByteOrder) KerbSidAndAttributes {
-	s := Read_RPC_SID(b, p, e)
+func Read_KerbSidAndAttributes(b []byte, p *int, e *binary.ByteOrder) (KerbSidAndAttributes, error) {
+	s, err := Read_RPC_SID(b, p, e)
+	if err != nil {
+		return KerbSidAndAttributes{}, err
+	}
 	a := ndr.Read_uint32(b, p, e)
 	return KerbSidAndAttributes{
 		SID:        s,
 		Attributes: a,
-	}
+	}, nil
 }
 
 func SetFlag(a *uint32, i uint) {

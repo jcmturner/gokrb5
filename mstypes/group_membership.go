@@ -32,8 +32,11 @@ type DomainGroupMembership struct {
 	GroupIDs   []GroupMembership // Size is value of GroupCount
 }
 
-func Read_DomainGroupMembership(b []byte, p *int, e *binary.ByteOrder) DomainGroupMembership {
-	d := Read_RPC_SID(b, p, e)
+func Read_DomainGroupMembership(b []byte, p *int, e *binary.ByteOrder) (DomainGroupMembership, error) {
+	d, err := Read_RPC_SID(b, p, e)
+	if err != nil {
+		return DomainGroupMembership{}, err
+	}
 	c := ndr.Read_uint32(b, p, e)
 	g := make([]GroupMembership, c, c)
 	for i := range g {
@@ -43,5 +46,5 @@ func Read_DomainGroupMembership(b []byte, p *int, e *binary.ByteOrder) DomainGro
 		DomainID:   d,
 		GroupCount: c,
 		GroupIDs:   g,
-	}
+	}, nil
 }

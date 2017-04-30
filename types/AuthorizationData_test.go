@@ -2,12 +2,12 @@ package types
 
 import (
 	"encoding/hex"
-	"github.com/jcmturner/gokrb5/testdata"
-	"testing"
-	"github.com/stretchr/testify/assert"
 	"fmt"
+	"github.com/jcmturner/gokrb5/iana/adtype"
+	"github.com/jcmturner/gokrb5/testdata"
+	"github.com/stretchr/testify/assert"
+	"testing"
 )
-
 
 func TestUnmarshalAuthorizationData(t *testing.T) {
 	var a AuthorizationData
@@ -21,7 +21,7 @@ func TestUnmarshalAuthorizationData(t *testing.T) {
 		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
 	}
 	assert.Equal(t, 2, len(a), "Number of authorization data entries not as expected")
-	for i, entry := range a{
+	for i, entry := range a {
 		assert.Equal(t, 1, entry.ADType, fmt.Sprintf("Authorization data type of entry %d not as expected", i+1))
 		assert.Equal(t, []byte("foobar"), entry.ADData, fmt.Sprintf("Authorization data of entry %d not as expected", i+1))
 	}
@@ -44,8 +44,28 @@ func TestUnmarshalAuthorizationData_kdcissued(t *testing.T) {
 	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMETYPE, a.Isname.NameType, "Issuing name type not as expected")
 	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMESTRING, a.Isname.NameString, "Issuing name string entries not as expected")
 	assert.Equal(t, 2, len(a.Elements), "Number of authorization data elements not as expected")
-	for i, ele := range a.Elements{
+	for i, ele := range a.Elements {
 		assert.Equal(t, 1, ele.ADType, fmt.Sprintf("Authorization data type of element %d not as expected", i+1))
 		assert.Equal(t, []byte(testdata.TEST_AUTHORIZATION_DATA_VALUE), ele.ADData, fmt.Sprintf("Authorization data of element %d not as expected", i+1))
 	}
+}
+
+func TestAuthorizationData_GetPACType(t *testing.T) {
+	v := "PAC_AuthorizationData"
+	b, err := hex.DecodeString(testdata.TestVectors[v])
+	if err != nil {
+		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+	}
+	//TODO should the test data need to be wrapped up again?
+	a := AuthorizationData{
+		AuthorizationDataEntry{
+			ADType: adtype.AD_IF_RELEVANT,
+			ADData: b,
+		},
+	}
+	pactype, err := a.GetPACType()
+	if err != nil {
+		t.Fatalf("Error getting PAC Type: %v\n", err)
+	}
+	t.Logf("PACType: %+v", pactype)
 }

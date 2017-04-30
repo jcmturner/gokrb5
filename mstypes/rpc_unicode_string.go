@@ -20,15 +20,14 @@ func Read_RPC_UnicodeString(b []byte, p *int, e *binary.ByteOrder) (RPC_UnicodeS
 		return RPC_UnicodeString{}, ndr.NDRMalformed{EText: "Invalid data for RPC_UNICODE_STRING"}
 	}
 	ptr := ndr.Read_uint32(b, p, e)
-	// Read string value from the pointer
-	v, err := ndr.Read_ConformantVaryingString(b, &ptr, e)
-	if err != nil {
-		return RPC_UnicodeString{}, ndr.NDRMalformed{EText: "Invalid data for conformant varying string"}
-	}
 	return RPC_UnicodeString{
 		Length:        l,
 		MaximumLength: ml,
 		BufferPrt:     ptr,
-		Value:         v,
 	}, nil
+}
+
+func (s *RPC_UnicodeString) UnmarshalString(b []byte, p *int, e *binary.ByteOrder) (err error) {
+	s.Value, err = ndr.Read_ConformantVaryingString(b, p, e)
+	return
 }
