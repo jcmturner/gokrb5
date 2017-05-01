@@ -36,10 +36,10 @@ type PAC_SignatureData struct {
 	RODCIdentifier uint16 // A 16-bit unsigned integer value in little-endian format that contains the first 16 bits of the key version number ([MS-KILE] section 3.1.5.8) when the KDC is an RODC. When the KDC is not an RODC, this field does not exist.
 }
 
-func (k *PAC_SignatureData) Unmarshal(b []byte) error {
+func (k *PAC_SignatureData) Unmarshal(b []byte) ([]byte, error) {
 	ch, _, p, err := ndr.ReadHeaders(&b)
 	if err != nil {
-		return fmt.Errorf("Error parsing byte stream headers: %v", err)
+		return []byte{}, fmt.Errorf("Error parsing byte stream headers: %v", err)
 	}
 	e := &ch.Endianness
 
@@ -62,9 +62,15 @@ func (k *PAC_SignatureData) Unmarshal(b []byte) error {
 	//Check that there is only zero padding left
 	for _, v := range b[p:] {
 		if v != 0 {
-			return ndr.NDRMalformed{EText: "Non-zero padding left over at end of data stream"}
+			return []byte{}, ndr.NDRMalformed{EText: "Non-zero padding left over at end of data stream"}
 		}
 	}
 
-	return nil
+	// Create bytes with zeroed signature needed for checksum verification
+	rb := make([]byte, len(b), len(b))
+	copy(rb, b)
+	z := make([]byte, c, c)
+	copy(rb[p:p+c], z)
+
+	return rb, nil
 }
