@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/jcmturner/gokrb5/iana/adtype"
+	"github.com/jcmturner/gokrb5/keytab"
 	"github.com/jcmturner/gokrb5/testdata"
 	"github.com/jcmturner/gokrb5/types"
 	"github.com/stretchr/testify/assert"
@@ -128,7 +129,10 @@ func TestAuthorizationData_GetPACType(t *testing.T) {
 		},
 	}
 	tkt := Ticket{DecryptedEncPart: EncTicketPart{AuthorizationData: a}}
-	pactype, err := tkt.GetPACType()
+	b, _ = hex.DecodeString(testdata.HTTP_KEYTAB)
+	kt, _ := keytab.Parse(b)
+	key, _ := kt.GetEncryptionKey([]string{"HTTP", "host.test.gokrb5"}, "TEST.GOKRB5", 1, 18)
+	pactype, err := tkt.GetPACType(key)
 	if err != nil {
 		t.Fatalf("Error getting PAC Type: %v\n", err)
 	}

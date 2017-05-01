@@ -3,6 +3,10 @@ package pac
 import (
 	"encoding/binary"
 	"errors"
+	"fmt"
+	"github.com/jcmturner/gokrb5/crypto"
+	"github.com/jcmturner/gokrb5/crypto/engine"
+	"github.com/jcmturner/gokrb5/iana/keyusage"
 	"github.com/jcmturner/gokrb5/ndr"
 	"github.com/jcmturner/gokrb5/types"
 )
@@ -11,7 +15,7 @@ import (
 type PACType struct {
 	CBuffers           uint32
 	Version            uint32
-	Buffers            []PACInfoBuffer // Size 1
+	Buffers            []PACInfoBuffer
 	Data               []byte
 	KerbValidationInfo *KerbValidationInfo
 	CredentialsInfo    *PAC_CredentialsInfo
@@ -23,11 +27,16 @@ type PACType struct {
 	ClientClaimsInfo   *PAC_ClientClaimsInfo
 	DeviceInfo         *PAC_DeviceInfo
 	DeviceClaimsInfo   *PAC_DeviceClaimsInfo
+	ZeroSigData        []byte
 }
 
 func (pac *PACType) Unmarshal(b []byte) error {
 	var p int
 	var e binary.ByteOrder = binary.LittleEndian
+	pac.Data = b
+	zb := make([]byte, len(b), len(b))
+	copy(zb, b)
+	pac.ZeroSigData = zb
 	pac.CBuffers = ndr.Read_uint32(&b, &p, &e)
 	pac.Version = ndr.Read_uint32(&b, &p, &e)
 	buf := make([]PACInfoBuffer, pac.CBuffers, pac.CBuffers)
@@ -52,7 +61,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			var k KerbValidationInfo
 			err := k.Unmarshal(p)
 			if err != nil {
-				return err
+				return fmt.Errorf("Error processing KerbValidationInfo: %v", err)
 			}
 			pac.KerbValidationInfo = &k
 		case ULTYPE_CREDENTIALS:
@@ -63,7 +72,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			var k PAC_CredentialsInfo
 			err := k.Unmarshal(p, key)
 			if err != nil {
-				return err
+				return fmt.Errorf("Error processing CredentialsInfo: %v", err)
 			}
 			pac.CredentialsInfo = &k
 		case ULTYPE_PAC_SERVER_SIGNATURE_DATA:
@@ -72,9 +81,10 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 				continue
 			}
 			var k PAC_SignatureData
-			err := k.Unmarshal(p)
+			zb, err := k.Unmarshal(p)
+			copy(pac.ZeroSigData[int(buf.Offset):int(buf.Offset)+int(buf.CBBufferSize)], zb)
 			if err != nil {
-				return err
+				return fmt.Errorf("Error processing ServerChecksum: %v", err)
 			}
 			pac.ServerChecksum = &k
 		case ULTYPE_PAC_KDC_SIGNATURE_DATA:
@@ -83,9 +93,10 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 				continue
 			}
 			var k PAC_SignatureData
-			err := k.Unmarshal(p)
+			zb, err := k.Unmarshal(p)
+			copy(pac.ZeroSigData[int(buf.Offset):int(buf.Offset)+int(buf.CBBufferSize)], zb)
 			if err != nil {
-				return err
+				return fmt.Errorf("Error processing KDCChecksum: %v", err)
 			}
 			pac.KDCChecksum = &k
 		case ULTYPE_PAC_CLIENT_INFO:
@@ -96,7 +107,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			var k PAC_ClientInfo
 			err := k.Unmarshal(p)
 			if err != nil {
-				return err
+				return fmt.Errorf("Error processing ClientInfo: %v", err)
 			}
 			pac.ClientInfo = &k
 		case ULTYPE_S4U_DELEGATION_INFO:
@@ -107,7 +118,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			var k S4U_DelegationInfo
 			err := k.Unmarshal(p)
 			if err != nil {
-				return err
+				return fmt.Errorf("Error processing S4U_DelegationInfo: %v", err)
 			}
 			pac.S4U_DelegationInfo = &k
 		case ULTYPE_UPN_DNS_INFO:
@@ -118,7 +129,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			var k UPN_DNSInfo
 			err := k.Unmarshal(p)
 			if err != nil {
-				return err
+				return fmt.Errorf("Error processing UPN_DNSInfo: %v", err)
 			}
 			pac.UPN_DNSInfo = &k
 		case ULTYPE_PAC_CLIENT_CLAIMS_INFO:
@@ -129,7 +140,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			var k PAC_ClientClaimsInfo
 			err := k.Unmarshal(p)
 			if err != nil {
-				return err
+				return fmt.Errorf("Error processing ClientClaimsInfo: %v", err)
 			}
 			pac.ClientClaimsInfo = &k
 		case ULTYPE_PAC_DEVICE_INFO:
@@ -140,7 +151,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			var k PAC_DeviceInfo
 			err := k.Unmarshal(p)
 			if err != nil {
-				return err
+				return fmt.Errorf("Error processing DeviceInfo: %v", err)
 			}
 			pac.DeviceInfo = &k
 		case ULTYPE_PAC_DEVICE_CLAIMS_INFO:
@@ -151,20 +162,20 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			var k PAC_DeviceClaimsInfo
 			err := k.Unmarshal(p)
 			if err != nil {
-				return err
+				return fmt.Errorf("Error processing DeviceClaimsInfo: %v", err)
 			}
 			pac.DeviceClaimsInfo = &k
 		}
 	}
 
-	if ok, err := pac.validate(); !ok {
+	if ok, err := pac.validate(key); !ok {
 		return err
 	}
 
 	return nil
 }
 
-func (pac *PACType) validate() (bool, error) {
+func (pac *PACType) validate(key types.EncryptionKey) (bool, error) {
 	if pac.KerbValidationInfo == nil {
 		return false, errors.New("PAC Info Buffers does not contain a KerbValidationInfo")
 	}
@@ -176,6 +187,17 @@ func (pac *PACType) validate() (bool, error) {
 	}
 	if pac.ClientInfo == nil {
 		return false, errors.New("PAC Info Buffers does not contain a ClientInfo")
+	}
+	etype, err := crypto.GetChksumEtype(int(pac.ServerChecksum.SignatureType))
+	if err != nil {
+		return false, err
+	}
+	if ok := engine.VerifyChecksum(key.KeyValue,
+		pac.ServerChecksum.Signature,
+		pac.ZeroSigData,
+		keyusage.KERB_NON_KERB_CKSUM_SALT,
+		etype); !ok {
+		return false, errors.New("PAC service checksum verification failed")
 	}
 
 	return true, nil
