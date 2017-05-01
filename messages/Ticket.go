@@ -193,12 +193,12 @@ func (t *Ticket) GetPACType(key types.EncryptionKey) (pac.PACType, error) {
 			if err != nil {
 				continue
 			}
-			// TODO note does tthe entry contain and AuthorizationData or AuthorizationDataEntry. Assuming the former atm.
+			// TODO note does the entry contain and AuthorizationData or AuthorizationDataEntry. Assuming the former atm.
 			if ad2[0].ADType == adtype.AD_WIN2K_PAC {
 				var pac pac.PACType
 				err = pac.Unmarshal(ad2[0].ADData)
 				if err != nil {
-					return pac, err
+					return pac, fmt.Errorf("Error unmarshaling PAC: %v", err)
 				}
 				err = pac.ProcessPACInfoBuffers(key)
 				return pac, err

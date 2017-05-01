@@ -1,7 +1,7 @@
 package pac
 
 import (
-	"fmt"
+	"encoding/binary"
 	"github.com/jcmturner/gokrb5/mstypes"
 	"github.com/jcmturner/gokrb5/ndr"
 )
@@ -14,20 +14,15 @@ type PAC_ClientInfo struct {
 }
 
 func (k *PAC_ClientInfo) Unmarshal(b []byte) error {
-	ch, _, p, err := ndr.ReadHeaders(&b)
-	if err != nil {
-		return fmt.Errorf("Error parsing byte stream headers: %v", err)
-	}
-	e := &ch.Endianness
+	//The PAC_CLIENT_INFO structure is a simple structure that is not NDR-encoded.
+	var p int
+	var e binary.ByteOrder = binary.LittleEndian
 
-	//The next 4 bytes are an RPC unique pointer referent. We just skip these
-	p += 4
-
-	k.ClientID = mstypes.Read_FileTime(&b, &p, e)
-	k.NameLength = ndr.Read_uint16(&b, &p, e)
+	k.ClientID = mstypes.Read_FileTime(&b, &p, &e)
+	k.NameLength = ndr.Read_uint16(&b, &p, &e)
 	s := make([]rune, k.NameLength, k.NameLength)
 	for i := 0; i < len(s); i++ {
-		s[i] = rune(ndr.Read_uint16(&b, &p, e))
+		s[i] = rune(ndr.Read_uint16(&b, &p, &e))
 	}
 	k.Name = string(s)
 

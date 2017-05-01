@@ -1,7 +1,7 @@
 package pac
 
 import (
-	"fmt"
+	"encoding/binary"
 	"github.com/jcmturner/gokrb5/iana/chksumtype"
 	"github.com/jcmturner/gokrb5/ndr"
 )
@@ -37,27 +37,30 @@ type PAC_SignatureData struct {
 }
 
 func (k *PAC_SignatureData) Unmarshal(b []byte) ([]byte, error) {
-	ch, _, p, err := ndr.ReadHeaders(&b)
-	if err != nil {
-		return []byte{}, fmt.Errorf("Error parsing byte stream headers: %v", err)
-	}
-	e := &ch.Endianness
+	//ch, _, p, err := ndr.ReadHeaders(&b)
+	//if err != nil {
+	//	return []byte{}, fmt.Errorf("Error parsing byte stream headers: %v", err)
+	//}
+	//e := &ch.Endianness
+	//
+	////The next 4 bytes are an RPC unique pointer referent. We just skip these
+	//p += 4
+	var p int
+	var e binary.ByteOrder = binary.LittleEndian
 
-	//The next 4 bytes are an RPC unique pointer referent. We just skip these
-	p += 4
-
-	k.SignatureType = ndr.Read_uint32(&b, &p, e)
+	k.SignatureType = ndr.Read_uint32(&b, &p, &e)
 	var c int
 	switch k.SignatureType {
-	case chksumtype.KERB_CHECKSUM_HMAC_MD5:
+	case chksumtype.KERB_CHECKSUM_HMAC_MD5_UNSIGNED:
 		c = 16
 	case chksumtype.HMAC_SHA1_96_AES128:
 		c = 12
 	case chksumtype.HMAC_SHA1_96_AES256:
 		c = 12
 	}
-	k.Signature = ndr.Read_bytes(&b, &p, c, e)
-	k.RODCIdentifier = ndr.Read_uint16(&b, &p, e)
+	sp := p
+	k.Signature = ndr.Read_bytes(&b, &p, c, &e)
+	k.RODCIdentifier = ndr.Read_uint16(&b, &p, &e)
 
 	//Check that there is only zero padding left
 	for _, v := range b[p:] {
@@ -69,8 +72,8 @@ func (k *PAC_SignatureData) Unmarshal(b []byte) ([]byte, error) {
 	// Create bytes with zeroed signature needed for checksum verification
 	rb := make([]byte, len(b), len(b))
 	copy(rb, b)
-	z := make([]byte, c, c)
-	copy(rb[p:p+c], z)
+	z := make([]byte, len(b), len(b))
+	copy(rb[sp:sp+c], z)
 
 	return rb, nil
 }
