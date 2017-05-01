@@ -2,7 +2,6 @@ package messages
 
 import (
 	"crypto/rand"
-	"encoding/binary"
 	"errors"
 	"fmt"
 	"github.com/jcmturner/asn1"
@@ -14,7 +13,6 @@ import (
 	"github.com/jcmturner/gokrb5/iana/errorcode"
 	"github.com/jcmturner/gokrb5/iana/keyusage"
 	"github.com/jcmturner/gokrb5/keytab"
-	"github.com/jcmturner/gokrb5/mstypes"
 	"github.com/jcmturner/gokrb5/pac"
 	"github.com/jcmturner/gokrb5/types"
 	"time"
@@ -187,7 +185,7 @@ func (t *Ticket) DecryptEncPart(keytab keytab.Keytab) error {
 	return nil
 }
 
-func (t *Ticket) GetPACType(key types.EncryptionKey) (mstypes.PACType, error) {
+func (t *Ticket) GetPACType(key types.EncryptionKey) (pac.PACType, error) {
 	for _, ad := range t.DecryptedEncPart.AuthorizationData {
 		if ad.ADType == adtype.AD_IF_RELEVANT {
 			var ad2 types.AuthorizationData
@@ -197,84 +195,15 @@ func (t *Ticket) GetPACType(key types.EncryptionKey) (mstypes.PACType, error) {
 			}
 			// TODO note does tthe entry contain and AuthorizationData or AuthorizationDataEntry. Assuming the former atm.
 			if ad2[0].ADType == adtype.AD_WIN2K_PAC {
-				var p int
-				var endian binary.ByteOrder = binary.LittleEndian
-				pt := mstypes.Read_PACType(&ad2[0].ADData, &p, &endian)
-				err = processAD_PAC(pt, ad2[0].ADData, key)
-				return pt, err
+				var pac pac.PACType
+				err = pac.Unmarshal(ad2[0].ADData)
+				if err != nil {
+					return pac, err
+				}
+				err = pac.ProcessPACInfoBuffers(key)
+				return pac, err
 			}
 		}
 	}
-	return mstypes.PACType{}, errors.New("AuthorizationData within the ticket does not contain PAC data.")
-}
-
-// https://msdn.microsoft.com/en-us/library/cc237954.aspx
-func processAD_PAC(pt mstypes.PACType, b []byte, key types.EncryptionKey) error {
-	for _, buf := range pt.Buffers {
-		p := make([]byte, buf.CBBufferSize, buf.CBBufferSize)
-		copy(p, b[int(buf.Offset):int(buf.Offset)+int(buf.CBBufferSize)])
-		switch int(buf.ULType) {
-		case mstypes.ULTYPE_KERB_VALIDATION_INFO:
-			var k pac.KerbValidationInfo
-			err := k.Unmarshal(p)
-			if err != nil {
-				return err
-			}
-		case mstypes.ULTYPE_CREDENTIALS:
-			var c pac.PAC_CredentialsInfo
-			err := c.Unmarshal(p, key)
-			if err != nil {
-				return err
-			}
-		case mstypes.ULTYPE_PAC_SERVER_SIGNATURE_DATA:
-			var k pac.PAC_SignatureData
-			err := k.Unmarshal(p)
-			if err != nil {
-				return err
-			}
-		case mstypes.ULTYPE_PAC_KDC_SIGNATURE_DATA:
-			var k pac.PAC_SignatureData
-			err := k.Unmarshal(p)
-			if err != nil {
-				return err
-			}
-		case mstypes.ULTYPE_PAC_CLIENT_INFO:
-			var k pac.PAC_ClientInfo
-			err := k.Unmarshal(p)
-			if err != nil {
-				return err
-			}
-		case mstypes.ULTYPE_S4U_DELEGATION_INFO:
-			var k pac.S4U_DelegationInfo
-			err := k.Unmarshal(p)
-			if err != nil {
-				return err
-			}
-		case mstypes.ULTYPE_UPN_DNS_INFO:
-			var k pac.UPN_DNSInfo
-			err := k.Unmarshal(p)
-			if err != nil {
-				return err
-			}
-		case mstypes.ULTYPE_PAC_CLIENT_CLAIMS_INFO:
-			var k pac.PAC_ClientClaimsInfo
-			err := k.Unmarshal(p)
-			if err != nil {
-				return err
-			}
-		case mstypes.ULTYPE_PAC_DEVICE_INFO:
-			var k pac.PAC_DeviceInfo
-			err := k.Unmarshal(p)
-			if err != nil {
-				return err
-			}
-		case mstypes.ULTYPE_PAC_DEVICE_CLAIMS_INFO:
-			var k pac.PAC_DeviceClaimsInfo
-			err := k.Unmarshal(p)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
+	return pac.PACType{}, errors.New("AuthorizationData within the ticket does not contain PAC data.")
 }

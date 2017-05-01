@@ -87,9 +87,3 @@ func (k *PAC_DeviceInfo) Unmarshal(b []byte) error {
 
 	return nil
 }
-
-// TODO come back to this struct
-// https://msdn.microsoft.com/en-us/library/hh554226.aspx
-//type PAC_DeviceClaimsInfo struct {
-//	Claims ClaimsSetMetadata
-//}
