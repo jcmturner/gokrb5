@@ -40,9 +40,3 @@ func (k *PAC_ClientInfo) Unmarshal(b []byte) error {
 
 	return nil
 }
-
-// TODO come back to this struct
-// https://msdn.microsoft.com/en-us/library/hh536365.aspx
-//type PAC_ClientClaimsInfo struct {
-//	Claims ClaimsSetMetadata
-//}
