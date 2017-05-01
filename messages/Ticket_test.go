@@ -3,10 +3,7 @@ package messages
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/jcmturner/gokrb5/iana/adtype"
-	"github.com/jcmturner/gokrb5/keytab"
 	"github.com/jcmturner/gokrb5/testdata"
-	"github.com/jcmturner/gokrb5/types"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -115,26 +112,26 @@ func TestMarshalTicket(t *testing.T) {
 	assert.Equal(t, b, mb, "Marshalled bytes not as expected")
 }
 
-func TestAuthorizationData_GetPACType(t *testing.T) {
-	v := "PAC_AuthorizationData"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
-	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
-	}
-	//TODO should the test data need to be wrapped up again?
-	a := types.AuthorizationData{
-		types.AuthorizationDataEntry{
-			ADType: adtype.AD_IF_RELEVANT,
-			ADData: b,
-		},
-	}
-	tkt := Ticket{DecryptedEncPart: EncTicketPart{AuthorizationData: a}}
-	b, _ = hex.DecodeString(testdata.HTTP_KEYTAB)
-	kt, _ := keytab.Parse(b)
-	key, _ := kt.GetEncryptionKey([]string{"HTTP", "host.test.gokrb5"}, "TEST.GOKRB5", 1, 18)
-	pactype, err := tkt.GetPACType(key)
-	if err != nil {
-		t.Fatalf("Error getting PAC Type: %v\n", err)
-	}
-	t.Logf("PACType: %+v", pactype)
-}
+//func TestAuthorizationData_GetPACType(t *testing.T) {
+//	v := "PAC_AuthorizationData"
+//	b, err := hex.DecodeString(testdata.TestVectors[v])
+//	if err != nil {
+//		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+//	}
+//	//TODO should the test data need to be wrapped up again?
+//	a := types.AuthorizationData{
+//		types.AuthorizationDataEntry{
+//			ADType: adtype.AD_IF_RELEVANT,
+//			ADData: b,
+//		},
+//	}
+//	tkt := Ticket{DecryptedEncPart: EncTicketPart{AuthorizationData: a}}
+//	b, _ = hex.DecodeString(testdata.HTTP_KEYTAB)
+//	kt, _ := keytab.Parse(b)
+//	key, _ := kt.GetEncryptionKey([]string{"HTTP", "host.test.gokrb5"}, "TEST.GOKRB5", 1, 18)
+//	pactype, err := tkt.GetPACType(key)
+//	if err != nil {
+//		t.Fatalf("Error getting PAC Type: %v\n", err)
+//	}
+//	t.Logf("PACType: %+v", pactype)
+//}
