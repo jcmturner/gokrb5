@@ -22,7 +22,7 @@ type PACType struct {
 	UPN_DNSInfo        *UPN_DNSInfo
 	ClientClaimsInfo   *PAC_ClientClaimsInfo
 	DeviceInfo         *PAC_DeviceInfo
-	DeviceClaimsInfo   *PAC_DeviceInfo
+	DeviceClaimsInfo   *PAC_DeviceClaimsInfo
 }
 
 func (pac *PACType) Unmarshal(b []byte) error {
@@ -56,7 +56,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			}
 			pac.KerbValidationInfo = &k
 		case ULTYPE_CREDENTIALS:
-			if pac.ClientInfo != nil {
+			if pac.CredentialsInfo != nil {
 				//Must ignore subsequent buffers of this type
 				continue
 			}
@@ -65,7 +65,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			if err != nil {
 				return err
 			}
-			pac.ClientInfo = &k
+			pac.CredentialsInfo = &k
 		case ULTYPE_PAC_SERVER_SIGNATURE_DATA:
 			if pac.ServerChecksum != nil {
 				//Must ignore subsequent buffers of this type
