@@ -37,14 +37,6 @@ type PAC_SignatureData struct {
 }
 
 func (k *PAC_SignatureData) Unmarshal(b []byte) ([]byte, error) {
-	//ch, _, p, err := ndr.ReadHeaders(&b)
-	//if err != nil {
-	//	return []byte{}, fmt.Errorf("Error parsing byte stream headers: %v", err)
-	//}
-	//e := &ch.Endianness
-	//
-	////The next 4 bytes are an RPC unique pointer referent. We just skip these
-	//p += 4
 	var p int
 	var e binary.ByteOrder = binary.LittleEndian
 
