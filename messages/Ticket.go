@@ -185,7 +185,7 @@ func (t *Ticket) DecryptEncPart(keytab keytab.Keytab) error {
 	return nil
 }
 
-func (t *Ticket) GetPACType(key types.EncryptionKey) (pac.PACType, error) {
+func (t *Ticket) GetPACType(keytab keytab.Keytab) (pac.PACType, error) {
 	for _, ad := range t.DecryptedEncPart.AuthorizationData {
 		if ad.ADType == adtype.AD_IF_RELEVANT {
 			var ad2 types.AuthorizationData
@@ -199,6 +199,10 @@ func (t *Ticket) GetPACType(key types.EncryptionKey) (pac.PACType, error) {
 				err = pac.Unmarshal(ad2[0].ADData)
 				if err != nil {
 					return pac, fmt.Errorf("Error unmarshaling PAC: %v", err)
+				}
+				key, err := keytab.GetEncryptionKey(t.SName.NameString, t.Realm, t.EncPart.KVNO, t.EncPart.EType)
+				if err != nil {
+					return pac, NewKRBError(t.SName, t.Realm, errorcode.KRB_AP_ERR_NOKEY, fmt.Sprintf("Could not get key from keytab: %v", err))
 				}
 				err = pac.ProcessPACInfoBuffers(key)
 				return pac, err

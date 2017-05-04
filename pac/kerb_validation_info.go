@@ -217,3 +217,38 @@ func (k *KerbValidationInfo) Unmarshal(b []byte) (err error) {
 
 	return nil
 }
+
+func (k *KerbValidationInfo) GetGroupMembershipSIDs() []string {
+	gSize := len(k.GroupIDs) + len(k.ExtraSIDs)
+	g := make([]string, gSize, gSize)
+	lSID := k.LogonDomainID.ToString()
+	for i := range k.GroupIDs {
+		g[i] = fmt.Sprintf("%s-%d", lSID, k.GroupIDs[i].RelativeID)
+	}
+	for _, s := range k.ExtraSIDs {
+		var exists = false
+		for _, es := range g {
+			if es == s.SID.ToString() {
+				exists = true
+				break
+			}
+		}
+		if !exists {
+			g = append(g, s.SID.ToString())
+		}
+	}
+	for _, r := range k.ResourceGroupIDs {
+		var exists = false
+		s := fmt.Sprintf("%s-%d", lSID, r)
+		for _, es := range g {
+			if es == s {
+				exists = true
+				break
+			}
+		}
+		if !exists {
+			g = append(g, s)
+		}
+	}
+	return g
+}
