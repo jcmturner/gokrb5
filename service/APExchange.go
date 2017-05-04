@@ -81,5 +81,20 @@ func ValidateAPREQ(APReq messages.APReq, kt keytab.Keytab, cAddr string) (bool, 
 		return false, creds, err
 	}
 	creds = credentials.NewCredentialsFromPrincipal(a.CName, a.CRealm)
+	pac, err := APReq.Ticket.GetPACType(kt)
+	if err == nil {
+		// There is a PAC. Adding attributes to creds
+		creds.Attributes["groupMembershipSIDs"] = pac.KerbValidationInfo.GetGroupMembershipSIDs()
+		creds.Attributes["logOnTime"] = pac.KerbValidationInfo.LogOnTime.Time()
+		creds.Attributes["logOffTime"] = pac.KerbValidationInfo.LogOffTime.Time()
+		creds.Attributes["passwordLastSet"] = pac.KerbValidationInfo.PasswordLastSet.Time()
+		creds.Attributes["effectiveName"] = pac.KerbValidationInfo.EffectiveName.Value
+		creds.Attributes["fullName"] = pac.KerbValidationInfo.FullName.Value
+		creds.Attributes["userID"] = int(pac.KerbValidationInfo.UserID)
+		creds.Attributes["primaryGroupID"] = int(pac.KerbValidationInfo.PrimaryGroupID)
+		creds.Attributes["logonServer"] = pac.KerbValidationInfo.LogonServer.Value
+		creds.Attributes["logonDomainName"] = pac.KerbValidationInfo.LogonDomainName.Value
+		creds.Attributes["logonDomainID"] = pac.KerbValidationInfo.LogonDomainID.ToString()
+	}
 	return true, creds, nil
 }
