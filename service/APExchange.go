@@ -14,9 +14,9 @@ import (
 )
 
 // Validates an AP_REQ sent to the service. Returns a boolean for if the AP_REQ is valid and the client's principal name and realm.
-func ValidateAPREQ(APReq messages.APReq, kt keytab.Keytab, cAddr string) (bool, credentials.Credentials, error) {
+func ValidateAPREQ(APReq messages.APReq, kt keytab.Keytab, sa string, cAddr string) (bool, credentials.Credentials, error) {
 	var creds credentials.Credentials
-	err := APReq.Ticket.DecryptEncPart(kt)
+	err := APReq.Ticket.DecryptEncPart(kt, sa)
 	if err != nil {
 		return false, creds, fmt.Errorf("Error decrypting encpart of service ticket provided: %v", err)
 	}
@@ -81,9 +81,12 @@ func ValidateAPREQ(APReq messages.APReq, kt keytab.Keytab, cAddr string) (bool, 
 		return false, creds, err
 	}
 	creds = credentials.NewCredentialsFromPrincipal(a.CName, a.CRealm)
-	pac, err := APReq.Ticket.GetPACType(kt)
-	if err == nil {
-		// There is a PAC. Adding attributes to creds
+	isPAC, pac, err := APReq.Ticket.GetPACType(kt, sa)
+	if isPAC && err != nil {
+		return false, creds, err
+	}
+	if isPAC {
+		// There is a valid PAC. Adding attributes to creds
 		creds.Attributes["groupMembershipSIDs"] = pac.KerbValidationInfo.GetGroupMembershipSIDs()
 		creds.Attributes["logOnTime"] = pac.KerbValidationInfo.LogOnTime.Time()
 		creds.Attributes["logOffTime"] = pac.KerbValidationInfo.LogOffTime.Time()
