@@ -29,7 +29,8 @@ func TestClient_SuccessfulLogin(t *testing.T) {
 func TestClient_SuccessfulLogin_TCPOnly(t *testing.T) {
 	b, err := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF_TCP)
+	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	c.LibDefaults.Udp_preference_limit = 1
 	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 
@@ -82,6 +83,20 @@ func TestClient_SuccessfulLogin_UserRequiringPreAuth(t *testing.T) {
 	b, err := hex.DecodeString(testdata.TESTUSER2_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	cl := NewClientWithKeytab("testuser2", "TEST.GOKRB5", kt)
+	cl.WithConfig(c)
+
+	err = cl.Login()
+	if err != nil {
+		t.Fatalf("Error on login: %v\n", err)
+	}
+}
+
+func TestClient_SuccessfulLogin_UserRequiringPreAuth_TCPOnly(t *testing.T) {
+	b, err := hex.DecodeString(testdata.TESTUSER2_KEYTAB)
+	kt, _ := keytab.Parse(b)
+	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	c.LibDefaults.Udp_preference_limit = 1
 	cl := NewClientWithKeytab("testuser2", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 

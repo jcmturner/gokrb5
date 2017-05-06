@@ -56,14 +56,15 @@ func (cl *Client) SendToKDC(b []byte) ([]byte, error) {
 				return rb, e
 			}
 			// Try TCP
-			rb, errtcp := sendTCP(kdc, b)
+			r, errtcp := sendTCP(kdc, b)
 			if errtcp != nil {
 				if e, ok := errtcp.(messages.KRBError); ok {
 					// Got a KRBError
-					return rb, e
+					return r, e
 				}
-				return rb, fmt.Errorf("Failed to communicate with KDC %v. Attempts made with UDP (%v) and then TCP (%v)", kdc, errudp, errtcp)
+				return r, fmt.Errorf("Failed to communicate with KDC %v. Attempts made with UDP (%v) and then TCP (%v)", kdc, errudp, errtcp)
 			}
+			rb = r
 		}
 		if len(rb) < 1 {
 			return rb, fmt.Errorf("No response data from KDC %v", kdc)
