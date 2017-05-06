@@ -191,4 +191,25 @@ const (
  .test.gokrb5 = TEST.GOKRB5
  test.gokrb5 = TEST.GOKRB5
  `
+	TEST_KRB5CONF_AD = `[libdefaults]
+  default_realm = TEST.GOKRB5
+  dns_lookup_realm = false
+  dns_lookup_kdc = false
+  ticket_lifetime = 24h
+  forwardable = yes
+  default_tkt_enctypes = aes256-cts-hmac-sha1-96
+  default_tgs_enctypes = aes256-cts-hmac-sha1-96
+  udp_preference_limit = 1
+
+[realms]
+ TEST.GOKRB5 = {
+  kdc = 10.80.88.68:88
+  admin_server = 10.80.88.68:749
+  default_domain = test.gokrb5
+ }
+
+[domain_realm]
+ .test.gokrb5 = TEST.GOKRB5
+ test.gokrb5 = TEST.GOKRB5
+ `
 )

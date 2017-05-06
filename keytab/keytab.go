@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"github.com/jcmturner/gokrb5/types"
 	"io/ioutil"
 	"time"
@@ -62,7 +63,7 @@ func (kt *Keytab) GetEncryptionKey(nameString []string, realm string, kvno, etyp
 		}
 	}
 	if len(key.KeyValue) < 1 {
-		return key, errors.New("Matching key not found in keytab")
+		return key, fmt.Errorf("Matching key not found in keytab. Looking for %v realm: %v kvno: %v etype: %v", nameString, realm, kvno, etype)
 	}
 	return key, nil
 }
