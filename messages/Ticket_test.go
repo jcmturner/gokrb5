@@ -3,7 +3,9 @@ package messages
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/jcmturner/gokrb5/keytab"
 	"github.com/jcmturner/gokrb5/testdata"
+	"github.com/jcmturner/gokrb5/types"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -112,26 +114,40 @@ func TestMarshalTicket(t *testing.T) {
 	assert.Equal(t, b, mb, "Marshalled bytes not as expected")
 }
 
-//func TestAuthorizationData_GetPACType(t *testing.T) {
-//	v := "PAC_AuthorizationData"
-//	b, err := hex.DecodeString(testdata.TestVectors[v])
-//	if err != nil {
-//		t.Fatalf("Test vector read error of %s: %v\n", v, err)
-//	}
-//	//TODO should the test data need to be wrapped up again?
-//	a := types.AuthorizationData{
-//		types.AuthorizationDataEntry{
-//			ADType: adtype.AD_IF_RELEVANT,
-//			ADData: b,
-//		},
-//	}
-//	tkt := Ticket{DecryptedEncPart: EncTicketPart{AuthorizationData: a}}
-//	b, _ = hex.DecodeString(testdata.HTTP_KEYTAB)
-//	kt, _ := keytab.Parse(b)
-//	key, _ := kt.GetEncryptionKey([]string{"HTTP", "host.test.gokrb5"}, "TEST.GOKRB5", 1, 18)
-//	pactype, err := tkt.GetPACType(key)
-//	if err != nil {
-//		t.Fatalf("Error getting PAC Type: %v\n", err)
-//	}
-//	t.Logf("PACType: %+v", pactype)
-//}
+func TestAuthorizationData_GetPACType_GOKRB5TestData(t *testing.T) {
+	v := "PAC_AuthorizationData_GOKRB5"
+	b, err := hex.DecodeString(testdata.TestVectors[v])
+	if err != nil {
+		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+	}
+	var a types.AuthorizationData
+	err = a.Unmarshal(b)
+	if err != nil {
+		t.Fatalf("Error unmarshaling test data: %v", err)
+	}
+	tkt := Ticket{
+		Realm: "TEST.GOKRB5",
+		EncPart: types.EncryptedData{
+			EType: 18,
+			KVNO:  2,
+		},
+		DecryptedEncPart: EncTicketPart{
+			AuthorizationData: a,
+		},
+	}
+	b, _ = hex.DecodeString(testdata.SYSHTTP_KEYTAB)
+	kt, _ := keytab.Parse(b)
+	isPAC, pac, err := tkt.GetPACType(kt, "sysHTTP")
+	if err != nil {
+		t.Fatalf("Error getting PAC Type: %v\n", err)
+	}
+	assert.True(t, isPAC, "PAC should be present")
+	assert.Equal(t, 5, len(pac.Buffers), "Number of buffers not as expected")
+	assert.Equal(t, uint32(5), pac.CBuffers, "Count of buffers not as expected")
+	assert.Equal(t, uint32(0), pac.Version, "PAC version not as expected")
+	assert.NotNil(t, pac.KerbValidationInfo, "PAC Kerb Validation info is nil")
+	assert.NotNil(t, pac.ClientInfo, "PAC Client Info info is nil")
+	assert.NotNil(t, pac.UPN_DNSInfo, "PAC UPN DNS Info info is nil")
+	assert.NotNil(t, pac.KDCChecksum, "PAC KDC Checksum info is nil")
+	assert.NotNil(t, pac.ServerChecksum, "PAC Server checksum info is nil")
+}

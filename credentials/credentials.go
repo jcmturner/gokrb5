@@ -5,6 +5,7 @@ import (
 	"github.com/jcmturner/gokrb5/iana/nametype"
 	"github.com/jcmturner/gokrb5/keytab"
 	"github.com/jcmturner/gokrb5/types"
+	"time"
 )
 
 // Credentials struct for a user.
@@ -17,6 +18,20 @@ type Credentials struct {
 	Keytab     keytab.Keytab
 	Password   string
 	Attributes map[string]interface{}
+}
+
+type ADCredentials struct {
+	EffectiveName       string
+	FullName            string
+	UserID              int
+	PrimaryGroupID      int
+	LogOnTime           time.Time
+	LogOffTime          time.Time
+	PasswordLastSet     time.Time
+	GroupMembershipSIDs []string
+	LogonDomainName     string
+	LogonDomainID       string
+	LogonServer         string
 }
 
 // Create a new Credentials struct.

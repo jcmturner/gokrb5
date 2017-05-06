@@ -84,8 +84,19 @@ func httpServer() *httptest.Server {
 }
 
 func testAppHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
 	ctx := r.Context()
-	fmt.Fprintf(w, "<html>\nTEST.GOKRB5 Handler\nAuthenticed user: %s\nUser's realm: %s\n</html>", ctx.Value("credentials").(credentials.Credentials).Username, ctx.Value("credentials").(credentials.Credentials).Realm)
+	fmt.Fprint(w, "<html>\n<p><h1>TEST.GOKRB5 Handler</h1></p>\n")
+	if validuser, ok := ctx.Value("authenticated").(bool); ok && validuser {
+		w.WriteHeader(http.StatusOK)
+		if creds, ok := ctx.Value("credentials").(credentials.Credentials); ok {
+			fmt.Fprintf(w, "<ul><li>Authenticed user: %s</li>\n", creds.Username)
+			fmt.Fprintf(w, "<li>User's realm: %s</li></ul>\n", creds.Realm)
+		}
+
+	} else {
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprint(w, "Authentication failed")
+	}
+	fmt.Fprint(w, "</html>")
 	return
 }

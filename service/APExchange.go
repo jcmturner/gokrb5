@@ -87,17 +87,19 @@ func ValidateAPREQ(APReq messages.APReq, kt keytab.Keytab, sa string, cAddr stri
 	}
 	if isPAC {
 		// There is a valid PAC. Adding attributes to creds
-		creds.Attributes["groupMembershipSIDs"] = pac.KerbValidationInfo.GetGroupMembershipSIDs()
-		creds.Attributes["logOnTime"] = pac.KerbValidationInfo.LogOnTime.Time()
-		creds.Attributes["logOffTime"] = pac.KerbValidationInfo.LogOffTime.Time()
-		creds.Attributes["passwordLastSet"] = pac.KerbValidationInfo.PasswordLastSet.Time()
-		creds.Attributes["effectiveName"] = pac.KerbValidationInfo.EffectiveName.Value
-		creds.Attributes["fullName"] = pac.KerbValidationInfo.FullName.Value
-		creds.Attributes["userID"] = int(pac.KerbValidationInfo.UserID)
-		creds.Attributes["primaryGroupID"] = int(pac.KerbValidationInfo.PrimaryGroupID)
-		creds.Attributes["logonServer"] = pac.KerbValidationInfo.LogonServer.Value
-		creds.Attributes["logonDomainName"] = pac.KerbValidationInfo.LogonDomainName.Value
-		creds.Attributes["logonDomainID"] = pac.KerbValidationInfo.LogonDomainID.ToString()
+		creds.Attributes["ADCredentials"] = credentials.ADCredentials{
+			GroupMembershipSIDs: pac.KerbValidationInfo.GetGroupMembershipSIDs(),
+			LogOnTime:           pac.KerbValidationInfo.LogOnTime.Time(),
+			LogOffTime:          pac.KerbValidationInfo.LogOffTime.Time(),
+			PasswordLastSet:     pac.KerbValidationInfo.PasswordLastSet.Time(),
+			EffectiveName:       pac.KerbValidationInfo.EffectiveName.Value,
+			FullName:            pac.KerbValidationInfo.FullName.Value,
+			UserID:              int(pac.KerbValidationInfo.UserID),
+			PrimaryGroupID:      int(pac.KerbValidationInfo.PrimaryGroupID),
+			LogonServer:         pac.KerbValidationInfo.LogonServer.Value,
+			LogonDomainName:     pac.KerbValidationInfo.LogonDomainName.Value,
+			LogonDomainID:       pac.KerbValidationInfo.LogonDomainID.ToString(),
+		}
 	}
 	return true, creds, nil
 }
