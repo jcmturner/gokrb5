@@ -16,7 +16,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"time"
 )
 
 func main() {
@@ -72,23 +71,34 @@ func httpServer() *httptest.Server {
 }
 
 func testAppHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
 	ctx := r.Context()
-	if ctx.Value("credentials") != nil {
-		// Note that you should really check each attribute is not nil before doing the type assertion.
-		fmt.Fprintf(w, "<html>\nTEST.GOKRB5 Handler\n<ul><li>Authenticed user: %s</li>\n<li>User's realm: %s</li>\n", ctx.Value("credentials").(credentials.Credentials).Username, ctx.Value("credentials").(credentials.Credentials).Realm)
-		fmt.Fprintf(w, "<li>EffectiveName: %v</li>\n", ctx.Value("credentials").(credentials.Credentials).Attributes["effectiveName"].(string))
-		fmt.Fprintf(w, "<li>FullName: %v</li>\n", ctx.Value("credentials").(credentials.Credentials).Attributes["fullName"].(string))
-		fmt.Fprintf(w, "<li>UserID: %v</li>\n", ctx.Value("credentials").(credentials.Credentials).Attributes["userID"].(int))
-		fmt.Fprintf(w, "<li>PrimaryGroupID: %v</li>\n", ctx.Value("credentials").(credentials.Credentials).Attributes["primaryGroupID"].(int))
-		fmt.Fprintf(w, "<li>Group SIDs: %v</li>\n", ctx.Value("credentials").(credentials.Credentials).Attributes["groupMembershipSIDs"].([]string))
-		fmt.Fprintf(w, "<li>LogOnTime: %v</li>\n", ctx.Value("credentials").(credentials.Credentials).Attributes["logOnTime"].(time.Time))
-		fmt.Fprintf(w, "<li>LogOffTime: %v</li>\n", ctx.Value("credentials").(credentials.Credentials).Attributes["logOffTime"].(time.Time))
-		fmt.Fprintf(w, "<li>PasswordLastSet: %v</li>\n", ctx.Value("credentials").(credentials.Credentials).Attributes["passwordLastSet"].(time.Time))
-		fmt.Fprintf(w, "<li>LogonServer: %v</li>\n", ctx.Value("credentials").(credentials.Credentials).Attributes["logonServer"].(string))
-		fmt.Fprintf(w, "<li>LogonDomainName: %v</li>\n", ctx.Value("credentials").(credentials.Credentials).Attributes["logonDomainName"].(string))
-		fmt.Fprintf(w, "<li>LogonDomainID: %v</li>\n", ctx.Value("credentials").(credentials.Credentials).Attributes["logonDomainID"].(string))
-		fmt.Fprintf(w, "</ul></html>")
+	fmt.Fprint(w, "<html>\n<p><h1>TEST.GOKRB5 Handler</h1></p>\n")
+	if validuser, ok := ctx.Value("authenticated").(bool); ok && validuser {
+		w.WriteHeader(http.StatusOK)
+		if creds, ok := ctx.Value("credentials").(credentials.Credentials); ok {
+			fmt.Fprintf(w, "<ul><li>Authenticed user: %s</li>\n", creds.Username)
+			fmt.Fprintf(w, "<li>User's realm: %s</li>\n", creds.Realm)
+			if ADCreds, ok := creds.Attributes["ADCredentials"].(credentials.ADCredentials); ok {
+				// Now access the fields of the ADCredentials struct. For example:
+				fmt.Fprintf(w, "<li>EffectiveName: %v</li>\n", ADCreds.EffectiveName)
+				fmt.Fprintf(w, "<li>FullName: %v</li>\n", ADCreds.FullName)
+				fmt.Fprintf(w, "<li>UserID: %v</li>\n", ADCreds.UserID)
+				fmt.Fprintf(w, "<li>PrimaryGroupID: %v</li>\n", ADCreds.PrimaryGroupID)
+				fmt.Fprintf(w, "<li>Group SIDs: %v</li>\n", ADCreds.GroupMembershipSIDs)
+				fmt.Fprintf(w, "<li>LogOnTime: %v</li>\n", ADCreds.LogOnTime)
+				fmt.Fprintf(w, "<li>LogOffTime: %v</li>\n", ADCreds.LogOffTime)
+				fmt.Fprintf(w, "<li>PasswordLastSet: %v</li>\n", ADCreds.PasswordLastSet)
+				fmt.Fprintf(w, "<li>LogonServer: %v</li>\n", ADCreds.LogonServer)
+				fmt.Fprintf(w, "<li>LogonDomainName: %v</li>\n", ADCreds.LogonDomainName)
+				fmt.Fprintf(w, "<li>LogonDomainID: %v</li>\n", ADCreds.LogonDomainID)
+			}
+			fmt.Fprint(w, "</ul>")
+		}
+
+	} else {
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprint(w, "Authentication failed")
 	}
+	fmt.Fprint(w, "</html>")
 	return
 }

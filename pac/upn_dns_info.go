@@ -45,7 +45,7 @@ func (k *UPN_DNSInfo) Unmarshal(b []byte) error {
 		q := i * 2
 		d[i] = rune(ndr.Read_uint16(&db, &q, &e))
 	}
-	k.UPN = string(d)
+	k.DNSDomain = string(d)
 
 	l := []int{
 		p,

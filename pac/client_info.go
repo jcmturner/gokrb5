@@ -20,7 +20,8 @@ func (k *PAC_ClientInfo) Unmarshal(b []byte) error {
 
 	k.ClientID = mstypes.Read_FileTime(&b, &p, &e)
 	k.NameLength = ndr.Read_uint16(&b, &p, &e)
-	s := make([]rune, k.NameLength, k.NameLength)
+	//Length devided by 2 as each run is 16bits = 2bytes
+	s := make([]rune, k.NameLength/2, k.NameLength/2)
 	for i := 0; i < len(s); i++ {
 		s[i] = rune(ndr.Read_uint16(&b, &p, &e))
 	}

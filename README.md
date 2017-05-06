@@ -4,12 +4,13 @@
 Currently the following is working/tested:
 * Client side libraries that supports authentication to HTTP servers that implement SPNEGO using Kerberos 5.
 * Service side libraries for implementing HTTP web servers using Kerberos SPNEGO authentication.
-* Tested against MIT KDC only (please let me know if you find it works against Microsoft Active Directory). MIT KDC 1.6.3 is the oldest version tested against.
+* Microsoft PAC Authorization Data is processed and exposed in the HTTP request context. Available if Microsoft Active Directory is used as the KDC.
+* Tested against MIT KDC (1.6.3 is the oldest version tested against) and Microsoft Active Directory (Windows 2008 R2)
 * Tested against a KDC that supports PA-FX-FAST.
 * Tested against users that have pre-authentication required using PA-ENC-TIMESTAMP.
 
 #### Implemented Encryption & Checksum Types
-The currently implemented encryption types are:
+The currently implemented encryption types limited to:
 
 | Implementation | Encryption ID | Checksum ID |
 |-------|-------------|------------|
@@ -123,13 +124,28 @@ h := http.HandlerFunc(apphandler)
 ```
 Configure the HTTP handler:
 ```go
-http.Handler("/", service.SPNEGOKRB5Authenticate(h, kt, l))
+serivceAccountName = ""
+http.Handler("/", service.SPNEGOKRB5Authenticate(h, kt, serivceAccountName, l))
 ```
+The serviceAccountName needs to be defined when using Active Directory where the SPN is mapped to a user account.
+If this is not required it should be set to an empty string "".
 If authentication succeeds then the request's context will have the following values added so they can be accessed within the application's handler:
 * "authenticated" - Boolean indicating if the user is authenticated. Use of this value should also handle that this value may not be set and should assume "false" in that case.
-* "cname" - The authenticated user name.
-* "crealm" - The authenticated user's realm.
+* "credentials" - The authenticated user's credentials.
+If Microsoft Active Directory is used as the KDC then additional ADCredentials are available. For example the SIDs of the users group membership are available and can be used by your application for authorization.
+Access the credentials within your application:
+```go
+ctx := r.Context()
+if validuser, ok := ctx.Value("authenticated").(bool); ok && validuser {
+        if creds, ok := ctx.Value("credentials").(credentials.Credentials); ok {
+                if ADCreds, ok := creds.Attributes["ADCredentials"].(credentials.ADCredentials); ok {
+                        // Now access the fields of the ADCredentials struct. For example:
+                        groupSids := ADCreds.GroupMembershipSIDs
+                }
+        } 
 
+}
+```
 
 ## References
 ### RFCs
