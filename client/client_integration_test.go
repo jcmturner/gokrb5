@@ -52,6 +52,19 @@ func TestClient_SuccessfulLogin_OlderKDC(t *testing.T) {
 	}
 }
 
+func TestClient_SuccessfulLogin_AD(t *testing.T) {
+	b, err := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	kt, _ := keytab.Parse(b)
+	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF_AD)
+	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
+	cl.WithConfig(c)
+
+	err = cl.Login()
+	if err != nil {
+		t.Fatalf("Error on login: %v\n", err)
+	}
+}
+
 func TestClient_FailedLogin(t *testing.T) {
 	b, err := hex.DecodeString(testdata.TESTUSER1_WRONGPASSWD)
 	kt, _ := keytab.Parse(b)
