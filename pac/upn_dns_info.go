@@ -1,8 +1,9 @@
 package pac
 
 import (
-	"fmt"
+	"encoding/binary"
 	"github.com/jcmturner/gokrb5/ndr"
+	"sort"
 )
 
 // https://msdn.microsoft.com/en-us/library/dd240468.aspx
@@ -12,6 +13,8 @@ type UPN_DNSInfo struct {
 	DNSDomainNameLength uint16
 	DNSDomainNameOffset uint16
 	Flags               uint32
+	UPN                 string
+	DNSDomain           string
 }
 
 const (
@@ -19,25 +22,41 @@ const (
 )
 
 func (k *UPN_DNSInfo) Unmarshal(b []byte) error {
-	ch, _, p, err := ndr.ReadHeaders(&b)
-	if err != nil {
-		return fmt.Errorf("Error parsing byte stream headers: %v", err)
+	//The UPN_DNS_INFO structure is a simple structure that is not NDR-encoded.
+	var p int
+	var e binary.ByteOrder = binary.LittleEndian
+
+	k.UPNLength = ndr.Read_uint16(&b, &p, &e)
+	k.UPNOffset = ndr.Read_uint16(&b, &p, &e)
+	k.DNSDomainNameLength = ndr.Read_uint16(&b, &p, &e)
+	k.DNSDomainNameOffset = ndr.Read_uint16(&b, &p, &e)
+	k.Flags = ndr.Read_uint32(&b, &p, &e)
+	ub := b[k.UPNOffset : k.UPNOffset+k.UPNLength]
+	db := b[k.DNSDomainNameOffset : k.DNSDomainNameOffset+k.DNSDomainNameLength]
+
+	u := make([]rune, k.UPNLength/2, k.UPNLength/2)
+	for i := 0; i < len(u); i++ {
+		q := i * 2
+		u[i] = rune(ndr.Read_uint16(&ub, &q, &e))
 	}
-	e := &ch.Endianness
+	k.UPN = string(u)
+	d := make([]rune, k.DNSDomainNameLength/2, k.DNSDomainNameLength/2)
+	for i := 0; i < len(d); i++ {
+		q := i * 2
+		d[i] = rune(ndr.Read_uint16(&db, &q, &e))
+	}
+	k.UPN = string(d)
 
-	//The next 4 bytes are an RPC unique pointer referent. We just skip these
-	p += 4
-
-	k.UPNLength = ndr.Read_uint16(&b, &p, e)
-	k.UPNOffset = ndr.Read_uint16(&b, &p, e)
-	k.DNSDomainNameLength = ndr.Read_uint16(&b, &p, e)
-	k.DNSDomainNameOffset = ndr.Read_uint16(&b, &p, e)
-	k.Flags = ndr.Read_uint32(&b, &p, e)
-
+	l := []int{
+		p,
+		int(k.UPNOffset + k.UPNLength),
+		int(k.DNSDomainNameOffset + k.DNSDomainNameLength),
+	}
+	sort.Ints(l)
 	//Check that there is only zero padding left
-	for _, v := range b[p:] {
+	for _, v := range b[l[2]:] {
 		if v != 0 {
-			return ndr.NDRMalformed{EText: "Non-zero padding left over at end of data stream"}
+			return ndr.NDRMalformed{EText: "Non-zero padding left over at end of data stream."}
 		}
 	}
 

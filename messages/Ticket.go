@@ -2,7 +2,6 @@ package messages
 
 import (
 	"crypto/rand"
-	"errors"
 	"fmt"
 	"github.com/jcmturner/asn1"
 	"github.com/jcmturner/gokrb5/asn1tools"
@@ -167,8 +166,14 @@ func MarshalTicketSequence(tkts []Ticket) (asn1.RawValue, error) {
 	return raw, nil
 }
 
-func (t *Ticket) DecryptEncPart(keytab keytab.Keytab) error {
-	key, err := keytab.GetEncryptionKey(t.SName.NameString, t.Realm, t.EncPart.KVNO, t.EncPart.EType)
+func (t *Ticket) DecryptEncPart(keytab keytab.Keytab, sa string) error {
+	var upn []string
+	if sa != "" {
+		upn = []string{sa}
+	} else {
+		upn = t.SName.NameString
+	}
+	key, err := keytab.GetEncryptionKey(upn, t.Realm, t.EncPart.KVNO, t.EncPart.EType)
 	if err != nil {
 		return NewKRBError(t.SName, t.Realm, errorcode.KRB_AP_ERR_NOKEY, fmt.Sprintf("Could not get key from keytab: %v", err))
 	}
@@ -185,7 +190,8 @@ func (t *Ticket) DecryptEncPart(keytab keytab.Keytab) error {
 	return nil
 }
 
-func (t *Ticket) GetPACType(keytab keytab.Keytab) (pac.PACType, error) {
+func (t *Ticket) GetPACType(keytab keytab.Keytab, sa string) (bool, pac.PACType, error) {
+	var isPAC bool
 	for _, ad := range t.DecryptedEncPart.AuthorizationData {
 		if ad.ADType == adtype.AD_IF_RELEVANT {
 			var ad2 types.AuthorizationData
@@ -195,19 +201,26 @@ func (t *Ticket) GetPACType(keytab keytab.Keytab) (pac.PACType, error) {
 			}
 			// TODO note does the entry contain and AuthorizationData or AuthorizationDataEntry. Assuming the former atm.
 			if ad2[0].ADType == adtype.AD_WIN2K_PAC {
+				isPAC = true
 				var pac pac.PACType
 				err = pac.Unmarshal(ad2[0].ADData)
 				if err != nil {
-					return pac, fmt.Errorf("Error unmarshaling PAC: %v", err)
+					return isPAC, pac, fmt.Errorf("Error unmarshaling PAC: %v", err)
 				}
-				key, err := keytab.GetEncryptionKey(t.SName.NameString, t.Realm, t.EncPart.KVNO, t.EncPart.EType)
+				var upn []string
+				if sa != "" {
+					upn = []string{sa}
+				} else {
+					upn = t.SName.NameString
+				}
+				key, err := keytab.GetEncryptionKey(upn, t.Realm, t.EncPart.KVNO, t.EncPart.EType)
 				if err != nil {
-					return pac, NewKRBError(t.SName, t.Realm, errorcode.KRB_AP_ERR_NOKEY, fmt.Sprintf("Could not get key from keytab: %v", err))
+					return isPAC, pac, NewKRBError(t.SName, t.Realm, errorcode.KRB_AP_ERR_NOKEY, fmt.Sprintf("Could not get key from keytab: %v", err))
 				}
 				err = pac.ProcessPACInfoBuffers(key)
-				return pac, err
+				return isPAC, pac, err
 			}
 		}
 	}
-	return pac.PACType{}, errors.New("AuthorizationData within the ticket does not contain PAC data.")
+	return isPAC, pac.PACType{}, nil
 }

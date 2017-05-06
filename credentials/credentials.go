@@ -28,16 +28,18 @@ func NewCredentials(username string, realm string) Credentials {
 			NameType:   nametype.KRB_NT_PRINCIPAL,
 			NameString: []string{username},
 		},
-		Keytab: keytab.NewKeytab(),
+		Keytab:     keytab.NewKeytab(),
+		Attributes: make(map[string]interface{}),
 	}
 }
 
 func NewCredentialsFromPrincipal(cname types.PrincipalName, realm string) Credentials {
 	return Credentials{
-		Username: cname.GetPrincipalNameString(),
-		Realm:    realm,
-		CName:    cname,
-		Keytab:   keytab.NewKeytab(),
+		Username:   cname.GetPrincipalNameString(),
+		Realm:      realm,
+		CName:      cname,
+		Keytab:     keytab.NewKeytab(),
+		Attributes: make(map[string]interface{}),
 	}
 }
 
