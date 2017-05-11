@@ -5,6 +5,7 @@ import (
 	"github.com/jcmturner/asn1"
 	"github.com/jcmturner/gokrb5/iana/asnAppTag"
 	"github.com/jcmturner/gokrb5/iana/msgtype"
+	"github.com/jcmturner/gokrb5/krberror"
 	"github.com/jcmturner/gokrb5/types"
 	"time"
 )
@@ -43,20 +44,20 @@ type EncAPRepPart struct {
 func (a *APRep) Unmarshal(b []byte) error {
 	_, err := asn1.UnmarshalWithParams(b, a, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.APREP))
 	if err != nil {
-		return processReplyError(b, err)
+		return processUnmarshalReplyError(b, err)
 	}
 	expectedMsgType := msgtype.KRB_AP_REP
 	if a.MsgType != expectedMsgType {
-		return fmt.Errorf("Message ID does not indicate a KRB_AP_REP. Expected: %v; Actual: %v", expectedMsgType, a.MsgType)
+		return krberror.NewErrorf(krberror.KRBMSG_ERROR, "Message ID does not indicate a KRB_AP_REP. Expected: %v; Actual: %v", expectedMsgType, a.MsgType)
 	}
 	return nil
 }
 
-// Unmarshal bytes b into the APRep encryoted part struct.
+// Unmarshal bytes b into the APRep encrypted part struct.
 func (a *EncAPRepPart) Unmarshal(b []byte) error {
 	_, err := asn1.UnmarshalWithParams(b, a, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.EncAPRepPart))
 	if err != nil {
-		return err
+		return krberror.Errorf(err, krberror.ENCODING_ERROR, "AP_REP unmarshal error")
 	}
 	return nil
 }

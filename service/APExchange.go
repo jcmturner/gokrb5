@@ -8,6 +8,7 @@ import (
 	"github.com/jcmturner/gokrb5/iana/flags"
 	"github.com/jcmturner/gokrb5/iana/keyusage"
 	"github.com/jcmturner/gokrb5/keytab"
+	"github.com/jcmturner/gokrb5/krberror"
 	"github.com/jcmturner/gokrb5/messages"
 	"github.com/jcmturner/gokrb5/types"
 	"time"
@@ -18,16 +19,16 @@ func ValidateAPREQ(APReq messages.APReq, kt keytab.Keytab, sa string, cAddr stri
 	var creds credentials.Credentials
 	err := APReq.Ticket.DecryptEncPart(kt, sa)
 	if err != nil {
-		return false, creds, fmt.Errorf("Error decrypting encpart of service ticket provided: %v", err)
+		return false, creds, krberror.Errorf(err, krberror.DECRYPTING_ERROR, "Error decrypting encpart of service ticket provided")
 	}
 	ab, err := crypto.DecryptEncPart(APReq.Authenticator, APReq.Ticket.DecryptedEncPart.Key, keyusage.AP_REQ_AUTHENTICATOR)
 	if err != nil {
-		return false, creds, fmt.Errorf("Error decrypting authenticator: %v", err)
+		return false, creds, krberror.Errorf(err, krberror.DECRYPTING_ERROR, "Error decrypting authenticator")
 	}
 	var a types.Authenticator
 	err = a.Unmarshal(ab)
 	if err != nil {
-		return false, creds, fmt.Errorf("Error unmarshaling authenticator: %v", err)
+		return false, creds, krberror.Errorf(err, krberror.ENCODING_ERROR, "Error unmarshaling authenticator")
 	}
 
 	// Check CName in Authenticator is the same as that in the ticket

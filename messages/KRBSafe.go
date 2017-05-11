@@ -5,6 +5,7 @@ import (
 	"github.com/jcmturner/asn1"
 	"github.com/jcmturner/gokrb5/iana/asnAppTag"
 	"github.com/jcmturner/gokrb5/iana/msgtype"
+	"github.com/jcmturner/gokrb5/krberror"
 	"github.com/jcmturner/gokrb5/types"
 	"time"
 )
@@ -49,11 +50,11 @@ type KRBSafeBody struct {
 func (s *KRBSafe) Unmarshal(b []byte) error {
 	_, err := asn1.UnmarshalWithParams(b, s, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.KRBSafe))
 	if err != nil {
-		return processReplyError(b, err)
+		return processUnmarshalReplyError(b, err)
 	}
 	expectedMsgType := msgtype.KRB_SAFE
 	if s.MsgType != expectedMsgType {
-		return fmt.Errorf("Message ID does not indicate a KRB_SAFE. Expected: %v; Actual: %v", expectedMsgType, s.MsgType)
+		return krberror.NewErrorf(krberror.KRBMSG_ERROR, "Message ID does not indicate a KRB_SAFE. Expected: %v; Actual: %v", expectedMsgType, s.MsgType)
 	}
 	return nil
 }

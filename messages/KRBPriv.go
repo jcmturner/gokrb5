@@ -5,6 +5,7 @@ import (
 	"github.com/jcmturner/asn1"
 	"github.com/jcmturner/gokrb5/iana/asnAppTag"
 	"github.com/jcmturner/gokrb5/iana/msgtype"
+	"github.com/jcmturner/gokrb5/krberror"
 	"github.com/jcmturner/gokrb5/types"
 	"time"
 )
@@ -30,11 +31,11 @@ type EncKrbPrivPart struct {
 func (k *KRBPriv) Unmarshal(b []byte) error {
 	_, err := asn1.UnmarshalWithParams(b, k, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.KRBPriv))
 	if err != nil {
-		return processReplyError(b, err)
+		return processUnmarshalReplyError(b, err)
 	}
 	expectedMsgType := msgtype.KRB_PRIV
 	if k.MsgType != expectedMsgType {
-		return fmt.Errorf("Message ID does not indicate a KRB_PRIV. Expected: %v; Actual: %v", expectedMsgType, k.MsgType)
+		return krberror.NewErrorf(krberror.KRBMSG_ERROR, "Message ID does not indicate a KRB_PRIV. Expected: %v; Actual: %v", expectedMsgType, k.MsgType)
 	}
 	return nil
 }
@@ -43,7 +44,7 @@ func (k *KRBPriv) Unmarshal(b []byte) error {
 func (k *EncKrbPrivPart) Unmarshal(b []byte) error {
 	_, err := asn1.UnmarshalWithParams(b, k, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.EncKrbPrivPart))
 	if err != nil {
-		return err
+		return krberror.Errorf(err, krberror.ENCODING_ERROR, "KRB_PRIV unmarshal error")
 	}
 	return nil
 }

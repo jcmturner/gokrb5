@@ -64,7 +64,7 @@ func GetKeyFromPassword(passwd string, cname types.PrincipalName, realm string, 
 			var eti types.ETypeInfo
 			err := eti.Unmarshal(pa.PADataValue)
 			if err != nil {
-				return key, et, fmt.Errorf("Error unmashalling PA Data to PA-ETYPE-INFO2: %v", err)
+				return key, et, fmt.Errorf("Error unmashaling PA Data to PA-ETYPE-INFO2: %v", err)
 			}
 			if etypeID != eti[0].EType {
 				et, err = GetEtype(eti[0].EType)
@@ -181,12 +181,9 @@ func DecryptBytes(ed []byte, key types.EncryptionKey, usage uint32) ([]byte, err
 	}
 	//Verify checksum
 	if !et.VerifyIntegrity(key.KeyValue, ed, b, usage) {
-		return nil, errors.New("Error decrypting encrypted part: integrity verification failed")
+		return nil, errors.New("Error decrypting: integrity verification failed")
 	}
 	//Remove the confounder bytes
 	b = b[et.GetConfounderByteSize():]
-	if err != nil {
-		return nil, fmt.Errorf("Error decrypting encrypted part: %v", err)
-	}
 	return b, nil
 }

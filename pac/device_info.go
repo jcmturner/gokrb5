@@ -79,9 +79,11 @@ func (k *PAC_DeviceInfo) Unmarshal(b []byte) error {
 	}
 
 	//Check that there is only zero padding left
-	for _, v := range b[p:] {
-		if v != 0 {
-			return ndr.NDRMalformed{EText: "Non-zero padding left over at end of data stream"}
+	if len(b) >= p {
+		for _, v := range b[p:] {
+			if v != 0 {
+				return ndr.NDRMalformed{EText: "Non-zero padding left over at end of data stream"}
+			}
 		}
 	}
 

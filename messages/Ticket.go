@@ -12,6 +12,7 @@ import (
 	"github.com/jcmturner/gokrb5/iana/errorcode"
 	"github.com/jcmturner/gokrb5/iana/keyusage"
 	"github.com/jcmturner/gokrb5/keytab"
+	"github.com/jcmturner/gokrb5/krberror"
 	"github.com/jcmturner/gokrb5/pac"
 	"github.com/jcmturner/gokrb5/types"
 	"time"
@@ -50,7 +51,7 @@ type TransitedEncoding struct {
 func NewTicket(cname types.PrincipalName, crealm string, sname types.PrincipalName, srealm string, flags asn1.BitString, sktab keytab.Keytab, eTypeID, kvno int, authTime, startTime, endTime, renewTill time.Time) (Ticket, types.EncryptionKey, error) {
 	etype, err := crypto.GetEtype(eTypeID)
 	if err != nil {
-		return Ticket{}, types.EncryptionKey{}, err
+		return Ticket{}, types.EncryptionKey{}, krberror.Errorf(err, krberror.ENCRYPTING_ERROR, "Error getting etype for new ticket")
 	}
 	ks := etype.GetKeyByteSize()
 	kv := make([]byte, ks, ks)
@@ -74,7 +75,7 @@ func NewTicket(cname types.PrincipalName, crealm string, sname types.PrincipalNa
 	b = asn1tools.AddASNAppTag(b, asnAppTag.EncTicketPart)
 	skey, err := sktab.GetEncryptionKey(sname.NameString, srealm, kvno, eTypeID)
 	if err != nil {
-		return Ticket{}, types.EncryptionKey{}, err
+		return Ticket{}, types.EncryptionKey{}, krberror.Errorf(err, krberror.ENCRYPTING_ERROR, "Error getting encryption key for new ticket")
 	}
 	ed, err := crypto.GetEncryptedData(b, skey, keyusage.KDC_REP_TICKET, kvno)
 	tkt := Ticket{
@@ -121,11 +122,11 @@ func UnmarshalTicketsSequence(in asn1.RawValue) ([]Ticket, error) {
 	for p < (len(b)) {
 		_, err := asn1.UnmarshalWithParams(b[p:], &raw, fmt.Sprintf("application,tag:%d", asnAppTag.Ticket))
 		if err != nil {
-			return nil, fmt.Errorf("Unmarshalling sequence of tickets failed geting length of ticket: %v", err)
+			return nil, fmt.Errorf("Unmarshaling sequence of tickets failed geting length of ticket: %v", err)
 		}
 		t, err := UnmarshalTicket(b[p:])
 		if err != nil {
-			return nil, fmt.Errorf("Unmarshalling sequence of tickets failed: %v", err)
+			return nil, fmt.Errorf("Unmarshaling sequence of tickets failed: %v", err)
 		}
 		p += len(raw.FullBytes)
 		tkts = append(tkts, t)
@@ -147,7 +148,7 @@ func MarshalTicketSequence(tkts []Ticket) (asn1.RawValue, error) {
 	for i, t := range tkts {
 		b, err := t.Marshal()
 		if err != nil {
-			return raw, fmt.Errorf("Error marshalling ticket number %d in seqence of tickets", i+1)
+			return raw, fmt.Errorf("Error marshaling ticket number %d in seqence of tickets", i+1)
 		}
 		btkts = append(btkts, b...)
 	}
@@ -184,7 +185,7 @@ func (t *Ticket) DecryptEncPart(keytab keytab.Keytab, sa string) error {
 	var denc EncTicketPart
 	err = denc.Unmarshal(b)
 	if err != nil {
-		return fmt.Errorf("Error unmarshalling encrypted part: %v", err)
+		return fmt.Errorf("Error unmarshaling encrypted part: %v", err)
 	}
 	t.DecryptedEncPart = denc
 	return nil
