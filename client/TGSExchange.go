@@ -2,8 +2,8 @@ package client
 
 import (
 	"errors"
-	"fmt"
 	"github.com/jcmturner/gokrb5/iana/nametype"
+	"github.com/jcmturner/gokrb5/krberror"
 	"github.com/jcmturner/gokrb5/messages"
 	"github.com/jcmturner/gokrb5/types"
 	"strings"
@@ -14,30 +14,30 @@ import (
 // The ticket retrieved is added to the client's cache.
 func (cl *Client) TGSExchange(spn types.PrincipalName, tkt messages.Ticket, sessionKey types.EncryptionKey, renewal bool) (tgsReq messages.TGSReq, tgsRep messages.TGSRep, err error) {
 	if cl.Session == nil {
-		return tgsReq, tgsRep, errors.New("Error client does not have a session. Client needs to login first")
+		return tgsReq, tgsRep, errors.New("TGS Exchange Error: client does not have a session. Client needs to login first")
 	}
 	tgsReq, err = messages.NewTGSReq(cl.Credentials.CName, cl.Config, tkt, sessionKey, spn, renewal)
 	if err != nil {
-		return tgsReq, tgsRep, fmt.Errorf("Error generating New TGS_REQ: %v", err)
+		return tgsReq, tgsRep, krberror.Errorf(err, krberror.KRBMSG_ERROR, "TGS Exchange Error: failed to generate a new TGS_REQ")
 	}
 	b, err := tgsReq.Marshal()
 	if err != nil {
-		return tgsReq, tgsRep, fmt.Errorf("Error marshalling TGS_REQ: %v", err)
+		return tgsReq, tgsRep, krberror.Errorf(err, krberror.ENCODING_ERROR, "TGS Exchange Error: failed to generate a new TGS_REQ")
 	}
 	r, err := cl.SendToKDC(b)
 	if err != nil {
-		return tgsReq, tgsRep, fmt.Errorf("Error sending TGS_REQ to KDC: %v", err)
+		return tgsReq, tgsRep, krberror.Errorf(err, krberror.NETWORKING_ERROR, "TGS Exchange Error: issue sending TGS_REQ to KDC")
 	}
 	err = tgsRep.Unmarshal(r)
 	if err != nil {
-		return tgsReq, tgsRep, fmt.Errorf("Error unmarshalling TGS_REP: %v", err)
+		return tgsReq, tgsRep, krberror.Errorf(err, krberror.ENCODING_ERROR, "TGS Exchange Error: failed to process the TGS_REP")
 	}
 	err = tgsRep.DecryptEncPart(sessionKey)
 	if err != nil {
-		return tgsReq, tgsRep, fmt.Errorf("Error decrypting EncPart of TGS_REP: %v", err)
+		return tgsReq, tgsRep, krberror.Errorf(err, krberror.ENCODING_ERROR, "TGS Exchange Error: failed to process the TGS_REP")
 	}
 	if ok, err := tgsRep.IsValid(cl.Config, tgsReq); !ok {
-		return tgsReq, tgsRep, fmt.Errorf("TGS_REP is not valid: %v", err)
+		return tgsReq, tgsRep, krberror.Errorf(err, krberror.ENCODING_ERROR, "TGS Exchange Error: TGS_REP is not valid")
 	}
 	return tgsReq, tgsRep, nil
 }

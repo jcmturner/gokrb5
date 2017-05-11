@@ -2,11 +2,11 @@ package client
 
 import (
 	"errors"
-	"fmt"
 	"github.com/jcmturner/gokrb5/crypto"
 	"github.com/jcmturner/gokrb5/iana/errorcode"
 	"github.com/jcmturner/gokrb5/iana/keyusage"
 	"github.com/jcmturner/gokrb5/iana/patype"
+	"github.com/jcmturner/gokrb5/krberror"
 	"github.com/jcmturner/gokrb5/messages"
 	"github.com/jcmturner/gokrb5/types"
 	"sort"
@@ -20,11 +20,11 @@ func (cl *Client) ASExchange() error {
 	ASReq := messages.NewASReq(cl.Config, cl.Credentials.CName)
 	err := setPAData(cl, &ASReq)
 	if err != nil {
-		return fmt.Errorf("Error setting AS_REQ PAData: %v", err)
+		return krberror.Errorf(err, krberror.KRBMSG_ERROR, "AS Exchange Error: failed setting AS_REQ PAData")
 	}
 	b, err := ASReq.Marshal()
 	if err != nil {
-		return fmt.Errorf("Error marshalling AS_REQ: %v", err)
+		return krberror.Errorf(err, krberror.ENCODING_ERROR, "AS Exchange Error: failed marshaling AS_REQ")
 	}
 
 	var ASRep messages.ASRep
@@ -36,26 +36,26 @@ func (cl *Client) ASExchange() error {
 			cl.GoKrb5Conf.Assume_PA_ENC_TIMESTAMP_Required = true
 			err = setPAData(cl, &ASReq)
 			if err != nil {
-				return fmt.Errorf("Error setting AS_REQ PAData for pre-authentication required: %v", err)
+				return krberror.Errorf(err, krberror.KRBMSG_ERROR, "AS Exchange Error: failed setting AS_REQ PAData for pre-authentication required")
 			}
 			b, err := ASReq.Marshal()
 			if err != nil {
-				return fmt.Errorf("Error marshalling AS_REQ with PAData: %v", err)
+				return krberror.Errorf(err, krberror.ENCODING_ERROR, "AS Exchange Error: failed marshaling AS_REQ with PAData")
 			}
 			rb, err = cl.SendToKDC(b)
 			if err != nil {
-				return fmt.Errorf("Error sending AS_REQ to KDC: %v", err)
+				return krberror.Errorf(err, krberror.NETWORKING_ERROR, "AS Exchange Error: failed sending AS_REQ to KDC")
 			}
 		} else {
-			return fmt.Errorf("Error sending AS_REQ to KDC: %v", err)
+			return krberror.Errorf(err, krberror.NETWORKING_ERROR, "AS Exchange Error: failed sending AS_REQ to KDC")
 		}
 	}
 	err = ASRep.Unmarshal(rb)
 	if err != nil {
-		return fmt.Errorf("Could not unmarshal AS_REP data returned from KDC: %v", err)
+		return krberror.Errorf(err, krberror.ENCODING_ERROR, "AS Exchange Error: failed to process the AS_REP")
 	}
 	if ok, err := ASRep.IsValid(cl.Config, cl.Credentials, ASReq); !ok {
-		return fmt.Errorf("AS_REP is not valid: %v", err)
+		return krberror.Errorf(err, krberror.KRBMSG_ERROR, "AS Exchange Error: AS_REP is not valid")
 	}
 	cl.Session = &Session{
 		AuthTime:             ASRep.DecryptedEncPart.AuthTime,
@@ -76,24 +76,24 @@ func setPAData(cl *Client, ASReq *messages.ASReq) error {
 	if cl.GoKrb5Conf.Assume_PA_ENC_TIMESTAMP_Required {
 		paTSb, err := types.GetPAEncTSEncAsnMarshalled()
 		if err != nil {
-			return fmt.Errorf("Error creating PAEncTSEnc for Pre-Authentication: %v", err)
+			return krberror.Errorf(err, krberror.KRBMSG_ERROR, "Error creating PAEncTSEnc for Pre-Authentication")
 		}
 		sort.Sort(sort.Reverse(sort.IntSlice(cl.Config.LibDefaults.Default_tkt_enctype_ids)))
 		etype, err := crypto.GetEtype(cl.Config.LibDefaults.Default_tkt_enctype_ids[0])
 		if err != nil {
-			return fmt.Errorf("Error creating etype: %v", err)
+			return krberror.Errorf(err, krberror.ENCRYPTING_ERROR, "Error creating etype")
 		}
 		key, err := cl.Credentials.Keytab.GetEncryptionKey(cl.Credentials.CName.NameString, cl.Config.LibDefaults.Default_realm, 1, etype.GetETypeID())
 		if err != nil {
-			return fmt.Errorf("Error getting key from keytab in credentials: %v", err)
+			return krberror.Errorf(err, krberror.ENCRYPTING_ERROR, "Error getting key from keytab in credentials")
 		}
 		paEncTS, err := crypto.GetEncryptedData(paTSb, key, keyusage.AS_REQ_PA_ENC_TIMESTAMP, 1)
 		if err != nil {
-			return fmt.Errorf("Error encrypting pre-authentication timestamp: %v", err)
+			return krberror.Errorf(err, krberror.ENCRYPTING_ERROR, "Error encrypting pre-authentication timestamp")
 		}
 		pb, err := paEncTS.Marshal()
 		if err != nil {
-			return fmt.Errorf("Error marshaling the PAEncTSEnc encrypted data: %v", err)
+			return krberror.Errorf(err, krberror.ENCODING_ERROR, "Error marshaling the PAEncTSEnc encrypted data")
 		}
 		pa := types.PAData{
 			PADataType:  patype.PA_ENC_TIMESTAMP,

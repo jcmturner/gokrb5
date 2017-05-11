@@ -2,6 +2,7 @@ package client
 
 import (
 	"github.com/jcmturner/gokrb5/iana/nametype"
+	"github.com/jcmturner/gokrb5/krberror"
 	"github.com/jcmturner/gokrb5/messages"
 	"github.com/jcmturner/gokrb5/types"
 	"time"
@@ -41,7 +42,7 @@ func (cl *Client) RenewTGT() error {
 	}
 	_, tgsRep, err := cl.TGSExchange(spn, cl.Session.TGT, cl.Session.SessionKey, true)
 	if err != nil {
-		return err
+		return krberror.Errorf(err, krberror.KRBMSG_ERROR, "Error renewing TGT")
 	}
 	cl.Session = &Session{
 		AuthTime:             tgsRep.DecryptedEncPart.AuthTime,

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/jcmturner/gokrb5/credentials"
 	"github.com/jcmturner/gokrb5/gssapi"
+	"github.com/jcmturner/gokrb5/krberror"
 	"github.com/jcmturner/gokrb5/messages"
 	"github.com/jcmturner/gokrb5/types"
 	"net/http"
@@ -32,7 +33,7 @@ func SetSPNEGOHeader(creds credentials.Credentials, tkt messages.Ticket, session
 	SPNEGOToken, err := gssapi.GetSPNEGOKrbNegTokenInit(creds, tkt, sessionKey)
 	nb, err := SPNEGOToken.Marshal()
 	if err != nil {
-		return fmt.Errorf("Could marshal SPNEGO: %v", err)
+		return krberror.Errorf(err, krberror.ENCODING_ERROR, "Could marshal SPNEGO")
 	}
 	hs := "Negotiate " + base64.StdEncoding.EncodeToString(nb)
 	r.Header.Set("Authorization", hs)

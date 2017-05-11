@@ -8,6 +8,7 @@ import (
 	"github.com/jcmturner/gokrb5/iana/asnAppTag"
 	"github.com/jcmturner/gokrb5/iana/errorcode"
 	"github.com/jcmturner/gokrb5/iana/msgtype"
+	"github.com/jcmturner/gokrb5/krberror"
 	"github.com/jcmturner/gokrb5/types"
 	"time"
 )
@@ -47,11 +48,11 @@ func NewKRBError(sname types.PrincipalName, realm string, code int, etext string
 func (k *KRBError) Unmarshal(b []byte) error {
 	_, err := asn1.UnmarshalWithParams(b, k, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.KRBError))
 	if err != nil {
-		return err
+		return krberror.Errorf(err, krberror.ENCODING_ERROR, "KRB_ERROR unmarshal error")
 	}
 	expectedMsgType := msgtype.KRB_ERROR
 	if k.MsgType != expectedMsgType {
-		return fmt.Errorf("Message ID does not indicate a KRB_ERROR. Expected: %v; Actual: %v", expectedMsgType, k.MsgType)
+		return krberror.NewErrorf(krberror.KRBMSG_ERROR, "Message ID does not indicate a KRB_ERROR. Expected: %v; Actual: %v", expectedMsgType, k.MsgType)
 	}
 	return nil
 }
@@ -65,16 +66,16 @@ func (k KRBError) Error() string {
 	return etxt
 }
 
-func processReplyError(b []byte, err error) error {
+func processUnmarshalReplyError(b []byte, err error) error {
 	switch err.(type) {
 	case asn1.StructuralError:
 		var krberr KRBError
 		tmperr := krberr.Unmarshal(b)
 		if tmperr != nil {
-			return err
+			return krberror.Errorf(err, krberror.ENCODING_ERROR, "Failed to unmarshal KDC's reply")
 		}
 		return krberr
 	default:
-		return err
+		return krberror.Errorf(err, krberror.ENCODING_ERROR, "Failed to unmarshal KDC's reply")
 	}
 }

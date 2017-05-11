@@ -4,7 +4,6 @@ package messages
 // Section: 5.4.2
 
 import (
-	"errors"
 	"fmt"
 	"github.com/jcmturner/asn1"
 	"github.com/jcmturner/gokrb5/config"
@@ -16,6 +15,7 @@ import (
 	"github.com/jcmturner/gokrb5/iana/keyusage"
 	"github.com/jcmturner/gokrb5/iana/msgtype"
 	"github.com/jcmturner/gokrb5/iana/patype"
+	"github.com/jcmturner/gokrb5/krberror"
 	"github.com/jcmturner/gokrb5/types"
 	"time"
 )
@@ -81,15 +81,15 @@ func (k *ASRep) Unmarshal(b []byte) error {
 	var m marshalKDCRep
 	_, err := asn1.UnmarshalWithParams(b, &m, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.ASREP))
 	if err != nil {
-		return processReplyError(b, err)
+		return processUnmarshalReplyError(b, err)
 	}
 	if m.MsgType != msgtype.KRB_AS_REP {
-		return errors.New("Message ID does not indicate a KRB_AS_REP")
+		return krberror.NewErrorf(krberror.KRBMSG_ERROR, "Message ID does not indicate an AS_REP. Expected: %v; Actual: %v", msgtype.KRB_AS_REP, m.MsgType)
 	}
 	//Process the raw ticket within
 	tkt, err := UnmarshalTicket(m.Ticket.Bytes)
 	if err != nil {
-		return err
+		return krberror.Errorf(err, krberror.ENCODING_ERROR, "Error unmarshaling Ticket within AS_REP")
 	}
 	k.KDCRepFields = KDCRepFields{
 		PVNO:    m.PVNO,
@@ -108,15 +108,15 @@ func (k *TGSRep) Unmarshal(b []byte) error {
 	var m marshalKDCRep
 	_, err := asn1.UnmarshalWithParams(b, &m, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.TGSREP))
 	if err != nil {
-		return processReplyError(b, err)
+		return processUnmarshalReplyError(b, err)
 	}
 	if m.MsgType != msgtype.KRB_TGS_REP {
-		return errors.New("Message ID does not indicate a KRB_TGS_REP")
+		return krberror.NewErrorf(krberror.KRBMSG_ERROR, "Message ID does not indicate an TGS_REP. Expected: %v; Actual: %v", msgtype.KRB_TGS_REP, m.MsgType)
 	}
 	//Process the raw ticket within
 	tkt, err := UnmarshalTicket(m.Ticket.Bytes)
 	if err != nil {
-		return err
+		return krberror.Errorf(err, krberror.ENCODING_ERROR, "Error unmarshaling Ticket within TGS_REP")
 	}
 	k.KDCRepFields = KDCRepFields{
 		PVNO:    m.PVNO,
@@ -142,9 +142,11 @@ func (e *EncKDCRepPart) Unmarshal(b []byte) error {
 		interest of compatibility, implementors MAY relax the check on the
 		tag number of the decrypted ENC-PART.*/
 		_, err = asn1.UnmarshalWithParams(b, e, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.EncTGSRepPart))
-		return err
+		if err != nil {
+			return krberror.Errorf(err, krberror.ENCODING_ERROR, "Error unmarshaling encrypted part within KDC_REP")
+		}
 	}
-	return err
+	return nil
 }
 
 // Decrypt the encrypted part of an AS_REP.
@@ -154,26 +156,26 @@ func (k *ASRep) DecryptEncPart(c *credentials.Credentials) (types.EncryptionKey,
 	if c.HasKeytab() {
 		key, err = c.Keytab.GetEncryptionKey(k.CName.NameString, k.CRealm, k.EncPart.KVNO, k.EncPart.EType)
 		if err != nil {
-			return key, fmt.Errorf("Could not get key from keytab: %v", err)
+			return key, krberror.Errorf(err, krberror.DECRYPTING_ERROR, "Error decrypting AS_REP encrypted part")
 		}
 	}
 	if c.HasPassword() {
 		key, _, err = crypto.GetKeyFromPassword(c.Password, k.CName, k.CRealm, k.EncPart.EType, k.PAData)
 		if err != nil {
-			return key, fmt.Errorf("Could not derive key from password: %v", err)
+			return key, krberror.Errorf(err, krberror.DECRYPTING_ERROR, "Error decrypting AS_REP encrypted part")
 		}
 	}
 	if !c.HasKeytab() && !c.HasPassword() {
-		return key, errors.New("No secret available in credentials to preform decryption")
+		return key, krberror.NewErrorf(krberror.DECRYPTING_ERROR, "No secret available in credentials to preform decryption of AS_REP encrypted part")
 	}
 	b, err := crypto.DecryptEncPart(k.EncPart, key, keyusage.AS_REP_ENCPART)
 	if err != nil {
-		return key, fmt.Errorf("Error decrypting KDC_REP EncPart: %v", err)
+		return key, krberror.Errorf(err, krberror.DECRYPTING_ERROR, "Error decrypting AS_REP encrypted part")
 	}
 	var denc EncKDCRepPart
 	err = denc.Unmarshal(b)
 	if err != nil {
-		return key, fmt.Errorf("Error unmarshalling encrypted part: %v", err)
+		return key, krberror.Errorf(err, krberror.ENCODING_ERROR, "Error unmarshaling decrypted encpart of AS_REP")
 	}
 	k.DecryptedEncPart = denc
 	return key, nil
@@ -183,62 +185,62 @@ func (k *ASRep) DecryptEncPart(c *credentials.Credentials) (types.EncryptionKey,
 func (k *ASRep) IsValid(cfg *config.Config, creds *credentials.Credentials, asReq ASReq) (bool, error) {
 	//Ref RFC 4120 Section 3.1.5
 	if k.CName.NameType != asReq.ReqBody.CName.NameType || k.CName.NameString == nil {
-		return false, fmt.Errorf("CName in response does not match what was requested. Requested: %+v; Reply: %+v", asReq.ReqBody.CName, k.CName)
+		return false, krberror.NewErrorf(krberror.KRBMSG_ERROR, "CName in response does not match what was requested. Requested: %+v; Reply: %+v", asReq.ReqBody.CName, k.CName)
 	}
 	for i := range k.CName.NameString {
 		if k.CName.NameString[i] != asReq.ReqBody.CName.NameString[i] {
-			return false, fmt.Errorf("CName in response does not match what was requested. Requested: %+v; Reply: %+v", asReq.ReqBody.CName, k.CName)
+			return false, krberror.NewErrorf(krberror.KRBMSG_ERROR, "CName in response does not match what was requested. Requested: %+v; Reply: %+v", asReq.ReqBody.CName, k.CName)
 		}
 	}
 	if k.CRealm != asReq.ReqBody.Realm {
-		return false, fmt.Errorf("CRealm in response does not match what was requested. Requested: %s; Reply: %s", asReq.ReqBody.Realm, k.CRealm)
+		return false, krberror.NewErrorf(krberror.KRBMSG_ERROR, "CRealm in response does not match what was requested. Requested: %s; Reply: %s", asReq.ReqBody.Realm, k.CRealm)
 	}
 	key, err := k.DecryptEncPart(creds)
 	if err != nil {
-		return false, fmt.Errorf("Error decrypting EncPart of AS_REP: %v", err)
+		return false, krberror.Errorf(err, krberror.DECRYPTING_ERROR, "Error decrypting EncPart of AS_REP")
 	}
 	if k.DecryptedEncPart.Nonce != asReq.ReqBody.Nonce {
-		return false, errors.New("Possible replay attack, nonce in response does not match that in request")
+		return false, krberror.NewErrorf(krberror.KRBMSG_ERROR, "Possible replay attack, nonce in response does not match that in request")
 	}
 	if k.DecryptedEncPart.SName.NameType != asReq.ReqBody.SName.NameType || k.DecryptedEncPart.SName.NameString == nil {
-		return false, fmt.Errorf("SName in response does not match what was requested. Requested: %v; Reply: %v", asReq.ReqBody.SName, k.DecryptedEncPart.SName)
+		return false, krberror.NewErrorf(krberror.KRBMSG_ERROR, "SName in response does not match what was requested. Requested: %v; Reply: %v", asReq.ReqBody.SName, k.DecryptedEncPart.SName)
 	}
 	for i := range k.CName.NameString {
 		if k.DecryptedEncPart.SName.NameString[i] != asReq.ReqBody.SName.NameString[i] {
-			return false, fmt.Errorf("SName in response does not match what was requested. Requested: %+v; Reply: %+v", asReq.ReqBody.SName, k.DecryptedEncPart.SName)
+			return false, krberror.NewErrorf(krberror.KRBMSG_ERROR, "SName in response does not match what was requested. Requested: %+v; Reply: %+v", asReq.ReqBody.SName, k.DecryptedEncPart.SName)
 		}
 	}
 	if k.DecryptedEncPart.SRealm != asReq.ReqBody.Realm {
-		return false, fmt.Errorf("SRealm in response does not match what was requested. Requested: %s; Reply: %s", asReq.ReqBody.Realm, k.DecryptedEncPart.SRealm)
+		return false, krberror.NewErrorf(krberror.KRBMSG_ERROR, "SRealm in response does not match what was requested. Requested: %s; Reply: %s", asReq.ReqBody.Realm, k.DecryptedEncPart.SRealm)
 	}
 	if len(asReq.ReqBody.Addresses) > 0 {
 		if !types.HostAddressesEqual(k.DecryptedEncPart.CAddr, asReq.ReqBody.Addresses) {
-			return false, errors.New("Addresses listed in the AS_REP does not match those listed in the AS_REQ")
+			return false, krberror.NewErrorf(krberror.KRBMSG_ERROR, "Addresses listed in the AS_REP does not match those listed in the AS_REQ")
 		}
 	}
 	t := time.Now().UTC()
 	if t.Sub(k.DecryptedEncPart.AuthTime) > cfg.LibDefaults.Clockskew || k.DecryptedEncPart.AuthTime.Sub(t) > cfg.LibDefaults.Clockskew {
-		return false, fmt.Errorf("Clock skew with KDC too large. Greater than %v seconds", cfg.LibDefaults.Clockskew.Seconds())
+		return false, krberror.NewErrorf(krberror.KRBMSG_ERROR, "Clock skew with KDC too large. Greater than %v seconds", cfg.LibDefaults.Clockskew.Seconds())
 	}
 	// RFC 6806 https://tools.ietf.org/html/rfc6806.html#section-11
 	if asReq.PAData.Contains(patype.PA_REQ_ENC_PA_REP) && types.IsFlagSet(&k.DecryptedEncPart.Flags, flags.EncPARep) {
 		if len(k.DecryptedEncPart.EncPAData) < 2 || !k.DecryptedEncPart.EncPAData.Contains(patype.PA_FX_FAST) {
-			return false, errors.New("KDC did not respond appropriately to FAST negotiation")
+			return false, krberror.NewErrorf(krberror.KRBMSG_ERROR, "KDC did not respond appropriately to FAST negotiation")
 		}
 		for _, pa := range k.DecryptedEncPart.EncPAData {
 			if pa.PADataType == patype.PA_REQ_ENC_PA_REP {
 				var pafast types.PAReqEncPARep
 				err := pafast.Unmarshal(pa.PADataValue)
 				if err != nil {
-					return false, fmt.Errorf("KDC FAST negotiation response error, could not unmarshal PA_REQ_ENC_PA_REP: %v", err)
+					return false, krberror.Errorf(err, krberror.ENCODING_ERROR, "KDC FAST negotiation response error, could not unmarshal PA_REQ_ENC_PA_REP")
 				}
 				etype, err := crypto.GetChksumEtype(pafast.ChksumType)
 				if err != nil {
-					return false, fmt.Errorf("KDC FAST negotiation response error, %v", err)
+					return false, krberror.Errorf(err, krberror.CHKSUM_ERROR, "KDC FAST negotiation response error")
 				}
 				ab, _ := asReq.Marshal()
 				if !engine.VerifyChecksum(key.KeyValue, pafast.Chksum, ab, keyusage.KEY_USAGE_AS_REQ, etype) {
-					return false, errors.New("KDC FAST negotiation response checksum invalid")
+					return false, krberror.Errorf(err, krberror.CHKSUM_ERROR, "KDC FAST negotiation response checksum invalid")
 				}
 			}
 		}
@@ -250,12 +252,12 @@ func (k *ASRep) IsValid(cfg *config.Config, creds *credentials.Credentials, asRe
 func (k *TGSRep) DecryptEncPart(key types.EncryptionKey) error {
 	b, err := crypto.DecryptEncPart(k.EncPart, key, keyusage.TGS_REP_ENCPART_SESSION_KEY)
 	if err != nil {
-		return fmt.Errorf("Error decrypting KDC_REP EncPart: %v", err)
+		return krberror.Errorf(err, krberror.DECRYPTING_ERROR, "Error decrypting TGS_REP EncPart")
 	}
 	var denc EncKDCRepPart
 	err = denc.Unmarshal(b)
 	if err != nil {
-		return fmt.Errorf("Error unmarshalling encrypted part: %v", err)
+		return krberror.Errorf(err, krberror.ENCODING_ERROR, "Error unmarshaling encrypted part")
 	}
 	k.DecryptedEncPart = denc
 	return nil
@@ -264,46 +266,46 @@ func (k *TGSRep) DecryptEncPart(key types.EncryptionKey) error {
 // Check validity of TGS_REP message.
 func (k *TGSRep) IsValid(cfg *config.Config, tgsReq TGSReq) (bool, error) {
 	if k.CName.NameType != tgsReq.ReqBody.CName.NameType || k.CName.NameString == nil {
-		return false, fmt.Errorf("CName in response does not match what was requested. Requested: %+v; Reply: %+v", tgsReq.ReqBody.CName, k.CName)
+		return false, krberror.NewErrorf(krberror.KRBMSG_ERROR, "CName in response does not match what was requested. Requested: %+v; Reply: %+v", tgsReq.ReqBody.CName, k.CName)
 	}
 	for i := range k.CName.NameString {
 		if k.CName.NameString[i] != tgsReq.ReqBody.CName.NameString[i] {
-			return false, fmt.Errorf("CName in response does not match what was requested. Requested: %+v; Reply: %+v", tgsReq.ReqBody.CName, k.CName)
+			return false, krberror.NewErrorf(krberror.KRBMSG_ERROR, "CName in response does not match what was requested. Requested: %+v; Reply: %+v", tgsReq.ReqBody.CName, k.CName)
 		}
 	}
 	if k.CRealm != tgsReq.ReqBody.Realm {
-		return false, fmt.Errorf("CRealm in response does not match what was requested. Requested: %s; Reply: %s", tgsReq.ReqBody.Realm, k.CRealm)
+		return false, krberror.NewErrorf(krberror.KRBMSG_ERROR, "CRealm in response does not match what was requested. Requested: %s; Reply: %s", tgsReq.ReqBody.Realm, k.CRealm)
 	}
 	if k.DecryptedEncPart.Nonce != tgsReq.ReqBody.Nonce {
-		return false, errors.New("Possible replay attack, nonce in response does not match that in request")
+		return false, krberror.NewErrorf(krberror.KRBMSG_ERROR, "Possible replay attack, nonce in response does not match that in request")
 	}
 	if k.Ticket.SName.NameType != tgsReq.ReqBody.SName.NameType || k.Ticket.SName.NameString == nil {
-		return false, fmt.Errorf("SName in response ticket does not match what was requested. Requested: %v; Reply: %v", tgsReq.ReqBody.SName, k.Ticket.SName)
+		return false, krberror.NewErrorf(krberror.KRBMSG_ERROR, "SName in response ticket does not match what was requested. Requested: %v; Reply: %v", tgsReq.ReqBody.SName, k.Ticket.SName)
 	}
 	for i := range k.Ticket.SName.NameString {
 		if k.Ticket.SName.NameString[i] != tgsReq.ReqBody.SName.NameString[i] {
-			return false, fmt.Errorf("SName in response ticket does not match what was requested. Requested: %+v; Reply: %+v", tgsReq.ReqBody.SName, k.Ticket.SName)
+			return false, krberror.NewErrorf(krberror.KRBMSG_ERROR, "SName in response ticket does not match what was requested. Requested: %+v; Reply: %+v", tgsReq.ReqBody.SName, k.Ticket.SName)
 		}
 	}
 	if k.DecryptedEncPart.SName.NameType != tgsReq.ReqBody.SName.NameType || k.DecryptedEncPart.SName.NameString == nil {
-		return false, fmt.Errorf("SName in response does not match what was requested. Requested: %v; Reply: %v", tgsReq.ReqBody.SName, k.DecryptedEncPart.SName)
+		return false, krberror.NewErrorf(krberror.KRBMSG_ERROR, "SName in response does not match what was requested. Requested: %v; Reply: %v", tgsReq.ReqBody.SName, k.DecryptedEncPart.SName)
 	}
 	for i := range k.CName.NameString {
 		if k.DecryptedEncPart.SName.NameString[i] != tgsReq.ReqBody.SName.NameString[i] {
-			return false, fmt.Errorf("SName in response does not match what was requested. Requested: %+v; Reply: %+v", tgsReq.ReqBody.SName, k.DecryptedEncPart.SName)
+			return false, krberror.NewErrorf(krberror.KRBMSG_ERROR, "SName in response does not match what was requested. Requested: %+v; Reply: %+v", tgsReq.ReqBody.SName, k.DecryptedEncPart.SName)
 		}
 	}
 	if k.DecryptedEncPart.SRealm != tgsReq.ReqBody.Realm {
-		return false, fmt.Errorf("SRealm in response does not match what was requested. Requested: %s; Reply: %s", tgsReq.ReqBody.Realm, k.DecryptedEncPart.SRealm)
+		return false, krberror.NewErrorf(krberror.KRBMSG_ERROR, "SRealm in response does not match what was requested. Requested: %s; Reply: %s", tgsReq.ReqBody.Realm, k.DecryptedEncPart.SRealm)
 	}
 	if len(tgsReq.ReqBody.Addresses) > 0 {
 		if !types.HostAddressesEqual(k.DecryptedEncPart.CAddr, tgsReq.ReqBody.Addresses) {
-			return false, errors.New("Addresses listed in the TGS_REP does not match those listed in the TGS_REQ")
+			return false, krberror.NewErrorf(krberror.KRBMSG_ERROR, "Addresses listed in the TGS_REP does not match those listed in the TGS_REQ")
 		}
 	}
 	if time.Since(k.DecryptedEncPart.StartTime) > cfg.LibDefaults.Clockskew || k.DecryptedEncPart.StartTime.Sub(time.Now().UTC()) > cfg.LibDefaults.Clockskew {
 		if time.Since(k.DecryptedEncPart.AuthTime) > cfg.LibDefaults.Clockskew || k.DecryptedEncPart.AuthTime.Sub(time.Now().UTC()) > cfg.LibDefaults.Clockskew {
-			return false, fmt.Errorf("Clock skew with KDC too large. Greater than %v seconds.", cfg.LibDefaults.Clockskew.Seconds())
+			return false, krberror.NewErrorf(krberror.KRBMSG_ERROR, "Clock skew with KDC too large. Greater than %v seconds.", cfg.LibDefaults.Clockskew.Seconds())
 		}
 	}
 	return true, nil
