@@ -1,3 +1,4 @@
+// Representations of Microsoft types for PAC processing.
 package mstypes
 
 import (

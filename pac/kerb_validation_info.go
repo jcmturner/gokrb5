@@ -1,3 +1,4 @@
+// Microsoft Privilege Attribute Certificate (PAC) processing.
 package pac
 
 import (

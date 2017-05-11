@@ -1,3 +1,4 @@
+// Error handling.
 package krberror
 
 import (

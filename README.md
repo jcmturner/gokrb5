@@ -1,6 +1,20 @@
 # gokrb5
 [![GoDoc](https://godoc.org/github.com/jcmturner/gokrb5?status.svg)](https://godoc.org/github.com/jcmturner/gokrb5)
 
+### Features
+* Server Side
+  * HTTP handler wrapper implements SPNEGO Kerberos authentication
+  * HTTP handler wrapper decodes Microsoft AD PAC authorization data
+* Client Side
+  * Client that can authenticate to an SPNEGO Kerberos authenticated web service
+* General
+  * Kerberos libraries for custom integration
+  * Parsing Keytab files
+  * Parsing krb5.conf files
+* Encryption
+  * aes128-cts-hmac-sha1-96
+  * aes256-cts-hmac-sha1-96
+
 Currently the following is working/tested:
 * Client side libraries that supports authentication to HTTP servers that implement SPNEGO using Kerberos 5.
 * Service side libraries for implementing HTTP web servers using Kerberos SPNEGO authentication.
@@ -111,7 +125,7 @@ if ok, creds, err := serivce.ValidateAPREQ(mt.APReq, kt, r.RemoteAddr); ok {
 }
 ```
 
-#### Kerberos Web Service
+#### SPNEGO/Kerberos HTTP Service
 A HTTP handler wrapper can be used to implement Kerberos SPNEGO authentication for web services.
 To configure the wrapper the keytab for the SPN and a Logger are required:
 ```go
