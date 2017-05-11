@@ -1,7 +1,7 @@
 # gokrb5
 [![GoDoc](https://godoc.org/github.com/jcmturner/gokrb5?status.svg)](https://godoc.org/github.com/jcmturner/gokrb5)
 
-### Features
+## Features
 * Server Side
   * HTTP handler wrapper implements SPNEGO Kerberos authentication
   * HTTP handler wrapper decodes Microsoft AD PAC authorization data
@@ -13,7 +13,7 @@
   * Parsing krb5.conf files
 
 #### Implemented Encryption & Checksum Types
-The currently implemented encryption types limited to:
+The currently implemented encryption types are limited to:
 
 | Implementation | Encryption ID | Checksum ID |
 |-------|-------------|------------|
@@ -73,7 +73,16 @@ err := cl.Login
 cl.EnableAutoSessionRenewal()
 ```
 #### Authenticate to a Service
-##### Generic Kerberos
+
+##### HTTP SPNEGO
+Create the HTTP request object and then call the client's SetSPNEGOHeader method passing the Service Principal Name (SPN)
+```go
+r, _ := http.NewRequest("GET", "http://host.test.gokrb5/index.html", nil)
+cl.SetSPNEGOHeader(r, "")
+HTTPResp, err := http.DefaultClient.Do(r)
+```
+
+##### Generic Kerberos Client
 To authenticate to a service a client will need to request a serivce ticket for a Service Principal Name (SPN) and form into an AP_REQ message along with an authenticator encrypted with the session key that was delivered from the KDC along with the service ticket.
 
 The steps below outline how to do this.
@@ -108,26 +117,10 @@ APReq, err := messages.NewAPReq(tkt, key, auth)
 
 Now send the AP_REQ to the serivce. How this is done will be specific to the application use case.
 
-##### HTTP SPNEGO
-Create the HTTP request object and then call the client's SetSPNEGOHeader method passing the Service Principal Name (SPN)
-```go
-r, _ := http.NewRequest("GET", "http://host.test.gokrb5/index.html", nil)
-cl.SetSPNEGOHeader(r, "")
-HTTPResp, err := http.DefaultClient.Do(r)
-```
 
 ---
 
 ### Kerberised Service
-#### Validating Client Details
-To validate the AP_REQ sent by the client on the service side call this method:
-```go
-import 	"github.com/jcmturner/gokrb5/service"
-if ok, creds, err := serivce.ValidateAPREQ(mt.APReq, kt, r.RemoteAddr); ok {
-        // Perform application specifc actions
-        // creds object has details about the client identity
-}
-```
 
 #### SPNEGO/Kerberos HTTP Service
 A HTTP handler wrapper can be used to implement Kerberos SPNEGO authentication for web services.
@@ -162,6 +155,16 @@ if validuser, ok := ctx.Value("authenticated").(bool); ok && validuser {
                 }
         } 
 
+}
+```
+
+#### Generic Kerberised Service - Validating Client Details
+To validate the AP_REQ sent by the client on the service side call this method:
+```go
+import 	"github.com/jcmturner/gokrb5/service"
+if ok, creds, err := serivce.ValidateAPREQ(mt.APReq, kt, r.RemoteAddr); ok {
+        // Perform application specifc actions
+        // creds object has details about the client identity
 }
 ```
 
