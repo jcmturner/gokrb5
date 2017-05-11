@@ -11,17 +11,6 @@
   * Kerberos libraries for custom integration
   * Parsing Keytab files
   * Parsing krb5.conf files
-* Encryption
-  * aes128-cts-hmac-sha1-96
-  * aes256-cts-hmac-sha1-96
-
-Currently the following is working/tested:
-* Client side libraries that supports authentication to HTTP servers that implement SPNEGO using Kerberos 5.
-* Service side libraries for implementing HTTP web servers using Kerberos SPNEGO authentication.
-* Microsoft PAC Authorization Data is processed and exposed in the HTTP request context. Available if Microsoft Active Directory is used as the KDC.
-* Tested against MIT KDC (1.6.3 is the oldest version tested against) and Microsoft Active Directory (Windows 2008 R2)
-* Tested against a KDC that supports PA-FX-FAST.
-* Tested against users that have pre-authentication required using PA-ENC-TIMESTAMP.
 
 #### Implemented Encryption & Checksum Types
 The currently implemented encryption types limited to:
@@ -31,7 +20,17 @@ The currently implemented encryption types limited to:
 | aes128-cts-hmac-sha1-96 | 17 | 15 |
 | aes256-cts-hmac-sha1-96 | 18 | 16 |
 
+
+Currently the following is working/tested:
+* Tested against MIT KDC (1.6.3 is the oldest version tested against) and Microsoft Active Directory (Windows 2008 R2)
+* Tested against a KDC that supports PA-FX-FAST.
+* Tested against users that have pre-authentication required using PA-ENC-TIMESTAMP.
+* Microsoft PAC Authorization Data is processed and exposed in the HTTP request context. Available if Microsoft Active Directory is used as the KDC.
+
 ## Usage
+
+---
+
 ### Configuration
 The gokrb5 libraries use the same krb5.conf configuration file format as MIT Kerberos, described [here](https://web.mit.edu/kerberos/krb5-latest/doc/admin/conf_files/krb5_conf.html).
 Config instances can be created by loading from a file path or by passing a string, io.Reader or bufio.Scanner to the relevant method:
@@ -50,6 +49,9 @@ ktFromFile, err := keytab.Load("/path/to/file.keytab")
 ktFromBytes, err := keytab.Parse(b)
 
 ```
+
+---
+
 ### Kerberos Client
 Create a client instance with either a password or a keytab:
 ```go
@@ -114,6 +116,8 @@ cl.SetSPNEGOHeader(r, "")
 HTTPResp, err := http.DefaultClient.Do(r)
 ```
 
+---
+
 ### Kerberised Service
 #### Validating Client Details
 To validate the AP_REQ sent by the client on the service side call this method:
@@ -160,6 +164,8 @@ if validuser, ok := ctx.Value("authenticated").(bool); ok && validuser {
 
 }
 ```
+
+---
 
 ## References
 ### RFCs
