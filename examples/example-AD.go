@@ -74,7 +74,6 @@ func testAppHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	fmt.Fprint(w, "<html>\n<p><h1>TEST.GOKRB5 Handler</h1></p>\n")
 	if validuser, ok := ctx.Value("authenticated").(bool); ok && validuser {
-		w.WriteHeader(http.StatusOK)
 		if creds, ok := ctx.Value("credentials").(credentials.Credentials); ok {
 			fmt.Fprintf(w, "<ul><li>Authenticed user: %s</li>\n", creds.Username)
 			fmt.Fprintf(w, "<li>User's realm: %s</li>\n", creds.Realm)
