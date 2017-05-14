@@ -200,7 +200,6 @@ func (t *Ticket) GetPACType(keytab keytab.Keytab, sa string) (bool, pac.PACType,
 			if err != nil {
 				continue
 			}
-			// TODO note does the entry contain and AuthorizationData or AuthorizationDataEntry. Assuming the former atm.
 			if ad2[0].ADType == adtype.AD_WIN2K_PAC {
 				isPAC = true
 				var pac pac.PACType

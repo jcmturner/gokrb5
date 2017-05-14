@@ -32,7 +32,6 @@ func (c *PAC_CredentialsInfo) Unmarshal(b []byte, k types.EncryptionKey) error {
 
 	c.Version = ndr.Read_uint32(&b, &p, e)
 	c.EType = ndr.Read_uint32(&b, &p, e)
-	// TODO review bytes provided to this method as we have to read to the end
 	c.PAC_CredentialData_Encrypted = ndr.Read_bytes(&b, &p, len(b)-p, e)
 
 	err = c.DecryptEncPart(k, e)
