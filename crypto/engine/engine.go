@@ -36,12 +36,12 @@ func DeriveRandom(key, usage []byte, n, k int, e etype.EType) ([]byte, error) {
 	K4 = ...
 
 	DR(Key, Constant) = k-truncate(K1 | K2 | K3 | K4 ...)*/
-	_, K, err := e.Encrypt(key, nFoldUsage)
+	_, K, err := e.EncryptData(key, nFoldUsage)
 	if err != nil {
 		return out, err
 	}
 	for i := copy(out, K); i < len(out); {
-		_, K, _ = e.Encrypt(key, K)
+		_, K, _ = e.EncryptData(key, K)
 		i = i + copy(out[i:], K)
 	}
 	return out, nil
@@ -107,7 +107,7 @@ func getHash(pt, key []byte, usage []byte, etype etype.EType) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Unable to derive key for checksum: %v", err)
 	}
-	mac := hmac.New(etype.GetHash, k)
+	mac := hmac.New(etype.GetHash(), k)
 	p := make([]byte, len(pt))
 	copy(p, pt)
 	mac.Write(p)

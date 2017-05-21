@@ -2,12 +2,9 @@
 package crypto
 
 import (
-	"crypto/rand"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"github.com/jcmturner/gokrb5/crypto/aes"
-	"github.com/jcmturner/gokrb5/crypto/engine"
 	"github.com/jcmturner/gokrb5/crypto/etype"
 	"github.com/jcmturner/gokrb5/iana/chksumtype"
 	"github.com/jcmturner/gokrb5/iana/etypeID"
@@ -23,6 +20,9 @@ func GetEtype(id int) (etype.EType, error) {
 	case etypeID.AES256_CTS_HMAC_SHA1_96:
 		var et aes.Aes256CtsHmacSha96
 		return et, nil
+	//case etypeID.AES128_CTS_HMAC_SHA256_128:
+	//	var et aes.Aes128CtsHmacSha256128
+	//	return et, nil
 	default:
 		return nil, fmt.Errorf("Unknown or unsupported EType: %d", id)
 	}
@@ -115,26 +115,11 @@ func GetEncryptedData(plainBytes []byte, key types.EncryptionKey, usage uint32, 
 	if err != nil {
 		return ed, fmt.Errorf("Error getting etype: %v", err)
 	}
-	k := key.KeyValue
-	if usage != 0 {
-		k, err = et.DeriveKey(key.KeyValue, engine.GetUsageKe(uint32(usage)))
-		if err != nil {
-			return ed, fmt.Errorf("Error deriving key: %v", err)
-		}
-	}
-	//confounder
-	c := make([]byte, et.GetConfounderByteSize())
-	_, err = rand.Read(c)
+	_, b, err := et.EncryptMessage(key.KeyValue, plainBytes, usage)
 	if err != nil {
-		return ed, fmt.Errorf("Could not generate random confounder: %v", err)
+		return ed, err
 	}
-	plainBytes = append(c, plainBytes...)
-	_, b, err := et.Encrypt(k, plainBytes)
-	if err != nil {
-		return ed, fmt.Errorf("Error encrypting data: %v", err)
-	}
-	ih, err := engine.GetIntegrityHash(plainBytes, key.KeyValue, usage, et)
-	b = append(b, ih...)
+
 	ed = types.EncryptedData{
 		EType:  key.KeyType,
 		Cipher: b,
@@ -144,46 +129,14 @@ func GetEncryptedData(plainBytes []byte, key types.EncryptionKey, usage uint32, 
 }
 
 func DecryptEncPart(ed types.EncryptedData, key types.EncryptionKey, usage uint32) ([]byte, error) {
-	//Derive the key
-	et, err := GetEtype(key.KeyType)
-	k, err := et.DeriveKey(key.KeyValue, engine.GetUsageKe(usage))
-	if err != nil {
-		return nil, fmt.Errorf("Error deriving key: %v", err)
-	}
-	// Strip off the checksum from the end
-	b, err := et.Decrypt(k, ed.Cipher[:len(ed.Cipher)-et.GetHMACBitLength()/8])
-	if err != nil {
-		return nil, fmt.Errorf("Error decrypting: %v", err)
-	}
-	//Verify checksum
-	if !et.VerifyIntegrity(key.KeyValue, ed.Cipher, b, usage) {
-		return nil, errors.New("Error decrypting encrypted part: integrity verification failed")
-	}
-	//Remove the confounder bytes
-	b = b[et.GetConfounderByteSize():]
-	if err != nil {
-		return nil, fmt.Errorf("Error decrypting encrypted part: %v", err)
-	}
-	return b, nil
+	return DecryptMessage(ed.Cipher, key, usage)
 }
 
-func DecryptBytes(ed []byte, key types.EncryptionKey, usage uint32) ([]byte, error) {
-	//Derive the key
+func DecryptMessage(ciphertext []byte, key types.EncryptionKey, usage uint32) ([]byte, error) {
 	et, err := GetEtype(key.KeyType)
-	k, err := et.DeriveKey(key.KeyValue, engine.GetUsageKe(usage))
-	if err != nil {
-		return nil, fmt.Errorf("Error deriving key: %v", err)
-	}
-	// Strip off the checksum from the end
-	b, err := et.Decrypt(k, ed[:len(ed)-et.GetHMACBitLength()/8])
+	b, err := et.DecryptMessage(key.KeyValue, ciphertext, usage)
 	if err != nil {
 		return nil, fmt.Errorf("Error decrypting: %v", err)
 	}
-	//Verify checksum
-	if !et.VerifyIntegrity(key.KeyValue, ed, b, usage) {
-		return nil, errors.New("Error decrypting: integrity verification failed")
-	}
-	//Remove the confounder bytes
-	b = b[et.GetConfounderByteSize():]
 	return b, nil
 }

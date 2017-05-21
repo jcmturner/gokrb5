@@ -2,7 +2,10 @@ package aes
 
 import (
 	"crypto/aes"
+	"crypto/rand"
 	"crypto/sha1"
+	"errors"
+	"fmt"
 	"github.com/jcmturner/gokrb5/crypto/engine"
 	"github.com/jcmturner/gokrb5/iana/chksumtype"
 	"github.com/jcmturner/gokrb5/iana/etypeID"
@@ -74,8 +77,8 @@ func (e Aes256CtsHmacSha96) GetKeySeedBitLength() int {
 	return e.GetKeyByteSize() * 8
 }
 
-func (e Aes256CtsHmacSha96) GetHash() hash.Hash {
-	return sha1.New()
+func (e Aes256CtsHmacSha96) GetHash() func() hash.Hash {
+	return sha1.New
 }
 
 func (e Aes256CtsHmacSha96) GetMessageBlockByteSize() int {
@@ -106,13 +109,65 @@ func (e Aes256CtsHmacSha96) RandomToKey(b []byte) []byte {
 	return randomToKey(b)
 }
 
-func (e Aes256CtsHmacSha96) Encrypt(key, message []byte) ([]byte, []byte, error) {
+func (e Aes256CtsHmacSha96) EncryptData(key, data []byte) ([]byte, []byte, error) {
 	ivz := make([]byte, aes.BlockSize)
-	return encryptCTS(key, ivz, message, e)
+	return encryptCTS(key, ivz, data, e)
 }
 
-func (e Aes256CtsHmacSha96) Decrypt(key, ciphertext []byte) ([]byte, error) {
-	return decryptCTS(key, ciphertext, e)
+func (e Aes256CtsHmacSha96) EncryptMessage(key, message []byte, usage uint32) ([]byte, []byte, error) {
+	//confounder
+	c := make([]byte, e.GetConfounderByteSize())
+	_, err := rand.Read(c)
+	if err != nil {
+		return []byte{}, []byte{}, fmt.Errorf("Could not generate random confounder: %v", err)
+	}
+	plainBytes := append(c, message...)
+
+	// Derive key for encryption from usage
+	var k []byte
+	if usage != 0 {
+		k, err = e.DeriveKey(key, engine.GetUsageKe(usage))
+		if err != nil {
+			return []byte{}, []byte{}, fmt.Errorf("Error deriving key for encryption: %v", err)
+		}
+	}
+
+	// Encrypt the data
+	iv, b, err := e.EncryptData(k, plainBytes)
+	if err != nil {
+		return iv, b, fmt.Errorf("Error encrypting data: %v", err)
+	}
+
+	// Generate and append integrity hash
+	ih, err := engine.GetIntegrityHash(plainBytes, key, usage, e)
+	if err != nil {
+		return iv, b, fmt.Errorf("Error encrypting data: %v", err)
+	}
+	b = append(b, ih...)
+	return iv, b, nil
+}
+
+func (e Aes256CtsHmacSha96) DecryptData(key, data []byte) ([]byte, error) {
+	return decryptCTS(key, data, e)
+}
+
+func (e Aes256CtsHmacSha96) DecryptMessage(key, ciphertext []byte, usage uint32) ([]byte, error) {
+	//Derive the key
+	k, err := e.DeriveKey(key, engine.GetUsageKe(usage))
+	if err != nil {
+		return nil, fmt.Errorf("Error deriving key: %v", err)
+	}
+	// Strip off the checksum from the end
+	b, err := e.DecryptData(k, ciphertext[:len(ciphertext)-e.GetHMACBitLength()/8])
+	if err != nil {
+		return nil, err
+	}
+	//Verify checksum
+	if !e.VerifyIntegrity(key, ciphertext, b, usage) {
+		return nil, errors.New("Integrity verification failed")
+	}
+	//Remove the confounder bytes
+	return b[e.GetConfounderByteSize():], nil
 }
 
 func (e Aes256CtsHmacSha96) DeriveKey(protocolKey, usage []byte) ([]byte, error) {

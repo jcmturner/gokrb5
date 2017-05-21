@@ -4,6 +4,7 @@ package des3
 import (
 	"crypto/cipher"
 	"crypto/des"
+	"crypto/rand"
 	"crypto/sha1"
 	"errors"
 	"fmt"
@@ -69,8 +70,8 @@ func (e Des3CbcSha1Kd) GetKeySeedBitLength() int {
 	return 21 * 8
 }
 
-func (e Des3CbcSha1Kd) GetHash() hash.Hash {
-	return sha1.New()
+func (e Des3CbcSha1Kd) GetHash() func() hash.Hash {
+	return sha1.New
 }
 
 func (e Des3CbcSha1Kd) GetMessageBlockByteSize() int {
@@ -88,7 +89,7 @@ func (e Des3CbcSha1Kd) GetConfounderByteSize() int {
 }
 
 func (e Des3CbcSha1Kd) GetHMACBitLength() int {
-	return e.GetHash().Size()
+	return e.GetHash()().Size()
 }
 
 func (e Des3CbcSha1Kd) GetCypherBlockBitLength() int {
@@ -118,58 +119,81 @@ func (e Des3CbcSha1Kd) DeriveKey(protocolKey, usage []byte) ([]byte, error) {
 	return e.RandomToKey(r), nil
 }
 
-func (e Des3CbcSha1Kd) Encrypt(key, message []byte) ([]byte, []byte, error) {
+func (e Des3CbcSha1Kd) EncryptData(key, data []byte) ([]byte, []byte, error) {
 	if len(key) != e.GetKeyByteSize() {
 		return nil, nil, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeySeedBitLength(), len(key))
 
 	}
-	if len(message)%e.GetMessageBlockByteSize() != 0 {
-		message, _ = engine.PKCS7Pad(message, e.GetMessageBlockByteSize())
-	}
+	data, _ = engine.ZeroPad(data, e.GetMessageBlockByteSize())
 
 	block, err := des.NewTripleDESCipher(key)
 	if err != nil {
 		return nil, nil, fmt.Errorf("Error creating cipher: %v", err)
-
 	}
 
 	//RFC 3961: initial cipher state      All bits zero
-	iv := make([]byte, e.GetConfounderByteSize())
-	//_, err = rand.Read(iv) //Not needed as all bits need to be zero
+	ivz := make([]byte, e.GetConfounderByteSize())
 
-	ct := make([]byte, len(message))
-	mode := cipher.NewCBCEncrypter(block, iv)
-	mode.CryptBlocks(ct, message)
-	return ct[:e.GetConfounderByteSize()], ct, nil
+	ct := make([]byte, len(data))
+	mode := cipher.NewCBCEncrypter(block, ivz)
+	mode.CryptBlocks(ct, data)
+	return ivz, ct, nil
 }
 
-func (e Des3CbcSha1Kd) Decrypt(key, ciphertext []byte) (message []byte, err error) {
+func (e Des3CbcSha1Kd) EncryptMessage(key, message []byte, usage uint32) ([]byte, []byte, error) {
+	//confounder
+	c := make([]byte, e.GetConfounderByteSize())
+	_, err := rand.Read(c)
+	if err != nil {
+		return []byte{}, []byte{}, fmt.Errorf("Could not generate random confounder: %v", err)
+	}
+	plainBytes := append(c, message...)
+
+	iv, b, err := e.EncryptData(key, plainBytes)
+	if err != nil {
+		return iv, b, fmt.Errorf("Error encrypting data: %v", err)
+	}
+
+	// Generate and append integrity hash
+	ih, err := engine.GetIntegrityHash(plainBytes, key, usage, e)
+	if err != nil {
+		return iv, b, fmt.Errorf("Error encrypting data: %v", err)
+	}
+	b = append(b, ih...)
+	return iv, b, nil
+}
+
+func (e Des3CbcSha1Kd) DecryptData(key, data []byte) ([]byte, error) {
 	if len(key) != e.GetKeySeedBitLength() {
-		err = fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeySeedBitLength(), len(key))
-		return
+		return []byte{}, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeySeedBitLength(), len(key))
 	}
 
-	if len(ciphertext) < des.BlockSize || len(ciphertext)%des.BlockSize != 0 {
-		err = errors.New("Ciphertext is not a multiple of the block size.")
-		return
+	if len(data) < des.BlockSize || len(data)%des.BlockSize != 0 {
+		return []byte{}, errors.New("Ciphertext is not a multiple of the block size.")
 	}
-
 	block, err := des.NewTripleDESCipher(key)
 	if err != nil {
-		err = fmt.Errorf("Error creating cipher: %v", err)
-		return
+		return []byte{}, fmt.Errorf("Error creating cipher: %v", err)
 	}
+	pt := make([]byte, len(data))
+	ivz := make([]byte, e.GetConfounderByteSize())
+	mode := cipher.NewCBCDecrypter(block, ivz)
+	mode.CryptBlocks(pt, data)
+	return pt, nil
+}
 
-	iv := ciphertext[:e.GetConfounderByteSize()]
-	ciphertext = ciphertext[e.GetConfounderByteSize():]
-
-	mode := cipher.NewCBCDecrypter(block, iv)
-	mode.CryptBlocks(message, ciphertext)
-	m, er := engine.PKCS7Unpad(message, e.GetMessageBlockByteSize())
-	if er == nil {
-		message = m
+func (e Des3CbcSha1Kd) DecryptMessage(key, ciphertext []byte, usage uint32) (message []byte, err error) {
+	// Strip off the checksum from the end
+	b, err := e.DecryptData(key, ciphertext[:len(ciphertext)-e.GetHMACBitLength()/8])
+	if err != nil {
+		return nil, fmt.Errorf("Error decrypting: %v", err)
 	}
-	return
+	//Verify checksum
+	if !e.VerifyIntegrity(key, ciphertext, b, usage) {
+		return nil, errors.New("Error decrypting: integrity verification failed")
+	}
+	//Remove the confounder bytes
+	return b[e.GetConfounderByteSize():], nil
 }
 
 func (e Des3CbcSha1Kd) VerifyIntegrity(protocolKey, ct, pt []byte, usage uint32) bool {

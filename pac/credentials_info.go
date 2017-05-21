@@ -45,7 +45,7 @@ func (c *PAC_CredentialsInfo) DecryptEncPart(k types.EncryptionKey, e *binary.By
 	if k.KeyType != int(c.EType) {
 		return fmt.Errorf("Key provided is not the correct type. Type needed: %d, type provided: %d", c.EType, k.KeyType)
 	}
-	pt, err := crypto.DecryptBytes(c.PAC_CredentialData_Encrypted, k, keyusage.KERB_NON_KERB_SALT)
+	pt, err := crypto.DecryptMessage(c.PAC_CredentialData_Encrypted, k, keyusage.KERB_NON_KERB_SALT)
 	if err != nil {
 		return err
 	}

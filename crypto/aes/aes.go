@@ -2,10 +2,9 @@
 package aes
 
 import (
-	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/sha1"
+	"crypto/hmac"
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
@@ -19,39 +18,93 @@ const (
 	s2kParamsZero = 4294967296
 )
 
-func stringToKey(secret, salt, s2kparams string, e etype.EType) ([]byte, error) {
+func s2kparamsToItertions(s2kparams string) (int, error) {
 	//process s2kparams string
 	//The parameter string is four octets indicating an unsigned
 	//number in big-endian order.  This is the number of iterations to be
 	//performed.  If the value is 00 00 00 00, the number of iterations to
 	//be performed is 4,294,967,296 (2**32).
-	var i int32
+	var i uint32
 	if len(s2kparams) != 8 {
-		return nil, errors.New("Invalid s2kparams length")
+		return s2kParamsZero, errors.New("Invalid s2kparams length")
 	}
 	b, err := hex.DecodeString(s2kparams)
 	if err != nil {
-		return nil, errors.New("Invalid s2kparams, cannot decode string to bytes")
+		return s2kParamsZero, errors.New("Invalid s2kparams, cannot decode string to bytes")
 	}
-	buf := bytes.NewBuffer(b)
-	err = binary.Read(buf, binary.BigEndian, &i)
+	i = binary.BigEndian.Uint32(b)
+	//buf := bytes.NewBuffer(b)
+	//err = binary.Read(buf, binary.BigEndian, &i)
 	if err != nil {
-		return nil, errors.New("Invalid s2kparams, cannot convert to big endian int32")
+		return s2kParamsZero, errors.New("Invalid s2kparams, cannot convert to big endian int32")
 	}
-	if i == 0 {
-		return stringToKeyIter(secret, salt, s2kParamsZero, e)
+	return int(i), nil
+}
+
+func IterationsToS2kparams(i int) string {
+	b := make([]byte, 4, 4)
+	binary.BigEndian.PutUint32(b, uint32(i))
+	return hex.EncodeToString(b)
+}
+
+func stringToKey(secret, salt, s2kparams string, e etype.EType) ([]byte, error) {
+	i, err := s2kparamsToItertions(s2kparams)
+	if err != nil {
+		return nil, err
 	}
 	return stringToKeyIter(secret, salt, int(i), e)
 }
 
+func stringToKeySHA2(secret, salt, s2kparams string, e etype.EType) ([]byte, error) {
+	i, err := s2kparamsToItertions(s2kparams)
+	if err != nil {
+		return nil, err
+	}
+	return stringToKeySHA2Iter(secret, salt, int(i), e), nil
+}
+
 func stringToPBKDF2(secret, salt string, iterations int, e etype.EType) []byte {
-	return pbkdf2.Key([]byte(secret), []byte(salt), iterations, e.GetKeyByteSize(), sha1.New)
+	return pbkdf2.Key([]byte(secret), []byte(salt), iterations, e.GetKeyByteSize(), e.GetHash())
 }
 
 func stringToKeyIter(secret, salt string, iterations int, e etype.EType) ([]byte, error) {
 	tkey := randomToKey(stringToPBKDF2(secret, salt, iterations, e))
-	key, err := deriveKey(tkey, []byte("kerberos"), e)
-	return key, err
+	return deriveKey(tkey, []byte("kerberos"), e)
+}
+
+func stringToKeySHA2Iter(secret, salt string, iterations int, e etype.EType) []byte {
+	tkey := randomToKey(stringToPBKDF2(secret, salt, iterations, e))
+	return deriveKeyKDF_HMAC_SHA2(tkey, []byte("kerberos"), e)
+}
+
+//https://tools.ietf.org/html/rfc8009#section-3
+func KDF_HMAC_SHA2(protocolKey, label, context []byte, kl int, e etype.EType) []byte {
+	//k: Length in bits of the key to be outputted, expressed in big-endian binary representation in 4 bytes.
+	k := make([]byte, 4, 4)
+	binary.BigEndian.PutUint32(k, uint32(kl))
+
+	c := make([]byte, 4, 4)
+	binary.BigEndian.PutUint32(c, uint32(1))
+	c = append(c, label...)
+	c = append(c, byte(uint8(0)))
+	if len(context) > 0 {
+		c = append(c, context...)
+	}
+	c = append(c, k...)
+
+	mac := hmac.New(e.GetHash(), protocolKey)
+	mac.Write(c)
+	return mac.Sum(nil)[:(kl / 8)]
+}
+
+func deriveKeyKDF_HMAC_SHA2(protocolKey, label []byte, e etype.EType) []byte {
+	var context []byte
+	return KDF_HMAC_SHA2(protocolKey, label, context, e.GetKeySeedBitLength(), e)
+}
+
+func deriveRandomKDF_HMAC_SHA2(protocolKey, usage []byte, e etype.EType) ([]byte, error) {
+	h := e.GetHash()()
+	return KDF_HMAC_SHA2(protocolKey, []byte("prf"), usage, h.Size(), e), nil
 }
 
 func randomToKey(b []byte) []byte {
