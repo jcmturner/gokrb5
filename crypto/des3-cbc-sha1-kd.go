@@ -1,5 +1,5 @@
 // DES3 Kerberos Encryption Types.
-package des3
+package crypto
 
 import (
 	"crypto/cipher"
@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jcmturner/gokrb5/crypto/engine"
+	"github.com/jcmturner/gokrb5/crypto/rfc3961"
 	"github.com/jcmturner/gokrb5/iana/chksumtype"
 	"github.com/jcmturner/gokrb5/iana/etypeID"
 	"hash"
@@ -107,7 +108,7 @@ func (e Des3CbcSha1Kd) RandomToKey(b []byte) (protocolKey []byte) {
 }
 
 func (e Des3CbcSha1Kd) DeriveRandom(protocolKey, usage []byte) ([]byte, error) {
-	r, err := engine.DeriveRandom(protocolKey, usage, e.GetCypherBlockBitLength(), e.GetKeySeedBitLength(), e)
+	r, err := rfc3961.DeriveRandom(protocolKey, usage, e)
 	return r, err
 }
 

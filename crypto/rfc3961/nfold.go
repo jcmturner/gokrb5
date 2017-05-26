@@ -1,4 +1,4 @@
-package engine
+package rfc3961
 
 /*
 Implementation of the n-fold algorithm as defined in RFC 3961.

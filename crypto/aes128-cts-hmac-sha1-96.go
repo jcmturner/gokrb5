@@ -1,4 +1,4 @@
-package aes
+package crypto
 
 import (
 	"crypto/aes"
@@ -6,7 +6,9 @@ import (
 	"crypto/sha1"
 	"errors"
 	"fmt"
+	"github.com/jcmturner/gokrb5/crypto/aescts"
 	"github.com/jcmturner/gokrb5/crypto/engine"
+	"github.com/jcmturner/gokrb5/crypto/rfc3961"
 	"github.com/jcmturner/gokrb5/iana/chksumtype"
 	"github.com/jcmturner/gokrb5/iana/etypeID"
 	"hash"
@@ -102,16 +104,16 @@ func (e Aes128CtsHmacSha96) GetCypherBlockBitLength() int {
 }
 
 func (e Aes128CtsHmacSha96) StringToKey(secret string, salt string, s2kparams string) ([]byte, error) {
-	return stringToKey(secret, salt, s2kparams, e)
+	return rfc3961.StringToKey(secret, salt, s2kparams, e)
 }
 
 func (e Aes128CtsHmacSha96) RandomToKey(b []byte) []byte {
-	return randomToKey(b)
+	return rfc3961.RandomToKey(b)
 }
 
 func (e Aes128CtsHmacSha96) EncryptData(key, data []byte) ([]byte, []byte, error) {
 	ivz := make([]byte, aes.BlockSize)
-	return encryptCTS(key, ivz, data, e)
+	return aescts.EncryptCTS(key, ivz, data)
 }
 
 func (e Aes128CtsHmacSha96) EncryptMessage(key, message []byte, usage uint32) ([]byte, []byte, error) {
@@ -148,7 +150,8 @@ func (e Aes128CtsHmacSha96) EncryptMessage(key, message []byte, usage uint32) ([
 }
 
 func (e Aes128CtsHmacSha96) DecryptData(key, data []byte) ([]byte, error) {
-	return decryptCTS(key, data, e)
+	ivz := make([]byte, aes.BlockSize)
+	return aescts.DecryptCTS(key, ivz, data)
 }
 
 func (e Aes128CtsHmacSha96) DecryptMessage(key, ciphertext []byte, usage uint32) ([]byte, error) {
@@ -171,11 +174,11 @@ func (e Aes128CtsHmacSha96) DecryptMessage(key, ciphertext []byte, usage uint32)
 }
 
 func (e Aes128CtsHmacSha96) DeriveKey(protocolKey, usage []byte) ([]byte, error) {
-	return deriveKey(protocolKey, usage, e)
+	return rfc3961.DeriveKey(protocolKey, usage, e)
 }
 
 func (e Aes128CtsHmacSha96) DeriveRandom(protocolKey, usage []byte) ([]byte, error) {
-	return deriveRandom(protocolKey, usage, e)
+	return rfc3961.DeriveRandom(protocolKey, usage, e)
 }
 
 func (e Aes128CtsHmacSha96) VerifyIntegrity(protocolKey, ct, pt []byte, usage uint32) bool {

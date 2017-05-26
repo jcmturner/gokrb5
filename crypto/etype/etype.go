@@ -1,9 +1,8 @@
-// Kerberos EType interface.
 package etype
 
 import "hash"
 
-// Interface defining the Encryption Algorithm Profile from RFC 3961.
+// Interface defining the Encryption Type.
 type EType interface {
 	GetETypeID() int
 	GetHashID() int
@@ -14,14 +13,14 @@ type EType interface {
 	RandomToKey(b []byte) []byte                                // random-to-key (bitstring[K])->(protocol-key)
 	GetHMACBitLength() int                                      // HMAC output size, h
 	GetMessageBlockByteSize() int                               // message block size, m
-	EncryptData(key, data []byte) ([]byte, []byte, error)
-	EncryptMessage(key, message []byte, usage uint32) ([]byte, []byte, error) // E function - encrypt (specific-key, state, octet string)->(state, octet string)
-	DecryptData(key, data []byte) ([]byte, error)
-	DecryptMessage(key, ciphertext []byte, usage uint32) ([]byte, error) // D function
-	GetCypherBlockBitLength() int                                        // cipher block size, c
-	GetConfounderByteSize() int                                          // This is the same as the cipher block size but in bytes.
-	DeriveKey(protocolKey, usage []byte) ([]byte, error)                 // DK key-derivation (protocol-key, integer)->(specific-key)
-	DeriveRandom(protocolKey, usage []byte) ([]byte, error)              // DR pseudo-random (protocol-key, octet-string)->(octet-string)
+	EncryptData(key, data []byte) ([]byte, []byte, error)       // E function - encrypt (specific-key, state, octet string)->(state, octet string)
+	EncryptMessage(key, message []byte, usage uint32) ([]byte, []byte, error)
+	DecryptData(key, data []byte) ([]byte, error) // D function
+	DecryptMessage(key, ciphertext []byte, usage uint32) ([]byte, error)
+	GetCypherBlockBitLength() int                           // cipher block size, c
+	GetConfounderByteSize() int                             // This is the same as the cipher block size but in bytes.
+	DeriveKey(protocolKey, usage []byte) ([]byte, error)    // DK key-derivation (protocol-key, integer)->(specific-key)
+	DeriveRandom(protocolKey, usage []byte) ([]byte, error) // DR pseudo-random (protocol-key, octet-string)->(octet-string)
 	VerifyIntegrity(protocolKey, ct, pt []byte, usage uint32) bool
 	GetHash() func() hash.Hash
 }

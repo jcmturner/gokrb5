@@ -1,134 +1,14 @@
-// AES Kerberos Encryption Types.
-package aes
+package aescts
 
 import (
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/hmac"
-	"encoding/binary"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"github.com/jcmturner/gokrb5/crypto/engine"
-	"github.com/jcmturner/gokrb5/crypto/etype"
-	"golang.org/x/crypto/pbkdf2"
 )
 
-const (
-	s2kParamsZero = 4294967296
-)
-
-func s2kparamsToItertions(s2kparams string) (int, error) {
-	//process s2kparams string
-	//The parameter string is four octets indicating an unsigned
-	//number in big-endian order.  This is the number of iterations to be
-	//performed.  If the value is 00 00 00 00, the number of iterations to
-	//be performed is 4,294,967,296 (2**32).
-	var i uint32
-	if len(s2kparams) != 8 {
-		return s2kParamsZero, errors.New("Invalid s2kparams length")
-	}
-	b, err := hex.DecodeString(s2kparams)
-	if err != nil {
-		return s2kParamsZero, errors.New("Invalid s2kparams, cannot decode string to bytes")
-	}
-	i = binary.BigEndian.Uint32(b)
-	//buf := bytes.NewBuffer(b)
-	//err = binary.Read(buf, binary.BigEndian, &i)
-	if err != nil {
-		return s2kParamsZero, errors.New("Invalid s2kparams, cannot convert to big endian int32")
-	}
-	return int(i), nil
-}
-
-func IterationsToS2kparams(i int) string {
-	b := make([]byte, 4, 4)
-	binary.BigEndian.PutUint32(b, uint32(i))
-	return hex.EncodeToString(b)
-}
-
-func stringToKey(secret, salt, s2kparams string, e etype.EType) ([]byte, error) {
-	i, err := s2kparamsToItertions(s2kparams)
-	if err != nil {
-		return nil, err
-	}
-	return stringToKeyIter(secret, salt, int(i), e)
-}
-
-func stringToKeySHA2(secret, salt, s2kparams string, e etype.EType) ([]byte, error) {
-	i, err := s2kparamsToItertions(s2kparams)
-	if err != nil {
-		return nil, err
-	}
-	return stringToKeySHA2Iter(secret, salt, int(i), e), nil
-}
-
-func stringToPBKDF2(secret, salt string, iterations int, e etype.EType) []byte {
-	return pbkdf2.Key([]byte(secret), []byte(salt), iterations, e.GetKeyByteSize(), e.GetHash())
-}
-
-func stringToKeyIter(secret, salt string, iterations int, e etype.EType) ([]byte, error) {
-	tkey := randomToKey(stringToPBKDF2(secret, salt, iterations, e))
-	return deriveKey(tkey, []byte("kerberos"), e)
-}
-
-func stringToKeySHA2Iter(secret, salt string, iterations int, e etype.EType) []byte {
-	tkey := randomToKey(stringToPBKDF2(secret, salt, iterations, e))
-	return deriveKeyKDF_HMAC_SHA2(tkey, []byte("kerberos"), e)
-}
-
-//https://tools.ietf.org/html/rfc8009#section-3
-func KDF_HMAC_SHA2(protocolKey, label, context []byte, kl int, e etype.EType) []byte {
-	//k: Length in bits of the key to be outputted, expressed in big-endian binary representation in 4 bytes.
-	k := make([]byte, 4, 4)
-	binary.BigEndian.PutUint32(k, uint32(kl))
-
-	c := make([]byte, 4, 4)
-	binary.BigEndian.PutUint32(c, uint32(1))
-	c = append(c, label...)
-	c = append(c, byte(uint8(0)))
-	if len(context) > 0 {
-		c = append(c, context...)
-	}
-	c = append(c, k...)
-
-	mac := hmac.New(e.GetHash(), protocolKey)
-	mac.Write(c)
-	return mac.Sum(nil)[:(kl / 8)]
-}
-
-func deriveKeyKDF_HMAC_SHA2(protocolKey, label []byte, e etype.EType) []byte {
-	var context []byte
-	return KDF_HMAC_SHA2(protocolKey, label, context, e.GetKeySeedBitLength(), e)
-}
-
-func deriveRandomKDF_HMAC_SHA2(protocolKey, usage []byte, e etype.EType) ([]byte, error) {
-	h := e.GetHash()()
-	return KDF_HMAC_SHA2(protocolKey, []byte("prf"), usage, h.Size(), e), nil
-}
-
-func randomToKey(b []byte) []byte {
-	return b
-}
-
-func deriveRandom(protocolKey, usage []byte, e etype.EType) ([]byte, error) {
-	r, err := engine.DeriveRandom(protocolKey, usage, e.GetCypherBlockBitLength(), e.GetKeySeedBitLength(), e)
-	return r, err
-}
-
-func deriveKey(protocolKey, usage []byte, e etype.EType) ([]byte, error) {
-	r, err := deriveRandom(protocolKey, usage, e)
-	if err != nil {
-		return nil, err
-	}
-	return randomToKey(r), nil
-}
-
-func encryptCTS(key, iv, message []byte, e etype.EType) ([]byte, []byte, error) {
-	if len(key) != e.GetKeyByteSize() {
-		return nil, nil, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeyByteSize(), len(key))
-	}
-
+func EncryptCTS(key, iv, message []byte) ([]byte, []byte, error) {
 	l := len(message)
 
 	block, err := aes.NewCipher(key)
@@ -180,14 +60,10 @@ func encryptCTS(key, iv, message []byte, e etype.EType) ([]byte, []byte, error) 
 	return lb, ct[:l], nil
 }
 
-func decryptCTS(key, ciphertext []byte, e etype.EType) ([]byte, error) {
+func DecryptCTS(key, iv, ciphertext []byte) ([]byte, error) {
 	// Copy the cipher text as golang slices even when passed by value to this method can result in the backing arrays of the calling code value being updated.
 	ct := make([]byte, len(ciphertext))
 	copy(ct, ciphertext)
-	if len(key) != e.GetKeyByteSize() {
-		return nil, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeySeedBitLength(), len(key))
-
-	}
 	if len(ct) < aes.BlockSize {
 		return nil, fmt.Errorf("Ciphertext is not large enough. It is less that one block size. Blocksize:%v; Ciphertext:%v", aes.BlockSize, len(ct))
 	}
@@ -197,8 +73,6 @@ func decryptCTS(key, ciphertext []byte, e etype.EType) ([]byte, error) {
 		return nil, fmt.Errorf("Error creating cipher: %v", err)
 	}
 	var mode cipher.BlockMode
-	//iv full of zeros
-	ivz := make([]byte, e.GetConfounderByteSize())
 
 	//If ciphertext is multiple of blocksize we just need to swap back the last two blocks and then do CBC
 	//If the ciphertext is just one block we can't swap so we just decrypt
@@ -206,7 +80,7 @@ func decryptCTS(key, ciphertext []byte, e etype.EType) ([]byte, error) {
 		if len(ct) > aes.BlockSize {
 			ct, _ = swapLastTwoBlocks(ct, aes.BlockSize)
 		}
-		mode = cipher.NewCBCDecrypter(block, ivz)
+		mode = cipher.NewCBCDecrypter(block, iv)
 		message := make([]byte, len(ct))
 		mode.CryptBlocks(message, ct)
 		return message[:len(ct)], nil
@@ -215,21 +89,22 @@ func decryptCTS(key, ciphertext []byte, e etype.EType) ([]byte, error) {
 	// Cipher Text Stealing (CTS) using CBC interface. Ref: https://en.wikipedia.org/wiki/Ciphertext_stealing#CBC_ciphertext_stealing
 	// Get ciphertext of the 2nd to last (penultimate) block (cpb), the last block (clb) and the rest (crb)
 	crb, cpb, clb, _ := tailBlocks(ct, aes.BlockSize)
-	iv := ivz
+	v := make([]byte, len(iv), len(iv))
+	copy(v, iv)
 	var message []byte
 	if crb != nil {
 		//If there is more than just the last and the penultimate block we decrypt it and the last bloc of this becomes the iv for later
 		rb := make([]byte, len(crb))
-		mode = cipher.NewCBCDecrypter(block, ivz)
-		iv = crb[len(crb)-aes.BlockSize:]
+		mode = cipher.NewCBCDecrypter(block, v)
+		v = crb[len(crb)-aes.BlockSize:]
 		mode.CryptBlocks(rb, crb)
 		message = append(message, rb...)
 	}
 
 	// We need to modify the cipher text
-	// Decryt the 2nd to last (penultimate) block with a zero iv
+	// Decryt the 2nd to last (penultimate) block with a the original iv
 	pb := make([]byte, aes.BlockSize)
-	mode = cipher.NewCBCDecrypter(block, ivz)
+	mode = cipher.NewCBCDecrypter(block, iv)
 	mode.CryptBlocks(pb, cpb)
 	// number of byte needed to pad
 	npb := aes.BlockSize - len(ct)%aes.BlockSize
@@ -239,13 +114,13 @@ func decryptCTS(key, ciphertext []byte, e etype.EType) ([]byte, error) {
 	// Now decrypt the last block in the penultimate position (iv will be from the crb, if the is no crb it's zeros)
 	// iv for the penultimate block decrypted in the last position becomes the modified last block
 	lb := make([]byte, aes.BlockSize)
-	mode = cipher.NewCBCDecrypter(block, iv)
-	iv = clb
+	mode = cipher.NewCBCDecrypter(block, v)
+	v = clb
 	mode.CryptBlocks(lb, clb)
 	message = append(message, lb...)
 
 	// Now decrypt the penultimate block in the last position (iv will be from the modified last block)
-	mode = cipher.NewCBCDecrypter(block, iv)
+	mode = cipher.NewCBCDecrypter(block, v)
 	mode.CryptBlocks(cpb, cpb)
 	message = append(message, cpb...)
 
@@ -255,7 +130,7 @@ func decryptCTS(key, ciphertext []byte, e etype.EType) ([]byte, error) {
 
 func tailBlocks(b []byte, c int) ([]byte, []byte, []byte, error) {
 	if len(b) <= c {
-		return nil, nil, nil, errors.New("bytes not larger than one block so cannot tail")
+		return nil, nil, nil, errors.New("bytes slice is not larger than one block so cannot tail")
 	}
 	// Get size of last block
 	var lbs int

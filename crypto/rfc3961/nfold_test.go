@@ -1,4 +1,4 @@
-package engine
+package rfc3961
 
 import (
 	"encoding/hex"

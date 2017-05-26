@@ -4,7 +4,6 @@ package crypto
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/jcmturner/gokrb5/crypto/aes"
 	"github.com/jcmturner/gokrb5/crypto/etype"
 	"github.com/jcmturner/gokrb5/iana/chksumtype"
 	"github.com/jcmturner/gokrb5/iana/etypeID"
@@ -15,10 +14,10 @@ import (
 func GetEtype(id int) (etype.EType, error) {
 	switch id {
 	case etypeID.AES128_CTS_HMAC_SHA1_96:
-		var et aes.Aes128CtsHmacSha96
+		var et Aes128CtsHmacSha96
 		return et, nil
 	case etypeID.AES256_CTS_HMAC_SHA1_96:
-		var et aes.Aes256CtsHmacSha96
+		var et Aes256CtsHmacSha96
 		return et, nil
 	//case etypeID.AES128_CTS_HMAC_SHA256_128:
 	//	var et aes.Aes128CtsHmacSha256128
@@ -31,10 +30,10 @@ func GetEtype(id int) (etype.EType, error) {
 func GetChksumEtype(id int) (etype.EType, error) {
 	switch id {
 	case chksumtype.HMAC_SHA1_96_AES128:
-		var et aes.Aes128CtsHmacSha96
+		var et Aes128CtsHmacSha96
 		return et, nil
 	case chksumtype.HMAC_SHA1_96_AES256:
-		var et aes.Aes256CtsHmacSha96
+		var et Aes256CtsHmacSha96
 		return et, nil
 	default:
 		return nil, fmt.Errorf("Unknown or unsupported checksum type: %d", id)

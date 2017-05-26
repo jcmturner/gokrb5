@@ -1,6 +1,6 @@
 // +build disabled
 
-package aes
+package crypto
 
 import (
 	"crypto/aes"
