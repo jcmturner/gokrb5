@@ -1,3 +1,4 @@
+// The Kerberos Encryption Type interface
 package etype
 
 import "hash"
@@ -22,5 +23,7 @@ type EType interface {
 	DeriveKey(protocolKey, usage []byte) ([]byte, error)    // DK key-derivation (protocol-key, integer)->(specific-key)
 	DeriveRandom(protocolKey, usage []byte) ([]byte, error) // DR pseudo-random (protocol-key, octet-string)->(octet-string)
 	VerifyIntegrity(protocolKey, ct, pt []byte, usage uint32) bool
-	GetHash() func() hash.Hash
+	GetChecksumHash(protocolKey, data []byte, usage uint32) ([]byte, error)
+	VerifyChecksum(protocolKey, data, chksum []byte, usage uint32) bool
+	GetHashFunc() func() hash.Hash
 }

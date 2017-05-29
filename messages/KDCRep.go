@@ -9,7 +9,6 @@ import (
 	"github.com/jcmturner/gokrb5/config"
 	"github.com/jcmturner/gokrb5/credentials"
 	"github.com/jcmturner/gokrb5/crypto"
-	"github.com/jcmturner/gokrb5/crypto/engine"
 	"github.com/jcmturner/gokrb5/iana/asnAppTag"
 	"github.com/jcmturner/gokrb5/iana/flags"
 	"github.com/jcmturner/gokrb5/iana/keyusage"
@@ -239,7 +238,7 @@ func (k *ASRep) IsValid(cfg *config.Config, creds *credentials.Credentials, asRe
 					return false, krberror.Errorf(err, krberror.CHKSUM_ERROR, "KDC FAST negotiation response error")
 				}
 				ab, _ := asReq.Marshal()
-				if !engine.VerifyChecksum(key.KeyValue, pafast.Chksum, ab, keyusage.KEY_USAGE_AS_REQ, etype) {
+				if !etype.VerifyChecksum(key.KeyValue, ab, pafast.Chksum, keyusage.KEY_USAGE_AS_REQ) {
 					return false, krberror.Errorf(err, krberror.CHKSUM_ERROR, "KDC FAST negotiation response checksum invalid")
 				}
 			}

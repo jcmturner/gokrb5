@@ -1,14 +1,14 @@
-// DES3 Kerberos Encryption Types.
 package crypto
 
 import (
 	"crypto/cipher"
 	"crypto/des"
+	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha1"
 	"errors"
 	"fmt"
-	"github.com/jcmturner/gokrb5/crypto/engine"
+	"github.com/jcmturner/gokrb5/crypto/common"
 	"github.com/jcmturner/gokrb5/crypto/rfc3961"
 	"github.com/jcmturner/gokrb5/iana/chksumtype"
 	"github.com/jcmturner/gokrb5/iana/etypeID"
@@ -71,7 +71,7 @@ func (e Des3CbcSha1Kd) GetKeySeedBitLength() int {
 	return 21 * 8
 }
 
-func (e Des3CbcSha1Kd) GetHash() func() hash.Hash {
+func (e Des3CbcSha1Kd) GetHashFunc() func() hash.Hash {
 	return sha1.New
 }
 
@@ -90,7 +90,7 @@ func (e Des3CbcSha1Kd) GetConfounderByteSize() int {
 }
 
 func (e Des3CbcSha1Kd) GetHMACBitLength() int {
-	return e.GetHash()().Size()
+	return e.GetHashFunc()().Size()
 }
 
 func (e Des3CbcSha1Kd) GetCypherBlockBitLength() int {
@@ -125,7 +125,7 @@ func (e Des3CbcSha1Kd) EncryptData(key, data []byte) ([]byte, []byte, error) {
 		return nil, nil, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeySeedBitLength(), len(key))
 
 	}
-	data, _ = engine.ZeroPad(data, e.GetMessageBlockByteSize())
+	data, _ = common.ZeroPad(data, e.GetMessageBlockByteSize())
 
 	block, err := des.NewTripleDESCipher(key)
 	if err != nil {
@@ -156,7 +156,7 @@ func (e Des3CbcSha1Kd) EncryptMessage(key, message []byte, usage uint32) ([]byte
 	}
 
 	// Generate and append integrity hash
-	ih, err := engine.GetIntegrityHash(plainBytes, key, usage, e)
+	ih, err := common.GetIntegrityHash(plainBytes, key, usage, e)
 	if err != nil {
 		return iv, b, fmt.Errorf("Error encrypting data: %v", err)
 	}
@@ -198,5 +198,17 @@ func (e Des3CbcSha1Kd) DecryptMessage(key, ciphertext []byte, usage uint32) (mes
 }
 
 func (e Des3CbcSha1Kd) VerifyIntegrity(protocolKey, ct, pt []byte, usage uint32) bool {
-	return engine.VerifyIntegrity(protocolKey, ct, pt, usage, e)
+	return rfc3961.VerifyIntegrity(protocolKey, ct, pt, usage, e)
+}
+
+func (e Des3CbcSha1Kd) GetChecksumHash(protocolKey, data []byte, usage uint32) ([]byte, error) {
+	return common.GetHash(data, protocolKey, common.GetUsageKc(usage), e)
+}
+
+func (e Des3CbcSha1Kd) VerifyChecksum(protocolKey, data, chksum []byte, usage uint32) bool {
+	c, err := e.GetChecksumHash(protocolKey, data, usage)
+	if err != nil {
+		return false
+	}
+	return hmac.Equal(chksum, c)
 }

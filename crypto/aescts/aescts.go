@@ -1,3 +1,4 @@
+// AES CipherText Stealing encryption and decryption methods
 package aescts
 
 import (
@@ -5,10 +6,10 @@ import (
 	"crypto/cipher"
 	"errors"
 	"fmt"
-	"github.com/jcmturner/gokrb5/crypto/engine"
+	"github.com/jcmturner/gokrb5/crypto/common"
 )
 
-func EncryptCTS(key, iv, message []byte) ([]byte, []byte, error) {
+func Encrypt(key, iv, message []byte) ([]byte, []byte, error) {
 	l := len(message)
 
 	block, err := aes.NewCipher(key)
@@ -29,7 +30,7 @@ func EncryptCTS(key, iv, message []byte) ([]byte, []byte, error) {
 	subsequent encryption is the next-to-last block of the encryption
 	output; this is the encrypted form of the last plaintext block.*/
 	if l <= aes.BlockSize {
-		m, _ = engine.ZeroPad(m, aes.BlockSize)
+		m, _ = common.ZeroPad(m, aes.BlockSize)
 		mode.CryptBlocks(m, m)
 		return m, m, nil
 	}
@@ -39,7 +40,7 @@ func EncryptCTS(key, iv, message []byte) ([]byte, []byte, error) {
 		rb, _ := swapLastTwoBlocks(m, aes.BlockSize)
 		return iv, rb, nil
 	}
-	m, _ = engine.ZeroPad(m, aes.BlockSize)
+	m, _ = common.ZeroPad(m, aes.BlockSize)
 	rb, pb, lb, err := tailBlocks(m, aes.BlockSize)
 	var ct []byte
 	if rb != nil {
@@ -60,7 +61,7 @@ func EncryptCTS(key, iv, message []byte) ([]byte, []byte, error) {
 	return lb, ct[:l], nil
 }
 
-func DecryptCTS(key, iv, ciphertext []byte) ([]byte, error) {
+func Decrypt(key, iv, ciphertext []byte) ([]byte, error) {
 	// Copy the cipher text as golang slices even when passed by value to this method can result in the backing arrays of the calling code value being updated.
 	ct := make([]byte, len(ciphertext))
 	copy(ct, ciphertext)

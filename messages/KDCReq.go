@@ -9,7 +9,6 @@ import (
 	"github.com/jcmturner/gokrb5/asn1tools"
 	"github.com/jcmturner/gokrb5/config"
 	"github.com/jcmturner/gokrb5/crypto"
-	"github.com/jcmturner/gokrb5/crypto/engine"
 	"github.com/jcmturner/gokrb5/iana"
 	"github.com/jcmturner/gokrb5/iana/asnAppTag"
 	"github.com/jcmturner/gokrb5/iana/flags"
@@ -172,7 +171,7 @@ func NewTGSReq(cname types.PrincipalName, c *config.Config, tkt Ticket, sessionK
 	if err != nil {
 		return a, krberror.Errorf(err, krberror.ENCRYPTING_ERROR, "Error getting etype to encrypt authenticator")
 	}
-	cb, err := engine.GetChecksumHash(b, sessionKey.KeyValue, keyusage.TGS_REQ_PA_TGS_REQ_AP_REQ_AUTHENTICATOR_CHKSUM, etype)
+	cb, err := etype.GetChecksumHash(sessionKey.KeyValue, b, keyusage.TGS_REQ_PA_TGS_REQ_AP_REQ_AUTHENTICATOR_CHKSUM)
 	auth.Cksum = types.Checksum{
 		CksumType: etype.GetHashID(),
 		Checksum:  cb,

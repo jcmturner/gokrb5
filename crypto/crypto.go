@@ -19,9 +19,12 @@ func GetEtype(id int) (etype.EType, error) {
 	case etypeID.AES256_CTS_HMAC_SHA1_96:
 		var et Aes256CtsHmacSha96
 		return et, nil
-	//case etypeID.AES128_CTS_HMAC_SHA256_128:
-	//	var et aes.Aes128CtsHmacSha256128
-	//	return et, nil
+	case etypeID.AES128_CTS_HMAC_SHA256_128:
+		var et Aes128CtsHmacSha256128
+		return et, nil
+	case etypeID.AES256_CTS_HMAC_SHA384_192:
+		var et Aes256CtsHmacSha384192
+		return et, nil
 	default:
 		return nil, fmt.Errorf("Unknown or unsupported EType: %d", id)
 	}
@@ -34,6 +37,12 @@ func GetChksumEtype(id int) (etype.EType, error) {
 		return et, nil
 	case chksumtype.HMAC_SHA1_96_AES256:
 		var et Aes256CtsHmacSha96
+		return et, nil
+	case chksumtype.HMAC_SHA256_128_AES128:
+		var et Aes128CtsHmacSha256128
+		return et, nil
+	case chksumtype.HMAC_SHA384_192_AES256:
+		var et Aes256CtsHmacSha384192
 		return et, nil
 	default:
 		return nil, fmt.Errorf("Unknown or unsupported checksum type: %d", id)
@@ -133,6 +142,9 @@ func DecryptEncPart(ed types.EncryptedData, key types.EncryptionKey, usage uint3
 
 func DecryptMessage(ciphertext []byte, key types.EncryptionKey, usage uint32) ([]byte, error) {
 	et, err := GetEtype(key.KeyType)
+	if err != nil {
+		return []byte{}, fmt.Errorf("Error decrypting: %v", err)
+	}
 	b, err := et.DecryptMessage(key.KeyValue, ciphertext, usage)
 	if err != nil {
 		return nil, fmt.Errorf("Error decrypting: %v", err)

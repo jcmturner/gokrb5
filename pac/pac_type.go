@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jcmturner/gokrb5/crypto"
-	"github.com/jcmturner/gokrb5/crypto/engine"
 	"github.com/jcmturner/gokrb5/iana/keyusage"
 	"github.com/jcmturner/gokrb5/ndr"
 	"github.com/jcmturner/gokrb5/types"
@@ -192,11 +191,10 @@ func (pac *PACType) validate(key types.EncryptionKey) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if ok := engine.VerifyChecksum(key.KeyValue,
-		pac.ServerChecksum.Signature,
+	if ok := etype.VerifyChecksum(key.KeyValue,
 		pac.ZeroSigData,
-		keyusage.KERB_NON_KERB_CKSUM_SALT,
-		etype); !ok {
+		pac.ServerChecksum.Signature,
+		keyusage.KERB_NON_KERB_CKSUM_SALT); !ok {
 		return false, errors.New("PAC service checksum verification failed")
 	}
 

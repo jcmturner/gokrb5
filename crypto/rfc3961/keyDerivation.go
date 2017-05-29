@@ -1,16 +1,13 @@
 package rfc3961
 
 import (
-	"encoding/binary"
-	"encoding/hex"
-	"errors"
 	"github.com/jcmturner/gokrb5/crypto/etype"
+	"github.com/jcmturner/gokrb5/crypto/rfc3962"
 	"golang.org/x/crypto/pbkdf2"
 )
 
 const (
-	s2kParamsZero = 4294967296
-	prfconstant   = "prf"
+	prfconstant = "prf"
 )
 
 // RFC 3961: DR(Key, Constant) = k-truncate(E(Key, Constant, initial-cipher-state)).
@@ -65,38 +62,15 @@ func RandomToKey(b []byte) []byte {
 }
 
 func StringToKey(secret, salt, s2kparams string, e etype.EType) ([]byte, error) {
-	i, err := S2KparamsToItertions(s2kparams)
+	i, err := rfc3962.S2KparamsToItertions(s2kparams)
 	if err != nil {
 		return nil, err
 	}
 	return StringToKeyIter(secret, salt, int(i), e)
 }
 
-func S2KparamsToItertions(s2kparams string) (int, error) {
-	//process s2kparams string
-	//The parameter string is four octets indicating an unsigned
-	//number in big-endian order.  This is the number of iterations to be
-	//performed.  If the value is 00 00 00 00, the number of iterations to
-	//be performed is 4,294,967,296 (2**32).
-	var i uint32
-	if len(s2kparams) != 8 {
-		return s2kParamsZero, errors.New("Invalid s2kparams length")
-	}
-	b, err := hex.DecodeString(s2kparams)
-	if err != nil {
-		return s2kParamsZero, errors.New("Invalid s2kparams, cannot decode string to bytes")
-	}
-	i = binary.BigEndian.Uint32(b)
-	//buf := bytes.NewBuffer(b)
-	//err = binary.Read(buf, binary.BigEndian, &i)
-	if err != nil {
-		return s2kParamsZero, errors.New("Invalid s2kparams, cannot convert to big endian int32")
-	}
-	return int(i), nil
-}
-
 func StringToPBKDF2(secret, salt string, iterations int, e etype.EType) []byte {
-	return pbkdf2.Key([]byte(secret), []byte(salt), iterations, e.GetKeyByteSize(), e.GetHash())
+	return pbkdf2.Key([]byte(secret), []byte(salt), iterations, e.GetKeyByteSize(), e.GetHashFunc())
 }
 
 func StringToKeyIter(secret, salt string, iterations int, e etype.EType) ([]byte, error) {
@@ -104,14 +78,8 @@ func StringToKeyIter(secret, salt string, iterations int, e etype.EType) ([]byte
 	return DeriveKey(tkey, []byte("kerberos"), e)
 }
 
-func IterationsToS2kparams(i int) string {
-	b := make([]byte, 4, 4)
-	binary.BigEndian.PutUint32(b, uint32(i))
-	return hex.EncodeToString(b)
-}
-
 func PseudoRandom(key, b []byte, e etype.EType) ([]byte, error) {
-	h := e.GetHash()()
+	h := e.GetHashFunc()()
 	h.Write(b)
 	tmp := h.Sum(nil)[:e.GetMessageBlockByteSize()]
 	k, err := DeriveKey(key, []byte(prfconstant), e)

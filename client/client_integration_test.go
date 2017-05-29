@@ -53,6 +53,40 @@ func TestClient_SuccessfulLogin_OlderKDC(t *testing.T) {
 	}
 }
 
+func TestClient_SuccessfulLogin_ETYPE_19(t *testing.T) {
+	b, err := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	kt, _ := keytab.Parse(b)
+	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF_LATESTKDC)
+	c.LibDefaults.Default_tkt_enctypes = []string{"aes128-cts-hmac-sha256-128"}
+	c.LibDefaults.Default_tkt_enctype_ids = []int{19}
+	c.LibDefaults.Default_tgs_enctypes = []string{"aes128-cts-hmac-sha256-128"}
+	c.LibDefaults.Default_tgs_enctype_ids = []int{19}
+	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
+	cl.WithConfig(c)
+
+	err = cl.Login()
+	if err != nil {
+		t.Fatalf("Error on login: %v\n", err)
+	}
+}
+
+func TestClient_SuccessfulLogin_ETYPE_20(t *testing.T) {
+	b, err := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	kt, _ := keytab.Parse(b)
+	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF_LATESTKDC)
+	c.LibDefaults.Default_tkt_enctypes = []string{"aes256-cts-hmac-sha384-192"}
+	c.LibDefaults.Default_tkt_enctype_ids = []int{20}
+	c.LibDefaults.Default_tgs_enctypes = []string{"aes256-cts-hmac-sha384-192"}
+	c.LibDefaults.Default_tgs_enctype_ids = []int{20}
+	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
+	cl.WithConfig(c)
+
+	err = cl.Login()
+	if err != nil {
+		t.Fatalf("Error on login: %v\n", err)
+	}
+}
+
 func TestClient_SuccessfulLogin_AD(t *testing.T) {
 	b, err := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)

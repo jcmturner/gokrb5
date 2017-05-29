@@ -24,7 +24,7 @@ func TestAesCts_Encrypt_Decrypt(t *testing.T) {
 	}
 	for i, test := range tests {
 		m, _ := hex.DecodeString(test.plain)
-		niv, c, err := EncryptCTS(key, iv, m)
+		niv, c, err := Encrypt(key, iv, m)
 		if err != nil {
 			t.Errorf("Encryption failed for test %v: %v", i+1, err)
 		}
@@ -34,7 +34,7 @@ func TestAesCts_Encrypt_Decrypt(t *testing.T) {
 	//t.Log("AES CTS Encryption tests finished")
 	for i, test := range tests {
 		b, _ := hex.DecodeString(test.cipher)
-		p, err := DecryptCTS(key, iv, b)
+		p, err := Decrypt(key, iv, b)
 		if err != nil {
 			t.Errorf("Decryption failed for test %v: %v", i+1, err)
 		}

@@ -2,8 +2,9 @@ package crypto
 
 import (
 	"crypto/aes"
+	"crypto/hmac"
 	"crypto/sha1"
-	"github.com/jcmturner/gokrb5/crypto/engine"
+	"github.com/jcmturner/gokrb5/crypto/common"
 	"github.com/jcmturner/gokrb5/crypto/rfc3961"
 	"github.com/jcmturner/gokrb5/iana/chksumtype"
 	"github.com/jcmturner/gokrb5/iana/etypeID"
@@ -75,7 +76,7 @@ func (e Aes256CtsHmacSha96) GetKeySeedBitLength() int {
 	return e.GetKeyByteSize() * 8
 }
 
-func (e Aes256CtsHmacSha96) GetHash() func() hash.Hash {
+func (e Aes256CtsHmacSha96) GetHashFunc() func() hash.Hash {
 	return sha1.New
 }
 
@@ -132,5 +133,17 @@ func (e Aes256CtsHmacSha96) DeriveRandom(protocolKey, usage []byte) ([]byte, err
 }
 
 func (e Aes256CtsHmacSha96) VerifyIntegrity(protocolKey, ct, pt []byte, usage uint32) bool {
-	return engine.VerifyIntegrity(protocolKey, ct, pt, usage, e)
+	return rfc3961.VerifyIntegrity(protocolKey, ct, pt, usage, e)
+}
+
+func (e Aes256CtsHmacSha96) GetChecksumHash(protocolKey, data []byte, usage uint32) ([]byte, error) {
+	return common.GetHash(data, protocolKey, common.GetUsageKc(usage), e)
+}
+
+func (e Aes256CtsHmacSha96) VerifyChecksum(protocolKey, data, chksum []byte, usage uint32) bool {
+	c, err := e.GetChecksumHash(protocolKey, data, usage)
+	if err != nil {
+		return false
+	}
+	return hmac.Equal(chksum, c)
 }

@@ -15,10 +15,12 @@
 #### Implemented Encryption & Checksum Types
 The currently implemented encryption types are limited to:
 
-| Implementation | Encryption ID | Checksum ID |
-|-------|-------------|------------|
-| aes128-cts-hmac-sha1-96 | 17 | 15 |
-| aes256-cts-hmac-sha1-96 | 18 | 16 |
+| Implementation | Encryption ID | Checksum ID | RFC |
+|-------|-------------|------------|------|
+| aes128-cts-hmac-sha1-96 | 17 | 15 | 3962 |
+| aes256-cts-hmac-sha1-96 | 18 | 16 | 3962 |
+| aes128-cts-hmac-sha256-128 | 19 | 19 | 8009 |
+| aes256-cts-hmac-sha384-192 | 20 | 20 | 8009 |
 
 
 Currently the following is working/tested:
