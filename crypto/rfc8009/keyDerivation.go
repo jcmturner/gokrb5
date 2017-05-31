@@ -60,7 +60,7 @@ func DeriveKey(protocolKey, label []byte, e etype.EType) []byte {
 	if kl == 0 {
 		kl = e.GetKeySeedBitLength()
 	}
-	return RandomToKey(KDF_HMAC_SHA2(protocolKey, label, context, kl, e))
+	return e.RandomToKey(KDF_HMAC_SHA2(protocolKey, label, context, kl, e))
 }
 
 func RandomToKey(b []byte) []byte {
@@ -72,12 +72,12 @@ func StringToKey(secret, salt, s2kparams string, e etype.EType) ([]byte, error) 
 	if err != nil {
 		return nil, err
 	}
-	return StringToKeyIter(secret, salt, int(i), e), nil
+	return StringToKeyIter(secret, salt, int(i), e)
 }
 
-func StringToKeyIter(secret, salt string, iterations int, e etype.EType) []byte {
-	tkey := RandomToKey(StringToPBKDF2(secret, salt, iterations, e))
-	return DeriveKey(tkey, []byte("kerberos"), e)
+func StringToKeyIter(secret, salt string, iterations int, e etype.EType) ([]byte, error) {
+	tkey := e.RandomToKey(StringToPBKDF2(secret, salt, iterations, e))
+	return e.DeriveKey(tkey, []byte("kerberos"))
 }
 
 func StringToPBKDF2(secret, salt string, iterations int, e etype.EType) []byte {

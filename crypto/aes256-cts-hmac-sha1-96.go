@@ -6,6 +6,7 @@ import (
 	"crypto/sha1"
 	"github.com/jcmturner/gokrb5/crypto/common"
 	"github.com/jcmturner/gokrb5/crypto/rfc3961"
+	"github.com/jcmturner/gokrb5/crypto/rfc3962"
 	"github.com/jcmturner/gokrb5/iana/chksumtype"
 	"github.com/jcmturner/gokrb5/iana/etypeID"
 	"hash"
@@ -109,19 +110,19 @@ func (e Aes256CtsHmacSha96) RandomToKey(b []byte) []byte {
 }
 
 func (e Aes256CtsHmacSha96) EncryptData(key, data []byte) ([]byte, []byte, error) {
-	return rfc3961.EncryptData(key, data, e)
+	return rfc3962.EncryptData(key, data, e)
 }
 
 func (e Aes256CtsHmacSha96) EncryptMessage(key, message []byte, usage uint32) ([]byte, []byte, error) {
-	return rfc3961.EncryptMessage(key, message, usage, e)
+	return rfc3962.EncryptMessage(key, message, usage, e)
 }
 
 func (e Aes256CtsHmacSha96) DecryptData(key, data []byte) ([]byte, error) {
-	return rfc3961.DecryptData(key, data, e)
+	return rfc3962.DecryptData(key, data, e)
 }
 
 func (e Aes256CtsHmacSha96) DecryptMessage(key, ciphertext []byte, usage uint32) ([]byte, error) {
-	return rfc3961.DecryptMessage(key, ciphertext, usage, e)
+	return rfc3962.DecryptMessage(key, ciphertext, usage, e)
 }
 
 func (e Aes256CtsHmacSha96) DeriveKey(protocolKey, usage []byte) ([]byte, error) {

@@ -2,28 +2,38 @@
 package rfc3961
 
 import (
-	"crypto/aes"
+	"crypto/cipher"
+	"crypto/des"
 	"crypto/hmac"
 	"crypto/rand"
 	"errors"
 	"fmt"
-	"github.com/jcmturner/gokrb5/crypto/aescts"
 	"github.com/jcmturner/gokrb5/crypto/common"
 	"github.com/jcmturner/gokrb5/crypto/etype"
 )
 
-func EncryptData(key, data []byte, e etype.EType) ([]byte, []byte, error) {
+func DES3EncryptData(key, data []byte, e etype.EType) ([]byte, []byte, error) {
 	if len(key) != e.GetKeyByteSize() {
-		return []byte{}, []byte{}, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeyByteSize(), len(key))
+		return nil, nil, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeyByteSize(), len(key))
+
 	}
-	ivz := make([]byte, aes.BlockSize)
-	return aescts.Encrypt(key, ivz, data)
+	data, _ = common.ZeroPad(data, e.GetMessageBlockByteSize())
+
+	block, err := des.NewTripleDESCipher(key)
+	if err != nil {
+		return nil, nil, fmt.Errorf("Error creating cipher: %v", err)
+	}
+
+	//RFC 3961: initial cipher state      All bits zero
+	ivz := make([]byte, des.BlockSize)
+
+	ct := make([]byte, len(data))
+	mode := cipher.NewCBCEncrypter(block, ivz)
+	mode.CryptBlocks(ct, data)
+	return ivz, ct, nil
 }
 
-func EncryptMessage(key, message []byte, usage uint32, e etype.EType) ([]byte, []byte, error) {
-	if len(key) != e.GetKeyByteSize() {
-		return []byte{}, []byte{}, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeyByteSize(), len(key))
-	}
+func DES3EncryptMessage(key, message []byte, usage uint32, e etype.EType) ([]byte, []byte, error) {
 	//confounder
 	c := make([]byte, e.GetConfounderByteSize())
 	_, err := rand.Read(c)
@@ -41,7 +51,6 @@ func EncryptMessage(key, message []byte, usage uint32, e etype.EType) ([]byte, [
 		}
 	}
 
-	// Encrypt the data
 	iv, b, err := e.EncryptData(k, plainBytes)
 	if err != nil {
 		return iv, b, fmt.Errorf("Error encrypting data: %v", err)
@@ -56,15 +65,26 @@ func EncryptMessage(key, message []byte, usage uint32, e etype.EType) ([]byte, [
 	return iv, b, nil
 }
 
-func DecryptData(key, data []byte, e etype.EType) ([]byte, error) {
+func DES3DecryptData(key, data []byte, e etype.EType) ([]byte, error) {
 	if len(key) != e.GetKeyByteSize() {
 		return []byte{}, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeyByteSize(), len(key))
 	}
-	ivz := make([]byte, aes.BlockSize)
-	return aescts.Decrypt(key, ivz, data)
+
+	if len(data) < des.BlockSize || len(data)%des.BlockSize != 0 {
+		return []byte{}, errors.New("Ciphertext is not a multiple of the block size.")
+	}
+	block, err := des.NewTripleDESCipher(key)
+	if err != nil {
+		return []byte{}, fmt.Errorf("Error creating cipher: %v", err)
+	}
+	pt := make([]byte, len(data))
+	ivz := make([]byte, des.BlockSize)
+	mode := cipher.NewCBCDecrypter(block, ivz)
+	mode.CryptBlocks(pt, data)
+	return pt, nil
 }
 
-func DecryptMessage(key, ciphertext []byte, usage uint32, e etype.EType) ([]byte, error) {
+func DES3DecryptMessage(key, ciphertext []byte, usage uint32, e etype.EType) ([]byte, error) {
 	//Derive the key
 	k, err := e.DeriveKey(key, common.GetUsageKe(usage))
 	if err != nil {
@@ -73,11 +93,11 @@ func DecryptMessage(key, ciphertext []byte, usage uint32, e etype.EType) ([]byte
 	// Strip off the checksum from the end
 	b, err := e.DecryptData(k, ciphertext[:len(ciphertext)-e.GetHMACBitLength()/8])
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error decrypting: %v", err)
 	}
 	//Verify checksum
 	if !e.VerifyIntegrity(key, ciphertext, b, usage) {
-		return nil, errors.New("Integrity verification failed")
+		return nil, errors.New("Error decrypting: integrity verification failed")
 	}
 	//Remove the confounder bytes
 	return b[e.GetConfounderByteSize():], nil

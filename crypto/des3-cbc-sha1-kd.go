@@ -1,13 +1,10 @@
 package crypto
 
 import (
-	"crypto/cipher"
 	"crypto/des"
 	"crypto/hmac"
-	"crypto/rand"
 	"crypto/sha1"
 	"errors"
-	"fmt"
 	"github.com/jcmturner/gokrb5/crypto/common"
 	"github.com/jcmturner/gokrb5/crypto/rfc3961"
 	"github.com/jcmturner/gokrb5/iana/chksumtype"
@@ -90,21 +87,22 @@ func (e Des3CbcSha1Kd) GetConfounderByteSize() int {
 }
 
 func (e Des3CbcSha1Kd) GetHMACBitLength() int {
-	return e.GetHashFunc()().Size()
+	return e.GetHashFunc()().Size() * 8
 }
 
 func (e Des3CbcSha1Kd) GetCypherBlockBitLength() int {
 	return des.BlockSize * 8
 }
 
-func (e Des3CbcSha1Kd) StringToKey(secret string, salt string, s2kparams string) (protocolKey []byte, err error) {
-	//TODO
-	return
+func (e Des3CbcSha1Kd) StringToKey(secret string, salt string, s2kparams string) ([]byte, error) {
+	if s2kparams != "" {
+		return []byte{}, errors.New("s2kparams must be an empty string")
+	}
+	return rfc3961.DES3StringToKey(secret, salt, e)
 }
 
-func (e Des3CbcSha1Kd) RandomToKey(b []byte) (protocolKey []byte) {
-	//TODO
-	return
+func (e Des3CbcSha1Kd) RandomToKey(b []byte) []byte {
+	return rfc3961.DES3RandomToKey(b)
 }
 
 func (e Des3CbcSha1Kd) DeriveRandom(protocolKey, usage []byte) ([]byte, error) {
@@ -121,80 +119,19 @@ func (e Des3CbcSha1Kd) DeriveKey(protocolKey, usage []byte) ([]byte, error) {
 }
 
 func (e Des3CbcSha1Kd) EncryptData(key, data []byte) ([]byte, []byte, error) {
-	if len(key) != e.GetKeyByteSize() {
-		return nil, nil, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeySeedBitLength(), len(key))
-
-	}
-	data, _ = common.ZeroPad(data, e.GetMessageBlockByteSize())
-
-	block, err := des.NewTripleDESCipher(key)
-	if err != nil {
-		return nil, nil, fmt.Errorf("Error creating cipher: %v", err)
-	}
-
-	//RFC 3961: initial cipher state      All bits zero
-	ivz := make([]byte, e.GetConfounderByteSize())
-
-	ct := make([]byte, len(data))
-	mode := cipher.NewCBCEncrypter(block, ivz)
-	mode.CryptBlocks(ct, data)
-	return ivz, ct, nil
+	return rfc3961.DES3EncryptData(key, data, e)
 }
 
 func (e Des3CbcSha1Kd) EncryptMessage(key, message []byte, usage uint32) ([]byte, []byte, error) {
-	//confounder
-	c := make([]byte, e.GetConfounderByteSize())
-	_, err := rand.Read(c)
-	if err != nil {
-		return []byte{}, []byte{}, fmt.Errorf("Could not generate random confounder: %v", err)
-	}
-	plainBytes := append(c, message...)
-
-	iv, b, err := e.EncryptData(key, plainBytes)
-	if err != nil {
-		return iv, b, fmt.Errorf("Error encrypting data: %v", err)
-	}
-
-	// Generate and append integrity hash
-	ih, err := common.GetIntegrityHash(plainBytes, key, usage, e)
-	if err != nil {
-		return iv, b, fmt.Errorf("Error encrypting data: %v", err)
-	}
-	b = append(b, ih...)
-	return iv, b, nil
+	return rfc3961.DES3EncryptMessage(key, message, usage, e)
 }
 
 func (e Des3CbcSha1Kd) DecryptData(key, data []byte) ([]byte, error) {
-	if len(key) != e.GetKeySeedBitLength() {
-		return []byte{}, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeySeedBitLength(), len(key))
-	}
-
-	if len(data) < des.BlockSize || len(data)%des.BlockSize != 0 {
-		return []byte{}, errors.New("Ciphertext is not a multiple of the block size.")
-	}
-	block, err := des.NewTripleDESCipher(key)
-	if err != nil {
-		return []byte{}, fmt.Errorf("Error creating cipher: %v", err)
-	}
-	pt := make([]byte, len(data))
-	ivz := make([]byte, e.GetConfounderByteSize())
-	mode := cipher.NewCBCDecrypter(block, ivz)
-	mode.CryptBlocks(pt, data)
-	return pt, nil
+	return rfc3961.DES3DecryptData(key, data, e)
 }
 
 func (e Des3CbcSha1Kd) DecryptMessage(key, ciphertext []byte, usage uint32) (message []byte, err error) {
-	// Strip off the checksum from the end
-	b, err := e.DecryptData(key, ciphertext[:len(ciphertext)-e.GetHMACBitLength()/8])
-	if err != nil {
-		return nil, fmt.Errorf("Error decrypting: %v", err)
-	}
-	//Verify checksum
-	if !e.VerifyIntegrity(key, ciphertext, b, usage) {
-		return nil, errors.New("Error decrypting: integrity verification failed")
-	}
-	//Remove the confounder bytes
-	return b[e.GetConfounderByteSize():], nil
+	return rfc3961.DES3DecryptMessage(key, ciphertext, usage, e)
 }
 
 func (e Des3CbcSha1Kd) VerifyIntegrity(protocolKey, ct, pt []byte, usage uint32) bool {

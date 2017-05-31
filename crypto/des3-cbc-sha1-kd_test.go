@@ -34,5 +34,32 @@ func TestDes3CbcSha1Kd_DR_DK(t *testing.T) {
 			t.Fatal(fmt.Sprintf("Error in deriveRandom: %v", err))
 		}
 		assert.Equal(t, test.dr, hex.EncodeToString(derivedRandom), "DR not as expected")
+		derivedKey, err := e.DeriveKey(key, usage)
+		if err != nil {
+			t.Fatal(fmt.Sprintf("Error in deriveKey: %v", err))
+		}
+		assert.Equal(t, test.dk, hex.EncodeToString(derivedKey), "DK not as expected")
+	}
+}
+
+func TestDes3CbcSha1Kd_StringToKey(t *testing.T) {
+	var tests = []struct {
+		salt   string
+		secret string
+		key    string
+	}{
+		{"ATHENA.MIT.EDUraeburn", "password", "850bb51358548cd05e86768c313e3bfef7511937dcf72c3e"},
+		{"WHITEHOUSE.GOVdanny", "potatoe", "dfcd233dd0a43204ea6dc437fb15e061b02979c1f74f377a"},
+		{"EXAMPLE.COMbuckaroo", "penny", "6d2fcdf2d6fbbc3ddcadb5da5710a23489b0d3b69d5d9d4a"},
+		{"ATHENA.MIT.EDUJuri" + "\u0161" + "i" + "\u0107", "\u00DF", "16d5a40e1ce3bacb61b9dce00470324c831973a7b952feb0"},
+		{"EXAMPLE.COMpianist", "𝄞", "85763726585dbc1cce6ec43e1f751f07f1c4cbb098f40b19"},
+	}
+	var e Des3CbcSha1Kd
+	for _, test := range tests {
+		key, err := e.StringToKey(test.secret, test.salt, "")
+		if err != nil {
+			t.Errorf("Error in StringToKey: %v", err)
+		}
+		assert.Equal(t, test.key, hex.EncodeToString(key), "StringToKey not as expected")
 	}
 }

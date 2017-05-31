@@ -25,6 +25,9 @@ func GetEtype(id int) (etype.EType, error) {
 	case etypeID.AES256_CTS_HMAC_SHA384_192:
 		var et Aes256CtsHmacSha384192
 		return et, nil
+	case etypeID.DES3_CBC_SHA1_KD:
+		var et Des3CbcSha1Kd
+		return et, nil
 	default:
 		return nil, fmt.Errorf("Unknown or unsupported EType: %d", id)
 	}
@@ -43,6 +46,9 @@ func GetChksumEtype(id int) (etype.EType, error) {
 		return et, nil
 	case chksumtype.HMAC_SHA384_192_AES256:
 		var et Aes256CtsHmacSha384192
+		return et, nil
+	case chksumtype.HMAC_SHA1_DES3_KD:
+		var et Des3CbcSha1Kd
 		return et, nil
 	default:
 		return nil, fmt.Errorf("Unknown or unsupported checksum type: %d", id)

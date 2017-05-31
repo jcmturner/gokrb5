@@ -17,6 +17,7 @@ The currently implemented encryption types are limited to:
 
 | Implementation | Encryption ID | Checksum ID | RFC |
 |-------|-------------|------------|------|
+| des3-cbc-sha1-kd | 16 | 12 | 3961 |
 | aes128-cts-hmac-sha1-96 | 17 | 15 | 3962 |
 | aes256-cts-hmac-sha1-96 | 18 | 16 | 3962 |
 | aes128-cts-hmac-sha256-128 | 19 | 19 | 8009 |
@@ -173,7 +174,6 @@ if ok, creds, err := serivce.ValidateAPREQ(mt.APReq, kt, r.RemoteAddr); ok {
 ---
 
 ## References
-### RFCs
 * RFC 4120 The Kerberos Network Authentication Service (V5)
 [text](https://www.ietf.org/rfc/rfc4120.txt) [html](https://tools.ietf.org/html/rfc4120)
 * RFC 3961 Encryption and Checksum Specifications for Kerberos 5

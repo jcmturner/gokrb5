@@ -6,6 +6,7 @@ package client
 import (
 	"encoding/hex"
 	"github.com/jcmturner/gokrb5/config"
+	"github.com/jcmturner/gokrb5/iana/etypeID"
 	"github.com/jcmturner/gokrb5/keytab"
 	"github.com/jcmturner/gokrb5/testdata"
 	"github.com/stretchr/testify/assert"
@@ -53,14 +54,14 @@ func TestClient_SuccessfulLogin_OlderKDC(t *testing.T) {
 	}
 }
 
-func TestClient_SuccessfulLogin_ETYPE_19(t *testing.T) {
+func TestClient_SuccessfulLogin_ETYPE_DES3_CBC_SHA1_KD(t *testing.T) {
 	b, err := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF_LATESTKDC)
-	c.LibDefaults.Default_tkt_enctypes = []string{"aes128-cts-hmac-sha256-128"}
-	c.LibDefaults.Default_tkt_enctype_ids = []int{19}
-	c.LibDefaults.Default_tgs_enctypes = []string{"aes128-cts-hmac-sha256-128"}
-	c.LibDefaults.Default_tgs_enctype_ids = []int{19}
+	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	c.LibDefaults.Default_tkt_enctypes = []string{"des3-cbc-sha1-kd"}
+	c.LibDefaults.Default_tkt_enctype_ids = []int{etypeID.DES3_CBC_SHA1_KD}
+	c.LibDefaults.Default_tgs_enctypes = []string{"des3-cbc-sha1-kd"}
+	c.LibDefaults.Default_tgs_enctype_ids = []int{etypeID.DES3_CBC_SHA1_KD}
 	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 
@@ -70,14 +71,31 @@ func TestClient_SuccessfulLogin_ETYPE_19(t *testing.T) {
 	}
 }
 
-func TestClient_SuccessfulLogin_ETYPE_20(t *testing.T) {
+func TestClient_SuccessfulLogin_ETYPE_AES128_CTS_HMAC_SHA256_128(t *testing.T) {
+	b, err := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	kt, _ := keytab.Parse(b)
+	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF_LATESTKDC)
+	c.LibDefaults.Default_tkt_enctypes = []string{"aes128-cts-hmac-sha256-128"}
+	c.LibDefaults.Default_tkt_enctype_ids = []int{etypeID.AES128_CTS_HMAC_SHA256_128}
+	c.LibDefaults.Default_tgs_enctypes = []string{"aes128-cts-hmac-sha256-128"}
+	c.LibDefaults.Default_tgs_enctype_ids = []int{etypeID.AES128_CTS_HMAC_SHA256_128}
+	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
+	cl.WithConfig(c)
+
+	err = cl.Login()
+	if err != nil {
+		t.Fatalf("Error on login: %v\n", err)
+	}
+}
+
+func TestClient_SuccessfulLogin_ETYPE_AES256_CTS_HMAC_SHA384_192(t *testing.T) {
 	b, err := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF_LATESTKDC)
 	c.LibDefaults.Default_tkt_enctypes = []string{"aes256-cts-hmac-sha384-192"}
-	c.LibDefaults.Default_tkt_enctype_ids = []int{20}
+	c.LibDefaults.Default_tkt_enctype_ids = []int{etypeID.AES256_CTS_HMAC_SHA384_192}
 	c.LibDefaults.Default_tgs_enctypes = []string{"aes256-cts-hmac-sha384-192"}
-	c.LibDefaults.Default_tgs_enctype_ids = []int{20}
+	c.LibDefaults.Default_tgs_enctype_ids = []int{etypeID.AES256_CTS_HMAC_SHA384_192}
 	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 
