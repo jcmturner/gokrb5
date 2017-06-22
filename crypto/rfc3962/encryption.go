@@ -1,3 +1,4 @@
+// Encryption and checksum methods as specified in RFC 3962
 package rfc3962
 
 import (
