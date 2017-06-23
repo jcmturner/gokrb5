@@ -111,6 +111,12 @@ func newLibDefaults() *LibDefaults {
 // Parse the lines of the [libdefaults] section of the configuration into the LibDefaults struct.
 func (l *LibDefaults) parseLines(lines []string) error {
 	for _, line := range lines {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+		if strings.Contains(line, "v4_") {
+			return errors.New("v4 configurations are not supported in Realms section")
+		}
 		if !strings.Contains(line, "=") {
 			return fmt.Errorf("libdefaults configuration line invalid: %s", line)
 		}
@@ -309,6 +315,9 @@ func (r *Realm) parseLines(name string, lines []string) error {
 	var kpasswd_server_final bool
 	var master_kdc_final bool
 	for _, line := range lines {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
 		if !strings.Contains(line, "=") {
 			return fmt.Errorf("Realm configuration line invalid: %s", line)
 		}
@@ -348,6 +357,12 @@ func parseRealms(lines []string) ([]Realm, error) {
 	start := -1
 	var name string
 	for i, l := range lines {
+		if strings.TrimSpace(l) == "" {
+			continue
+		}
+		if strings.Contains(l, "v4_") {
+			return nil, errors.New("v4 configurations are not supported in Realms section")
+		}
 		if strings.Contains(l, "{") {
 			if start >= 0 {
 				// already started a block!!!
@@ -380,6 +395,9 @@ type DomainRealm map[string]string
 // Parse the lines of the [domain_realm] section of the configuration and add to the mapping.
 func (d *DomainRealm) parseLines(lines []string) error {
 	for _, line := range lines {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
 		if !strings.Contains(line, "=") {
 			return fmt.Errorf("Realm configuration line invalid: %s", line)
 		}
