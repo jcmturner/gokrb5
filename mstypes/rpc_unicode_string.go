@@ -17,7 +17,7 @@ func Read_RPC_UnicodeString(b *[]byte, p *int, e *binary.ByteOrder) (RPC_Unicode
 	l := ndr.Read_uint16(b, p, e)
 	ml := ndr.Read_uint16(b, p, e)
 	if ml < l || l%2 != 0 || ml%2 != 0 {
-		return RPC_UnicodeString{}, ndr.NDRMalformed{EText: "Invalid data for RPC_UNICODE_STRING"}
+		return RPC_UnicodeString{}, ndr.Malformed{EText: "Invalid data for RPC_UNICODE_STRING"}
 	}
 	ptr := ndr.Read_uint32(b, p, e)
 	return RPC_UnicodeString{

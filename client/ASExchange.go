@@ -15,7 +15,7 @@ import (
 // Perform an AS exchange for the client to retrieve a TGT.
 func (cl *Client) ASExchange() error {
 	if !cl.IsConfigured() {
-		return errors.New("Client is not configured correctly.")
+		return errors.New("Client is not configured correctly")
 	}
 	ASReq := messages.NewASReq(cl.Config, cl.Credentials.CName)
 	err := setPAData(cl, &ASReq)

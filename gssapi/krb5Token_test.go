@@ -46,8 +46,8 @@ func TestMechToken_newAuthenticatorChksum(t *testing.T) {
 func TestMechToken_newAuthenticator(t *testing.T) {
 	creds := credentials.NewCredentials("hftsai", testdata.TEST_REALM)
 	creds.CName.NameString = testdata.TEST_PRINCIPALNAME_NAMESTRING
-	etypeId := 18
-	a := newAuthenticator(creds, etypeId)
+	etypeID := 18
+	a := newAuthenticator(creds, etypeID)
 	assert.Equal(t, 32771, a.Cksum.CksumType, "Checksum type in authenticator for SPNEGO mechtoken not as expected.")
 	assert.Equal(t, 18, a.SubKey.KeyType, "Subkey not of the expected type.")
 	assert.Equal(t, 32, len(a.SubKey.KeyValue), "Subkey value not of the right length")

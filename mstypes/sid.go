@@ -24,13 +24,13 @@ func Read_RPC_SID(b *[]byte, p *int, e *binary.ByteOrder) (RPC_SID, error) {
 	size := int(ndr.Read_uint32(b, p, e)) // This is part of the NDR encoding rather than the data type.
 	r := ndr.Read_uint8(b, p)
 	if r != uint8(1) {
-		return RPC_SID{}, ndr.NDRMalformed{EText: fmt.Sprintf("SID revision value read as %d when it must be 1", r)}
+		return RPC_SID{}, ndr.Malformed{EText: fmt.Sprintf("SID revision value read as %d when it must be 1", r)}
 	}
 	c := ndr.Read_uint8(b, p)
 	a := Read_RPC_SIDIdentifierAuthority(b, p, e)
 	s := make([]uint32, c, c)
 	if size != len(s) {
-		return RPC_SID{}, ndr.NDRMalformed{EText: fmt.Sprintf("Number of elements (%d) within SID in the byte stream does not equal the SubAuthorityCount (%d)", size, c)}
+		return RPC_SID{}, ndr.Malformed{EText: fmt.Sprintf("Number of elements (%d) within SID in the byte stream does not equal the SubAuthorityCount (%d)", size, c)}
 	}
 	for i := 0; i < len(s); i++ {
 		s[i] = ndr.Read_uint32(b, p, e)

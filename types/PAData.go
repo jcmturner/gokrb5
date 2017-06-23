@@ -72,8 +72,8 @@ func (pa *PAData) Unmarshal(b []byte) error {
 	return err
 }
 
-func (pa *PADataSequence) Unmarshal(b []byte) error {
-	_, err := asn1.Unmarshal(b, pa)
+func (pas *PADataSequence) Unmarshal(b []byte) error {
+	_, err := asn1.Unmarshal(b, pas)
 	return err
 }
 

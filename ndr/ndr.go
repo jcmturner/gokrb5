@@ -69,18 +69,18 @@ func ReadHeaders(b *[]byte) (CommonHeader, PrivateHeader, int, error) {
 func GetCommonHeader(b *[]byte) (CommonHeader, int, error) {
 	//The first 8 bytes comprise the Common RPC Header for type marshalling.
 	if len(*b) < COMMON_HEADER_BYTES {
-		return CommonHeader{}, 0, NDRMalformed{EText: "Not enough bytes."}
+		return CommonHeader{}, 0, Malformed{EText: "Not enough bytes."}
 	}
 	if (*b)[0] != PROTOCOL_VERSION {
-		return CommonHeader{}, 0, NDRMalformed{EText: fmt.Sprintf("Stream does not indicate a RPC Type serialization of version %v", PROTOCOL_VERSION)}
+		return CommonHeader{}, 0, Malformed{EText: fmt.Sprintf("Stream does not indicate a RPC Type serialization of version %v", PROTOCOL_VERSION)}
 	}
 	endian := int((*b)[1] >> 4 & 0xF)
 	if endian != 0 && endian != 1 {
-		return CommonHeader{}, 1, NDRMalformed{EText: "Common header does not indicate a valid endianness"}
+		return CommonHeader{}, 1, Malformed{EText: "Common header does not indicate a valid endianness"}
 	}
 	charEncoding := uint8((*b)[1] & 0xF)
 	if charEncoding != 0 && charEncoding != 1 {
-		return CommonHeader{}, 1, NDRMalformed{EText: "Common header does not indicate a valid charater encoding"}
+		return CommonHeader{}, 1, Malformed{EText: "Common header does not indicate a valid charater encoding"}
 	}
 	var bo binary.ByteOrder
 	switch endian {
@@ -91,7 +91,7 @@ func GetCommonHeader(b *[]byte) (CommonHeader, int, error) {
 	}
 	l := bo.Uint16((*b)[2:4])
 	if l != COMMON_HEADER_BYTES {
-		return CommonHeader{}, 4, NDRMalformed{EText: fmt.Sprintf("Common header does not indicate a valid length: %v instead of %v", uint8((*b)[3]), COMMON_HEADER_BYTES)}
+		return CommonHeader{}, 4, Malformed{EText: fmt.Sprintf("Common header does not indicate a valid length: %v instead of %v", uint8((*b)[3]), COMMON_HEADER_BYTES)}
 	}
 
 	return CommonHeader{
@@ -107,13 +107,13 @@ func GetCommonHeader(b *[]byte) (CommonHeader, int, error) {
 func GetPrivateHeader(b *[]byte, p *int, bo *binary.ByteOrder) (PrivateHeader, error) {
 	//The next 8 bytes comprise the RPC type marshalling private header for constructed types.
 	if len(*b) < (PRIVATE_HEADER_BYTES) {
-		return PrivateHeader{}, NDRMalformed{EText: "Not enough bytes."}
+		return PrivateHeader{}, Malformed{EText: "Not enough bytes."}
 	}
 	var l uint32
 	buf := bytes.NewBuffer((*b)[*p : *p+4])
 	binary.Read(buf, *bo, &l)
 	if l%8 != 0 {
-		return PrivateHeader{}, NDRMalformed{EText: "Object buffer length not a multiple of 8"}
+		return PrivateHeader{}, Malformed{EText: "Object buffer length not a multiple of 8"}
 	}
 	*p += 8
 	return PrivateHeader{
@@ -129,7 +129,7 @@ func Read_uint8(b *[]byte, p *int) (i uint8) {
 	}
 	ensureAlignment(p, 1)
 	i = uint8((*b)[*p])
-	*p += 1
+	*p++
 	return
 }
 
@@ -208,7 +208,7 @@ func Read_ConformantVaryingString(b *[]byte, p *int, e *binary.ByteOrder) (strin
 	o := Read_uint32(b, p, e) // Offset
 	a := Read_uint32(b, p, e) // Actual count
 	if a > (m-o) || o > m {
-		return "", NDRMalformed{EText: fmt.Sprintf("Not enough bytes. Max: %d, Offset: %d, Actual: %d", m, o, a)}
+		return "", Malformed{EText: fmt.Sprintf("Not enough bytes. Max: %d, Offset: %d, Actual: %d", m, o, a)}
 	}
 	//Unicode string so each element is 2 bytes
 	//move position based on the offset

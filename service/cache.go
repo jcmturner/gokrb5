@@ -30,7 +30,7 @@ them following an event that caused the server to lose track of
 recently seen authenticators.*/
 
 // Cache for tickets received from clients keyed by fully qualified client name. Used to track replay of tickets.
-type ServiceCache map[string]clientEntries
+type Cache map[string]clientEntries
 
 // Entries for client details sent to the service.
 type clientEntries struct {
@@ -47,14 +47,14 @@ type replayCacheEntry struct {
 }
 
 // Instance of the ServiceCache. This needs to be a singleton.
-var replayCache ServiceCache
+var replayCache Cache
 var once sync.Once
 
 // Get a pointer to the ServiceCache singleton.
-func GetReplayCache(d time.Duration) *ServiceCache {
+func GetReplayCache(d time.Duration) *Cache {
 	// Create a singleton of the ReplayCache and start a background thread to regularly clean out old entries
 	once.Do(func() {
-		replayCache = make(ServiceCache)
+		replayCache = make(Cache)
 		go func() {
 			for {
 				// TODO consider using a context here.
@@ -67,7 +67,7 @@ func GetReplayCache(d time.Duration) *ServiceCache {
 }
 
 // Add an entry to the ServiceCache.
-func (c *ServiceCache) AddEntry(sname types.PrincipalName, a types.Authenticator) {
+func (c *Cache) AddEntry(sname types.PrincipalName, a types.Authenticator) {
 	ct := a.CTime.Add(time.Duration(a.Cusec) * time.Microsecond)
 	if ce, ok := (*c)[a.CName.GetPrincipalNameString()]; ok {
 		ce.ReplayMap[ct] = replayCacheEntry{
@@ -93,7 +93,7 @@ func (c *ServiceCache) AddEntry(sname types.PrincipalName, a types.Authenticator
 }
 
 // Clear entries from the ServiceCache that are older than the duration provided.
-func (c *ServiceCache) ClearOldEntries(d time.Duration) {
+func (c *Cache) ClearOldEntries(d time.Duration) {
 	for ck := range *c {
 		for ct, e := range (*c)[ck].ReplayMap {
 			if time.Now().UTC().Sub(e.PresentedTime) > d {
@@ -107,7 +107,7 @@ func (c *ServiceCache) ClearOldEntries(d time.Duration) {
 }
 
 // Check if the Authenticator provided is a replay within the duration defined. If this is not a replay add the entry to the cache for tracking.
-func (c *ServiceCache) IsReplay(sname types.PrincipalName, a types.Authenticator) bool {
+func (c *Cache) IsReplay(sname types.PrincipalName, a types.Authenticator) bool {
 	if ck, ok := (*c)[a.CName.GetPrincipalNameString()]; ok {
 		ct := a.CTime.Add(time.Duration(a.Cusec) * time.Microsecond)
 		if e, ok := ck.ReplayMap[ct]; ok {

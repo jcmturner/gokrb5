@@ -30,13 +30,13 @@ The cryptographic system that is used to calculate the checksum depends on which
 - Does not support RC4-HMAC, AES128-CTS-HMAC-SHA1-96 or AES256-CTS-HMAC-SHA1-96 -->  None. The checksum operation will fail.
 */
 
-type PAC_SignatureData struct {
+type SignatureData struct {
 	SignatureType  uint32 // A 32-bit unsigned integer value in little-endian format that defines the cryptographic system used to calculate the checksum. This MUST be one of the following checksum types: KERB_CHECKSUM_HMAC_MD5 (signature size = 16), HMAC_SHA1_96_AES128 (signature size = 12), HMAC_SHA1_96_AES256 (signature size = 12).
 	Signature      []byte // Size depends on the type. See comment above.
 	RODCIdentifier uint16 // A 16-bit unsigned integer value in little-endian format that contains the first 16 bits of the key version number ([MS-KILE] section 3.1.5.8) when the KDC is an RODC. When the KDC is not an RODC, this field does not exist.
 }
 
-func (k *PAC_SignatureData) Unmarshal(b []byte) ([]byte, error) {
+func (k *SignatureData) Unmarshal(b []byte) ([]byte, error) {
 	var p int
 	var e binary.ByteOrder = binary.LittleEndian
 
@@ -57,7 +57,7 @@ func (k *PAC_SignatureData) Unmarshal(b []byte) ([]byte, error) {
 	//Check that there is only zero padding left
 	for _, v := range b[p:] {
 		if v != 0 {
-			return []byte{}, ndr.NDRMalformed{EText: "Non-zero padding left over at end of data stream"}
+			return []byte{}, ndr.Malformed{EText: "Non-zero padding left over at end of data stream"}
 		}
 	}
 

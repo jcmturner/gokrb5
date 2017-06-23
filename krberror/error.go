@@ -16,37 +16,36 @@ const (
 	KRBMSG_ERROR     = "KRBMessage_Handling_Error"
 )
 
-type krberror struct {
+type Krberror struct {
 	RootCause string
 	EText     []string
 }
 
-func (e krberror) Error() string {
+func (e Krberror) Error() string {
 	return fmt.Sprintf("[Root cause: %s] ", e.RootCause) + strings.Join(e.EText, SEPARATOR)
 }
 
-func (e *krberror) Add2(et string, s string) {
+func (e *Krberror) Add2(et string, s string) {
 	e.EText = append([]string{fmt.Sprintf("%s: %s", et, s)}, e.EText...)
 }
 
-func NewKrberror(et, s string) krberror {
-	return krberror{
+func NewKrberror(et, s string) Krberror {
+	return Krberror{
 		RootCause: et,
 		EText:     []string{s},
 	}
 }
 
-func Errorf(err error, et, format string, a ...interface{}) krberror {
-	if e, ok := err.(krberror); ok {
+func Errorf(err error, et, format string, a ...interface{}) Krberror {
+	if e, ok := err.(Krberror); ok {
 		e.EText = append([]string{fmt.Sprintf("%s: "+format, et, a)}, e.EText...)
 		return e
-	} else {
-		return NewErrorf(et, format+": %v", a, err)
 	}
+	return NewErrorf(et, format+": %v", a, err)
 }
 
-func NewErrorf(et, format string, a ...interface{}) krberror {
-	return krberror{
+func NewErrorf(et, format string, a ...interface{}) Krberror {
+	return Krberror{
 		RootCause: et,
 		EText:     []string{fmt.Sprintf("%s: %s", et, fmt.Sprintf(format, a))},
 	}

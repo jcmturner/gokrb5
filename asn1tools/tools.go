@@ -1,11 +1,11 @@
-// Tools for managing ASN1 marshaled data.
+// Package asn1tools - Tools for managing ASN1 marshaled data.
 package asn1tools
 
 import (
 	"github.com/jcmturner/asn1"
 )
 
-// Get the ASN1 encoded bytes for the length 'l'
+// MarshalLengthBytes returns the ASN1 encoded bytes for the length 'l'
 //
 // There are two forms: short (for lengths between 0 and 127), and long definite (for lengths between 0 and 2^1008 -1).
 //
@@ -29,7 +29,7 @@ func MarshalLengthBytes(l int) []byte {
 	return append([]byte{byte(128 + len(b))}, b...)
 }
 
-// Get the length of a slice of ASN1 encoded bytes from the ASN1 length header it contains.
+// GetLengthFromASN returns the length of a slice of ASN1 encoded bytes from the ASN1 length header it contains.
 func GetLengthFromASN(b []byte) int {
 	if int(b[1]) <= 127 {
 		return int(b[1])

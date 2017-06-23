@@ -2,10 +2,10 @@ package ndr
 
 import "fmt"
 
-type NDRMalformed struct {
+type Malformed struct {
 	EText string
 }
 
-func (e NDRMalformed) Error() string {
+func (e Malformed) Error() string {
 	return fmt.Sprintf("Malformed NDR steam: %s", e.EText)
 }

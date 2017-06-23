@@ -13,7 +13,7 @@ func TestPAC_SignatureData_Unmarshal_Server_Signature(t *testing.T) {
 	if err != nil {
 		t.Fatal("Could not decode test data hex string")
 	}
-	var k PAC_SignatureData
+	var k SignatureData
 	bz, err := k.Unmarshal(b)
 	if err != nil {
 		t.Fatalf("Error unmarshaling test data: %v", err)
@@ -31,7 +31,7 @@ func TestPAC_SignatureData_Unmarshal_KDC_Signature(t *testing.T) {
 	if err != nil {
 		t.Fatal("Could not decode test data hex string")
 	}
-	var k PAC_SignatureData
+	var k SignatureData
 	bz, err := k.Unmarshal(b)
 	if err != nil {
 		t.Fatalf("Error unmarshaling test data: %v", err)

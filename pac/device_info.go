@@ -7,7 +7,7 @@ import (
 )
 
 // https://msdn.microsoft.com/en-us/library/hh536402.aspx
-type PAC_DeviceInfo struct {
+type DeviceInfo struct {
 	UserID            uint32                          // A 32-bit unsigned integer that contains the RID of the account. If the UserId member equals 0x00000000, the first group SID in this member is the SID for this account.
 	PrimaryGroupID    uint32                          // A 32-bit unsigned integer that contains the RID for the primary group to which this account belongs.
 	AccountDomainID   mstypes.RPC_SID                 // A SID structure that contains the SID for the domain of the account.This member is used in conjunction with the UserId, and GroupIds members to create the user and group SIDs for the client.
@@ -19,7 +19,7 @@ type PAC_DeviceInfo struct {
 	DomainGroup       []mstypes.DomainGroupMembership // A pointer to a list of DOMAIN_GROUP_MEMBERSHIP structures (section 2.2.3) that contains the domains to which the account belongs to a group. The number of sets in this list MUST be equal to DomainCount.
 }
 
-func (k *PAC_DeviceInfo) Unmarshal(b []byte) error {
+func (k *DeviceInfo) Unmarshal(b []byte) error {
 	ch, _, p, err := ndr.ReadHeaders(&b)
 	if err != nil {
 		return fmt.Errorf("Error parsing byte stream headers: %v", err)
@@ -62,7 +62,7 @@ func (k *PAC_DeviceInfo) Unmarshal(b []byte) error {
 				s, err := mstypes.Read_RPC_SID(&b, &p, e)
 				es[i] = mstypes.KerbSidAndAttributes{SID: s, Attributes: attr[i]}
 				if err != nil {
-					return ndr.NDRMalformed{EText: fmt.Sprintf("Could not read ExtraSIDs: %v", err)}
+					return ndr.Malformed{EText: fmt.Sprintf("Could not read ExtraSIDs: %v", err)}
 				}
 			}
 		}
@@ -82,7 +82,7 @@ func (k *PAC_DeviceInfo) Unmarshal(b []byte) error {
 	if len(b) >= p {
 		for _, v := range b[p:] {
 			if v != 0 {
-				return ndr.NDRMalformed{EText: "Non-zero padding left over at end of data stream"}
+				return ndr.Malformed{EText: "Non-zero padding left over at end of data stream"}
 			}
 		}
 	}

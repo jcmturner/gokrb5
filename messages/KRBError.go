@@ -59,7 +59,7 @@ func (k *KRBError) Unmarshal(b []byte) error {
 
 // Error method implementing error interface on KRBError struct.
 func (k KRBError) Error() string {
-	etxt := fmt.Sprintf("KRB Error: %s", errorcode.ErrorCodeLookup(k.ErrorCode))
+	etxt := fmt.Sprintf("KRB Error: %s", errorcode.Lookup(k.ErrorCode))
 	if k.EText != "" {
 		etxt = fmt.Sprintf("%s - %s", etxt, k.EText)
 	}

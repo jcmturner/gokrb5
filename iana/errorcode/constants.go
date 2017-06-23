@@ -74,7 +74,7 @@ const (
 	KDC_ERR_KDC_NAME_MISMATCH             = 76 //Reserved for PKINIT
 )
 
-func ErrorCodeLookup(i int) string {
+func Lookup(i int) string {
 	if s, ok := errorcodeLookup[i]; ok {
 		return fmt.Sprintf("(%d) %s", i, s)
 	}

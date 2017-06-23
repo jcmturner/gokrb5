@@ -77,9 +77,8 @@ func (cl *Client) IsConfigured() bool {
 		if r.Realm == cl.Config.LibDefaults.Default_realm {
 			if len(r.Kdc) > 0 {
 				return true
-			} else {
-				return false
 			}
+			return false
 		}
 	}
 	return false

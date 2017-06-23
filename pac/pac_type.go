@@ -14,18 +14,18 @@ import (
 type PACType struct {
 	CBuffers           uint32
 	Version            uint32
-	Buffers            []PACInfoBuffer
+	Buffers            []InfoBuffer
 	Data               []byte
 	KerbValidationInfo *KerbValidationInfo
-	CredentialsInfo    *PAC_CredentialsInfo
-	ServerChecksum     *PAC_SignatureData
-	KDCChecksum        *PAC_SignatureData
-	ClientInfo         *PAC_ClientInfo
+	CredentialsInfo    *CredentialsInfo
+	ServerChecksum     *SignatureData
+	KDCChecksum        *SignatureData
+	ClientInfo         *ClientInfo
 	S4U_DelegationInfo *S4U_DelegationInfo
 	UPN_DNSInfo        *UPN_DNSInfo
-	ClientClaimsInfo   *PAC_ClientClaimsInfo
-	DeviceInfo         *PAC_DeviceInfo
-	DeviceClaimsInfo   *PAC_DeviceClaimsInfo
+	ClientClaimsInfo   *ClientClaimsInfo
+	DeviceInfo         *DeviceInfo
+	DeviceClaimsInfo   *DeviceClaimsInfo
 	ZeroSigData        []byte
 }
 
@@ -38,7 +38,7 @@ func (pac *PACType) Unmarshal(b []byte) error {
 	pac.ZeroSigData = zb
 	pac.CBuffers = ndr.Read_uint32(&b, &p, &e)
 	pac.Version = ndr.Read_uint32(&b, &p, &e)
-	buf := make([]PACInfoBuffer, pac.CBuffers, pac.CBuffers)
+	buf := make([]InfoBuffer, pac.CBuffers, pac.CBuffers)
 	for i := range buf {
 		buf[i] = Read_PACInfoBuffer(&b, &p, &e)
 	}
@@ -68,7 +68,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 				//Must ignore subsequent buffers of this type
 				continue
 			}
-			var k PAC_CredentialsInfo
+			var k CredentialsInfo
 			err := k.Unmarshal(p, key)
 			if err != nil {
 				return fmt.Errorf("Error processing CredentialsInfo: %v", err)
@@ -79,7 +79,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 				//Must ignore subsequent buffers of this type
 				continue
 			}
-			var k PAC_SignatureData
+			var k SignatureData
 			zb, err := k.Unmarshal(p)
 			copy(pac.ZeroSigData[int(buf.Offset):int(buf.Offset)+int(buf.CBBufferSize)], zb)
 			if err != nil {
@@ -91,7 +91,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 				//Must ignore subsequent buffers of this type
 				continue
 			}
-			var k PAC_SignatureData
+			var k SignatureData
 			zb, err := k.Unmarshal(p)
 			copy(pac.ZeroSigData[int(buf.Offset):int(buf.Offset)+int(buf.CBBufferSize)], zb)
 			if err != nil {
@@ -103,7 +103,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 				//Must ignore subsequent buffers of this type
 				continue
 			}
-			var k PAC_ClientInfo
+			var k ClientInfo
 			err := k.Unmarshal(p)
 			if err != nil {
 				return fmt.Errorf("Error processing ClientInfo: %v", err)
@@ -136,7 +136,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 				//Must ignore subsequent buffers of this type
 				continue
 			}
-			var k PAC_ClientClaimsInfo
+			var k ClientClaimsInfo
 			err := k.Unmarshal(p)
 			if err != nil {
 				return fmt.Errorf("Error processing ClientClaimsInfo: %v", err)
@@ -147,7 +147,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 				//Must ignore subsequent buffers of this type
 				continue
 			}
-			var k PAC_DeviceInfo
+			var k DeviceInfo
 			err := k.Unmarshal(p)
 			if err != nil {
 				return fmt.Errorf("Error processing DeviceInfo: %v", err)
@@ -158,7 +158,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 				//Must ignore subsequent buffers of this type
 				continue
 			}
-			var k PAC_DeviceClaimsInfo
+			var k DeviceClaimsInfo
 			err := k.Unmarshal(p)
 			if err != nil {
 				return fmt.Errorf("Error processing DeviceClaimsInfo: %v", err)

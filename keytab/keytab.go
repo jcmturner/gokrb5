@@ -15,11 +15,11 @@ import (
 // Keytab struct.
 type Keytab struct {
 	Version uint16
-	Entries []KeytabEntry
+	Entries []Entry
 }
 
 // Keytab entry struct.
-type KeytabEntry struct {
+type Entry struct {
 	Principal Principal
 	Timestamp time.Time
 	KVNO8     uint8
@@ -37,7 +37,7 @@ type Principal struct {
 
 //Create new, empty Keytab type.
 func NewKeytab() Keytab {
-	var e []KeytabEntry
+	var e []Entry
 	return Keytab{
 		Version: 0,
 		Entries: e,
@@ -69,9 +69,9 @@ func (kt *Keytab) GetEncryptionKey(nameString []string, realm string, kvno, etyp
 }
 
 // Create a new Keytab entry.
-func newKeytabEntry() KeytabEntry {
+func newKeytabEntry() Entry {
 	var b []byte
-	return KeytabEntry{
+	return Entry{
 		Principal: newPrincipal(),
 		Timestamp: time.Time{},
 		KVNO8:     0,
@@ -176,11 +176,11 @@ func Parse(b []byte) (kt Keytab, err error) {
 }
 
 // Parse the Keytab bytes of a principal into a Keytab entry's principal.
-func parse_principal(b []byte, p *int, kt *Keytab, ke *KeytabEntry, e *binary.ByteOrder) (err error) {
+func parse_principal(b []byte, p *int, kt *Keytab, ke *Entry, e *binary.ByteOrder) (err error) {
 	ke.Principal.NumComponents = read_int16(b, p, e)
 	if kt.Version == 1 {
 		//In version 1 the number of components includes the realm. Minus 1 to make consistent with version 2
-		ke.Principal.NumComponents -= 1
+		ke.Principal.NumComponents--
 	}
 	len_realm := read_int16(b, p, e)
 	ke.Principal.Realm = string(read_Bytes(b, p, int(len_realm), e))
@@ -204,7 +204,7 @@ func read_timestamp(b []byte, p *int, e *binary.ByteOrder) time.Time {
 func read_int8(b []byte, p *int, e *binary.ByteOrder) (i int8) {
 	buf := bytes.NewBuffer(b[*p : *p+1])
 	binary.Read(buf, *e, &i)
-	*p += 1
+	*p++
 	return
 }
 
@@ -233,9 +233,9 @@ func read_Bytes(b []byte, p *int, s int, e *binary.ByteOrder) []byte {
 }
 
 func isNativeEndianLittle() bool {
-	var x int = 0x012345678
-	var p unsafe.Pointer = unsafe.Pointer(&x)
-	var bp *[4]byte = (*[4]byte)(p)
+	var x = 0x012345678
+	var p = unsafe.Pointer(&x)
+	var bp = (*[4]byte)(p)
 
 	var endian bool
 	if 0x01 == bp[0] {

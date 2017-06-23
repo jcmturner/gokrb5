@@ -7,11 +7,11 @@ import (
 )
 
 // https://msdn.microsoft.com/en-us/library/hh554226.aspx
-type PAC_DeviceClaimsInfo struct {
+type DeviceClaimsInfo struct {
 	Claims mstypes.ClaimsSetMetadata
 }
 
-func (k *PAC_DeviceClaimsInfo) Unmarshal(b []byte) error {
+func (k *DeviceClaimsInfo) Unmarshal(b []byte) error {
 	ch, _, p, err := ndr.ReadHeaders(&b)
 	if err != nil {
 		return fmt.Errorf("Error parsing byte stream headers: %v", err)
@@ -27,7 +27,7 @@ func (k *PAC_DeviceClaimsInfo) Unmarshal(b []byte) error {
 	if len(b) >= p {
 		for _, v := range b[p:] {
 			if v != 0 {
-				return ndr.NDRMalformed{EText: "Non-zero padding left over at end of data stream"}
+				return ndr.Malformed{EText: "Non-zero padding left over at end of data stream"}
 			}
 		}
 	}

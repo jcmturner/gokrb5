@@ -13,14 +13,14 @@ import (
 // https://msdn.microsoft.com/en-us/library/cc237931.aspx
 
 // https://msdn.microsoft.com/en-us/library/cc237953.aspx
-type PAC_CredentialsInfo struct {
+type CredentialsInfo struct {
 	Version                      uint32 // A 32-bit unsigned integer in little-endian format that defines the version. MUST be 0x00000000.
 	EType                        uint32
 	PAC_CredentialData_Encrypted []byte // Key usage number for encryption: KERB_NON_KERB_SALT (16)
-	PAC_CredentialData           PAC_CredentialData
+	PAC_CredentialData           CredentialData
 }
 
-func (c *PAC_CredentialsInfo) Unmarshal(b []byte, k types.EncryptionKey) error {
+func (c *CredentialsInfo) Unmarshal(b []byte, k types.EncryptionKey) error {
 	ch, _, p, err := ndr.ReadHeaders(&b)
 	if err != nil {
 		return fmt.Errorf("Error parsing byte stream headers: %v", err)
@@ -41,7 +41,7 @@ func (c *PAC_CredentialsInfo) Unmarshal(b []byte, k types.EncryptionKey) error {
 	return nil
 }
 
-func (c *PAC_CredentialsInfo) DecryptEncPart(k types.EncryptionKey, e *binary.ByteOrder) error {
+func (c *CredentialsInfo) DecryptEncPart(k types.EncryptionKey, e *binary.ByteOrder) error {
 	if k.KeyType != int(c.EType) {
 		return fmt.Errorf("Key provided is not the correct type. Type needed: %d, type provided: %d", c.EType, k.KeyType)
 	}
@@ -59,18 +59,18 @@ func (c *PAC_CredentialsInfo) DecryptEncPart(k types.EncryptionKey, e *binary.By
 // Encryption is performed by first serializing the data structure via Network Data Representation (NDR) encoding, as specified in [MS-RPCE].
 // Once serialized, the data is encrypted using the key and cryptographic system selected through the AS protocol and the KRB_AS_REP message
 // Fields (for capturing this information) and cryptographic parameters are specified in PAC_CREDENTIAL_INFO (section 2.6.1).
-type PAC_CredentialData struct {
+type CredentialData struct {
 	CredentialCount uint32
 	Credentials     []SECPKG_SupplementalCred // Size is the value of CredentialCount
 }
 
-func Read_PAC_CredentialData(b *[]byte, p *int, e *binary.ByteOrder) PAC_CredentialData {
+func Read_PAC_CredentialData(b *[]byte, p *int, e *binary.ByteOrder) CredentialData {
 	c := ndr.Read_uint32(b, p, e)
 	cr := make([]SECPKG_SupplementalCred, c, c)
 	for i := range cr {
 		cr[i] = Read_SECPKG_SupplementalCred(b, p, e)
 	}
-	return PAC_CredentialData{
+	return CredentialData{
 		CredentialCount: c,
 		Credentials:     cr,
 	}

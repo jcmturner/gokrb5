@@ -71,7 +71,7 @@ func DES3DecryptData(key, data []byte, e etype.EType) ([]byte, error) {
 	}
 
 	if len(data) < des.BlockSize || len(data)%des.BlockSize != 0 {
-		return []byte{}, errors.New("Ciphertext is not a multiple of the block size.")
+		return []byte{}, errors.New("Ciphertext is not a multiple of the block size")
 	}
 	block, err := des.NewTripleDESCipher(key)
 	if err != nil {

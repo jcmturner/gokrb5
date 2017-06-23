@@ -366,7 +366,7 @@ func parseRealms(lines []string) ([]Realm, error) {
 		if strings.Contains(l, "{") {
 			if start >= 0 {
 				// already started a block!!!
-				return nil, errors.New("Invalid Realms section in configuration.")
+				return nil, errors.New("Invalid Realms section in configuration")
 			}
 			start = i
 			if !strings.Contains(l, "=") {
@@ -378,7 +378,7 @@ func parseRealms(lines []string) ([]Realm, error) {
 		if strings.Contains(l, "}") {
 			if start < 0 {
 				// but not started a block!!!
-				return nil, errors.New("Invalid Realms section in configuration.")
+				return nil, errors.New("Invalid Realms section in configuration")
 			}
 			var r Realm
 			r.parseLines(name, lines[start+1:i])
@@ -424,7 +424,7 @@ func (d *DomainRealm) deleteMapping(domain, realm string) {
 func (c *Config) ResolveRealm(domainName string) string {
 	domainName = strings.TrimSuffix(domainName, ".")
 	periods := strings.Count(domainName, ".") + 1
-	for i := 1; i <= periods; i += 1 {
+	for i := 1; i <= periods; i++ {
 		z := strings.SplitN(domainName, ".", i)
 		if r, ok := c.DomainRealm[z[len(z)-1]]; ok {
 			return r
@@ -460,7 +460,7 @@ func NewConfigFromReader(r io.Reader) (*Config, error) {
 func NewConfigFromScanner(scanner *bufio.Scanner) (*Config, error) {
 	c := NewConfig()
 	sections := make(map[int]string)
-	var section_line_num []int
+	var sectionLineNum []int
 	var lines []string
 	for scanner.Scan() {
 		// Skip comments and blank lines
@@ -469,32 +469,32 @@ func NewConfigFromScanner(scanner *bufio.Scanner) (*Config, error) {
 		}
 		if matched, _ := regexp.MatchString(`\s*\[libdefaults\]\s*`, scanner.Text()); matched {
 			sections[len(lines)] = "libdefaults"
-			section_line_num = append(section_line_num, len(lines))
+			sectionLineNum = append(sectionLineNum, len(lines))
 			continue
 		}
 		if matched, _ := regexp.MatchString(`\s*\[realms\]\s*`, scanner.Text()); matched {
 			sections[len(lines)] = "realms"
-			section_line_num = append(section_line_num, len(lines))
+			sectionLineNum = append(sectionLineNum, len(lines))
 			continue
 		}
 		if matched, _ := regexp.MatchString(`\s*\[domain_realm\]\s*`, scanner.Text()); matched {
 			sections[len(lines)] = "domain_realm"
-			section_line_num = append(section_line_num, len(lines))
+			sectionLineNum = append(sectionLineNum, len(lines))
 			continue
 		}
 		if matched, _ := regexp.MatchString(`\s*\[.*\]\s*`, scanner.Text()); matched {
 			sections[len(lines)] = "unknown_section"
-			section_line_num = append(section_line_num, len(lines))
+			sectionLineNum = append(sectionLineNum, len(lines))
 			continue
 		}
 		lines = append(lines, scanner.Text())
 	}
-	for i, start := range section_line_num {
+	for i, start := range sectionLineNum {
 		var end int
-		if i+1 >= len(section_line_num) {
+		if i+1 >= len(sectionLineNum) {
 			end = len(lines) - 1
 		} else {
-			end = section_line_num[i+1] - 1
+			end = sectionLineNum[i+1] - 1
 		}
 		switch section := sections[start]; section {
 		case "libdefaults":

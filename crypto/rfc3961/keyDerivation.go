@@ -160,7 +160,7 @@ func calcEvenParity(b byte) (uint8, uint8) {
 	for p := 1; p < 8; p++ {
 		v := b & (1 << uint(p))
 		if v != 0 {
-			c += 1
+			c++
 		}
 	}
 	if c%2 == 0 {

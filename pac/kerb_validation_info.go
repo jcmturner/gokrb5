@@ -183,7 +183,7 @@ func (k *KerbValidationInfo) Unmarshal(b []byte) (err error) {
 				s, err := mstypes.Read_RPC_SID(&b, &p, e)
 				es[i] = mstypes.KerbSidAndAttributes{SID: s, Attributes: attr[i]}
 				if err != nil {
-					return ndr.NDRMalformed{EText: fmt.Sprintf("Could not read ExtraSIDs: %v", err)}
+					return ndr.Malformed{EText: fmt.Sprintf("Could not read ExtraSIDs: %v", err)}
 				}
 			}
 		}
@@ -213,7 +213,7 @@ func (k *KerbValidationInfo) Unmarshal(b []byte) (err error) {
 	if len(b) >= p {
 		for _, v := range b[p:] {
 			if v != 0 {
-				return ndr.NDRMalformed{EText: "Non-zero padding left over at end of data stream"}
+				return ndr.Malformed{EText: "Non-zero padding left over at end of data stream"}
 			}
 		}
 	}
