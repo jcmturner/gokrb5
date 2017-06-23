@@ -2,10 +2,10 @@ package types
 
 import (
 	"encoding/hex"
+	"fmt"
+	"github.com/jcmturner/gokrb5/testdata"
 	"github.com/stretchr/testify/assert"
 	"testing"
-	"github.com/jcmturner/gokrb5/testdata"
-	"fmt"
 )
 
 func TestUnmarshalTypedData(t *testing.T) {

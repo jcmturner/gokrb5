@@ -2,11 +2,10 @@ package types
 
 import (
 	"encoding/hex"
-	"github.com/stretchr/testify/assert"
 	"github.com/jcmturner/gokrb5/testdata"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
-
 
 func TestUnmarshalEncryptedData(t *testing.T) {
 	var a EncryptedData

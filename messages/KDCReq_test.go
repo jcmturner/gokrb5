@@ -424,4 +424,3 @@ func TestMarshalTGSReq(t *testing.T) {
 	}
 	assert.Equal(t, b, mb, "Marshal bytes of TGSReq not as expected")
 }
-

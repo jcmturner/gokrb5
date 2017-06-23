@@ -5,9 +5,9 @@ package types
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/jcmturner/asn1"
 	"net"
-	"fmt"
 )
 
 /*
@@ -74,7 +74,7 @@ func GetHostAddress(s string) (HostAddress, error) {
 	}
 	h = HostAddress{
 		AddrType: ht,
-		Address: hb,
+		Address:  hb,
 	}
 	return h, nil
 }
