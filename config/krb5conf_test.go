@@ -1,10 +1,10 @@
 package config
 
 import (
-	"testing"
+	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
-	"github.com/stretchr/testify/assert"
+	"testing"
 	"time"
 )
 
@@ -17,6 +17,7 @@ const krb5Conf = `
 [libdefaults]
  default_realm = TEST.GOKRB5
  dns_lookup_realm = false
+
  dns_lookup_kdc = false
  #dns_lookup_kdc = true
  ;dns_lookup_kdc = true
@@ -25,14 +26,18 @@ const krb5Conf = `
  ticket_lifetime = 10h
  forwardable = yes
  default_keytab_name = FILE:/etc/krb5.keytab
+
  default_client_keytab_name = FILE:/home/gokrb5/client.keytab
  default_tkt_enctypes = aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96
+
 
 [realms]
  TEST.GOKRB5 = {
   kdc = 10.80.88.88:88
+
   kdc = 10.80.88.88:88*
   kdc = 10.1.2.3.4:88
+
   admin_server = 10.80.88.88:749
   default_domain = test.gokrb5
  }
@@ -42,14 +47,18 @@ const krb5Conf = `
         admin_server = kerberos.example.com
  }
 
+
 [domain_realm]
  .test.gokrb5 = TEST.GOKRB5
+
  test.gokrb5 = TEST.GOKRB5
 
 [appdefaults]
  pam = {
    debug = false
+
    ticket_lifetime = 36000
+
    renew_lifetime = 36000
    forwardable = true
    krb4_convert = false
@@ -63,7 +72,7 @@ func TestLoad(t *testing.T) {
 
 	c, err := Load(cf.Name())
 	if err != nil {
-		t.Errorf("Error loading config: %v", err)
+		t.Fatalf("Error loading config: %v", err)
 	}
 
 	assert.Equal(t, "TEST.GOKRB5", c.LibDefaults.Default_realm, "[libdefaults] default_realm not as expected")
