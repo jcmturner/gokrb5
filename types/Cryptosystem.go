@@ -26,11 +26,13 @@ type Checksum struct {
 	Checksum  []byte `asn1:"explicit,tag:1"`
 }
 
+// Unmarshal bytes into the EncryptedData.
 func (a *EncryptedData) Unmarshal(b []byte) error {
 	_, err := asn1.Unmarshal(b, a)
 	return err
 }
 
+// Marshal the EncryptedData.
 func (a *EncryptedData) Marshal() ([]byte, error) {
 	edb, err := asn1.Marshal(*a)
 	if err != nil {
@@ -39,11 +41,13 @@ func (a *EncryptedData) Marshal() ([]byte, error) {
 	return edb, nil
 }
 
+// Unmarshal bytes into the EncryptionKey.
 func (a *EncryptionKey) Unmarshal(b []byte) error {
 	_, err := asn1.Unmarshal(b, a)
 	return err
 }
 
+// Unmarshal bytes into the Checksum.
 func (a *Checksum) Unmarshal(b []byte) error {
 	_, err := asn1.Unmarshal(b, a)
 	return err

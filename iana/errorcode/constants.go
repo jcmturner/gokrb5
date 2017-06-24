@@ -1,4 +1,4 @@
-// Kerberos 5 assigned error codes.
+// Package errorcode provides Kerberos 5 assigned error codes.
 package errorcode
 
 import "fmt"

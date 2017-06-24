@@ -1,4 +1,4 @@
-// Encryption methods common across encryption types
+// Package common provides encryption methods common across encryption types
 package common
 
 import (
@@ -11,7 +11,11 @@ import (
 	"github.com/jcmturner/gokrb5/crypto/etype"
 )
 
-// Pad bytes b with zeros to nearest multiple of message size m.
+const (
+	s2kParamsZero = 4294967296
+)
+
+// ZeroPad pads bytes with zeros to nearest multiple of message size m.
 func ZeroPad(b []byte, m int) ([]byte, error) {
 	if m <= 0 {
 		return nil, errors.New("Invalid message block size when padding")
@@ -27,7 +31,7 @@ func ZeroPad(b []byte, m int) ([]byte, error) {
 	return b, nil
 }
 
-// Pad bytes b according to RFC 2315 to nearest multiple of message size m.
+// PKCS7Pad pads bytes according to RFC 2315 to nearest multiple of message size m.
 func PKCS7Pad(b []byte, m int) ([]byte, error) {
 	if m <= 0 {
 		return nil, errors.New("Invalid message block size when padding")
@@ -42,7 +46,7 @@ func PKCS7Pad(b []byte, m int) ([]byte, error) {
 	return pb, nil
 }
 
-// Remove RFC 2315 padding from byes b where message size is m.
+// PKCS7Unpad removes RFC 2315 padding from byes where message size is m.
 func PKCS7Unpad(b []byte, m int) ([]byte, error) {
 	if m <= 0 {
 		return nil, errors.New("Invalid message block size when unpadding")
@@ -66,6 +70,7 @@ func PKCS7Unpad(b []byte, m int) ([]byte, error) {
 	return b[:len(b)-n], nil
 }
 
+// GetHash generates the keyed hash value according to the etype's hash function.
 func GetHash(pt, key []byte, usage []byte, etype etype.EType) ([]byte, error) {
 	k, err := etype.DeriveKey(key, usage)
 	if err != nil {
@@ -78,17 +83,17 @@ func GetHash(pt, key []byte, usage []byte, etype etype.EType) ([]byte, error) {
 	return mac.Sum(nil)[:etype.GetHMACBitLength()/8], nil
 }
 
-// Get a keyed checksum hash of bytes b.
+// GetChecksumHash returns a keyed checksum hash of the bytes provided.
 func GetChecksumHash(b, key []byte, usage uint32, etype etype.EType) ([]byte, error) {
 	return GetHash(b, key, GetUsageKc(usage), etype)
 }
 
-// Get a keyed integrity hash of bytes b.
+// GetIntegrityHash returns a keyed integrity hash of the bytes provided.
 func GetIntegrityHash(b, key []byte, usage uint32, etype etype.EType) ([]byte, error) {
 	return GetHash(b, key, GetUsageKi(usage), etype)
 }
 
-// Verify the checksum of the msg bytes is the same as the checksum provided.
+// VerifyChecksum compares the checksum of the msg bytes is the same as the checksum provided.
 func VerifyChecksum(key, chksum, msg []byte, usage uint32, etype etype.EType) bool {
 	//The ciphertext output is the concatenation of the output of the basic
 	//encryption function E and a (possibly truncated) HMAC using the
@@ -100,7 +105,7 @@ func VerifyChecksum(key, chksum, msg []byte, usage uint32, etype etype.EType) bo
 	return hmac.Equal(chksum, expectedMAC)
 }
 
-// Get the checksum key usage value for the usage number un.
+// GetUsageKc returns the checksum key usage value for the usage number un.
 //
 // RFC 3961: The "well-known constant" used for the DK function is the key usage number, expressed as four octets in big-endian order, followed by one octet indicated below.
 //
@@ -109,7 +114,7 @@ func GetUsageKc(un uint32) []byte {
 	return getUsage(un, 0x99)
 }
 
-// Get the encryption key usage value for the usage number un
+// GetUsageKe returns the encryption key usage value for the usage number un
 //
 // RFC 3961: The "well-known constant" used for the DK function is the key usage number, expressed as four octets in big-endian order, followed by one octet indicated below.
 //
@@ -118,7 +123,7 @@ func GetUsageKe(un uint32) []byte {
 	return getUsage(un, 0xAA)
 }
 
-// Get the integrity key usage value for the usage number un
+// GetUsageKi returns the integrity key usage value for the usage number un
 //
 // RFC 3961: The "well-known constant" used for the DK function is the key usage number, expressed as four octets in big-endian order, followed by one octet indicated below.
 //
@@ -133,8 +138,33 @@ func getUsage(un uint32, o byte) []byte {
 	return append(buf.Bytes(), o)
 }
 
+// IterationsToS2Kparams converts the number of iterations as an integer to a string representation.
 func IterationsToS2kparams(i int) string {
 	b := make([]byte, 4, 4)
 	binary.BigEndian.PutUint32(b, uint32(i))
 	return hex.EncodeToString(b)
+}
+
+// S2KparamsToItertions converts the string representation of iterations to an integer
+func S2KparamsToItertions(s2kparams string) (int, error) {
+	//process s2kparams string
+	//The parameter string is four octets indicating an unsigned
+	//number in big-endian order.  This is the number of iterations to be
+	//performed.  If the value is 00 00 00 00, the number of iterations to
+	//be performed is 4,294,967,296 (2**32).
+	var i uint32
+	if len(s2kparams) != 8 {
+		return s2kParamsZero, errors.New("Invalid s2kparams length")
+	}
+	b, err := hex.DecodeString(s2kparams)
+	if err != nil {
+		return s2kParamsZero, errors.New("Invalid s2kparams, cannot decode string to bytes")
+	}
+	i = binary.BigEndian.Uint32(b)
+	//buf := bytes.NewBuffer(b)
+	//err = binary.Read(buf, binary.BigEndian, &i)
+	if err != nil {
+		return s2kParamsZero, errors.New("Invalid s2kparams, cannot convert to big endian int32")
+	}
+	return int(i), nil
 }

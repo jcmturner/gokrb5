@@ -1,4 +1,4 @@
-// Kerberos 5 test reference data.
+// Package testdata provides Kerberos 5 test reference data.
 package testdata
 
 const (

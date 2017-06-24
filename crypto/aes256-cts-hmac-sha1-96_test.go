@@ -3,7 +3,7 @@ package crypto
 import (
 	"encoding/hex"
 	"github.com/jcmturner/gokrb5/crypto/common"
-	"github.com/jcmturner/gokrb5/crypto/rfc3961"
+	"github.com/jcmturner/gokrb5/crypto/rfc3962"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -32,7 +32,7 @@ func TestAes256CtsHmacSha196_StringToKey(t *testing.T) {
 	var e Aes256CtsHmacSha96
 	for i, test := range tests {
 
-		assert.Equal(t, test.pbkdf2, hex.EncodeToString(rfc3961.StringToPBKDF2(test.phrase, test.salt, test.iterations, e)), "PBKDF2 not as expected")
+		assert.Equal(t, test.pbkdf2, hex.EncodeToString(rfc3962.StringToPBKDF2(test.phrase, test.salt, test.iterations, e)), "PBKDF2 not as expected")
 		k, err := e.StringToKey(test.phrase, test.salt, common.IterationsToS2kparams(test.iterations))
 		if err != nil {
 			t.Errorf("Error in processing string to key for test %d: %v", i, err)

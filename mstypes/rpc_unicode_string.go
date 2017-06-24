@@ -13,6 +13,7 @@ type RPC_UnicodeString struct {
 	Value         string
 }
 
+// Read_RPC_UnicodeString reads a RPC_UnicodeString from the bytes slice.
 func Read_RPC_UnicodeString(b *[]byte, p *int, e *binary.ByteOrder) (RPC_UnicodeString, error) {
 	l := ndr.Read_uint16(b, p, e)
 	ml := ndr.Read_uint16(b, p, e)
@@ -27,6 +28,7 @@ func Read_RPC_UnicodeString(b *[]byte, p *int, e *binary.ByteOrder) (RPC_Unicode
 	}, nil
 }
 
+// UnmarshalString populates a golang string into the RPC_UnicodeString struct.
 func (s *RPC_UnicodeString) UnmarshalString(b *[]byte, p *int, e *binary.ByteOrder) (err error) {
 	s.Value, err = ndr.Read_ConformantVaryingString(b, p, e)
 	return

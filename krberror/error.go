@@ -21,14 +21,17 @@ type Krberror struct {
 	EText     []string
 }
 
+// Error function to implement the error interface.
 func (e Krberror) Error() string {
 	return fmt.Sprintf("[Root cause: %s] ", e.RootCause) + strings.Join(e.EText, SEPARATOR)
 }
 
-func (e *Krberror) Add2(et string, s string) {
+// Add another error statement to the error.
+func (e *Krberror) Add(et string, s string) {
 	e.EText = append([]string{fmt.Sprintf("%s: %s", et, s)}, e.EText...)
 }
 
+// NewKrberror creates a new instance of Krberror.
 func NewKrberror(et, s string) Krberror {
 	return Krberror{
 		RootCause: et,
@@ -36,6 +39,7 @@ func NewKrberror(et, s string) Krberror {
 	}
 }
 
+// Errorf appends to or creates a new Krberror.
 func Errorf(err error, et, format string, a ...interface{}) Krberror {
 	if e, ok := err.(Krberror); ok {
 		e.EText = append([]string{fmt.Sprintf("%s: "+format, et, a)}, e.EText...)
@@ -44,6 +48,7 @@ func Errorf(err error, et, format string, a ...interface{}) Krberror {
 	return NewErrorf(et, format+": %v", a, err)
 }
 
+// NewErrorf creates a new Krberror from a formatted string.
 func NewErrorf(et, format string, a ...interface{}) Krberror {
 	return Krberror{
 		RootCause: et,

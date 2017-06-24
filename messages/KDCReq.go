@@ -80,7 +80,7 @@ type KDCReqBody struct {
 	AdditionalTickets []Ticket            `asn1:"explicit,optional,tag:11"`
 }
 
-// Generate a new KRB_AS_REQ struct.
+// NewASReq generates a new KRB_AS_REQ struct.
 func NewASReq(c *config.Config, cname types.PrincipalName) ASReq {
 	nonce := int(rand.Int31())
 	t := time.Now().UTC()
@@ -123,7 +123,7 @@ func NewASReq(c *config.Config, cname types.PrincipalName) ASReq {
 	return a
 }
 
-// Generate a new KRB_TGS_REQ struct.
+// NewTGSReq generates a new KRB_TGS_REQ struct.
 func NewTGSReq(cname types.PrincipalName, c *config.Config, tkt Ticket, sessionKey types.EncryptionKey, spn types.PrincipalName, renewal bool) (TGSReq, error) {
 	nonce := int(rand.Int31())
 	t := time.Now().UTC()
@@ -268,7 +268,7 @@ func (k *KDCReqBody) Unmarshal(b []byte) error {
 	return nil
 }
 
-// ASN1 marshal ASReq struct.
+// Marshal ASReq struct.
 func (k *ASReq) Marshal() ([]byte, error) {
 	m := marshalKDCReq{
 		PVNO:    k.PVNO,
@@ -294,7 +294,7 @@ func (k *ASReq) Marshal() ([]byte, error) {
 	return mk, nil
 }
 
-// ASN1 marshal TGSReq struct.
+// Marshal TGSReq struct.
 func (k *TGSReq) Marshal() ([]byte, error) {
 	m := marshalKDCReq{
 		PVNO:    k.PVNO,
@@ -320,7 +320,7 @@ func (k *TGSReq) Marshal() ([]byte, error) {
 	return mk, nil
 }
 
-// ASN1 marshal KRB_KDC_REQ body struct.
+// Marshal KRB_KDC_REQ body struct.
 func (k *KDCReqBody) Marshal() ([]byte, error) {
 	var b []byte
 	m := marshalKDCReqBody{

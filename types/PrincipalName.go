@@ -10,6 +10,7 @@ type PrincipalName struct {
 	NameString []string `asn1:"generalstring,explicit,tag:1"`
 }
 
+// GetSalt returns a salt derived from the PrincipalName.
 func (pn *PrincipalName) GetSalt(realm string) string {
 	var sb []byte
 	sb = append(sb, realm...)
@@ -19,6 +20,7 @@ func (pn *PrincipalName) GetSalt(realm string) string {
 	return string(sb)
 }
 
+// Equal tests if the PrincipalName is equal to the one provided.
 func (pn *PrincipalName) Equal(n PrincipalName) bool {
 	if n.NameType != pn.NameType {
 		return false
@@ -31,6 +33,7 @@ func (pn *PrincipalName) Equal(n PrincipalName) bool {
 	return true
 }
 
+// GetPrincipalNameString returns the PrincipalName in string form.
 func (pn *PrincipalName) GetPrincipalNameString() string {
 	return strings.Join(pn.NameString, "/")
 }

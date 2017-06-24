@@ -20,6 +20,7 @@ type RPC_SIDIdentifierAuthority struct {
 	Value []byte // 6 bytes
 }
 
+// Read_RPC_SID reads a RPC_SID from the bytes slice.
 func Read_RPC_SID(b *[]byte, p *int, e *binary.ByteOrder) (RPC_SID, error) {
 	size := int(ndr.Read_uint32(b, p, e)) // This is part of the NDR encoding rather than the data type.
 	r := ndr.Read_uint8(b, p)
@@ -43,30 +44,14 @@ func Read_RPC_SID(b *[]byte, p *int, e *binary.ByteOrder) (RPC_SID, error) {
 	}, nil
 }
 
+// Read_RPC_SIDIdentifierAuthority reads a RPC_SIDIdentifierAuthority from the bytes slice.
 func Read_RPC_SIDIdentifierAuthority(b *[]byte, p *int, e *binary.ByteOrder) RPC_SIDIdentifierAuthority {
 	return RPC_SIDIdentifierAuthority{
 		Value: ndr.Read_bytes(b, p, 6, e),
 	}
 }
 
-//SID= "S-1-" IdentifierAuthority 1*SubAuthority
-//IdentifierAuthority= IdentifierAuthorityDec / IdentifierAuthorityHex
-//; If the identifier authority is < 2^32, the
-//; identifier authority is represented as a decimal ; number
-//; If the identifier authority is >= 2^32,
-//; the identifier authority is represented in
-//; hexadecimal
-//IdentifierAuthorityDec = 1*10DIGIT
-//; IdentifierAuthorityDec, top level authority of a
-//; security identifier is represented as a decimal number
-//IdentifierAuthorityHex = "0x" 12HEXDIG
-//; IdentifierAuthorityHex, the top-level authority of a
-//; security identifier is represented as a hexadecimal number
-//SubAuthority= "-" 1*10DIGIT
-//; Sub-Authority is always represented as a decimal number
-//; No leading "0" characters are allowed when IdentifierAuthority ; or SubAuthority is represented as a decimal number
-//; All hexadecimal digits must be output in string format,
-//; pre-pended by "0x"
+// ToString returns the string representation of the RPC_SID.
 func (s *RPC_SID) ToString() string {
 	var str string
 	b := append(make([]byte, 2, 2), s.IdentifierAuthority.Value...)

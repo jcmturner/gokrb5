@@ -1,4 +1,4 @@
-// ASN1 application tag numbers.
+// Package asnAppTag provides ASN1 application tag numbers.
 package asnAppTag
 
 const (

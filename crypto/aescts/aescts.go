@@ -1,4 +1,4 @@
-// AES CipherText Stealing encryption and decryption methods
+// Package aescts provides AES CipherText Stealing encryption and decryption methods
 package aescts
 
 import (
@@ -9,6 +9,7 @@ import (
 	"github.com/jcmturner/gokrb5/crypto/common"
 )
 
+// Encrypt the message with the key and the initial vector.
 func Encrypt(key, iv, message []byte) ([]byte, []byte, error) {
 	l := len(message)
 
@@ -61,6 +62,7 @@ func Encrypt(key, iv, message []byte) ([]byte, []byte, error) {
 	return lb, ct[:l], nil
 }
 
+// Decrypt the ciphertext with the key and the initial vector.
 func Decrypt(key, iv, ciphertext []byte) ([]byte, error) {
 	// Copy the cipher text as golang slices even when passed by value to this method can result in the backing arrays of the calling code value being updated.
 	ct := make([]byte, len(ciphertext))

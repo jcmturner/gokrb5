@@ -53,6 +53,7 @@ type HostAddress struct {
 	Address  []byte `asn1:"explicit,tag:1"`
 }
 
+// GetHostAddress returns a HostAddress struct from a string in the format <hostname>:<port>
 func GetHostAddress(s string) (HostAddress, error) {
 	var h HostAddress
 	cAddr, _, err := net.SplitHostPort(s)
@@ -79,12 +80,14 @@ func GetHostAddress(s string) (HostAddress, error) {
 	return h, nil
 }
 
+// GetAddress returns a string representation of the HostAddress.
 func (h *HostAddress) GetAddress() (string, error) {
 	var b []byte
 	_, err := asn1.Unmarshal(h.Address, &b)
 	return string(b), err
 }
 
+// HostAddressesEqual tests if two HostAddress slices are equal.
 func HostAddressesEqual(h, a []HostAddress) bool {
 	if len(h) != len(a) {
 		return false
@@ -105,6 +108,7 @@ func HostAddressesEqual(h, a []HostAddress) bool {
 	return true
 }
 
+// HostAddressesContains tests if a HostAddress is contained in a HostAddress slice.
 func HostAddressesContains(h []HostAddress, a HostAddress) bool {
 	for _, e := range h {
 		if e.Equal(a) {
@@ -114,6 +118,7 @@ func HostAddressesContains(h []HostAddress, a HostAddress) bool {
 	return false
 }
 
+// Equal tests if the HostAddress is equal to another HostAddress provided.
 func (h *HostAddress) Equal(a HostAddress) bool {
 	if h.AddrType != a.AddrType {
 		return false
@@ -121,6 +126,7 @@ func (h *HostAddress) Equal(a HostAddress) bool {
 	return bytes.Equal(h.Address, a.Address)
 }
 
+// Contains tests if a HostAddress is contained within the HostAddresses struct.
 func (h *HostAddresses) Contains(a HostAddress) bool {
 	for _, e := range *h {
 		if e.Equal(a) {
@@ -130,6 +136,7 @@ func (h *HostAddresses) Contains(a HostAddress) bool {
 	return false
 }
 
+// Equal tests if a HostAddress slice is equal to the HostAddresses struct.
 func (h *HostAddresses) Equal(a []HostAddress) bool {
 	if len(*h) != len(a) {
 		return false

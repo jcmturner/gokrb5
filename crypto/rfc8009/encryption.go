@@ -1,4 +1,4 @@
-// Encryption and checksum methods as specified in RFC 8009
+// Package rfc8009 provides encryption and checksum methods as specified in RFC 8009
 package rfc8009
 
 import (
@@ -13,6 +13,7 @@ import (
 	"github.com/jcmturner/gokrb5/iana/etypeID"
 )
 
+// EncryptData encrypts the data provided using methods specific to the etype provided as defined in RFC 8009.
 func EncryptData(key, data []byte, e etype.EType) ([]byte, []byte, error) {
 	kl := e.GetKeyByteSize()
 	if e.GetETypeID() == etypeID.AES256_CTS_HMAC_SHA384_192 {
@@ -25,28 +26,8 @@ func EncryptData(key, data []byte, e etype.EType) ([]byte, []byte, error) {
 	return aescts.Encrypt(key, ivz, data)
 }
 
-//encryption function: as follows, where E() is AES encryption in
-//CBC-CS3 mode, and h is the size of truncated HMAC (128 bits or 192
-//bits as described above).
-//
-//N = random value of length 128 bits (the AES block size)
-//IV = cipher state
-//C = E(Ke, N | plaintext, IV)
-//H = HMAC(Ki, IV | C)
-//ciphertext = C | H[1..h]
-//
-//Steps to compute the 128-bit cipher state:
-//L = length of C in bits
-//portion C into 128-bit blocks, placing any remainder of less
-//than 128 bits into a final block
-//if L == 128: cipher state = C
-//else if L mod 128 > 0: cipher state = last full (128-bit) block
-//of C (the next-to-last
-//block)
-//else if L mod 128 == 0: cipher state = next-to-last block of C
-//
-//(Note that L will never be less than 128 because of the
-//presence of N in the encryption input.)
+// EncryptMessage encrypts the message provided using the methods specific to the etype provided as defined in RFC 8009.
+// The encrypted data is concatenated with its integrity hash to create an encrypted message.
 func EncryptMessage(key, message []byte, usage uint32, e etype.EType) ([]byte, []byte, error) {
 	kl := e.GetKeyByteSize()
 	if e.GetETypeID() == etypeID.AES256_CTS_HMAC_SHA384_192 {
@@ -89,6 +70,7 @@ func EncryptMessage(key, message []byte, usage uint32, e etype.EType) ([]byte, [
 	return iv, b, nil
 }
 
+// DecryptData decrypts the data provided using the methods specific to the etype provided as defined in RFC 8009.
 func DecryptData(key, data []byte, e etype.EType) ([]byte, error) {
 	kl := e.GetKeyByteSize()
 	if e.GetETypeID() == etypeID.AES256_CTS_HMAC_SHA384_192 {
@@ -101,6 +83,8 @@ func DecryptData(key, data []byte, e etype.EType) ([]byte, error) {
 	return aescts.Decrypt(key, ivz, data)
 }
 
+// DecryptMessage decrypts the message provided using the methods specific to the etype provided as defined in RFC 8009.
+// The integrity of the message is also verified.
 func DecryptMessage(key, ciphertext []byte, usage uint32, e etype.EType) ([]byte, error) {
 	//Derive the key
 	k, err := e.DeriveKey(key, common.GetUsageKe(usage))
@@ -120,6 +104,7 @@ func DecryptMessage(key, ciphertext []byte, usage uint32, e etype.EType) ([]byte
 	return b[e.GetConfounderByteSize():], nil
 }
 
+// GetIntegityHash returns a keyed integrity hash of the bytes provided as defined in RFC 8009
 func GetIntegityHash(iv, c, key []byte, usage uint32, e etype.EType) ([]byte, error) {
 	// Generate and append integrity hash
 	// The HMAC is calculated over the cipher state concatenated with the
@@ -131,7 +116,7 @@ func GetIntegityHash(iv, c, key []byte, usage uint32, e etype.EType) ([]byte, er
 	return common.GetIntegrityHash(ib, key, usage, e)
 }
 
-// Verify the integrity of cipertext bytes ct.
+// VerifyIntegrity verifies the integrity of cipertext bytes ct.
 func VerifyIntegrity(key, ct []byte, usage uint32, etype etype.EType) bool {
 	h := make([]byte, etype.GetHMACBitLength()/8)
 	copy(h, ct[len(ct)-etype.GetHMACBitLength()/8:])

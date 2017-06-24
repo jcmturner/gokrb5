@@ -61,7 +61,7 @@ type NegTokenResp struct {
 
 type NegTokenTarg NegTokenResp
 
-// Unmarshal and return either a NegTokenInit or a NegTokenResp.
+// UnmarshalNegToken umarshals and returns either a NegTokenInit or a NegTokenResp.
 //
 // The boolean indicates if the response is a NegTokenInit.
 // If error is nil and the boolean is false the response is a NegTokenResp.
@@ -130,7 +130,7 @@ func (n *NegTokenResp) Marshal() ([]byte, error) {
 	return nb, nil
 }
 
-// Create new Init negotiation token for Kerberos 5
+// NewNegTokenInitKrb5 creates new Init negotiation token for Kerberos 5
 func NewNegTokenInitKrb5(creds credentials.Credentials, tkt messages.Ticket, sessionKey types.EncryptionKey) (NegTokenInit, error) {
 	mt, err := NewKRB5APREQMechToken(creds, tkt, sessionKey)
 	if err != nil {

@@ -43,6 +43,7 @@ type Authenticator struct {
 	AuthorizationData AuthorizationData `asn1:"explicit,optional,tag:8"`
 }
 
+// NewAuthenticator creates a new Authenticator.
 func NewAuthenticator(realm string, cname PrincipalName) Authenticator {
 	t := time.Now().UTC()
 	return Authenticator{
@@ -56,6 +57,7 @@ func NewAuthenticator(realm string, cname PrincipalName) Authenticator {
 	}
 }
 
+// GenerateSeqNumberAndSubKey sets the Authenticator's sequence number and subkey.
 func (a *Authenticator) GenerateSeqNumberAndSubKey(keyType, keySize int) {
 	a.SeqNumber = int(rand.Int31())
 	//Generate subkey value
@@ -67,11 +69,13 @@ func (a *Authenticator) GenerateSeqNumberAndSubKey(keyType, keySize int) {
 	}
 }
 
+// Unmarshal bytes into the Authenticator.
 func (a *Authenticator) Unmarshal(b []byte) error {
 	_, err := asn1.UnmarshalWithParams(b, a, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.Authenticator))
 	return err
 }
 
+// Marshal the Authenticator.
 func (a *Authenticator) Marshal() ([]byte, error) {
 	b, err := asn1.Marshal(*a)
 	if err != nil {

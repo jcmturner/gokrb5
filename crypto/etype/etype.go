@@ -1,4 +1,4 @@
-// The Kerberos Encryption Type interface
+// Package etype provides the Kerberos Encryption Type interface
 package etype
 
 import "hash"

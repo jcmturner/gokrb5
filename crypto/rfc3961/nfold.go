@@ -34,7 +34,8 @@ https://svn.apache.org/repos/asf/directory/apacheds/tags/1.5.1/kerberos-shared/s
 License: http://www.apache.org/licenses/LICENSE-2.0
 */
 
-// RFC 3961: n-fold algorithm.
+// Nfold expands the key to ensure it is not smaller than one cipher block.
+// Defined in RFC 3961.
 //
 // m input bytes that will be "stretched" to the least common multiple of n bits and the bit length of m.
 func Nfold(m []byte, n int) []byte {

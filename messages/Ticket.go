@@ -48,6 +48,7 @@ type TransitedEncoding struct {
 	Contents []byte `asn1:"explicit,tag:1"`
 }
 
+// NewTicket creates a new Ticket instance.
 func NewTicket(cname types.PrincipalName, crealm string, sname types.PrincipalName, srealm string, flags asn1.BitString, sktab keytab.Keytab, eTypeID, kvno int, authTime, startTime, endTime, renewTill time.Time) (Ticket, types.EncryptionKey, error) {
 	etype, err := crypto.GetEtype(eTypeID)
 	if err != nil {
@@ -87,11 +88,13 @@ func NewTicket(cname types.PrincipalName, crealm string, sname types.PrincipalNa
 	return tkt, sessionKey, nil
 }
 
+// Unmarshal bytes b into a Ticket struct.
 func (t *Ticket) Unmarshal(b []byte) error {
 	_, err := asn1.UnmarshalWithParams(b, t, fmt.Sprintf("application,explicit,tag:%d", asnAppTag.Ticket))
 	return err
 }
 
+// Marshal the Ticket.
 func (t *Ticket) Marshal() ([]byte, error) {
 	b, err := asn1.Marshal(*t)
 	if err != nil {
@@ -101,16 +104,19 @@ func (t *Ticket) Marshal() ([]byte, error) {
 	return b, nil
 }
 
+// Unmarshal bytes b into the EncTicketPart struct.
 func (t *EncTicketPart) Unmarshal(b []byte) error {
 	_, err := asn1.UnmarshalWithParams(b, t, fmt.Sprintf("application,explicit,tag:%d", asnAppTag.EncTicketPart))
 	return err
 }
 
+// UnmarshalTicket returns a ticket from the bytes provided.
 func UnmarshalTicket(b []byte) (t Ticket, err error) {
 	_, err = asn1.UnmarshalWithParams(b, &t, fmt.Sprintf("application,explicit,tag:%d", asnAppTag.Ticket))
 	return
 }
 
+// UnmarshalTicketsSequence returns a slice of Tickets from a raw ASN1 value.
 func UnmarshalTicketsSequence(in asn1.RawValue) ([]Ticket, error) {
 	//This is a workaround to a asn1 decoding issue in golang - https://github.com/golang/go/issues/17321. It's not pretty I'm afraid
 	//We pull out raw values from the larger raw value (that is actually the data of the sequence of raw values) and track our position moving along the data.
@@ -135,6 +141,7 @@ func UnmarshalTicketsSequence(in asn1.RawValue) ([]Ticket, error) {
 	return tkts, nil
 }
 
+// MarshalTicketSequence marshals a slice of Tickets returning an ASN1 raw value containing the ticket sequence.
 func MarshalTicketSequence(tkts []Ticket) (asn1.RawValue, error) {
 	raw := asn1.RawValue{
 		Class:      2,
@@ -167,6 +174,7 @@ func MarshalTicketSequence(tkts []Ticket) (asn1.RawValue, error) {
 	return raw, nil
 }
 
+// DecryptEncPart decrypts the encrypted part of the ticket.
 func (t *Ticket) DecryptEncPart(keytab keytab.Keytab, sa string) error {
 	var upn []string
 	if sa != "" {
@@ -191,6 +199,7 @@ func (t *Ticket) DecryptEncPart(keytab keytab.Keytab, sa string) error {
 	return nil
 }
 
+// GetPACType returns a Microsoft PAC that has been extracted from the ticket and processed.
 func (t *Ticket) GetPACType(keytab keytab.Keytab, sa string) (bool, pac.PACType, error) {
 	var isPAC bool
 	for _, ad := range t.DecryptedEncPart.AuthorizationData {

@@ -1,4 +1,4 @@
-// Implementation of Kerberos keytabs: https://web.mit.edu/kerberos/krb5-devel/doc/formats/keytab_file_format.html.
+// Package keytab implements Kerberos keytabs: https://web.mit.edu/kerberos/krb5-devel/doc/formats/keytab_file_format.html.
 package keytab
 
 import (
@@ -35,7 +35,7 @@ type Principal struct {
 	NameType      int32
 }
 
-//Create new, empty Keytab type.
+// NewKeytab creates new, empty Keytab type.
 func NewKeytab() Keytab {
 	var e []Entry
 	return Keytab{
@@ -44,7 +44,7 @@ func NewKeytab() Keytab {
 	}
 }
 
-// Get the EncryptionKey from the Keytab for the newest entry with the required kvno, etype and matching principal.
+// GetEncryptionKey returns the EncryptionKey from the Keytab for the newest entry with the required kvno, etype and matching principal.
 func (kt *Keytab) GetEncryptionKey(nameString []string, realm string, kvno, etype int) (types.EncryptionKey, error) {
 	var key types.EncryptionKey
 	var t time.Time

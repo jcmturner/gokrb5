@@ -63,6 +63,7 @@ encoding of a bit string that is declared with the "NamedBit"
 notation.
 */
 
+// NewKrbFlags returns an ASN1 BitString struct of the right size for KrbFlags.
 func NewKrbFlags() asn1.BitString {
 	f := asn1.BitString{}
 	f.Bytes = make([]byte, 4)
@@ -70,12 +71,14 @@ func NewKrbFlags() asn1.BitString {
 	return f
 }
 
+// SetFlags sets the flags of an ASN1 BitString.
 func SetFlags(f *asn1.BitString, j []int) {
 	for _, i := range j {
 		SetFlag(f, i)
 	}
 }
 
+// SetFlag sets a flag in an ASN1 BitString.
 func SetFlag(f *asn1.BitString, i int) {
 	for l := len(f.Bytes); l < 4; l++ {
 		(*f).Bytes = append((*f).Bytes, byte(0))
@@ -88,12 +91,14 @@ func SetFlag(f *asn1.BitString, i int) {
 	(*f).Bytes[b] = (*f).Bytes[b] | (1 << p)
 }
 
+// UnsetFlags unsets flags in an ASN1 BitString.
 func UnsetFlags(f *asn1.BitString, j []int) {
 	for _, i := range j {
 		UnsetFlag(f, i)
 	}
 }
 
+// UnsetFlag unsets a flag in an ASN1 BitString.
 func UnsetFlag(f *asn1.BitString, i int) {
 	for l := len(f.Bytes); l < 4; l++ {
 		(*f).Bytes = append((*f).Bytes, byte(0))
@@ -106,6 +111,7 @@ func UnsetFlag(f *asn1.BitString, i int) {
 	(*f).Bytes[b] = (*f).Bytes[b] &^ (1 << p)
 }
 
+// IsFlagSet tests if a flag is set in the ASN1 BitString.
 func IsFlagSet(f *asn1.BitString, i int) bool {
 	//Which byte?
 	b := int(i / 8)

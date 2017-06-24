@@ -76,7 +76,7 @@ func (k *KRBCred) Unmarshal(b []byte) error {
 	return nil
 }
 
-// Decrypt the encrypted part of a KRB_CRED.
+// DecryptEncPart decrypts the encrypted part of a KRB_CRED.
 func (k *KRBCred) DecryptEncPart(key types.EncryptionKey) error {
 	b, err := crypto.DecryptEncPart(k.EncPart, key, keyusage.KRB_CRED_ENCPART)
 	if err != nil {

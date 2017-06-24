@@ -29,6 +29,7 @@ type PACType struct {
 	ZeroSigData        []byte
 }
 
+// Unmarshal bytes into the PACType struct
 func (pac *PACType) Unmarshal(b []byte) error {
 	var p int
 	var e binary.ByteOrder = binary.LittleEndian
@@ -46,6 +47,7 @@ func (pac *PACType) Unmarshal(b []byte) error {
 	return nil
 }
 
+// ProcessPACInfoBuffers processes the PAC Info Buffers.
 // https://msdn.microsoft.com/en-us/library/cc237954.aspx
 func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 	for _, buf := range pac.Buffers {

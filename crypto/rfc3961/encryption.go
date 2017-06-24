@@ -1,4 +1,4 @@
-// Encryption and checksum methods as specified in RFC 3961
+// Package rfc3961 provides encryption and checksum methods as specified in RFC 3961
 package rfc3961
 
 import (
@@ -12,6 +12,7 @@ import (
 	"github.com/jcmturner/gokrb5/crypto/etype"
 )
 
+// DES3EncryptData encrypts the data provided using DES3 and methods specific to the etype provided.
 func DES3EncryptData(key, data []byte, e etype.EType) ([]byte, []byte, error) {
 	if len(key) != e.GetKeyByteSize() {
 		return nil, nil, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeyByteSize(), len(key))
@@ -33,6 +34,8 @@ func DES3EncryptData(key, data []byte, e etype.EType) ([]byte, []byte, error) {
 	return ivz, ct, nil
 }
 
+// DES3EncryptMessage encrypts the message provided using DES3 and methods specific to the etype provided.
+// The encrypted data is concatenated with its integrity hash to create an encrypted message.
 func DES3EncryptMessage(key, message []byte, usage uint32, e etype.EType) ([]byte, []byte, error) {
 	//confounder
 	c := make([]byte, e.GetConfounderByteSize())
@@ -65,6 +68,7 @@ func DES3EncryptMessage(key, message []byte, usage uint32, e etype.EType) ([]byt
 	return iv, b, nil
 }
 
+// DES3DecryptData decrypts the data provided using DES3 and methods specific to the etype provided.
 func DES3DecryptData(key, data []byte, e etype.EType) ([]byte, error) {
 	if len(key) != e.GetKeyByteSize() {
 		return []byte{}, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeyByteSize(), len(key))
@@ -84,6 +88,8 @@ func DES3DecryptData(key, data []byte, e etype.EType) ([]byte, error) {
 	return pt, nil
 }
 
+// DES3DecryptMessage decrypts the message provided using DES3 and methods specific to the etype provided.
+// The integrity of the message is also verified.
 func DES3DecryptMessage(key, ciphertext []byte, usage uint32, e etype.EType) ([]byte, error) {
 	//Derive the key
 	k, err := e.DeriveKey(key, common.GetUsageKe(usage))
@@ -103,7 +109,7 @@ func DES3DecryptMessage(key, ciphertext []byte, usage uint32, e etype.EType) ([]
 	return b[e.GetConfounderByteSize():], nil
 }
 
-// Verify the integrity of cipertext bytes ct.
+// VerifyIntegrity verifies the integrity of cipertext bytes ct.
 func VerifyIntegrity(key, ct, pt []byte, usage uint32, etype etype.EType) bool {
 	//The ciphertext output is the concatenation of the output of the basic
 	//encryption function E and a (possibly truncated) HMAC using the

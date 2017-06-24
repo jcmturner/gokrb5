@@ -22,7 +22,7 @@ const (
 	AUTHENTICATED_CTXKEY       ctxKey = 1
 )
 
-// Kerberos SPNEGO authentication HTTP handler wrapper.
+// SPNEGOKRB5Authenticate is a Kerberos SPNEGO authentication HTTP handler wrapper.
 //
 // kt - keytab for the service user
 //

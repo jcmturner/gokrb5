@@ -1,4 +1,4 @@
-// Kerberos 5 checksum type assigned numbers.
+// Package chksumtype provides Kerberos 5 checksum type assigned numbers.
 package chksumtype
 
 const (

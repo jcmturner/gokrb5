@@ -40,7 +40,7 @@ func (k *KRBPriv) Unmarshal(b []byte) error {
 	return nil
 }
 
-// Decrypt the encrypted part of a KRB_PRIV.
+// Unmarshal bytes b into the EncKrbPrivPart struct.
 func (k *EncKrbPrivPart) Unmarshal(b []byte) error {
 	_, err := asn1.UnmarshalWithParams(b, k, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.EncKrbPrivPart))
 	if err != nil {

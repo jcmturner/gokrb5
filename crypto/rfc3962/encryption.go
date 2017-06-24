@@ -1,4 +1,4 @@
-// Encryption and checksum methods as specified in RFC 3962
+// Package rfc3962 provides encryption and checksum methods as specified in RFC 3962
 package rfc3962
 
 import (
@@ -10,6 +10,7 @@ import (
 	"github.com/jcmturner/gokrb5/crypto/etype"
 )
 
+// EncryptData encrypts the data provided using methods specific to the etype provided as defined in RFC 3962.
 func EncryptData(key, data []byte, e etype.EType) ([]byte, []byte, error) {
 	if len(key) != e.GetKeyByteSize() {
 		return []byte{}, []byte{}, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeyByteSize(), len(key))
@@ -18,6 +19,8 @@ func EncryptData(key, data []byte, e etype.EType) ([]byte, []byte, error) {
 	return aescts.Encrypt(key, ivz, data)
 }
 
+// EncryptMessage encrypts the message provided using the methods specific to the etype provided as defined in RFC 3962.
+// The encrypted data is concatenated with its integrity hash to create an encrypted message.
 func EncryptMessage(key, message []byte, usage uint32, e etype.EType) ([]byte, []byte, error) {
 	if len(key) != e.GetKeyByteSize() {
 		return []byte{}, []byte{}, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeyByteSize(), len(key))
@@ -54,6 +57,7 @@ func EncryptMessage(key, message []byte, usage uint32, e etype.EType) ([]byte, [
 	return iv, b, nil
 }
 
+// DecryptData decrypts the data provided using the methods specific to the etype provided as defined in RFC 3962.
 func DecryptData(key, data []byte, e etype.EType) ([]byte, error) {
 	if len(key) != e.GetKeyByteSize() {
 		return []byte{}, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeyByteSize(), len(key))
@@ -62,6 +66,8 @@ func DecryptData(key, data []byte, e etype.EType) ([]byte, error) {
 	return aescts.Decrypt(key, ivz, data)
 }
 
+// DecryptMessage decrypts the message provided using the methods specific to the etype provided as defined in RFC 3962.
+// The integrity of the message is also verified.
 func DecryptMessage(key, ciphertext []byte, usage uint32, e etype.EType) ([]byte, error) {
 	//Derive the key
 	k, err := e.DeriveKey(key, common.GetUsageKe(usage))

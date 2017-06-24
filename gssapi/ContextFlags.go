@@ -26,6 +26,7 @@ const (
 
 type ContextFlags asn1.BitString
 
+// NewContextFlags creates a new ContextFlags instance.
 func NewContextFlags() ContextFlags {
 	var c ContextFlags
 	c.BitLength = 32

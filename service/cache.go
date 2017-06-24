@@ -1,4 +1,4 @@
-// Service integrations for Kerberos authentication.
+// Package service provides server side integrations for Kerberos authentication.
 package service
 
 import (
@@ -50,7 +50,7 @@ type replayCacheEntry struct {
 var replayCache Cache
 var once sync.Once
 
-// Get a pointer to the ServiceCache singleton.
+// GetReplayCache returns a pointer to the Cache singleton.
 func GetReplayCache(d time.Duration) *Cache {
 	// Create a singleton of the ReplayCache and start a background thread to regularly clean out old entries
 	once.Do(func() {
@@ -66,7 +66,7 @@ func GetReplayCache(d time.Duration) *Cache {
 	return &replayCache
 }
 
-// Add an entry to the ServiceCache.
+// AddEntry adds an entry to the Cache.
 func (c *Cache) AddEntry(sname types.PrincipalName, a types.Authenticator) {
 	ct := a.CTime.Add(time.Duration(a.Cusec) * time.Microsecond)
 	if ce, ok := (*c)[a.CName.GetPrincipalNameString()]; ok {
@@ -92,7 +92,7 @@ func (c *Cache) AddEntry(sname types.PrincipalName, a types.Authenticator) {
 	}
 }
 
-// Clear entries from the ServiceCache that are older than the duration provided.
+// ClearOldEntries clears entries from the Cache that are older than the duration provided.
 func (c *Cache) ClearOldEntries(d time.Duration) {
 	for ck := range *c {
 		for ct, e := range (*c)[ck].ReplayMap {
@@ -106,7 +106,7 @@ func (c *Cache) ClearOldEntries(d time.Duration) {
 	}
 }
 
-// Check if the Authenticator provided is a replay within the duration defined. If this is not a replay add the entry to the cache for tracking.
+// IsReplay tests if the Authenticator provided is a replay within the duration defined. If this is not a replay add the entry to the cache for tracking.
 func (c *Cache) IsReplay(sname types.PrincipalName, a types.Authenticator) bool {
 	if ck, ok := (*c)[a.CName.GetPrincipalNameString()]; ok {
 		ct := a.CTime.Add(time.Duration(a.Cusec) * time.Microsecond)

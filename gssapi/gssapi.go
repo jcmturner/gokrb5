@@ -1,4 +1,4 @@
-// Generic Security Services Application Program Interface implementation required for SPNEGO kerberos authentication.
+// Package gssapi implements Generic Security Services Application Program Interface required for SPNEGO kerberos authentication.
 package gssapi
 
 import (
@@ -86,6 +86,7 @@ func (s *SPNEGO) Marshal() ([]byte, error) {
 	return b, errors.New("SPNEGO cannot be marshalled. It contains neither a NegTokenInit or NegTokenResp")
 }
 
+// GetSPNEGOKrbNegTokenInit returns an SPNEGO struct containing a NegTokenInit.
 func GetSPNEGOKrbNegTokenInit(creds credentials.Credentials, tkt messages.Ticket, sessionKey types.EncryptionKey) (SPNEGO, error) {
 	negTokenInit, err := NewNegTokenInitKrb5(creds, tkt, sessionKey)
 	if err != nil {

@@ -11,6 +11,7 @@ type DeviceClaimsInfo struct {
 	Claims mstypes.ClaimsSetMetadata
 }
 
+// Unmarshal bytes into the DeviceClaimsInfo struct
 func (k *DeviceClaimsInfo) Unmarshal(b []byte) error {
 	ch, _, p, err := ndr.ReadHeaders(&b)
 	if err != nil {

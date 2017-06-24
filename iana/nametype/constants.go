@@ -1,4 +1,4 @@
-// Kerberos 5 principal name type numbers.
+// Package nametype provides Kerberos 5 principal name type numbers.
 package nametype
 
 const (

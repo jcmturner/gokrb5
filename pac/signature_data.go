@@ -36,6 +36,7 @@ type SignatureData struct {
 	RODCIdentifier uint16 // A 16-bit unsigned integer value in little-endian format that contains the first 16 bits of the key version number ([MS-KILE] section 3.1.5.8) when the KDC is an RODC. When the KDC is not an RODC, this field does not exist.
 }
 
+// Unmarshal bytes into the SignatureData struct
 func (k *SignatureData) Unmarshal(b []byte) ([]byte, error) {
 	var p int
 	var e binary.ByteOrder = binary.LittleEndian

@@ -1,4 +1,4 @@
-// Kerberos 5 encryption type assigned numbers.
+// Package etypeID provides Kerberos 5 encryption type assigned numbers.
 package etypeID
 
 const (

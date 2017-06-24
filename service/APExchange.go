@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-// Validates an AP_REQ sent to the service. Returns a boolean for if the AP_REQ is valid and the client's principal name and realm.
+// ValidateAPREQ validates an AP_REQ sent to the service. Returns a boolean for if the AP_REQ is valid and the client's principal name and realm.
 func ValidateAPREQ(APReq messages.APReq, kt keytab.Keytab, sa string, cAddr string) (bool, credentials.Credentials, error) {
 	var creds credentials.Credentials
 	err := APReq.Ticket.DecryptEncPart(kt, sa)

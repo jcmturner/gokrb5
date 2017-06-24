@@ -20,6 +20,7 @@ type KerbSidAndAttributes struct {
 	Attributes uint32
 }
 
+// Read_KerbSidAndAttributes reads a KerbSidAndAttribute from the bytes slice.
 func Read_KerbSidAndAttributes(b *[]byte, p *int, e *binary.ByteOrder) (KerbSidAndAttributes, error) {
 	s, err := Read_RPC_SID(b, p, e)
 	if err != nil {
@@ -32,6 +33,7 @@ func Read_KerbSidAndAttributes(b *[]byte, p *int, e *binary.ByteOrder) (KerbSidA
 	}, nil
 }
 
+// SetFlag sets a flag in a uint32 attribute value.
 func SetFlag(a *uint32, i uint) {
 	*a = *a | (1 << (31 - i))
 }

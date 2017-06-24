@@ -1,4 +1,4 @@
-//Kerberos 5 flag values.
+// Package flags provides Kerberos 5 flag assigned numbers.
 package flags
 
 const (

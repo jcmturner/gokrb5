@@ -13,6 +13,7 @@ type GroupMembership struct {
 	Attributes uint32
 }
 
+// Read_GroupMembership reads a GroupMembership from the bytes slice.
 func Read_GroupMembership(b *[]byte, p *int, e *binary.ByteOrder) GroupMembership {
 	r := ndr.Read_uint32(b, p, e)
 	a := ndr.Read_uint32(b, p, e)
@@ -32,6 +33,7 @@ type DomainGroupMembership struct {
 	GroupIDs   []GroupMembership // Size is value of GroupCount
 }
 
+// Read_DomainGroupMembership reads a DomainGroupMembership from the bytes slice.
 func Read_DomainGroupMembership(b *[]byte, p *int, e *binary.ByteOrder) (DomainGroupMembership, error) {
 	d, err := Read_RPC_SID(b, p, e)
 	if err != nil {

@@ -9,6 +9,7 @@ type TypedData struct {
 
 type TypedDataSequence []TypedData
 
+// Unmarshal bytes into the TypedDataSequence.
 func (a *TypedDataSequence) Unmarshal(b []byte) error {
 	_, err := asn1.Unmarshal(b, a)
 	return err

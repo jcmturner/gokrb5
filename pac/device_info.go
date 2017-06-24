@@ -19,6 +19,7 @@ type DeviceInfo struct {
 	DomainGroup       []mstypes.DomainGroupMembership // A pointer to a list of DOMAIN_GROUP_MEMBERSHIP structures (section 2.2.3) that contains the domains to which the account belongs to a group. The number of sets in this list MUST be equal to DomainCount.
 }
 
+// Unmarshal bytes into the DeviceInfo struct
 func (k *DeviceInfo) Unmarshal(b []byte) error {
 	ch, _, p, err := ndr.ReadHeaders(&b)
 	if err != nil {

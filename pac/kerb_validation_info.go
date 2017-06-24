@@ -72,6 +72,7 @@ type KerbValidationInfo struct {
 	ResourceGroupIDs        []mstypes.GroupMembership
 }
 
+// Unmarshal bytes into the DeviceInfo struct
 func (k *KerbValidationInfo) Unmarshal(b []byte) (err error) {
 	ch, _, p, err := ndr.ReadHeaders(&b)
 	if err != nil {
@@ -221,6 +222,7 @@ func (k *KerbValidationInfo) Unmarshal(b []byte) (err error) {
 	return nil
 }
 
+// GetGroupMembershipSIDs returns a slice of strings containing the group membership SIDs found in the PAC.
 func (k *KerbValidationInfo) GetGroupMembershipSIDs() []string {
 	gSize := len(k.GroupIDs) + len(k.ExtraSIDs)
 	g := make([]string, gSize, gSize)

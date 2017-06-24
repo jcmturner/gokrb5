@@ -98,16 +98,19 @@ type ADKDCIssued struct {
 
 type ADMandatoryForKDC AuthorizationData
 
+// Unmarshal bytes into the ADKDCIssued.
 func (a *ADKDCIssued) Unmarshal(b []byte) error {
 	_, err := asn1.Unmarshal(b, a)
 	return err
 }
 
+// Unmarshal bytes into the AuthorizationData.
 func (a *AuthorizationData) Unmarshal(b []byte) error {
 	_, err := asn1.Unmarshal(b, a)
 	return err
 }
 
+// Unmarshal bytes into the AuthorizationDataEntry.
 func (a *AuthorizationDataEntry) Unmarshal(b []byte) error {
 	_, err := asn1.Unmarshal(b, a)
 	return err

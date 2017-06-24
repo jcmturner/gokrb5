@@ -34,6 +34,7 @@ type MechToken struct {
 	KRBError messages.KRBError
 }
 
+// Unmarshal a MechToken
 func (m *MechToken) Unmarshal(b []byte) error {
 	var oid asn1.ObjectIdentifier
 	r, err := asn1.UnmarshalWithParams(b, &oid, fmt.Sprintf("application,explicit,tag:%v", 0))
@@ -68,6 +69,7 @@ func (m *MechToken) Unmarshal(b []byte) error {
 	return nil
 }
 
+// IsAPReq tests if the MechToken contains an AP_REQ
 func (m *MechToken) IsAPReq() bool {
 	if hex.EncodeToString(m.TokID) == TOK_ID_KRB_AP_REQ {
 		return true
@@ -75,6 +77,7 @@ func (m *MechToken) IsAPReq() bool {
 	return false
 }
 
+// IsAPRep tests if the MechToken contains an AP_REP
 func (m *MechToken) IsAPRep() bool {
 	if hex.EncodeToString(m.TokID) == TOK_ID_KRB_AP_REP {
 		return true
@@ -82,6 +85,7 @@ func (m *MechToken) IsAPRep() bool {
 	return false
 }
 
+// IsKRBError tests if the MechToken contains an KRB_ERROR
 func (m *MechToken) IsKRBError() bool {
 	if hex.EncodeToString(m.TokID) == TOK_ID_KRB_ERROR {
 		return true
@@ -89,7 +93,7 @@ func (m *MechToken) IsKRBError() bool {
 	return false
 }
 
-// Create new kerberos AP_REQ MechToken
+// NewKRB5APREQMechToken creates new kerberos AP_REQ MechToken
 func NewKRB5APREQMechToken(creds credentials.Credentials, tkt messages.Ticket, sessionKey types.EncryptionKey) ([]byte, error) {
 	// Create the header
 	b, _ := asn1.Marshal(MechTypeOID_Krb5)

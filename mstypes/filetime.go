@@ -1,4 +1,4 @@
-// Representations of Microsoft types for PAC processing.
+// Package mstypes implements representations of Microsoft types for PAC processing.
 package mstypes
 
 import (
@@ -24,7 +24,7 @@ type FileTime struct {
 	HighDateTime uint32
 }
 
-// Return a golang Time type from the FileTime
+// Time return a golang Time type from the FileTime
 func (ft FileTime) Time() time.Time {
 	ns := (ft.MSEpoch() - UNIX_EPOCH_DIFF) * 100
 	return time.Unix(0, int64(ns)).UTC()
@@ -40,7 +40,7 @@ func (ft FileTime) Unix() int64 {
 	return (ft.MSEpoch() - UNIX_EPOCH_DIFF) / 10000000
 }
 
-// Get a FileTime type from the provided Golang Time type.
+// GetFileTime returns a FileTime type from the provided Golang Time type.
 func GetFileTime(t time.Time) FileTime {
 	ns := t.UnixNano()
 	fp := (ns / 100) + UNIX_EPOCH_DIFF
@@ -52,6 +52,7 @@ func GetFileTime(t time.Time) FileTime {
 	}
 }
 
+// Read_FileTime reads a FileTime from the bytes slice.
 func Read_FileTime(b *[]byte, p *int, e *binary.ByteOrder) FileTime {
 	l := ndr.Read_uint32(b, p, e)
 	h := ndr.Read_uint32(b, p, e)

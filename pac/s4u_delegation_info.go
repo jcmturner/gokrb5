@@ -13,6 +13,7 @@ type S4U_DelegationInfo struct {
 	S4UTransitedServices []mstypes.RPC_UnicodeString // List of all services that have been delegated through by this client and subsequent services or servers.. Size is value of TransitedListSize
 }
 
+// Unmarshal bytes into the S4U_DelegationInfo struct
 func (k *S4U_DelegationInfo) Unmarshal(b []byte) error {
 	ch, _, p, err := ndr.ReadHeaders(&b)
 	if err != nil {

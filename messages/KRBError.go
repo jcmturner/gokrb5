@@ -1,4 +1,4 @@
-// Kerberos 5 message types and methods.
+// Package message implements Kerberos 5 message types and methods.
 package messages
 
 import (
@@ -30,6 +30,7 @@ type KRBError struct {
 	EData     []byte              `asn1:"optional,explicit,tag:12"`
 }
 
+// NewKRBError creates a new KRBError.
 func NewKRBError(sname types.PrincipalName, realm string, code int, etext string) KRBError {
 	t := time.Now().UTC()
 	return KRBError{

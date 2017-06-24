@@ -13,6 +13,7 @@ type ClientInfo struct {
 	Name       string           // An array of 16-bit Unicode characters in little-endian format that contains the client's account name.
 }
 
+// Unmarshal bytes into the ClientInfo struct
 func (k *ClientInfo) Unmarshal(b []byte) error {
 	//The PAC_CLIENT_INFO structure is a simple structure that is not NDR-encoded.
 	var p int

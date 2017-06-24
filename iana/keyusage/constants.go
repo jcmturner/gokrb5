@@ -1,4 +1,4 @@
-// Kerberos 5 key usage assigned numbers.
+// Package keyusage provides Kerberos 5 key usage assigned numbers.
 package keyusage
 
 const (

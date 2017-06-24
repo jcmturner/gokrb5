@@ -1,11 +1,7 @@
 package rfc3961
 
 import (
-	"encoding/binary"
-	"encoding/hex"
-	"errors"
 	"github.com/jcmturner/gokrb5/crypto/etype"
-	"golang.org/x/crypto/pbkdf2"
 )
 
 const (
@@ -13,7 +9,7 @@ const (
 	s2kParamsZero = 4294967296
 )
 
-// RFC 3961: DR(Key, Constant) = k-truncate(E(Key, Constant, initial-cipher-state)).
+// DeriveRandom implements the RFC 3961 defined function: DR(Key, Constant) = k-truncate(E(Key, Constant, initial-cipher-state)).
 //
 // key: base key or protocol key. Likely to be a key from a keytab file.
 //
@@ -52,6 +48,7 @@ func DeriveRandom(key, usage []byte, e etype.EType) ([]byte, error) {
 	return out, nil
 }
 
+// DeriveKey derives a key from the protocol key based on the usage and the etype's specific methods.
 func DeriveKey(protocolKey, usage []byte, e etype.EType) ([]byte, error) {
 	r, err := e.DeriveRandom(protocolKey, usage)
 	if err != nil {
@@ -60,10 +57,12 @@ func DeriveKey(protocolKey, usage []byte, e etype.EType) ([]byte, error) {
 	return e.RandomToKey(r), nil
 }
 
+// RandomToKey returns a key from the bytes provided according to the definition in RFC 3961.
 func RandomToKey(b []byte) []byte {
 	return b
 }
 
+// DES3RandomToKey returns a key from the bytes provided according to the definition in RFC 3961 for DES3 etypes.
 func DES3RandomToKey(b []byte) []byte {
 	r := stretch56Bits(b[:7])
 	r2 := stretch56Bits(b[7:14])
@@ -73,29 +72,14 @@ func DES3RandomToKey(b []byte) []byte {
 	return r
 }
 
+// DES3StringToKey returns a key derived from the string provided according to the definition in RFC 3961 for DES3 etypes.
 func DES3StringToKey(secret, salt string, e etype.EType) ([]byte, error) {
 	s := secret + salt
 	tkey := e.RandomToKey(Nfold([]byte(s), e.GetKeySeedBitLength()))
 	return e.DeriveKey(tkey, []byte("kerberos"))
 }
 
-func StringToKey(secret, salt, s2kparams string, e etype.EType) ([]byte, error) {
-	i, err := S2KparamsToItertions(s2kparams)
-	if err != nil {
-		return nil, err
-	}
-	return StringToKeyIter(secret, salt, int(i), e)
-}
-
-func StringToPBKDF2(secret, salt string, iterations int, e etype.EType) []byte {
-	return pbkdf2.Key([]byte(secret), []byte(salt), iterations, e.GetKeyByteSize(), e.GetHashFunc())
-}
-
-func StringToKeyIter(secret, salt string, iterations int, e etype.EType) ([]byte, error) {
-	tkey := e.RandomToKey(StringToPBKDF2(secret, salt, iterations, e))
-	return e.DeriveKey(tkey, []byte("kerberos"))
-}
-
+// PseudoRandom function as defined in RFC 3961
 func PseudoRandom(key, b []byte, e etype.EType) ([]byte, error) {
 	h := e.GetHashFunc()()
 	h.Write(b)
@@ -109,29 +93,6 @@ func PseudoRandom(key, b []byte, e etype.EType) ([]byte, error) {
 		return []byte{}, err
 	}
 	return prf, nil
-}
-
-func S2KparamsToItertions(s2kparams string) (int, error) {
-	//process s2kparams string
-	//The parameter string is four octets indicating an unsigned
-	//number in big-endian order.  This is the number of iterations to be
-	//performed.  If the value is 00 00 00 00, the number of iterations to
-	//be performed is 4,294,967,296 (2**32).
-	var i uint32
-	if len(s2kparams) != 8 {
-		return s2kParamsZero, errors.New("Invalid s2kparams length")
-	}
-	b, err := hex.DecodeString(s2kparams)
-	if err != nil {
-		return s2kParamsZero, errors.New("Invalid s2kparams, cannot decode string to bytes")
-	}
-	i = binary.BigEndian.Uint32(b)
-	//buf := bytes.NewBuffer(b)
-	//err = binary.Read(buf, binary.BigEndian, &i)
-	if err != nil {
-		return s2kParamsZero, errors.New("Invalid s2kparams, cannot convert to big endian int32")
-	}
-	return int(i), nil
 }
 
 func stretch56Bits(b []byte) []byte {

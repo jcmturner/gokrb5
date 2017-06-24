@@ -1,4 +1,4 @@
-// Partial implementation of NDR encoding: http://pubs.opengroup.org/onlinepubs/9629399/chap14.htm
+// Package ndr is a partial implementation of NDR encoding: http://pubs.opengroup.org/onlinepubs/9629399/chap14.htm
 package ndr
 
 import (
@@ -54,6 +54,7 @@ type PrivateHeader struct {
 	Filler             []byte
 }
 
+// ReadHeaders processes the bytes to return the NDR Common and Private headers.
 func ReadHeaders(b *[]byte) (CommonHeader, PrivateHeader, int, error) {
 	ch, p, err := GetCommonHeader(b)
 	if err != nil {
@@ -66,6 +67,7 @@ func ReadHeaders(b *[]byte) (CommonHeader, PrivateHeader, int, error) {
 	return ch, ph, p, err
 }
 
+// GetCommonHeader processes the bytes to return the NDR Common header.
 func GetCommonHeader(b *[]byte) (CommonHeader, int, error) {
 	//The first 8 bytes comprise the Common RPC Header for type marshalling.
 	if len(*b) < COMMON_HEADER_BYTES {
@@ -104,6 +106,7 @@ func GetCommonHeader(b *[]byte) (CommonHeader, int, error) {
 	}, 8, nil
 }
 
+// GetPrivateHeader processes the bytes to return the NDR Private header.
 func GetPrivateHeader(b *[]byte, p *int, bo *binary.ByteOrder) (PrivateHeader, error) {
 	//The next 8 bytes comprise the RPC type marshalling private header for constructed types.
 	if len(*b) < (PRIVATE_HEADER_BYTES) {
@@ -122,7 +125,7 @@ func GetPrivateHeader(b *[]byte, p *int, bo *binary.ByteOrder) (PrivateHeader, e
 	}, nil
 }
 
-// Read bytes representing a thirty two bit integer.
+// Read_uint8 reads bytes representing a thirty two bit integer.
 func Read_uint8(b *[]byte, p *int) (i uint8) {
 	if len((*b)[*p:]) < 1 {
 		return
@@ -133,7 +136,7 @@ func Read_uint8(b *[]byte, p *int) (i uint8) {
 	return
 }
 
-// Read bytes representing a thirty two bit integer.
+// Read_uint16 reads bytes representing a thirty two bit integer.
 func Read_uint16(b *[]byte, p *int, e *binary.ByteOrder) (i uint16) {
 	if len((*b)[*p:]) < 2 {
 		return
@@ -144,7 +147,7 @@ func Read_uint16(b *[]byte, p *int, e *binary.ByteOrder) (i uint16) {
 	return
 }
 
-// Read bytes representing a thirty two bit integer.
+// Read_uint32 reads bytes representing a thirty two bit integer.
 func Read_uint32(b *[]byte, p *int, e *binary.ByteOrder) (i uint32) {
 	if len((*b)[*p:]) < 4 {
 		return
@@ -155,7 +158,7 @@ func Read_uint32(b *[]byte, p *int, e *binary.ByteOrder) (i uint32) {
 	return
 }
 
-// Read bytes representing a thirty two bit integer.
+// Read_uint64 reads bytes representing a thirty two bit integer.
 func Read_uint64(b *[]byte, p *int, e *binary.ByteOrder) (i uint64) {
 	if len((*b)[*p:]) < 8 {
 		return
@@ -166,6 +169,7 @@ func Read_uint64(b *[]byte, p *int, e *binary.ByteOrder) (i uint64) {
 	return
 }
 
+// Read_bytes reads the number of bytes specified.
 func Read_bytes(b *[]byte, p *int, s int, e *binary.ByteOrder) (r []byte) {
 	if len((*b)[*p:]) < s {
 		return
@@ -177,6 +181,7 @@ func Read_bytes(b *[]byte, p *int, s int, e *binary.ByteOrder) (r []byte) {
 	return r
 }
 
+// Read_bool reads bytes representing a boolean.
 func Read_bool(b *[]byte, p *int) bool {
 	if len((*b)[*p:]) < 1 {
 		return false
@@ -187,17 +192,19 @@ func Read_bool(b *[]byte, p *int) bool {
 	return false
 }
 
+// Read_IEEEfloat32 reads bytes representing a IEEE formatted 32 bit float.
 func Read_IEEEfloat32(b *[]byte, p *int, e *binary.ByteOrder) float32 {
 	ensureAlignment(p, 4)
 	return math.Float32frombits(Read_uint32(b, p, e))
 }
 
+// Read_IEEEfloat64 reads bytes representing a IEEE formatted 64 bit float.
 func Read_IEEEfloat64(b *[]byte, p *int, e *binary.ByteOrder) float64 {
 	ensureAlignment(p, 8)
 	return math.Float64frombits(Read_uint64(b, p, e))
 }
 
-// Conformant and Varying Strings
+// Read_ConformantVaryingString reads a Conformant and Varying String from the bytes slice.
 // A conformant and varying string is a string in which the maximum number of elements is not known beforehand and therefore is included in the representation of the string.
 // NDR represents a conformant and varying string as an ordered sequence of representations of the string elements, preceded by three unsigned long integers.
 // The first integer gives the maximum number of elements in the string, including the terminator.
@@ -223,6 +230,7 @@ func Read_ConformantVaryingString(b *[]byte, p *int, e *binary.ByteOrder) (strin
 	return string(s), nil
 }
 
+// Read_UniDimensionalConformantArrayHeader reads a UniDimensionalConformantArrayHeader from the bytes slice.
 func Read_UniDimensionalConformantArrayHeader(b *[]byte, p *int, e *binary.ByteOrder) int {
 	return int(Read_uint32(b, p, e))
 }

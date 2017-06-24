@@ -21,6 +21,7 @@ const (
 	UPN_NO_UPN_ATTR = 31 // The user account object does not have the userPrincipalName attribute ([MS-ADA3] section 2.349) set. A UPN constructed by concatenating the user name with the DNS domain name of the account domain is provided.
 )
 
+// Unmarshal bytes into the UPN_DNSInfo struct
 func (k *UPN_DNSInfo) Unmarshal(b []byte) error {
 	//The UPN_DNS_INFO structure is a simple structure that is not NDR-encoded.
 	var p int

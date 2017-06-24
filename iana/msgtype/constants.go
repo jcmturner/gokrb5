@@ -1,4 +1,4 @@
-// Kerberos 5 message type assigned numbers.
+// Package msgtype provides Kerberos 5 message type assigned numbers.
 package msgtype
 
 const (

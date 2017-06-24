@@ -45,7 +45,7 @@ type APReq struct {
 	Authenticator types.EncryptedData `asn1:"explicit,tag:4"`
 }
 
-// Generate a new KRB_AP_REQ struct.
+// NewAPReq generates a new KRB_AP_REQ struct.
 func NewAPReq(tkt Ticket, sessionKey types.EncryptionKey, auth types.Authenticator) (APReq, error) {
 	var a APReq
 	ed, err := encryptAuthenticator(auth, sessionKey, tkt)
@@ -104,7 +104,7 @@ func (a *APReq) Unmarshal(b []byte) error {
 	return nil
 }
 
-// ASN1 marshal APReq struct.
+// Marshal APReq struct.
 func (a *APReq) Marshal() ([]byte, error) {
 	m := marshalAPReq{
 		PVNO:          a.PVNO,

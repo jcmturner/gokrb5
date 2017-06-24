@@ -148,7 +148,7 @@ func (e *EncKDCRepPart) Unmarshal(b []byte) error {
 	return nil
 }
 
-// Decrypt the encrypted part of an AS_REP.
+// DecryptEncPart decrypts the encrypted part of an AS_REP.
 func (k *ASRep) DecryptEncPart(c *credentials.Credentials) (types.EncryptionKey, error) {
 	var key types.EncryptionKey
 	var err error
@@ -180,7 +180,7 @@ func (k *ASRep) DecryptEncPart(c *credentials.Credentials) (types.EncryptionKey,
 	return key, nil
 }
 
-// Check validity of AS_REP message.
+// IsValid checks the validity of AS_REP message.
 func (k *ASRep) IsValid(cfg *config.Config, creds *credentials.Credentials, asReq ASReq) (bool, error) {
 	//Ref RFC 4120 Section 3.1.5
 	if k.CName.NameType != asReq.ReqBody.CName.NameType || k.CName.NameString == nil {
@@ -247,7 +247,7 @@ func (k *ASRep) IsValid(cfg *config.Config, creds *credentials.Credentials, asRe
 	return true, nil
 }
 
-// Decrypt the encrypted part of an TGS_REP.
+// DecryptEncPart decrypts the encrypted part of an TGS_REP.
 func (k *TGSRep) DecryptEncPart(key types.EncryptionKey) error {
 	b, err := crypto.DecryptEncPart(k.EncPart, key, keyusage.TGS_REP_ENCPART_SESSION_KEY)
 	if err != nil {
@@ -262,7 +262,7 @@ func (k *TGSRep) DecryptEncPart(key types.EncryptionKey) error {
 	return nil
 }
 
-// Check validity of TGS_REP message.
+// IsValid checks the validity of the TGS_REP message.
 func (k *TGSRep) IsValid(cfg *config.Config, tgsReq TGSReq) (bool, error) {
 	if k.CName.NameType != tgsReq.ReqBody.CName.NameType || k.CName.NameString == nil {
 		return false, krberror.NewErrorf(krberror.KRBMSG_ERROR, "CName in response does not match what was requested. Requested: %+v; Reply: %+v", tgsReq.ReqBody.CName, k.CName)

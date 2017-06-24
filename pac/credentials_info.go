@@ -20,6 +20,7 @@ type CredentialsInfo struct {
 	PAC_CredentialData           CredentialData
 }
 
+// Unmarshal bytes into the CredentialsInfo struct
 func (c *CredentialsInfo) Unmarshal(b []byte, k types.EncryptionKey) error {
 	ch, _, p, err := ndr.ReadHeaders(&b)
 	if err != nil {
@@ -41,6 +42,7 @@ func (c *CredentialsInfo) Unmarshal(b []byte, k types.EncryptionKey) error {
 	return nil
 }
 
+// DecryptEncPart decrypts the encrypted part of the CredentialsInfo.
 func (c *CredentialsInfo) DecryptEncPart(k types.EncryptionKey, e *binary.ByteOrder) error {
 	if k.KeyType != int(c.EType) {
 		return fmt.Errorf("Key provided is not the correct type. Type needed: %d, type provided: %d", c.EType, k.KeyType)
@@ -64,6 +66,7 @@ type CredentialData struct {
 	Credentials     []SECPKG_SupplementalCred // Size is the value of CredentialCount
 }
 
+// Read_PAC_CredentialData reads a CredentialData from the byte slice.
 func Read_PAC_CredentialData(b *[]byte, p *int, e *binary.ByteOrder) CredentialData {
 	c := ndr.Read_uint32(b, p, e)
 	cr := make([]SECPKG_SupplementalCred, c, c)
@@ -83,6 +86,7 @@ type SECPKG_SupplementalCred struct {
 	Credentials    []uint8 // Is a ptr. Size is the value of CredentialSize
 }
 
+// Read_SECPKG_SupplementalCred reads a SECPKG_SupplementalCred from the byte slice.
 func Read_SECPKG_SupplementalCred(b *[]byte, p *int, e *binary.ByteOrder) SECPKG_SupplementalCred {
 	n, _ := mstypes.Read_RPC_UnicodeString(b, p, e)
 	cs := ndr.Read_uint32(b, p, e)
@@ -105,6 +109,7 @@ type NTLM_SupplementalCred struct {
 	NTPassword []byte // A 16-element array of unsigned 8-bit integers that define the NT OWF. The LtPassword member MUST be ignored if the N flag is not set in the Flags member.
 }
 
+// Read_NTLM_SupplementalCred reads a NTLM_SupplementalCred from the byte slice.
 func Read_NTLM_SupplementalCred(b *[]byte, p *int, e *binary.ByteOrder) NTLM_SupplementalCred {
 	v := ndr.Read_uint32(b, p, e)
 	f := ndr.Read_uint32(b, p, e)
