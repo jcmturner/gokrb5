@@ -34,7 +34,7 @@ type ADCredentials struct {
 	LogonServer         string
 }
 
-// Create a new Credentials struct.
+// NewCredentials creates a new Credentials instance.
 func NewCredentials(username string, realm string) Credentials {
 	return Credentials{
 		Username: username,
@@ -48,6 +48,7 @@ func NewCredentials(username string, realm string) Credentials {
 	}
 }
 
+// NewCredentialsFromPrincipal creates a new Credentials instance with the user details provides as a PrincipalName type.
 func NewCredentialsFromPrincipal(cname types.PrincipalName, realm string) Credentials {
 	return Credentials{
 		Username:   cname.GetPrincipalNameString(),
@@ -58,19 +59,19 @@ func NewCredentialsFromPrincipal(cname types.PrincipalName, realm string) Creden
 	}
 }
 
-// Set the Keytab in the Credentials struct.
+// WithKeytab sets the Keytab in the Credentials struct.
 func (c *Credentials) WithKeytab(kt keytab.Keytab) *Credentials {
 	c.Keytab = kt
 	return c
 }
 
-// Set the password in the Credentials struct.
+// WithPassword sets the password in the Credentials struct.
 func (c *Credentials) WithPassword(password string) *Credentials {
 	c.Password = password
 	return c
 }
 
-// Query if the Credentials has a keytab defined.
+// HasKeytab queries if the Credentials has a keytab defined.
 func (c *Credentials) HasKeytab() bool {
 	if len(c.Keytab.Entries) > 0 {
 		return true
@@ -78,7 +79,7 @@ func (c *Credentials) HasKeytab() bool {
 	return false
 }
 
-// Query if the Credentials has a password defined.
+// HasPassword queries if the Credentials has a password defined.
 func (c *Credentials) HasPassword() bool {
 	if c.Password != "" {
 		return true

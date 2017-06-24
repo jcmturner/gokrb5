@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-// Send bytes to the KDC.
+// SendToKDC performs network actions to send data to the KDC.
 func (cl *Client) SendToKDC(b []byte) ([]byte, error) {
 	var rb []byte
 	var kdcs []string

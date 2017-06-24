@@ -18,7 +18,7 @@ type Session struct {
 	SessionKeyExpiration time.Time
 }
 
-//Enable the automatic renewal for the client's TGT session.
+// EnableAutoSessionRenewal turns on the automatic renewal for the client's TGT session.
 func (cl *Client) EnableAutoSessionRenewal() {
 	// TODO look into using a context here
 	go func() {
@@ -34,7 +34,7 @@ func (cl *Client) EnableAutoSessionRenewal() {
 	}()
 }
 
-//Renew the client's TGT session.
+// RenewTGT renews the client's TGT session.
 func (cl *Client) RenewTGT() error {
 	spn := types.PrincipalName{
 		NameType:   nametype.KRB_NT_SRV_INST,

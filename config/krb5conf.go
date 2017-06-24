@@ -30,7 +30,7 @@ type Config struct {
 // List of encryption types that have been deemed weak.
 const WEAK_ETYPE_LIST = "des-cbc-crc des-cbc-md4 des-cbc-md5 des-cbc-raw des3-cbc-raw des-hmac-sha1 arcfour-hmac-exp rc4-hmac-exp arcfour-hmac-md5-exp des"
 
-// Create a new config struct.
+// NewConfig creates a new config struct instance.
 func NewConfig() *Config {
 	d := make(DomainRealm)
 	return &Config{
@@ -419,7 +419,7 @@ func (d *DomainRealm) deleteMapping(domain, realm string) {
 	delete(*d, domain)
 }
 
-// Resolve the realm for the specified domain name from the domain to realm mapping.
+// ResolveRealm resolves the kerberos realm for the specified domain name from the domain to realm mapping.
 // The most specific mapping is returned.
 func (c *Config) ResolveRealm(domainName string) string {
 	domainName = strings.TrimSuffix(domainName, ".")
@@ -444,19 +444,19 @@ func Load(cfgPath string) (*Config, error) {
 	return NewConfigFromScanner(scanner)
 }
 
-// Create a new Config struct from a string.
+// NewConfigFromString creates a new Config struct from a string.
 func NewConfigFromString(s string) (*Config, error) {
 	reader := strings.NewReader(s)
 	return NewConfigFromReader(reader)
 }
 
-// Create a new Config struct from an io.Reader.
+// NewConfigFromReader creates a new Config struct from an io.Reader.
 func NewConfigFromReader(r io.Reader) (*Config, error) {
 	scanner := bufio.NewScanner(r)
 	return NewConfigFromScanner(scanner)
 }
 
-// Create a new Config struct from a bufio.Scanner.
+// NewConfigFromScanner creates a new Config struct from a bufio.Scanner.
 func NewConfigFromScanner(scanner *bufio.Scanner) (*Config, error) {
 	c := NewConfig()
 	sections := make(map[int]string)

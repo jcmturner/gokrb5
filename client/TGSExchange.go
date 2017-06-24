@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// Perform a TGS exchange to retrieve a ticket to the specified SPN.
+// TGSExchange performs a TGS exchange to retrieve a ticket to the specified SPN.
 // The ticket retrieved is added to the client's cache.
 func (cl *Client) TGSExchange(spn types.PrincipalName, tkt messages.Ticket, sessionKey types.EncryptionKey, renewal bool) (tgsReq messages.TGSReq, tgsRep messages.TGSRep, err error) {
 	if cl.Session == nil {
@@ -42,7 +42,7 @@ func (cl *Client) TGSExchange(spn types.PrincipalName, tkt messages.Ticket, sess
 	return tgsReq, tgsRep, nil
 }
 
-// Make a request to get a service ticket for the SPN specified
+// GetServiceTicket makes a request to get a service ticket for the SPN specified
 // SPN format: <SERVICE>/<FQDN> Eg. HTTP/www.example.com
 // The ticket will be added to the client's ticket cache
 func (cl *Client) GetServiceTicket(spn string) (messages.Ticket, types.EncryptionKey, error) {

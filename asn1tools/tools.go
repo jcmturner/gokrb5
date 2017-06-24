@@ -1,4 +1,4 @@
-// Package asn1tools - Tools for managing ASN1 marshaled data.
+// Package asn1tools provides tools for managing ASN1 marshaled data.
 package asn1tools
 
 import (
@@ -45,6 +45,7 @@ func GetLengthFromASN(b []byte) int {
 	return l
 }
 
+// GetNumberBytesInLengthHeader returns the number of bytes in the ASn1 header that indicate the length.
 func GetNumberBytesInLengthHeader(b []byte) int {
 	if int(b[1]) <= 127 {
 		return 1
@@ -53,6 +54,7 @@ func GetNumberBytesInLengthHeader(b []byte) int {
 	return 1 + int(b[1]) - 128
 }
 
+// AddASNAppTag adds an ASN1 encoding application tag value to the raw bytes provided.
 func AddASNAppTag(b []byte, tag int) []byte {
 	r := asn1.RawValue{
 		Class:      asn1.ClassApplication,

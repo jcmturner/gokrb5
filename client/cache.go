@@ -22,20 +22,20 @@ type CacheEntry struct {
 	SessionKey types.EncryptionKey
 }
 
-// Create a new client ticket cache.
+// NewCache creates a new client ticket cache instance.
 func NewCache() *Cache {
 	return &Cache{
 		Entries: map[string]CacheEntry{},
 	}
 }
 
-// Get a cache entry that matches the SPN.
+// GetEntry returns a cache entry that matches the SPN.
 func (c *Cache) GetEntry(spn string) (CacheEntry, bool) {
 	e, ok := (*c).Entries[spn]
 	return e, ok
 }
 
-// Add a ticket to the cache.
+// AddEntry adds a ticket to the cache.
 func (c *Cache) AddEntry(tkt messages.Ticket, authTime, startTime, endTime, renewTill time.Time, sessionKey types.EncryptionKey) CacheEntry {
 	spn := strings.Join(tkt.SName.NameString, "/")
 	(*c).Entries[spn] = CacheEntry{
@@ -49,12 +49,12 @@ func (c *Cache) AddEntry(tkt messages.Ticket, authTime, startTime, endTime, rene
 	return c.Entries[spn]
 }
 
-// Remove the cache entry for the defined SPN.
+// RemoveEntry removes the cache entry for the defined SPN.
 func (c *Cache) RemoveEntry(spn string) {
 	delete(c.Entries, spn)
 }
 
-// Get a ticket from the cache for the SPN.
+// GetCachedTicket returns a ticket from the cache for the SPN.
 // Only a ticket that is currently valid will be returned.
 func (cl *Client) GetCachedTicket(spn string) (messages.Ticket, types.EncryptionKey, bool) {
 	if e, ok := cl.Cache.GetEntry(spn); ok {
@@ -74,7 +74,7 @@ func (cl *Client) GetCachedTicket(spn string) (messages.Ticket, types.Encryption
 	return tkt, key, false
 }
 
-// Renew a cache entry ticket
+// RenewTicket renews a cache entry ticket
 func (cl *Client) RenewTicket(e CacheEntry) (CacheEntry, error) {
 	spn := e.Ticket.SName
 	_, tgsRep, err := cl.TGSExchange(spn, e.Ticket, e.SessionKey, true)

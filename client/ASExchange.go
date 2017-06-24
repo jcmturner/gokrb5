@@ -12,7 +12,7 @@ import (
 	"sort"
 )
 
-// Perform an AS exchange for the client to retrieve a TGT.
+// ASExchange performs an AS exchange for the client to retrieve a TGT.
 func (cl *Client) ASExchange() error {
 	if !cl.IsConfigured() {
 		return errors.New("Client is not configured correctly")

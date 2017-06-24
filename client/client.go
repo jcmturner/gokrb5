@@ -1,4 +1,4 @@
-// A client for Kerberos 5 authentication.
+// Package client provides a client library and methods for Kerberos 5 authentication.
 package client
 
 import (
@@ -22,7 +22,7 @@ type Config struct {
 	Assume_PA_ENC_TIMESTAMP_Required bool
 }
 
-// Create a new client with a password credential.
+// NewClientWithPassword creates a new client from a password credential.
 func NewClientWithPassword(username, realm, password string) Client {
 	creds := credentials.NewCredentials(username, realm)
 	return Client{
@@ -34,7 +34,7 @@ func NewClientWithPassword(username, realm, password string) Client {
 	}
 }
 
-// Create a new client with a keytab credential.
+// NewClientWithKeytab creates a new client from a keytab credential.
 func NewClientWithKeytab(username, realm string, kt keytab.Keytab) Client {
 	creds := credentials.NewCredentials(username, realm)
 	return Client{
@@ -46,13 +46,13 @@ func NewClientWithKeytab(username, realm string, kt keytab.Keytab) Client {
 	}
 }
 
-// Set the Kerberos configuration for the client.
+// WithConfig sets the Kerberos configuration for the client.
 func (cl *Client) WithConfig(cfg *config.Config) *Client {
 	cl.Config = cfg
 	return cl
 }
 
-// Load the Kerberos configuration for the client from file path specified.
+// LoadConfig loads the Kerberos configuration for the client from file path specified.
 func (cl *Client) LoadConfig(cfgPath string) (*Client, error) {
 	cfg, err := config.Load(cfgPath)
 	if err != nil {
@@ -62,7 +62,7 @@ func (cl *Client) LoadConfig(cfgPath string) (*Client, error) {
 	return cl, nil
 }
 
-// Has the client got sufficient values required.
+// IsConfigured indicates if the client has the values required set.
 func (cl *Client) IsConfigured() bool {
 	if !cl.Credentials.HasPassword() && !cl.Credentials.HasKeytab() {
 		return false

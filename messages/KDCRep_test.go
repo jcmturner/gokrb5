@@ -257,7 +257,7 @@ func TestUnmarshalASRepDecodeAndDecrypt(t *testing.T) {
 	assert.Equal(t, 18, asRep.DecryptedEncPart.Key.KeyType, "KeyType in decrypted EncPart not as expected")
 	assert.IsType(t, time.Time{}, asRep.DecryptedEncPart.LastReqs[0].LRValue, "LastReqs did not have a time value")
 	assert.Equal(t, 2069991465, asRep.DecryptedEncPart.Nonce, "Nonce value not as expected")
-	assert.IsType(t, time.Time{}, asRep.DecryptedEncPart.KeyExpiration, "Key expriation not a time type")
+	assert.IsType(t, time.Time{}, asRep.DecryptedEncPart.KeyExpiration, "Key expiration not a time type")
 	assert.IsType(t, time.Time{}, asRep.DecryptedEncPart.AuthTime, "AuthTime not a time type")
 	assert.IsType(t, time.Time{}, asRep.DecryptedEncPart.StartTime, "StartTime not a time type")
 	assert.IsType(t, time.Time{}, asRep.DecryptedEncPart.EndTime, "StartTime not a time type")
@@ -297,7 +297,7 @@ func TestUnmarshalASRepDecodeAndDecrypt_withPassword(t *testing.T) {
 	assert.Equal(t, 18, asRep.DecryptedEncPart.Key.KeyType, "KeyType in decrypted EncPart not as expected")
 	assert.IsType(t, time.Time{}, asRep.DecryptedEncPart.LastReqs[0].LRValue, "LastReqs did not have a time value")
 	assert.Equal(t, 2069991465, asRep.DecryptedEncPart.Nonce, "Nonce value not as expected")
-	assert.IsType(t, time.Time{}, asRep.DecryptedEncPart.KeyExpiration, "Key expriation not a time type")
+	assert.IsType(t, time.Time{}, asRep.DecryptedEncPart.KeyExpiration, "Key expiration not a time type")
 	assert.IsType(t, time.Time{}, asRep.DecryptedEncPart.AuthTime, "AuthTime not a time type")
 	assert.IsType(t, time.Time{}, asRep.DecryptedEncPart.StartTime, "StartTime not a time type")
 	assert.IsType(t, time.Time{}, asRep.DecryptedEncPart.EndTime, "StartTime not a time type")
@@ -306,36 +306,3 @@ func TestUnmarshalASRepDecodeAndDecrypt_withPassword(t *testing.T) {
 	assert.Equal(t, 2, asRep.DecryptedEncPart.SName.NameType, "Name type for AS_REP not as expected")
 	assert.Equal(t, []string{"krbtgt", test_realm}, asRep.DecryptedEncPart.SName.NameString, "Service name string not as expected")
 }
-
-//func TestKDCRep_Validate(t *testing.T) {
-//	d, _ := os.Getwd()
-//	asreqData, err := ioutil.ReadFile(d + "/../testdata/AS-REQ.raw")
-//	if err != nil {
-//		t.Fatalf("AS REP read error: %v\n", err)
-//	}
-//	asReq, err := UnmarshalASReq(asreqData)
-//	if err != nil {
-//		t.Fatalf("AS REP Unmarshal error: %v\n", err)
-//	}
-//
-//	usr, _ := user.Current()
-//	dir := usr.HomeDir
-//	asrepData, err := ioutil.ReadFile(d + "/../testdata/AS-REP.raw")
-//	if err != nil {
-//		t.Fatalf("AS REP read error: %v\n", err)
-//	}
-//	var asRep ASRep
-//	err = asRep.Unmarshal(asrepData)
-//	if err != nil {
-//		t.Fatalf("AS REP Unmarshal error: %v\n", err)
-//	}
-//	kt, err := keytab.Load(dir + "/tmp.keytab")
-//	if err != nil {
-//		fmt.Printf("keytab parse error: %v\n", err)
-//	}
-//	ok, err := asRep.Validate(asReq, kt)
-//	if !ok || err != nil {
-//		t.Fatalf("Validation of AS REP failed: %v", err)
-//	}
-//	t.Log("AS REP validation tests finished")
-//}

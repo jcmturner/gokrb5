@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-// Get service ticket and set as the SPNEGO authorization header on HTTP request object.
+// SetSPNEGOHeader gets the service ticket and sets it as the SPNEGO authorization header on HTTP request object.
 // To auto generate the SPN from the request object pass a null string "".
 func (cl *Client) SetSPNEGOHeader(r *http.Request, spn string) error {
 	if spn == "" {
@@ -29,6 +29,7 @@ func (cl *Client) SetSPNEGOHeader(r *http.Request, spn string) error {
 	return nil
 }
 
+// SetSPNEGOHeader sets the provided ticket as the SPNEGO authorization header on HTTP request object.
 func SetSPNEGOHeader(creds credentials.Credentials, tkt messages.Ticket, sessionKey types.EncryptionKey, r *http.Request) error {
 	SPNEGOToken, err := gssapi.GetSPNEGOKrbNegTokenInit(creds, tkt, sessionKey)
 	nb, err := SPNEGOToken.Marshal()
