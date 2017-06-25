@@ -2,6 +2,8 @@
 [![GoDoc](https://godoc.org/github.com/jcmturner/gokrb5?status.svg)](https://godoc.org/github.com/jcmturner/gokrb5) [![Go Report Card](https://goreportcard.com/badge/github.com/jcmturner/gokrb5)](https://goreportcard.com/report/github.com/jcmturner/gokrb5)
 
 ## Features
+* Pure Go - no dependency on external libraries 
+* No platform specific code
 * Server Side
   * HTTP handler wrapper implements SPNEGO Kerberos authentication
   * HTTP handler wrapper decodes Microsoft AD PAC authorization data
