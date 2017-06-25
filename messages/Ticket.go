@@ -82,6 +82,9 @@ func NewTicket(cname types.PrincipalName, crealm string, sname types.PrincipalNa
 		return Ticket{}, types.EncryptionKey{}, krberror.Errorf(err, krberror.ENCRYPTING_ERROR, "Error getting encryption key for new ticket")
 	}
 	ed, err := crypto.GetEncryptedData(b, skey, keyusage.KDC_REP_TICKET, kvno)
+	if err != nil {
+		return Ticket{}, types.EncryptionKey{}, krberror.Errorf(err, krberror.ENCRYPTING_ERROR, "Error encrypting ticket encpart")
+	}
 	tkt := Ticket{
 		TktVNO:  iana.PVNO,
 		Realm:   srealm,

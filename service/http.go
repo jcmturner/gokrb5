@@ -16,7 +16,7 @@ type ctxKey int
 const (
 	// SPNEGO_NegTokenResp_Krb_Accept_Completed - The response on successful authentication always has this header. Capturing as const so we don't have marshaling and encoding overhead.
 	SPNEGO_NegTokenResp_Krb_Accept_Completed = "Negotiate oRQwEqADCgEAoQsGCSqGSIb3EgECAg=="
-	// SPNEGO_NegTokenResp_Reject - The response on a failed authentication always has this rejection header. Capturing as const so we don't have marshaling and encoding overhead.
+	// SPNEGO_NegTokenResp_Reject - pThe response on a failed authentication always has this rejection header. Capturing as const so we don't have marshaling and encoding overhead.
 	SPNEGO_NegTokenResp_Reject        = "Negotiate oQcwBaADCgEC"
 	CTXKey_Credentials         ctxKey = 0
 	CTXKey_Authenticated       ctxKey = 1

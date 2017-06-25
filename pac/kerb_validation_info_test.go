@@ -126,6 +126,9 @@ func TestKerbValidationInfo_Unmarshal(t *testing.T) {
 	}
 	var k2 KerbValidationInfo
 	err = k2.Unmarshal(b)
+	if err != nil {
+		t.Fatal("Could not unmarshal KerbValidationInfo")
+	}
 
 	assert.Equal(t, time.Date(2017, 5, 6, 15, 53, 11, 825766900, time.UTC), k2.LogOnTime.Time(), "LogOnTime not as expected")
 	assert.Equal(t, time.Date(2185, 7, 21, 23, 34, 33, 709551516, time.UTC), k2.LogOffTime.Time(), "LogOffTime not as expected")

@@ -33,6 +33,9 @@ func (k *S4U_DelegationInfo) Unmarshal(b []byte) error {
 		ts := make([]mstypes.RPC_UnicodeString, k.TransitedListSize, k.TransitedListSize)
 		for i := range ts {
 			ts[i], err = mstypes.Read_RPC_UnicodeString(&b, &p, e)
+			if err != nil {
+				return err
+			}
 		}
 		for i := range ts {
 			ts[i].UnmarshalString(&b, &p, e)

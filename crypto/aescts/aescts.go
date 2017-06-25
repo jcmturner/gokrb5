@@ -15,7 +15,7 @@ func Encrypt(key, iv, message []byte) ([]byte, []byte, error) {
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return nil, nil, fmt.Errorf("Error creating cipher: %v", err)
+		return []byte{}, []byte{}, fmt.Errorf("Error creating cipher: %v", err)
 	}
 	mode := cipher.NewCBCEncrypter(block, iv)
 
@@ -43,6 +43,9 @@ func Encrypt(key, iv, message []byte) ([]byte, []byte, error) {
 	}
 	m, _ = common.ZeroPad(m, aes.BlockSize)
 	rb, pb, lb, err := tailBlocks(m, aes.BlockSize)
+	if err != nil {
+		return []byte{}, []byte{}, fmt.Errorf("Error tailing blocks: %v", err)
+	}
 	var ct []byte
 	if rb != nil {
 		// Encrpt all but the lats 2 blocks and update the rolling iv
@@ -68,7 +71,7 @@ func Decrypt(key, iv, ciphertext []byte) ([]byte, error) {
 	ct := make([]byte, len(ciphertext))
 	copy(ct, ciphertext)
 	if len(ct) < aes.BlockSize {
-		return nil, fmt.Errorf("Ciphertext is not large enough. It is less that one block size. Blocksize:%v; Ciphertext:%v", aes.BlockSize, len(ct))
+		return []byte{}, fmt.Errorf("Ciphertext is not large enough. It is less that one block size. Blocksize:%v; Ciphertext:%v", aes.BlockSize, len(ct))
 	}
 	// Configure the CBC
 	block, err := aes.NewCipher(key)
@@ -133,7 +136,7 @@ func Decrypt(key, iv, ciphertext []byte) ([]byte, error) {
 
 func tailBlocks(b []byte, c int) ([]byte, []byte, []byte, error) {
 	if len(b) <= c {
-		return nil, nil, nil, errors.New("bytes slice is not larger than one block so cannot tail")
+		return []byte{}, []byte{}, []byte{}, errors.New("bytes slice is not larger than one block so cannot tail")
 	}
 	// Get size of last block
 	var lbs int
