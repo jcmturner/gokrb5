@@ -57,7 +57,7 @@ func (cl *Client) ASExchange() error {
 	if ok, err := ASRep.IsValid(cl.Config, cl.Credentials, ASReq); !ok {
 		return krberror.Errorf(err, krberror.KRBMSG_ERROR, "AS Exchange Error: AS_REP is not valid")
 	}
-	cl.Session = &Session{
+	cl.session = &session{
 		AuthTime:             ASRep.DecryptedEncPart.AuthTime,
 		EndTime:              ASRep.DecryptedEncPart.EndTime,
 		RenewTill:            ASRep.DecryptedEncPart.RenewTill,

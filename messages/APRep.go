@@ -25,14 +25,14 @@ EncAPRepPart    ::= [APPLICATION 27] SEQUENCE {
 }
 */
 
-// RFC 4120 KRB_AP_REP: https://tools.ietf.org/html/rfc4120#section-5.5.2.
+// APRep implements RFC 4120 KRB_AP_REP: https://tools.ietf.org/html/rfc4120#section-5.5.2.
 type APRep struct {
 	PVNO    int                 `asn1:"explicit,tag:0"`
 	MsgType int                 `asn1:"explicit,tag:1"`
 	EncPart types.EncryptedData `asn1:"explicit,tag:2"`
 }
 
-// Encrypted part of KRB_AP_REP.
+// EncAPRepPart is the encrypted part of KRB_AP_REP.
 type EncAPRepPart struct {
 	CTime          time.Time           `asn1:"generalized,explicit,tag:0"`
 	Cusec          int                 `asn1:"explicit,tag:1"`

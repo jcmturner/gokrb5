@@ -10,14 +10,14 @@ import (
 	"time"
 )
 
-// RFC 4120 KRB_PRIV: https://tools.ietf.org/html/rfc4120#section-5.7.1.
+// KRBPriv implements RFC 4120 type: https://tools.ietf.org/html/rfc4120#section-5.7.1.
 type KRBPriv struct {
 	PVNO    int                 `asn1:"explicit,tag:0"`
 	MsgType int                 `asn1:"explicit,tag:1"`
 	EncPart types.EncryptedData `asn1:"explicit,tag:3"`
 }
 
-// Encrypted part of KRB_PRIV.
+// EncKrbPrivPart is the encrypted part of KRB_PRIV.
 type EncKrbPrivPart struct {
 	UserData       []byte            `asn1:"explicit,tag:0"`
 	Timestamp      time.Time         `asn1:"generalized,optional,explicit,tag:1"`

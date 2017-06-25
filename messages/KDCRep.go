@@ -30,7 +30,7 @@ type marshalKDCRep struct {
 	EncPart types.EncryptedData `asn1:"explicit,tag:6"`
 }
 
-// KRB_KDC_REP struct fields.
+// KDCRepFields represents the KRB_KDC_REP fields.
 type KDCRepFields struct {
 	PVNO             int
 	MsgType          int
@@ -42,17 +42,17 @@ type KDCRepFields struct {
 	DecryptedEncPart EncKDCRepPart
 }
 
-// RFC 4120 KRB_AS_REP: https://tools.ietf.org/html/rfc4120#section-5.4.2.
+// ASRep implements RFC 4120 KRB_AS_REP: https://tools.ietf.org/html/rfc4120#section-5.4.2.
 type ASRep struct {
 	KDCRepFields
 }
 
-// RFC 4120 KRB_TGS_REP: https://tools.ietf.org/html/rfc4120#section-5.4.2.
+// TGSRep implements RFC 4120 KRB_TGS_REP: https://tools.ietf.org/html/rfc4120#section-5.4.2.
 type TGSRep struct {
 	KDCRepFields
 }
 
-// Encrypted part of KRB_KDC_REP.
+// EncKDCRepPart is the encrypted part of KRB_KDC_REP.
 type EncKDCRepPart struct {
 	Key           types.EncryptionKey  `asn1:"explicit,tag:0"`
 	LastReqs      []LastReq            `asn1:"explicit,tag:1"`

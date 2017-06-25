@@ -13,7 +13,7 @@ import (
 // TGSExchange performs a TGS exchange to retrieve a ticket to the specified SPN.
 // The ticket retrieved is added to the client's cache.
 func (cl *Client) TGSExchange(spn types.PrincipalName, tkt messages.Ticket, sessionKey types.EncryptionKey, renewal bool) (tgsReq messages.TGSReq, tgsRep messages.TGSRep, err error) {
-	if cl.Session == nil {
+	if cl.session == nil {
 		return tgsReq, tgsRep, errors.New("TGS Exchange Error: client does not have a session. Client needs to login first")
 	}
 	tgsReq, err = messages.NewTGSReq(cl.Credentials.CName, cl.Config, tkt, sessionKey, spn, renewal)
@@ -53,7 +53,7 @@ func (cl *Client) GetServiceTicket(spn string) (messages.Ticket, types.Encryptio
 		return tkt, skey, nil
 	}
 	// Ensure TGT still valid
-	if time.Now().UTC().After(cl.Session.EndTime) {
+	if time.Now().UTC().After(cl.session.EndTime) {
 		err := cl.updateTGT()
 		if err != nil {
 			return tkt, skey, err
@@ -64,11 +64,11 @@ func (cl *Client) GetServiceTicket(spn string) (messages.Ticket, types.Encryptio
 		NameType:   nametype.KRB_NT_PRINCIPAL,
 		NameString: s,
 	}
-	_, tgsRep, err := cl.TGSExchange(princ, cl.Session.TGT, cl.Session.SessionKey, false)
+	_, tgsRep, err := cl.TGSExchange(princ, cl.session.TGT, cl.session.SessionKey, false)
 	if err != nil {
 		return tkt, skey, err
 	}
-	cl.Cache.AddEntry(
+	cl.Cache.addEntry(
 		tgsRep.Ticket,
 		tgsRep.DecryptedEncPart.AuthTime,
 		tgsRep.DecryptedEncPart.StartTime,

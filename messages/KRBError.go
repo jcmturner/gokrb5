@@ -1,4 +1,4 @@
-// Package message implements Kerberos 5 message types and methods.
+// Package messages implements Kerberos 5 message types and methods.
 package messages
 
 import (
@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-// RFC 4120 KRB_ERROR: https://tools.ietf.org/html/rfc4120#section-5.9.1.
+// KRBError implements RFC 4120 KRB_ERROR: https://tools.ietf.org/html/rfc4120#section-5.9.1.
 type KRBError struct {
 	PVNO      int                 `asn1:"explicit,tag:0"`
 	MsgType   int                 `asn1:"explicit,tag:1"`

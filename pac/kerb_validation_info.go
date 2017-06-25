@@ -1,4 +1,4 @@
-// Microsoft Privilege Attribute Certificate (PAC) processing.
+// Package pac implements Microsoft Privilege Attribute Certificate (PAC) processing.
 package pac
 
 import (
@@ -23,7 +23,7 @@ const (
 	USERFLAG_AUTH_LMCHALLENGERESP_KEY_NTCHALLENGERESP = 18 // The LMv2 response from the LmChallengeResponseFields ([MS-NLMP] section 2.2.1.3) was used for authentication and the NTLMv2 response from the NtChallengeResponseFields ([MS-NLMP] section 2.2.1.3) was used session key generation.
 )
 
-// https://msdn.microsoft.com/en-us/library/cc237948.aspx
+// KerbValidationInfo implement https://msdn.microsoft.com/en-us/library/cc237948.aspx
 // The KERB_VALIDATION_INFO structure defines the user's logon and authorization information
 // provided by the DC. The KERB_VALIDATION_INFO structure is a subset of the
 // NETLOGON_VALIDATION_SAM_INFO4 structure ([MS-NRPC] section 2.2.1.4.13).

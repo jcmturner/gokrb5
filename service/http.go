@@ -14,12 +14,12 @@ import (
 type ctxKey int
 
 const (
-	// The response on successful authentication always has this header. Capturing as const so we don't have marshaling and encoding overhead.
+	// SPNEGO_NegTokenResp_Krb_Accept_Completed - The response on successful authentication always has this header. Capturing as const so we don't have marshaling and encoding overhead.
 	SPNEGO_NegTokenResp_Krb_Accept_Completed = "Negotiate oRQwEqADCgEAoQsGCSqGSIb3EgECAg=="
-	// The response on a failed authentication always has this rejection header. Capturing as const so we don't have marshaling and encoding overhead.
+	// SPNEGO_NegTokenResp_Reject - The response on a failed authentication always has this rejection header. Capturing as const so we don't have marshaling and encoding overhead.
 	SPNEGO_NegTokenResp_Reject        = "Negotiate oQcwBaADCgEC"
-	CREDENTIALS_CTXKEY         ctxKey = 0
-	AUTHENTICATED_CTXKEY       ctxKey = 1
+	CTXKey_Credentials         ctxKey = 0
+	CTXKey_Authenticated       ctxKey = 1
 )
 
 // SPNEGOKRB5Authenticate is a Kerberos SPNEGO authentication HTTP handler wrapper.
@@ -66,8 +66,8 @@ func SPNEGOKRB5Authenticate(f http.Handler, kt keytab.Keytab, sa string, l *log.
 
 		if ok, creds, err := ValidateAPREQ(mt.APReq, kt, sa, r.RemoteAddr); ok {
 			ctx := r.Context()
-			ctx = context.WithValue(ctx, CREDENTIALS_CTXKEY, creds)
-			ctx = context.WithValue(ctx, AUTHENTICATED_CTXKEY, true)
+			ctx = context.WithValue(ctx, CTXKey_Credentials, creds)
+			ctx = context.WithValue(ctx, CTXKey_Authenticated, true)
 			if l != nil {
 				l.Printf("%v %s@%s - SPNEGO authentication succeeded", r.RemoteAddr, creds.Username, creds.Realm)
 			}

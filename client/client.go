@@ -7,16 +7,18 @@ import (
 	"github.com/jcmturner/gokrb5/keytab"
 )
 
-// Client struct.
+// Client side configuration and state.
 type Client struct {
 	Credentials *credentials.Credentials
 	Config      *config.Config
 	GoKrb5Conf  *Config
-	Session     *Session
+	session     *session
 	Cache       *Cache
 }
 
-// GoKRB5 specific client configurations.
+// Config struct holds GoKRB5 specific client configurations.
+// Set Disable_PA_FX_FAST to true to force this behaviour off.
+// Set Assume_PA_ENC_TIMESTAMP_Required to send the PA_ENC_TIMESTAMP pro-actively rather than waiting for a KRB_ERROR response from the KDC indicating it is required.
 type Config struct {
 	Disable_PA_FX_FAST               bool
 	Assume_PA_ENC_TIMESTAMP_Required bool
@@ -29,7 +31,7 @@ func NewClientWithPassword(username, realm, password string) Client {
 		Credentials: creds.WithPassword(password),
 		Config:      config.NewConfig(),
 		GoKrb5Conf:  &Config{},
-		Session:     &Session{},
+		session:     &session{},
 		Cache:       NewCache(),
 	}
 }
@@ -41,7 +43,7 @@ func NewClientWithKeytab(username, realm string, kt keytab.Keytab) Client {
 		Credentials: creds.WithKeytab(kt),
 		Config:      config.NewConfig(),
 		GoKrb5Conf:  &Config{},
-		Session:     &Session{},
+		session:     &session{},
 		Cache:       NewCache(),
 	}
 }

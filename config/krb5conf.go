@@ -1,4 +1,4 @@
-// Implements KRB5 client and service configuration as described at https://web.mit.edu/kerberos/krb5-latest/doc/admin/conf_files/krb5_conf.html
+// Package config implements KRB5 client and service configuration as described at https://web.mit.edu/kerberos/krb5-latest/doc/admin/conf_files/krb5_conf.html
 package config
 
 import (
@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-// Struct representing the KRB5 configuration.
+// Config represents the KRB5 configuration.
 type Config struct {
 	LibDefaults *LibDefaults
 	Realms      []Realm
@@ -39,7 +39,7 @@ func NewConfig() *Config {
 	}
 }
 
-// Struct representing the [libdefaults] section of the configuration.
+// LibDefaults represents the [libdefaults] section of the configuration.
 type LibDefaults struct {
 	Allow_weak_crypto bool //default false
 	// ap_req_checksum_type int //unlikely to support this
@@ -295,7 +295,7 @@ func (l *LibDefaults) parseLines(lines []string) error {
 	return nil
 }
 
-// Struct representing an entry in the [realms] section of the configuration.
+// Realm represents an entry in the [realms] section of the configuration.
 type Realm struct {
 	Realm        string
 	Admin_server []string
@@ -389,7 +389,7 @@ func parseRealms(lines []string) ([]Realm, error) {
 	return realms, nil
 }
 
-// Mapping of domains to realms representing the [domain_realm] section of the configuration.
+// DomainRealm maps the domains to realms representing the [domain_realm] section of the configuration.
 type DomainRealm map[string]string
 
 // Parse the lines of the [domain_realm] section of the configuration and add to the mapping.

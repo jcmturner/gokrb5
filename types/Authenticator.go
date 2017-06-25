@@ -1,4 +1,4 @@
-// Kerberos 5 data types.
+// Package types provides Kerberos 5 data types.
 package types
 
 import (
@@ -31,6 +31,8 @@ authorization-data      [8] AuthorizationData OPTIONAL
 
 */
 
+// Authenticator - A record containing information that can be shown to have been recently generated using the session key known only by the client and server.
+// https://tools.ietf.org/html/rfc4120#section-5.5.1
 type Authenticator struct {
 	AVNO              int               `asn1:"explicit,tag:0"`
 	CRealm            string            `asn1:"generalstring,explicit,tag:1"`

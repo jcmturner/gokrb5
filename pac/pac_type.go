@@ -10,7 +10,7 @@ import (
 	"github.com/jcmturner/gokrb5/types"
 )
 
-// https://msdn.microsoft.com/en-us/library/cc237950.aspx
+// PACType implements: https://msdn.microsoft.com/en-us/library/cc237950.aspx
 type PACType struct {
 	CBuffers           uint32
 	Version            uint32

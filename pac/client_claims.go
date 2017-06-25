@@ -6,7 +6,7 @@ import (
 	"github.com/jcmturner/gokrb5/ndr"
 )
 
-// https://msdn.microsoft.com/en-us/library/hh536365.aspx
+// ClientClaimsInfo implements https://msdn.microsoft.com/en-us/library/hh536365.aspx
 type ClientClaimsInfo struct {
 	Claims mstypes.ClaimsSetMetadata
 }

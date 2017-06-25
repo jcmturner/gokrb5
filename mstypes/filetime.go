@@ -19,6 +19,7 @@ This gives the number of 100 nano second period from January 1, 1601, Coordinate
 
 const UNIX_EPOCH_DIFF = 116444736000000000
 
+// FileTime implements the Microsoft FILETIME type https://msdn.microsoft.com/en-us/library/cc230324.aspx
 type FileTime struct {
 	LowDateTime  uint32
 	HighDateTime uint32

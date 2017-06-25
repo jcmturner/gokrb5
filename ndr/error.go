@@ -2,6 +2,7 @@ package ndr
 
 import "fmt"
 
+// Malformed implements the error interface for malformed NDR encoding errors.
 type Malformed struct {
 	EText string
 }

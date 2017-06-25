@@ -6,7 +6,7 @@ import (
 	"github.com/jcmturner/gokrb5/ndr"
 )
 
-// https://msdn.microsoft.com/en-us/library/hh536402.aspx
+// DeviceInfo implements https://msdn.microsoft.com/en-us/library/hh536402.aspx
 type DeviceInfo struct {
 	UserID            uint32                          // A 32-bit unsigned integer that contains the RID of the account. If the UserId member equals 0x00000000, the first group SID in this member is the SID for this account.
 	PrimaryGroupID    uint32                          // A 32-bit unsigned integer that contains the RID for the primary group to which this account belongs.

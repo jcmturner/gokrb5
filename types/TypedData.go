@@ -2,11 +2,13 @@ package types
 
 import "github.com/jcmturner/asn1"
 
+// TypedData implements RFC 4120 type: https://tools.ietf.org/html/rfc4120#section-5.9.1
 type TypedData struct {
 	DataType  int    `asn1:"explicit,tag:0"`
 	DataValue []byte `asn1:"optional,explicit,tag:1"`
 }
 
+// TypedDataSequence implements RFC 4120 type: https://tools.ietf.org/html/rfc4120#section-5.9.1
 type TypedDataSequence []TypedData
 
 // Unmarshal bytes into the TypedDataSequence.

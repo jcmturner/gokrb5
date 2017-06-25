@@ -12,7 +12,7 @@ import (
 
 // https://msdn.microsoft.com/en-us/library/cc237931.aspx
 
-// https://msdn.microsoft.com/en-us/library/cc237953.aspx
+// CredentialsInfo implements https://msdn.microsoft.com/en-us/library/cc237953.aspx
 type CredentialsInfo struct {
 	Version                      uint32 // A 32-bit unsigned integer in little-endian format that defines the version. MUST be 0x00000000.
 	EType                        uint32
@@ -56,7 +56,7 @@ func (c *CredentialsInfo) DecryptEncPart(k types.EncryptionKey, e *binary.ByteOr
 	return nil
 }
 
-// https://msdn.microsoft.com/en-us/library/cc237952.aspx
+// CredentialData implements https://msdn.microsoft.com/en-us/library/cc237952.aspx
 // This structure is encrypted prior to being encoded in any other structures.
 // Encryption is performed by first serializing the data structure via Network Data Representation (NDR) encoding, as specified in [MS-RPCE].
 // Once serialized, the data is encrypted using the key and cryptographic system selected through the AS protocol and the KRB_AS_REP message
@@ -79,7 +79,7 @@ func Read_PAC_CredentialData(b *[]byte, p *int, e *binary.ByteOrder) CredentialD
 	}
 }
 
-// https://msdn.microsoft.com/en-us/library/cc237956.aspx
+// SECPKG_SupplementalCred implements https://msdn.microsoft.com/en-us/library/cc237956.aspx
 type SECPKG_SupplementalCred struct {
 	PackageName    mstypes.RPC_UnicodeString
 	CredentialSize uint32
@@ -101,7 +101,7 @@ func Read_SECPKG_SupplementalCred(b *[]byte, p *int, e *binary.ByteOrder) SECPKG
 	}
 }
 
-// https://msdn.microsoft.com/en-us/library/cc237949.aspx
+// NTLM_SupplementalCred implements https://msdn.microsoft.com/en-us/library/cc237949.aspx
 type NTLM_SupplementalCred struct {
 	Version    uint32 // A 32-bit unsigned integer that defines the credential version.This field MUST be 0x00000000.
 	Flags      uint32

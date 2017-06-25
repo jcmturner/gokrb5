@@ -15,12 +15,12 @@ import (
 // Keytab struct.
 type Keytab struct {
 	Version uint16
-	Entries []Entry
+	Entries []entry
 }
 
 // Keytab entry struct.
-type Entry struct {
-	Principal Principal
+type entry struct {
+	Principal principal
 	Timestamp time.Time
 	KVNO8     uint8
 	Key       types.EncryptionKey
@@ -28,7 +28,7 @@ type Entry struct {
 }
 
 // Keytab entry principal struct.
-type Principal struct {
+type principal struct {
 	NumComponents int16
 	Realm         string
 	Components    []string
@@ -37,7 +37,7 @@ type Principal struct {
 
 // NewKeytab creates new, empty Keytab type.
 func NewKeytab() Keytab {
-	var e []Entry
+	var e []entry
 	return Keytab{
 		Version: 0,
 		Entries: e,
@@ -69,9 +69,9 @@ func (kt *Keytab) GetEncryptionKey(nameString []string, realm string, kvno, etyp
 }
 
 // Create a new Keytab entry.
-func newKeytabEntry() Entry {
+func newKeytabEntry() entry {
 	var b []byte
-	return Entry{
+	return entry{
 		Principal: newPrincipal(),
 		Timestamp: time.Time{},
 		KVNO8:     0,
@@ -84,9 +84,9 @@ func newKeytabEntry() Entry {
 }
 
 // Create a new principal.
-func newPrincipal() Principal {
+func newPrincipal() principal {
 	var c []string
-	return Principal{
+	return principal{
 		NumComponents: 0,
 		Realm:         "",
 		Components:    c,
@@ -176,7 +176,7 @@ func Parse(b []byte) (kt Keytab, err error) {
 }
 
 // Parse the Keytab bytes of a principal into a Keytab entry's principal.
-func parse_principal(b []byte, p *int, kt *Keytab, ke *Entry, e *binary.ByteOrder) (err error) {
+func parse_principal(b []byte, p *int, kt *Keytab, ke *entry, e *binary.ByteOrder) (err error) {
 	ke.Principal.NumComponents = read_int16(b, p, e)
 	if kt.Version == 1 {
 		//In version 1 the number of components includes the realm. Minus 1 to make consistent with version 2

@@ -32,7 +32,7 @@ recently seen authenticators.*/
 // Cache for tickets received from clients keyed by fully qualified client name. Used to track replay of tickets.
 type Cache map[string]clientEntries
 
-// Entries for client details sent to the service.
+// clientEntries holds entries of client details sent to the service.
 type clientEntries struct {
 	ReplayMap map[time.Time]replayCacheEntry
 	SeqNumber int

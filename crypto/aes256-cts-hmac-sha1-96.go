@@ -58,6 +58,7 @@ import (
 //|    hmac-sha1-96-aes256                16                   96      |
 //+--------------------------------------------------------------------+
 
+// Aes256CtsHmacSha96 implements Kerberos encryption type aes256-cts-hmac-sha1-96
 type Aes256CtsHmacSha96 struct {
 }
 

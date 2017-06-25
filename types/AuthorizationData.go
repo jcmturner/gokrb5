@@ -75,20 +75,19 @@ the ASN.1 structure that follows the subsection heading.
 
 */
 
+// AuthorizationData implements RFC 4120 type: https://tools.ietf.org/html/rfc4120#section-5.2.6
 type AuthorizationData []AuthorizationDataEntry
 
+// AuthorizationDataEntry implements RFC 4120 type: https://tools.ietf.org/html/rfc4120#section-5.2.6
 type AuthorizationDataEntry struct {
 	ADType int    `asn1:"explicit,tag:0"`
 	ADData []byte `asn1:"explicit,tag:1"`
 }
 
+// ADIfRelevant implements RFC 4120 type: https://tools.ietf.org/html/rfc4120#section-5.2.6.1
 type ADIfRelevant AuthorizationData
 
-type ADAndOr struct {
-	ConditionCount int               `asn1:"explicit,tag:0"`
-	Elements       AuthorizationData `asn1:"explicit,tag:1"`
-}
-
+// ADKDCIssued implements RFC 4120 type: https://tools.ietf.org/html/rfc4120#section-5.2.6.2
 type ADKDCIssued struct {
 	ADChecksum Checksum          `asn1:"explicit,tag:0"`
 	IRealm     string            `asn1:"optional,generalstring,explicit,tag:1"`
@@ -96,6 +95,13 @@ type ADKDCIssued struct {
 	Elements   AuthorizationData `asn1:"explicit,tag:3"`
 }
 
+// ADAndOr implements RFC 4120 type: https://tools.ietf.org/html/rfc4120#section-5.2.6.3
+type ADAndOr struct {
+	ConditionCount int               `asn1:"explicit,tag:0"`
+	Elements       AuthorizationData `asn1:"explicit,tag:1"`
+}
+
+// ADMandatoryForKDC implements RFC 4120 type: https://tools.ietf.org/html/rfc4120#section-5.2.6.4
 type ADMandatoryForKDC AuthorizationData
 
 // Unmarshal bytes into the ADKDCIssued.

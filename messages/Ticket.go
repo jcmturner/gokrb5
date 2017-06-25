@@ -21,6 +21,7 @@ import (
 // Reference: https://www.ietf.org/rfc/rfc4120.txt
 // Section: 5.3
 
+// Ticket implements the Kerberos ticket.
 type Ticket struct {
 	TktVNO           int                 `asn1:"explicit,tag:0"`
 	Realm            string              `asn1:"generalstring,explicit,tag:1"`
@@ -29,6 +30,7 @@ type Ticket struct {
 	DecryptedEncPart EncTicketPart       `asn1:"optional"` // Not part of ASN1 bytes so marked as optional so unmarshalling works
 }
 
+// EncTicketPart is the encrypted part of the Ticket.
 type EncTicketPart struct {
 	Flags             asn1.BitString          `asn1:"explicit,tag:0"`
 	Key               types.EncryptionKey     `asn1:"explicit,tag:1"`
@@ -43,6 +45,7 @@ type EncTicketPart struct {
 	AuthorizationData types.AuthorizationData `asn1:"explicit,optional,tag:10"`
 }
 
+// TransitedEncoding part of the ticket's encrypted part.
 type TransitedEncoding struct {
 	TRType   int    `asn1:"explicit,tag:0"`
 	Contents []byte `asn1:"explicit,tag:1"`

@@ -7,20 +7,21 @@ import (
 // Reference: https://www.ietf.org/rfc/rfc4120.txt
 // Section: 5.2.9
 
-// Reference: https://www.ietf.org/rfc/rfc3961.txt
-
+// EncryptedData implements RFC 4120 type: https://tools.ietf.org/html/rfc4120#section-5.2.9
 type EncryptedData struct {
 	EType  int    `asn1:"explicit,tag:0"`
 	KVNO   int    `asn1:"explicit,optional,tag:1"`
 	Cipher []byte `asn1:"explicit,tag:2"`
 }
 
-//AKA KeyBlock
+// EncryptionKey implements RFC 4120 type: https://tools.ietf.org/html/rfc4120#section-5.2.9
+// AKA KeyBlock
 type EncryptionKey struct {
 	KeyType  int    `asn1:"explicit,tag:0"`
 	KeyValue []byte `asn1:"explicit,tag:1"`
 }
 
+// Checksum implements RFC 4120 type: https://tools.ietf.org/html/rfc4120#section-5.2.9
 type Checksum struct {
 	CksumType int    `asn1:"explicit,tag:0"`
 	Checksum  []byte `asn1:"explicit,tag:1"`

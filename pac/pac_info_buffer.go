@@ -18,7 +18,7 @@ const (
 	ULTYPE_PAC_DEVICE_CLAIMS_INFO    = 15
 )
 
-// https://msdn.microsoft.com/en-us/library/cc237954.aspx
+// InfoBuffer implements the PAC Info Buffer: https://msdn.microsoft.com/en-us/library/cc237954.aspx
 type InfoBuffer struct {
 	ULType       uint32 // A 32-bit unsigned integer in little-endian format that describes the type of data present in the buffer contained at Offset.
 	CBBufferSize uint32 // A 32-bit unsigned integer in little-endian format that contains the size, in bytes, of the buffer in the PAC located at Offset.

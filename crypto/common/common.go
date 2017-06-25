@@ -139,7 +139,7 @@ func getUsage(un uint32, o byte) []byte {
 }
 
 // IterationsToS2Kparams converts the number of iterations as an integer to a string representation.
-func IterationsToS2kparams(i int) string {
+func IterationsToS2Kparams(i int) string {
 	b := make([]byte, 4, 4)
 	binary.BigEndian.PutUint32(b, uint32(i))
 	return hex.EncodeToString(b)

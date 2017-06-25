@@ -1,4 +1,4 @@
-// Error handling.
+// Package krberror provides error type and functions for gokrb5.
 package krberror
 
 import (
@@ -16,6 +16,7 @@ const (
 	KRBMSG_ERROR     = "KRBMessage_Handling_Error"
 )
 
+// Krberror is an error type for gokrb5
 type Krberror struct {
 	RootCause string
 	EText     []string

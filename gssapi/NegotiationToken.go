@@ -43,7 +43,7 @@ NegTokenResp ::= SEQUENCE {
 }
 */
 
-// Negotiation Token - Init
+// NegTokenInit implements Negotiation Token of type Init
 type NegTokenInit struct {
 	MechTypes    []asn1.ObjectIdentifier `asn1:"explicit,tag:0"`
 	ReqFlags     ContextFlags            `asn1:"explicit,optional,tag:1"`
@@ -51,7 +51,7 @@ type NegTokenInit struct {
 	MechTokenMIC []byte                  `asn1:"explicit,optional,tag:3"`
 }
 
-// Negotiation Token - Resp/Targ
+// NegTokenResp implements Negotiation Token of type Resp/Targ
 type NegTokenResp struct {
 	NegState      asn1.Enumerated       `asn1:"explicit,tag:0"`
 	SupportedMech asn1.ObjectIdentifier `asn1:"explicit,optional,tag:1"`
@@ -59,6 +59,7 @@ type NegTokenResp struct {
 	MechListMIC   []byte                `asn1:"explicit,optional,tag:3"`
 }
 
+// NegTokenTarg implements Negotiation Token of type Resp/Targ
 type NegTokenTarg NegTokenResp
 
 // UnmarshalNegToken umarshals and returns either a NegTokenInit or a NegTokenResp.

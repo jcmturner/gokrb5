@@ -6,7 +6,7 @@ import (
 	"github.com/jcmturner/gokrb5/ndr"
 )
 
-// https://msdn.microsoft.com/en-us/library/cc237951.aspx
+// ClientInfo implements https://msdn.microsoft.com/en-us/library/cc237951.aspx
 type ClientInfo struct {
 	ClientID   mstypes.FileTime // A FILETIME structure in little-endian format that contains the Kerberos initial ticket-granting ticket TGT authentication time
 	NameLength uint16           // An unsigned 16-bit integer in little-endian format that specifies the length, in bytes, of the Name field.

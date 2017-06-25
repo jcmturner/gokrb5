@@ -6,7 +6,7 @@ import (
 	"github.com/jcmturner/gokrb5/ndr"
 )
 
-// https://msdn.microsoft.com/en-us/library/hh554226.aspx
+// DeviceClaimsInfo implements https://msdn.microsoft.com/en-us/library/hh554226.aspx
 type DeviceClaimsInfo struct {
 	Claims mstypes.ClaimsSetMetadata
 }

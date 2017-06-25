@@ -6,7 +6,7 @@ import (
 	"github.com/jcmturner/gokrb5/ndr"
 )
 
-// https://msdn.microsoft.com/en-us/library/cc237944.aspx
+// S4U_DelegationInfo implements https://msdn.microsoft.com/en-us/library/cc237944.aspx
 type S4U_DelegationInfo struct {
 	S4U2proxyTarget      mstypes.RPC_UnicodeString // The name of the principal to whom the application can forward the ticket.
 	TransitedListSize    uint32

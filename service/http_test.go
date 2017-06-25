@@ -129,6 +129,6 @@ func httpServer() *httptest.Server {
 func testAppHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	ctx := r.Context()
-	fmt.Fprintf(w, "<html>\nTEST.GOKRB5 Handler\nAuthenticed user: %s\nUser's realm: %s\n</html>", ctx.Value(CREDENTIALS_CTXKEY).(credentials.Credentials).Username, ctx.Value(CREDENTIALS_CTXKEY).(credentials.Credentials).Realm)
+	fmt.Fprintf(w, "<html>\nTEST.GOKRB5 Handler\nAuthenticed user: %s\nUser's realm: %s\n</html>", ctx.Value(CTXKey_Credentials).(credentials.Credentials).Username, ctx.Value(CTXKey_Credentials).(credentials.Credentials).Realm)
 	return
 }

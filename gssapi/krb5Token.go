@@ -26,6 +26,7 @@ const (
 	GSS_C_INTEG_FLAG    = 32
 )
 
+// MechToken implementation for GSSAPI
 type MechToken struct {
 	OID      asn1.ObjectIdentifier
 	TokID    []byte

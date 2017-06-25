@@ -9,7 +9,7 @@ import (
 )
 
 // Client session struct.
-type Session struct {
+type session struct {
 	AuthTime             time.Time
 	EndTime              time.Time
 	RenewTill            time.Time
@@ -24,7 +24,7 @@ func (cl *Client) EnableAutoSessionRenewal() {
 	go func() {
 		for {
 			//Wait until one minute before endtime
-			w := (cl.Session.EndTime.Sub(time.Now().UTC()) * 5) / 6
+			w := (cl.session.EndTime.Sub(time.Now().UTC()) * 5) / 6
 			if w < 0 {
 				return
 			}
@@ -38,13 +38,13 @@ func (cl *Client) EnableAutoSessionRenewal() {
 func (cl *Client) RenewTGT() error {
 	spn := types.PrincipalName{
 		NameType:   nametype.KRB_NT_SRV_INST,
-		NameString: []string{"krbtgt", cl.Session.TGT.Realm},
+		NameString: []string{"krbtgt", cl.session.TGT.Realm},
 	}
-	_, tgsRep, err := cl.TGSExchange(spn, cl.Session.TGT, cl.Session.SessionKey, true)
+	_, tgsRep, err := cl.TGSExchange(spn, cl.session.TGT, cl.session.SessionKey, true)
 	if err != nil {
 		return krberror.Errorf(err, krberror.KRBMSG_ERROR, "Error renewing TGT")
 	}
-	cl.Session = &Session{
+	cl.session = &session{
 		AuthTime:             tgsRep.DecryptedEncPart.AuthTime,
 		EndTime:              tgsRep.DecryptedEncPart.EndTime,
 		RenewTill:            tgsRep.DecryptedEncPart.RenewTill,
@@ -56,7 +56,7 @@ func (cl *Client) RenewTGT() error {
 }
 
 func (cl *Client) updateTGT() error {
-	if time.Now().UTC().Before(cl.Session.RenewTill) {
+	if time.Now().UTC().Before(cl.session.RenewTill) {
 		err := cl.RenewTGT()
 		if err != nil {
 			return err

@@ -196,6 +196,7 @@ if ok, creds, err := serivce.ValidateAPREQ(mt.APReq, kt, r.RemoteAddr); ok {
 * [HTTP-Based Cross-Platform Authentication by Using the Negotiate Protocol - Part 2](https://msdn.microsoft.com/en-us/library/ms995330.aspx)
 * [Microsoft PAC Validation](https://blogs.msdn.microsoft.com/openspecification/2009/04/24/understanding-microsoft-kerberos-pac-validation/)
 * [Microsoft Kerberos Protocol Extensions](https://msdn.microsoft.com/en-us/library/cc233855.aspx)
+* [Windows Data Types](https://msdn.microsoft.com/en-us/library/cc230273.aspx)
 
 ### Useful Links
 * https://en.wikipedia.org/wiki/Ciphertext_stealing#CBC_ciphertext_stealing

@@ -49,6 +49,7 @@ import (
    sixteen (16).  The hmac-sha1-des3-kd checksum algorithm is assigned a
    checksum type number of twelve (12)*/
 
+// Des3CbcSha1Kd implements Kerberos encryption type des3-cbc-hmac-sha1-kd
 type Des3CbcSha1Kd struct {
 }
 

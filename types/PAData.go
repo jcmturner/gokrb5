@@ -9,17 +9,22 @@ import (
 	"time"
 )
 
+// PAData implements RFC 4120 types: https://tools.ietf.org/html/rfc4120#section-5.2.7
 type PAData struct {
 	PADataType  int    `asn1:"explicit,tag:1"`
 	PADataValue []byte `asn1:"explicit,tag:2"`
 }
 
+// PADataSequence implements RFC 4120 types: https://tools.ietf.org/html/rfc4120#section-5.2.7
 type PADataSequence []PAData
 
+// MethodData implements RFC 4120 types: https://tools.ietf.org/html/rfc4120#section-5.9.1
 type MethodData []PAData
 
+// PAEncTimestamp implements RFC 4120 types: https://tools.ietf.org/html/rfc4120#section-5.2.7.2
 type PAEncTimestamp EncryptedData
 
+// PAEncTSEnc implements RFC 4120 types: https://tools.ietf.org/html/rfc4120#section-5.2.7.2
 type PAEncTSEnc struct {
 	PATimestamp time.Time `asn1:"generalized,explicit,tag:0"`
 	PAUSec      int       `asn1:"explicit,optional,tag:1"`
@@ -49,21 +54,26 @@ func GetPAEncTSEncAsnMarshalled() ([]byte, error) {
 	return b, nil
 }
 
+// ETypeInfoEntry implements RFC 4120 types: https://tools.ietf.org/html/rfc4120#section-5.2.7.4
 type ETypeInfoEntry struct {
 	EType int    `asn1:"explicit,tag:0"`
 	Salt  []byte `asn1:"explicit,optional,tag:1"`
 }
 
+// ETypeInfo implements RFC 4120 types: https://tools.ietf.org/html/rfc4120#section-5.2.7.4
 type ETypeInfo []ETypeInfoEntry
 
+// ETypeInfo2Entry implements RFC 4120 types: https://tools.ietf.org/html/rfc4120#section-5.2.7.5
 type ETypeInfo2Entry struct {
 	EType     int    `asn1:"explicit,tag:0"`
 	Salt      string `asn1:"explicit,optional,generalstring,tag:1"`
 	S2KParams []byte `asn1:"explicit,optional,tag:2"`
 }
 
+// ETypeInfo2 implements RFC 4120 types: https://tools.ietf.org/html/rfc4120#section-5.2.7.5
 type ETypeInfo2 []ETypeInfo2Entry
 
+// PAReqEncPARep PA Data Type
 type PAReqEncPARep struct {
 	ChksumType int    `asn1:"explicit,tag:0"`
 	Chksum     []byte `asn1:"explicit,tag:1"`

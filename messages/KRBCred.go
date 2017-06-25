@@ -19,7 +19,7 @@ type marshalKRBCred struct {
 	EncPart types.EncryptedData `asn1:"explicit,tag:3"`
 }
 
-// RFC 4120 KRB_CRED: https://tools.ietf.org/html/rfc4120#section-5.8.1.
+// KRBCred implements RFC 4120 KRB_CRED: https://tools.ietf.org/html/rfc4120#section-5.8.1.
 type KRBCred struct {
 	PVNO             int
 	MsgType          int
@@ -28,7 +28,7 @@ type KRBCred struct {
 	DecryptedEncPart EncKrbCredPart
 }
 
-// Encrypted part of KRB_CRED.
+// EncKrbCredPart is the encrypted part of KRB_CRED.
 type EncKrbCredPart struct {
 	TicketInfo []KrbCredInfo     `asn1:"explicit,tag:0"`
 	Nouce      int               `asn1:"optional,explicit,tag:1"`
@@ -38,7 +38,7 @@ type EncKrbCredPart struct {
 	RAddress   types.HostAddress `asn1:"optional,explicit,tag:5"`
 }
 
-// KRB_CRED_INFO part of KRB_CRED.
+// KrbCredInfo is the KRB_CRED_INFO part of KRB_CRED.
 type KrbCredInfo struct {
 	Key       types.EncryptionKey `asn1:"explicit,tag:0"`
 	PRealm    string              `asn1:"generalstring,optional,explicit,tag:1"`

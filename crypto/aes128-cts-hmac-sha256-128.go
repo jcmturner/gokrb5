@@ -13,6 +13,7 @@ import (
 
 // RFC https://tools.ietf.org/html/rfc8009
 
+// Aes128CtsHmacSha256128 implements Kerberos encryption type aes128-cts-hmac-sha256-128
 type Aes128CtsHmacSha256128 struct {
 }
 

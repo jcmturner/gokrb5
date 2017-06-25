@@ -1,4 +1,4 @@
-// Cryptographic packages for Kerberos 5 implementation.
+// Package crypto implements cryptographic functions for Kerberos 5 implementation.
 package crypto
 
 import (
@@ -11,6 +11,7 @@ import (
 	"github.com/jcmturner/gokrb5/types"
 )
 
+// GetEtype returns an instances of the required etype struct for the etype ID.
 func GetEtype(id int) (etype.EType, error) {
 	switch id {
 	case etypeID.AES128_CTS_HMAC_SHA1_96:
@@ -33,6 +34,7 @@ func GetEtype(id int) (etype.EType, error) {
 	}
 }
 
+// GetChksumEtype returns an instances of the required etype struct for the checksum ID.
 func GetChksumEtype(id int) (etype.EType, error) {
 	switch id {
 	case chksumtype.HMAC_SHA1_96_AES128:
@@ -55,6 +57,7 @@ func GetChksumEtype(id int) (etype.EType, error) {
 	}
 }
 
+// GetKeyFromPassword generates an encryption key from the principal's password.
 func GetKeyFromPassword(passwd string, cname types.PrincipalName, realm string, etypeID int, pas types.PADataSequence) (types.EncryptionKey, etype.EType, error) {
 	var key types.EncryptionKey
 	et, err := GetEtype(etypeID)
@@ -122,7 +125,8 @@ func GetKeyFromPassword(passwd string, cname types.PrincipalName, realm string, 
 	return key, et, nil
 }
 
-// Pass a usage value of zero to use the key provided directly rather than deriving one
+// GetEncryptedData encrypts the data provided and returns and EncryptedData type.
+// Pass a usage value of zero to use the key provided directly rather than deriving one.
 func GetEncryptedData(plainBytes []byte, key types.EncryptionKey, usage uint32, kvno int) (types.EncryptedData, error) {
 	var ed types.EncryptedData
 	et, err := GetEtype(key.KeyType)
@@ -142,10 +146,12 @@ func GetEncryptedData(plainBytes []byte, key types.EncryptionKey, usage uint32, 
 	return ed, nil
 }
 
+// DecryptEncPart decrypts the EncryptedData.
 func DecryptEncPart(ed types.EncryptedData, key types.EncryptionKey, usage uint32) ([]byte, error) {
 	return DecryptMessage(ed.Cipher, key, usage)
 }
 
+// DecryptMessage decrypts the ciphertext and verifies the integrity.
 func DecryptMessage(ciphertext []byte, key types.EncryptionKey, usage uint32) ([]byte, error) {
 	et, err := GetEtype(key.KeyType)
 	if err != nil {

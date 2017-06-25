@@ -3,7 +3,7 @@ package etype
 
 import "hash"
 
-// Interface defining the Encryption Type.
+// EType is the interface defining the Encryption Type.
 type EType interface {
 	GetETypeID() int
 	GetHashID() int

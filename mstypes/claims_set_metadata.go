@@ -5,7 +5,7 @@ import (
 	"github.com/jcmturner/gokrb5/ndr"
 )
 
-// https://msdn.microsoft.com/en-us/library/hh554073.aspx
+// ClaimsSetMetadata implements https://msdn.microsoft.com/en-us/library/hh554073.aspx
 type ClaimsSetMetadata struct {
 	ULClaimsSetSize             uint32
 	ClaimsSet                   []byte

@@ -40,6 +40,7 @@ const (
 	IBM                  = 3
 )
 
+// CommonHeader implements the NDR common header: https://msdn.microsoft.com/en-us/library/cc243889.aspx
 type CommonHeader struct {
 	Version           uint8
 	Endianness        binary.ByteOrder
@@ -49,6 +50,7 @@ type CommonHeader struct {
 	Filler       []byte
 }
 
+// PrivateHeader implements the NDR private header: https://msdn.microsoft.com/en-us/library/cc243919.aspx
 type PrivateHeader struct {
 	ObjectBufferLength uint32
 	Filler             []byte

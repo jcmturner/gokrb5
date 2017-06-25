@@ -11,8 +11,10 @@ import (
 	"github.com/jcmturner/gokrb5/types"
 )
 
+// SPNEGO_OID is the OID for SPNEGO header type.
 var SPNEGO_OID = asn1.ObjectIdentifier{1, 3, 6, 1, 5, 5, 2}
 
+// SPNEGO header struct
 type SPNEGO struct {
 	Init         bool
 	Resp         bool

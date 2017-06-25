@@ -1,4 +1,4 @@
-// Credentials for Kerberos 5 authentication.
+// Package credentials provides credentials management for Kerberos 5 authentication.
 package credentials
 
 import (
@@ -20,6 +20,7 @@ type Credentials struct {
 	Attributes map[string]interface{}
 }
 
+// ADCredentials contains information obtained from the PAC.
 type ADCredentials struct {
 	EffectiveName       string
 	FullName            string

@@ -6,7 +6,7 @@ import (
 	"sort"
 )
 
-// https://msdn.microsoft.com/en-us/library/dd240468.aspx
+// UPN_DNSInfo implements https://msdn.microsoft.com/en-us/library/dd240468.aspx
 type UPN_DNSInfo struct {
 	UPNLength           uint16 // An unsigned 16-bit integer in little-endian format that specifies the length, in bytes, of the UPN field.
 	UPNOffset           uint16 // An unsigned 16-bit integer in little-endian format that contains the offset to the beginning of the buffer, in bytes, from the beginning of the UPN_DNS_INFO structure.

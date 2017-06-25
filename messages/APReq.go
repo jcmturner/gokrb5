@@ -36,7 +36,7 @@ type marshalAPReq struct {
 	Authenticator types.EncryptedData `asn1:"explicit,tag:4"`
 }
 
-// RFC 4120 KRB_AP_REQ: https://tools.ietf.org/html/rfc4120#section-5.5.1.
+// APReq implements RFC 4120 KRB_AP_REQ: https://tools.ietf.org/html/rfc4120#section-5.5.1.
 type APReq struct {
 	PVNO          int                 `asn1:"explicit,tag:0"`
 	MsgType       int                 `asn1:"explicit,tag:1"`

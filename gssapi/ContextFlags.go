@@ -24,6 +24,7 @@ const (
 	integFlag    = 6
 )
 
+// ContextFlags flags for GSSAPI
 type ContextFlags asn1.BitString
 
 // NewContextFlags creates a new ContextFlags instance.

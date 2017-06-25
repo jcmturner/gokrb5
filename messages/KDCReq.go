@@ -29,7 +29,7 @@ type marshalKDCReq struct {
 	ReqBody asn1.RawValue        `asn1:"explicit,tag:4"`
 }
 
-// KRB_KDC_REQ struct fields.
+// KDCReqFields represents the KRB_KDC_REQ fields.
 type KDCReqFields struct {
 	PVNO    int
 	MsgType int
@@ -38,12 +38,12 @@ type KDCReqFields struct {
 	Renewal bool
 }
 
-// RFC 4120 KRB_AS_REQ: https://tools.ietf.org/html/rfc4120#section-5.4.1.
+// ASReq implements RFC 4120 KRB_AS_REQ: https://tools.ietf.org/html/rfc4120#section-5.4.1.
 type ASReq struct {
 	KDCReqFields
 }
 
-// RFC 4120 KRB_TGS_REQ: https://tools.ietf.org/html/rfc4120#section-5.4.1.
+// TGSReq implements RFC 4120 KRB_TGS_REQ: https://tools.ietf.org/html/rfc4120#section-5.4.1.
 type TGSReq struct {
 	KDCReqFields
 }
@@ -64,7 +64,7 @@ type marshalKDCReqBody struct {
 	AdditionalTickets asn1.RawValue `asn1:"explicit,optional,tag:11"`
 }
 
-// KRB_KDC_REQ request body.
+// KDCReqBody implements the KRB_KDC_REQ request body.
 type KDCReqBody struct {
 	KDCOptions        asn1.BitString      `asn1:"explicit,tag:0"`
 	CName             types.PrincipalName `asn1:"explicit,optional,tag:1"`

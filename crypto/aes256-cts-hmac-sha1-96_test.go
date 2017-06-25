@@ -33,7 +33,7 @@ func TestAes256CtsHmacSha196_StringToKey(t *testing.T) {
 	for i, test := range tests {
 
 		assert.Equal(t, test.pbkdf2, hex.EncodeToString(rfc3962.StringToPBKDF2(test.phrase, test.salt, test.iterations, e)), "PBKDF2 not as expected")
-		k, err := e.StringToKey(test.phrase, test.salt, common.IterationsToS2kparams(test.iterations))
+		k, err := e.StringToKey(test.phrase, test.salt, common.IterationsToS2Kparams(test.iterations))
 		if err != nil {
 			t.Errorf("Error in processing string to key for test %d: %v", i, err)
 		}

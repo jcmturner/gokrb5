@@ -46,8 +46,10 @@ const (
 	AddrType_IPv6            = 24
 )
 
+// HostAddresses implements RFC 4120 type: https://tools.ietf.org/html/rfc4120#section-5.2.5
 type HostAddresses []HostAddress
 
+// HostAddress implements RFC 4120 type: https://tools.ietf.org/html/rfc4120#section-5.2.5
 type HostAddress struct {
 	AddrType int    `asn1:"explicit,tag:0"`
 	Address  []byte `asn1:"explicit,tag:1"`

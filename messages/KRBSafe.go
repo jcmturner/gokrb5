@@ -28,7 +28,7 @@ KRB-SAFE-BODY   ::= SEQUENCE {
 }
 */
 
-// RFC 4120 KRB_SAFE: https://tools.ietf.org/html/rfc4120#section-5.6.1.
+// KRBSafe implements RFC 4120 KRB_SAFE: https://tools.ietf.org/html/rfc4120#section-5.6.1.
 type KRBSafe struct {
 	PVNO     int            `asn1:"explicit,tag:0"`
 	MsgType  int            `asn1:"explicit,tag:1"`
@@ -36,7 +36,7 @@ type KRBSafe struct {
 	Cksum    types.Checksum `asn1:"explicit,tag:3"`
 }
 
-// KRB_SAFE_BODY of KRB_SAFE.
+// KRBSafeBody implements the KRB_SAFE_BODY of KRB_SAFE.
 type KRBSafeBody struct {
 	UserData       []byte            `asn1:"explicit,tag:0"`
 	Timestamp      time.Time         `asn1:"generalized,optional,explicit,tag:1"`
