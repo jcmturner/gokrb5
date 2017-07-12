@@ -2,9 +2,13 @@
 package client
 
 import (
+	"fmt"
 	"github.com/jcmturner/gokrb5/config"
 	"github.com/jcmturner/gokrb5/credentials"
+	"github.com/jcmturner/gokrb5/iana/nametype"
 	"github.com/jcmturner/gokrb5/keytab"
+	"github.com/jcmturner/gokrb5/messages"
+	"github.com/jcmturner/gokrb5/types"
 )
 
 // Client side configuration and state.
@@ -48,9 +52,69 @@ func NewClientWithKeytab(username, realm string, kt keytab.Keytab) Client {
 	}
 }
 
+// NewClientFromCCache create a client from a populated client cache.
+//
+// WARNING: If you do not add a keytab or password to the client then the TGT cannot be renewed and a failure will occur after the TGT expires.
+func NewClientFromCCache(c credentials.CCache) (Client, error) {
+	cl := Client{
+		Credentials: c.GetClientCredentials(),
+		Config:      config.NewConfig(),
+		GoKrb5Conf:  &Config{},
+		Cache:       NewCache(),
+	}
+	spn := types.PrincipalName{
+		NameType:   nametype.KRB_NT_SRV_INST,
+		NameString: []string{"krbtgt", c.DefaultPrincipal.Realm},
+	}
+	cred, err := c.GetEntry(spn)
+	if err != nil {
+		return cl, err
+	}
+	var tgt messages.Ticket
+	err = tgt.Unmarshal(cred.Ticket)
+	if err != nil {
+		return cl, fmt.Errorf("TGT bytes in cache are not valid: %v", err)
+	}
+	cl.session = &session{
+		AuthTime:   cred.AuthTime,
+		EndTime:    cred.EndTime,
+		RenewTill:  cred.RenewTill,
+		TGT:        tgt,
+		SessionKey: cred.Key,
+	}
+	for _, cred := range c.GetEntries() {
+		var tkt messages.Ticket
+		err = tkt.Unmarshal(cred.Ticket)
+		if err != nil {
+			return cl, fmt.Errorf("Cache entry ticket bytes are not valid: %v", err)
+		}
+		cl.Cache.addEntry(
+			tkt,
+			cred.AuthTime,
+			cred.StartTime,
+			cred.EndTime,
+			cred.RenewTill,
+			cred.Key,
+		)
+	}
+	return cl, nil
+}
+
 // WithConfig sets the Kerberos configuration for the client.
 func (cl *Client) WithConfig(cfg *config.Config) *Client {
 	cl.Config = cfg
+	return cl
+}
+
+// WithKeytab adds a keytab to the client
+func (cl *Client) WithKeytab(kt keytab.Keytab) *Client {
+	cl.Credentials.WithKeytab(kt)
+	return cl
+}
+
+// WithPassword adds a password to the client
+func (cl *Client) WithPassword(password string) *Client {
+	cl.Credentials.WithPassword(password)
 	return cl
 }
 
