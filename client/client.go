@@ -2,6 +2,7 @@
 package client
 
 import (
+	"errors"
 	"fmt"
 	"github.com/jcmturner/gokrb5/config"
 	"github.com/jcmturner/gokrb5/credentials"
@@ -66,12 +67,12 @@ func NewClientFromCCache(c credentials.CCache) (Client, error) {
 		NameType:   nametype.KRB_NT_SRV_INST,
 		NameString: []string{"krbtgt", c.DefaultPrincipal.Realm},
 	}
-	cred, err := c.GetEntry(spn)
-	if err != nil {
-		return cl, err
+	cred, ok := c.GetEntry(spn)
+	if !ok {
+		return cl, errors.New("TGT not found in CCache")
 	}
 	var tgt messages.Ticket
-	err = tgt.Unmarshal(cred.Ticket)
+	err := tgt.Unmarshal(cred.Ticket)
 	if err != nil {
 		return cl, fmt.Errorf("TGT bytes in cache are not valid: %v", err)
 	}

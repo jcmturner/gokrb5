@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"github.com/jcmturner/asn1"
 	"github.com/jcmturner/gokrb5/types"
 	"io/ioutil"
@@ -230,7 +229,7 @@ func (c *CCache) Contains(p types.PrincipalName) bool {
 }
 
 // GetEntry returns a specific credential for the PrincipalName provided.
-func (c *CCache) GetEntry(p types.PrincipalName) (credential, error) {
+func (c *CCache) GetEntry(p types.PrincipalName) (credential, bool) {
 	var cred credential
 	var found bool
 	for i := range c.Credentials {
@@ -241,9 +240,9 @@ func (c *CCache) GetEntry(p types.PrincipalName) (credential, error) {
 		}
 	}
 	if !found {
-		return cred, fmt.Errorf("Cache does not contain an entry for %s", p.GetPrincipalNameString())
+		return cred, false
 	}
-	return cred, nil
+	return cred, true
 }
 
 // GetEntries filters out configuration entries an returns a slice of credentials.

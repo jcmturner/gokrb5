@@ -82,9 +82,9 @@ func TestCCache_GetEntry(t *testing.T) {
 		NameType:   nametype.KRB_NT_PRINCIPAL,
 		NameString: []string{"HTTP", "host.test.gokrb5"},
 	}
-	cred, err := c.GetEntry(httppn)
-	if err != nil {
-		t.Fatalf("Could not get entry from CCache: %v", err)
+	cred, ok := c.GetEntry(httppn)
+	if !ok {
+		t.Fatal("Could not get entry from CCache as not found")
 	}
 	assert.Equal(t, httppn, cred.Server.PrincipalName, "Credential does not have the right server principal name")
 }
