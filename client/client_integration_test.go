@@ -6,6 +6,7 @@ package client
 import (
 	"encoding/hex"
 	"github.com/jcmturner/gokrb5/config"
+	"github.com/jcmturner/gokrb5/credentials"
 	"github.com/jcmturner/gokrb5/iana/etypeID"
 	"github.com/jcmturner/gokrb5/keytab"
 	"github.com/jcmturner/gokrb5/testdata"
@@ -250,6 +251,38 @@ func TestClient_SetSPNEGOHeader(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error on AS_REQ: %v\n", err)
 	}
+	r, _ := http.NewRequest("GET", "http://10.80.88.90/index.html", nil)
+	httpResp, err := http.DefaultClient.Do(r)
+	if err != nil {
+		t.Fatalf("Request error: %v\n", err)
+	}
+	assert.Equal(t, http.StatusUnauthorized, httpResp.StatusCode, "Status code in response to client with no SPNEGO not as expected")
+	err = cl.SetSPNEGOHeader(r, "HTTP/host.test.gokrb5")
+	if err != nil {
+		t.Fatalf("Error setting client SPNEGO header: %v", err)
+	}
+	httpResp, err = http.DefaultClient.Do(r)
+	if err != nil {
+		t.Fatalf("Request error: %v\n", err)
+	}
+	assert.Equal(t, http.StatusOK, httpResp.StatusCode, "Status code in response to client SPNEGO request not as expected")
+}
+
+func TestNewClientFromCCache(t *testing.T) {
+	b, err := hex.DecodeString(testdata.CCACHE_TEST)
+	if err != nil {
+		t.Fatalf("Error decoding test data")
+	}
+	cc, err := credentials.ParseCCache(b)
+	if err != nil {
+		t.Fatal("Error getting test CCache")
+	}
+	cl, err := NewClientFromCCache(cc)
+	if err != nil {
+		t.Fatalf("Error creating client from CCache: %v", err)
+	}
+	//c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	//cl.WithConfig(c)
 	r, _ := http.NewRequest("GET", "http://10.80.88.90/index.html", nil)
 	httpResp, err := http.DefaultClient.Do(r)
 	if err != nil {

@@ -6,7 +6,7 @@ setenforce 0
 sed -i "s/SELINUX=enforcing/SELINUX=permissive/g" /etc/sysconfig/selinux
 
 yum update -y && yum clean all
-yum install -y tcpdump krb5-workstation ntp
+yum install -y tcpdump krb5-workstation ntp vim
 
 systemctl stop firewalld
 systemctl disable firewalld
