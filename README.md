@@ -13,9 +13,9 @@
   * Kerberos libraries for custom integration
   * Parsing Keytab files
   * Parsing krb5.conf files
+  * Parsing client credentials cache files such as `/tmp/krb5cc_$(id -u $(whoami))`
 
 #### Implemented Encryption & Checksum Types
-The currently implemented encryption types are limited to:
 
 | Implementation | Encryption ID | Checksum ID | RFC |
 |-------|-------------|------------|------|
