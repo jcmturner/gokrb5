@@ -68,8 +68,8 @@ type credential struct {
 	SecondTicket []byte
 }
 
-// Load a credential cache file into a CCache type.
-func Load(cpath string) (CCache, error) {
+// LoadCCache loads a credential cache file into a CCache type.
+func LoadCCache(cpath string) (CCache, error) {
 	k, err := ioutil.ReadFile(cpath)
 	if err != nil {
 		return CCache{}, err
