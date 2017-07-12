@@ -8,6 +8,10 @@ import (
 	"time"
 )
 
+const (
+	AttributeKey_ADCredentials = 1
+)
+
 // Credentials struct for a user.
 // Contains either a keytab, password or both.
 // Keytabs are used over passwords if both are defined.

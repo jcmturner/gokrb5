@@ -88,7 +88,7 @@ func ValidateAPREQ(APReq messages.APReq, kt keytab.Keytab, sa string, cAddr stri
 	}
 	if isPAC {
 		// There is a valid PAC. Adding attributes to creds
-		creds.Attributes["ADCredentials"] = credentials.ADCredentials{
+		creds.Attributes[credentials.AttributeKey_ADCredentials] = credentials.ADCredentials{
 			GroupMembershipSIDs: pac.KerbValidationInfo.GetGroupMembershipSIDs(),
 			LogOnTime:           pac.KerbValidationInfo.LogOnTime.Time(),
 			LogOffTime:          pac.KerbValidationInfo.LogOffTime.Time(),

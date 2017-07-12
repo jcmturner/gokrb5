@@ -73,11 +73,11 @@ func httpServer() *httptest.Server {
 func testAppHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	fmt.Fprint(w, "<html>\n<p><h1>TEST.GOKRB5 Handler</h1></p>\n")
-	if validuser, ok := ctx.Value(service.AUTHENTICATED_CTXKEY).(bool); ok && validuser {
-		if creds, ok := ctx.Value(service.CREDENTIALS_CTXKEY).(credentials.Credentials); ok {
+	if validuser, ok := ctx.Value(service.CTXKey_Authenticated).(bool); ok && validuser {
+		if creds, ok := ctx.Value(service.CTXKey_Credentials).(credentials.Credentials); ok {
 			fmt.Fprintf(w, "<ul><li>Authenticed user: %s</li>\n", creds.Username)
 			fmt.Fprintf(w, "<li>User's realm: %s</li>\n", creds.Realm)
-			if ADCreds, ok := creds.Attributes["ADCredentials"].(credentials.ADCredentials); ok {
+			if ADCreds, ok := creds.Attributes[credentials.AttributeKey_ADCredentials].(credentials.ADCredentials); ok {
 				// Now access the fields of the ADCredentials struct. For example:
 				fmt.Fprintf(w, "<li>EffectiveName: %v</li>\n", ADCreds.EffectiveName)
 				fmt.Fprintf(w, "<li>FullName: %v</li>\n", ADCreds.FullName)
