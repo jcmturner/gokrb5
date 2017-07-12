@@ -21,7 +21,7 @@ type Credentials struct {
 	CName      types.PrincipalName
 	Keytab     keytab.Keytab
 	Password   string
-	Attributes map[string]interface{}
+	Attributes map[int]interface{}
 }
 
 // ADCredentials contains information obtained from the PAC.
@@ -49,7 +49,7 @@ func NewCredentials(username string, realm string) Credentials {
 			NameString: []string{username},
 		},
 		Keytab:     keytab.NewKeytab(),
-		Attributes: make(map[string]interface{}),
+		Attributes: make(map[int]interface{}),
 	}
 }
 
@@ -60,7 +60,7 @@ func NewCredentialsFromPrincipal(cname types.PrincipalName, realm string) Creden
 		Realm:      realm,
 		CName:      cname,
 		Keytab:     keytab.NewKeytab(),
-		Attributes: make(map[string]interface{}),
+		Attributes: make(map[int]interface{}),
 	}
 }
 
