@@ -281,21 +281,7 @@ func TestNewClientFromCCache(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error creating client from CCache: %v", err)
 	}
-	//c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
-	//cl.WithConfig(c)
-	r, _ := http.NewRequest("GET", "http://10.80.88.90/index.html", nil)
-	httpResp, err := http.DefaultClient.Do(r)
-	if err != nil {
-		t.Fatalf("Request error: %v\n", err)
-	}
-	assert.Equal(t, http.StatusUnauthorized, httpResp.StatusCode, "Status code in response to client with no SPNEGO not as expected")
-	err = cl.SetSPNEGOHeader(r, "HTTP/host.test.gokrb5")
-	if err != nil {
-		t.Fatalf("Error setting client SPNEGO header: %v", err)
-	}
-	httpResp, err = http.DefaultClient.Do(r)
-	if err != nil {
-		t.Fatalf("Request error: %v\n", err)
-	}
-	assert.Equal(t, http.StatusOK, httpResp.StatusCode, "Status code in response to client SPNEGO request not as expected")
+	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	cl.WithConfig(c)
+	assert.True(t, cl.IsConfigured(), "Client was not configured from CCache")
 }

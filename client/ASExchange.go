@@ -18,7 +18,7 @@ func (cl *Client) ASExchange() error {
 		return errors.New("Client is not configured correctly")
 	}
 	ASReq := messages.NewASReq(cl.Config, cl.Credentials.CName)
-	err := setPAData(cl, &ASReq)
+	err := setPAData(cl, messages.KRBError{}, &ASReq)
 	if err != nil {
 		return krberror.Errorf(err, krberror.KRBMSG_ERROR, "AS Exchange Error: failed setting AS_REQ PAData")
 	}
@@ -34,7 +34,7 @@ func (cl *Client) ASExchange() error {
 		if e, ok := err.(messages.KRBError); ok && e.ErrorCode == errorcode.KDC_ERR_PREAUTH_REQUIRED {
 			// From now on assume this client will need to do this pre-auth and set the PAData
 			cl.GoKrb5Conf.Assume_PA_ENC_TIMESTAMP_Required = true
-			err = setPAData(cl, &ASReq)
+			err = setPAData(cl, e, &ASReq)
 			if err != nil {
 				return krberror.Errorf(err, krberror.KRBMSG_ERROR, "AS Exchange Error: failed setting AS_REQ PAData for pre-authentication required")
 			}
@@ -68,7 +68,7 @@ func (cl *Client) ASExchange() error {
 	return nil
 }
 
-func setPAData(cl *Client, ASReq *messages.ASReq) error {
+func setPAData(cl *Client, krberr messages.KRBError, ASReq *messages.ASReq) error {
 	if !cl.GoKrb5Conf.Disable_PA_FX_FAST {
 		pa := types.PAData{PADataType: patype.PA_REQ_ENC_PA_REP}
 		ASReq.PAData = append(ASReq.PAData, pa)
@@ -83,9 +83,9 @@ func setPAData(cl *Client, ASReq *messages.ASReq) error {
 		if err != nil {
 			return krberror.Errorf(err, krberror.ENCRYPTING_ERROR, "Error creating etype")
 		}
-		key, err := cl.Credentials.Keytab.GetEncryptionKey(cl.Credentials.CName.NameString, cl.Config.LibDefaults.Default_realm, 1, etype.GetETypeID())
+		key, err := cl.Key(etype, krberr)
 		if err != nil {
-			return krberror.Errorf(err, krberror.ENCRYPTING_ERROR, "Error getting key from keytab in credentials")
+			return krberror.Errorf(err, krberror.ENCRYPTING_ERROR, "Error getting key from credentials")
 		}
 		paEncTS, err := crypto.GetEncryptedData(paTSb, key, keyusage.AS_REQ_PA_ENC_TIMESTAMP, 1)
 		if err != nil {
