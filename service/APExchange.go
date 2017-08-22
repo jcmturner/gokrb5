@@ -30,7 +30,6 @@ func ValidateAPREQ(APReq messages.APReq, kt keytab.Keytab, sa string, cAddr stri
 	if err != nil {
 		return false, creds, krberror.Errorf(err, krberror.ENCODING_ERROR, "Error unmarshaling authenticator")
 	}
-
 	// Check CName in Authenticator is the same as that in the ticket
 	if !a.CName.Equal(APReq.Ticket.DecryptedEncPart.CName) {
 		err := messages.NewKRBError(APReq.Ticket.SName, APReq.Ticket.Realm, errorcode.KRB_AP_ERR_BADMATCH, "CName in Authenticator does not match that in service ticket")
@@ -82,13 +81,15 @@ func ValidateAPREQ(APReq messages.APReq, kt keytab.Keytab, sa string, cAddr stri
 		return false, creds, err
 	}
 	creds = credentials.NewCredentialsFromPrincipal(a.CName, a.CRealm)
+	creds.SetAuthTime(t)
+	creds.SetAuthenticated(true)
 	isPAC, pac, err := APReq.Ticket.GetPACType(kt, sa)
 	if isPAC && err != nil {
 		return false, creds, err
 	}
 	if isPAC {
 		// There is a valid PAC. Adding attributes to creds
-		creds.Attributes[credentials.AttributeKey_ADCredentials] = credentials.ADCredentials{
+		creds.SetADCredentials(credentials.ADCredentials{
 			GroupMembershipSIDs: pac.KerbValidationInfo.GetGroupMembershipSIDs(),
 			LogOnTime:           pac.KerbValidationInfo.LogOnTime.Time(),
 			LogOffTime:          pac.KerbValidationInfo.LogOffTime.Time(),
@@ -100,7 +101,7 @@ func ValidateAPREQ(APReq messages.APReq, kt keytab.Keytab, sa string, cAddr stri
 			LogonServer:         pac.KerbValidationInfo.LogonServer.Value,
 			LogonDomainName:     pac.KerbValidationInfo.LogonDomainName.Value,
 			LogonDomainID:       pac.KerbValidationInfo.LogonDomainID.ToString(),
-		}
+		})
 	}
 	return true, creds, nil
 }

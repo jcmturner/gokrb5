@@ -2,6 +2,7 @@
 package credentials
 
 import (
+	"github.com/hashicorp/go-uuid"
 	"github.com/jcmturner/gokrb5/iana/nametype"
 	"github.com/jcmturner/gokrb5/keytab"
 	"github.com/jcmturner/gokrb5/types"
@@ -16,12 +17,17 @@ const (
 // Contains either a keytab, password or both.
 // Keytabs are used over passwords if both are defined.
 type Credentials struct {
-	Username   string
-	Realm      string
-	CName      types.PrincipalName
-	Keytab     keytab.Keytab
-	Password   string
-	Attributes map[int]interface{}
+	Username        string
+	Realm           string
+	CName           types.PrincipalName
+	Keytab          keytab.Keytab
+	Password        string
+	Attributes      map[int]interface{}
+	authenticated   bool
+	human           bool
+	authTime        time.Time
+	groupMembership map[string]bool
+	sessionID       string
 }
 
 // ADCredentials contains information obtained from the PAC.
@@ -41,6 +47,10 @@ type ADCredentials struct {
 
 // NewCredentials creates a new Credentials instance.
 func NewCredentials(username string, realm string) Credentials {
+	uid, err := uuid.GenerateUUID()
+	if err != nil {
+		uid = "00unique-sess-ions-uuid-unavailable0"
+	}
 	return Credentials{
 		Username: username,
 		Realm:    realm,
@@ -50,17 +60,23 @@ func NewCredentials(username string, realm string) Credentials {
 		},
 		Keytab:     keytab.NewKeytab(),
 		Attributes: make(map[int]interface{}),
+		sessionID:  uid,
 	}
 }
 
 // NewCredentialsFromPrincipal creates a new Credentials instance with the user details provides as a PrincipalName type.
 func NewCredentialsFromPrincipal(cname types.PrincipalName, realm string) Credentials {
+	uid, err := uuid.GenerateUUID()
+	if err != nil {
+		uid = "00unique-sess-ions-uuid-unavailable0"
+	}
 	return Credentials{
 		Username:   cname.GetPrincipalNameString(),
 		Realm:      realm,
 		CName:      cname,
 		Keytab:     keytab.NewKeytab(),
 		Attributes: make(map[int]interface{}),
+		sessionID:  uid,
 	}
 }
 
@@ -90,4 +106,108 @@ func (c *Credentials) HasPassword() bool {
 		return true
 	}
 	return false
+}
+
+func (c *Credentials) SetADCredentials(a ADCredentials) {
+	c.Attributes[AttributeKey_ADCredentials] = a
+	if a.FullName != "" {
+		c.SetDisplayName(a.FullName)
+	}
+	for i := range a.GroupMembershipSIDs {
+		c.AddAuthzAttribute(a.GroupMembershipSIDs[i])
+	}
+}
+
+// Methods to implement goidentity.Identity interface
+
+func (c *Credentials) UserName() string {
+	return c.Username
+}
+
+func (c *Credentials) SetUserName(s string) {
+	c.Username = s
+}
+
+func (c *Credentials) Domain() string {
+	return c.Realm
+}
+
+func (c *Credentials) SetDomain(s string) {
+	c.Realm = s
+}
+
+func (c *Credentials) DisplayName() string {
+	return c.Username
+}
+
+func (c *Credentials) SetDisplayName(s string) {
+	c.Username = s
+}
+
+func (c *Credentials) Human() bool {
+	return c.human
+}
+
+func (c *Credentials) SetHuman(b bool) {
+	c.human = b
+}
+
+func (c *Credentials) AuthTime() time.Time {
+	return c.authTime
+}
+
+func (c *Credentials) SetAuthTime(t time.Time) {
+	c.authTime = t
+}
+
+func (c *Credentials) AuthzAttributes() []string {
+	s := make([]string, len(c.groupMembership))
+	i := 0
+	for a := range c.groupMembership {
+		s[i] = a
+		i++
+	}
+	return s
+}
+
+func (c *Credentials) Authenticated() bool {
+	return c.authenticated
+}
+
+func (c *Credentials) SetAuthenticated(b bool) {
+	c.authenticated = b
+}
+
+func (c *Credentials) AddAuthzAttribute(a string) {
+	c.groupMembership[a] = true
+}
+
+func (c *Credentials) RemoveAuthzAttribute(a string) {
+	if _, ok := c.groupMembership[a]; !ok {
+		return
+	}
+	delete(c.groupMembership, a)
+}
+
+func (c *Credentials) EnableAuthzAttribute(a string) {
+	if enabled, ok := c.groupMembership[a]; ok && !enabled {
+		c.groupMembership[a] = true
+	}
+}
+
+func (c *Credentials) DisableAuthzAttribute(a string) {
+	if enabled, ok := c.groupMembership[a]; ok && enabled {
+		c.groupMembership[a] = false
+	}
+}
+
+func (c *Credentials) Authorized(a string) bool {
+	if enabled, ok := c.groupMembership[a]; ok && enabled {
+		return true
+	}
+	return false
+}
+
+func (c *Credentials) SessionID() string {
+	return c.sessionID
 }

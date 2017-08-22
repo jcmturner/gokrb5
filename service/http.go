@@ -71,7 +71,7 @@ func SPNEGOKRB5Authenticate(f http.Handler, kt keytab.Keytab, sa string, l *log.
 			if l != nil {
 				l.Printf("%v %s@%s - SPNEGO authentication succeeded", r.RemoteAddr, creds.Username, creds.Realm)
 			}
-			w.Header().Set("WWW-Authenticate", SPNEGO_NegTokenResp_Krb_Accept_Completed)
+			SPNEGOResponseAcceptCompleted(w)
 			f.ServeHTTP(w, r.WithContext(ctx))
 		} else {
 			rejectSPNEGO(w, l, fmt.Sprintf("%v - SPNEGO Kerberos authentication failed: %v", r.RemoteAddr, err))
@@ -85,7 +85,15 @@ func rejectSPNEGO(w http.ResponseWriter, l *log.Logger, logMsg string) {
 	if l != nil {
 		l.Println(logMsg)
 	}
+	SPNEGOResponseReject(w)
+}
+
+func SPNEGOResponseReject(w http.ResponseWriter) {
 	w.Header().Set("WWW-Authenticate", SPNEGO_NegTokenResp_Reject)
 	w.WriteHeader(http.StatusUnauthorized)
 	w.Write([]byte("Unauthorised.\n"))
+}
+
+func SPNEGOResponseAcceptCompleted(w http.ResponseWriter) {
+	w.Header().Set("WWW-Authenticate", SPNEGO_NegTokenResp_Krb_Accept_Completed)
 }
