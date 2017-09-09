@@ -331,6 +331,14 @@ func (r *Realm) parseLines(name string, lines []string) error {
 		case "default_domain":
 			r.Default_domain = v
 		case "kdc":
+			if !strings.Contains(v, ":") {
+				// No port number specified default to 88
+				if strings.HasSuffix(v, `*`) {
+					v = strings.TrimSpace(strings.TrimSuffix(v, `*`)) + ":88*"
+				} else {
+					v = strings.TrimSpace(v) + ":88"
+				}
+			}
 			appendUntilFinal(&r.Kdc, v, &kdc_final)
 		case "kpasswd_server":
 			appendUntilFinal(&r.Kpasswd_server, v, &kpasswd_server_final)
