@@ -204,7 +204,7 @@ func (c *CCache) GetClientPrincipalName() types.PrincipalName {
 	return c.DefaultPrincipal.PrincipalName
 }
 
-// GetClientRealm returns the reals of teh client the credentials cache is for.
+// GetClientRealm returns the reals of the client the credentials cache is for.
 func (c *CCache) GetClientRealm() string {
 	return c.DefaultPrincipal.Realm
 }
