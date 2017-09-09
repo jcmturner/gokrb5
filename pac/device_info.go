@@ -40,7 +40,7 @@ func (k *DeviceInfo) Unmarshal(b []byte) error {
 	if k.AccountGroupCount > 0 {
 		ag := make([]mstypes.GroupMembership, k.AccountGroupCount, k.AccountGroupCount)
 		for i := range ag {
-			ag[i] = mstypes.Read_GroupMembership(&b, &p, e)
+			ag[i] = mstypes.ReadGroupMembership(&b, &p, e)
 		}
 		k.AccountGroupIDs = ag
 	}

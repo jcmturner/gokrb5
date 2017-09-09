@@ -55,7 +55,7 @@ type TransitedEncoding struct {
 func NewTicket(cname types.PrincipalName, crealm string, sname types.PrincipalName, srealm string, flags asn1.BitString, sktab keytab.Keytab, eTypeID, kvno int, authTime, startTime, endTime, renewTill time.Time) (Ticket, types.EncryptionKey, error) {
 	etype, err := crypto.GetEtype(eTypeID)
 	if err != nil {
-		return Ticket{}, types.EncryptionKey{}, krberror.Errorf(err, krberror.ENCRYPTING_ERROR, "Error getting etype for new ticket")
+		return Ticket{}, types.EncryptionKey{}, krberror.Errorf(err, krberror.EncryptingError, "Error getting etype for new ticket")
 	}
 	ks := etype.GetKeyByteSize()
 	kv := make([]byte, ks, ks)
@@ -79,11 +79,11 @@ func NewTicket(cname types.PrincipalName, crealm string, sname types.PrincipalNa
 	b = asn1tools.AddASNAppTag(b, asnAppTag.EncTicketPart)
 	skey, err := sktab.GetEncryptionKey(sname.NameString, srealm, kvno, eTypeID)
 	if err != nil {
-		return Ticket{}, types.EncryptionKey{}, krberror.Errorf(err, krberror.ENCRYPTING_ERROR, "Error getting encryption key for new ticket")
+		return Ticket{}, types.EncryptionKey{}, krberror.Errorf(err, krberror.EncryptingError, "Error getting encryption key for new ticket")
 	}
 	ed, err := crypto.GetEncryptedData(b, skey, keyusage.KDC_REP_TICKET, kvno)
 	if err != nil {
-		return Ticket{}, types.EncryptionKey{}, krberror.Errorf(err, krberror.ENCRYPTING_ERROR, "Error encrypting ticket encpart")
+		return Ticket{}, types.EncryptionKey{}, krberror.Errorf(err, krberror.EncryptingError, "Error encrypting ticket encpart")
 	}
 	tkt := Ticket{
 		TktVNO:  iana.PVNO,

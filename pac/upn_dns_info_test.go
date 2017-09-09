@@ -12,7 +12,7 @@ func TestUPN_DNSInfo_Unmarshal(t *testing.T) {
 	if err != nil {
 		t.Fatal("Could not decode test data hex string")
 	}
-	var k UPN_DNSInfo
+	var k UPNDNSInfo
 	err = k.Unmarshal(b)
 	if err != nil {
 		t.Fatalf("Error unmarshaling test data: %v", err)

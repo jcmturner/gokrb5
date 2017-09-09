@@ -108,7 +108,7 @@ func (k *KerbValidationInfo) Unmarshal(b []byte) (err error) {
 	k.pGroupIDs = ndr.Read_uint32(&b, &p, e)
 
 	k.UserFlags = ndr.Read_uint32(&b, &p, e)
-	k.UserSessionKey = mstypes.Read_UserSessionKey(&b, &p, e)
+	k.UserSessionKey = mstypes.ReadUserSessionKey(&b, &p, e)
 
 	k.LogonServer, err = mstypes.Read_RPC_UnicodeString(&b, &p, e)
 	k.LogonDomainName, err = mstypes.Read_RPC_UnicodeString(&b, &p, e)
@@ -152,7 +152,7 @@ func (k *KerbValidationInfo) Unmarshal(b []byte) (err error) {
 		}
 		g := make([]mstypes.GroupMembership, k.GroupCount, k.GroupCount)
 		for i := range g {
-			g[i] = mstypes.Read_GroupMembership(&b, &p, e)
+			g[i] = mstypes.ReadGroupMembership(&b, &p, e)
 		}
 		k.GroupIDs = g
 	}
@@ -205,7 +205,7 @@ func (k *KerbValidationInfo) Unmarshal(b []byte) (err error) {
 		}
 		g := make([]mstypes.GroupMembership, ac, ac)
 		for i := range g {
-			g[i] = mstypes.Read_GroupMembership(&b, &p, e)
+			g[i] = mstypes.ReadGroupMembership(&b, &p, e)
 		}
 		k.ResourceGroupIDs = g
 	}

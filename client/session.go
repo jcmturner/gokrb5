@@ -42,7 +42,7 @@ func (cl *Client) RenewTGT() error {
 	}
 	_, tgsRep, err := cl.TGSExchange(spn, cl.session.TGT, cl.session.SessionKey, true)
 	if err != nil {
-		return krberror.Errorf(err, krberror.KRBMSG_ERROR, "Error renewing TGT")
+		return krberror.Errorf(err, krberror.KRBMsgError, "Error renewing TGT")
 	}
 	cl.session = &session{
 		AuthTime:             tgsRep.DecryptedEncPart.AuthTime,

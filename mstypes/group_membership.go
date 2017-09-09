@@ -14,7 +14,7 @@ type GroupMembership struct {
 }
 
 // Read_GroupMembership reads a GroupMembership from the bytes slice.
-func Read_GroupMembership(b *[]byte, p *int, e *binary.ByteOrder) GroupMembership {
+func ReadGroupMembership(b *[]byte, p *int, e *binary.ByteOrder) GroupMembership {
 	r := ndr.Read_uint32(b, p, e)
 	a := ndr.Read_uint32(b, p, e)
 	return GroupMembership{
@@ -42,7 +42,7 @@ func Read_DomainGroupMembership(b *[]byte, p *int, e *binary.ByteOrder) (DomainG
 	c := ndr.Read_uint32(b, p, e)
 	g := make([]GroupMembership, c, c)
 	for i := range g {
-		g[i] = Read_GroupMembership(b, p, e)
+		g[i] = ReadGroupMembership(b, p, e)
 	}
 	return DomainGroupMembership{
 		DomainID:   d,

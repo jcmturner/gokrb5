@@ -62,7 +62,7 @@ func (k *KRBCred) Unmarshal(b []byte) error {
 	}
 	expectedMsgType := msgtype.KRB_CRED
 	if m.MsgType != expectedMsgType {
-		return krberror.NewErrorf(krberror.KRBMSG_ERROR, "Message ID does not indicate a KRB_CRED. Expected: %v; Actual: %v", expectedMsgType, m.MsgType)
+		return krberror.NewErrorf(krberror.KRBMsgError, "Message ID does not indicate a KRB_CRED. Expected: %v; Actual: %v", expectedMsgType, m.MsgType)
 	}
 	k.PVNO = m.PVNO
 	k.MsgType = m.MsgType
@@ -70,7 +70,7 @@ func (k *KRBCred) Unmarshal(b []byte) error {
 	if len(m.Tickets.Bytes) > 0 {
 		k.Tickets, err = UnmarshalTicketsSequence(m.Tickets)
 		if err != nil {
-			return krberror.Errorf(err, krberror.ENCODING_ERROR, "Error unmarshaling tickets within KRB_CRED")
+			return krberror.Errorf(err, krberror.EncodingError, "Error unmarshaling tickets within KRB_CRED")
 		}
 	}
 	return nil
@@ -80,12 +80,12 @@ func (k *KRBCred) Unmarshal(b []byte) error {
 func (k *KRBCred) DecryptEncPart(key types.EncryptionKey) error {
 	b, err := crypto.DecryptEncPart(k.EncPart, key, keyusage.KRB_CRED_ENCPART)
 	if err != nil {
-		return krberror.Errorf(err, krberror.DECRYPTING_ERROR, "Error decrypting KRB_CRED EncPart")
+		return krberror.Errorf(err, krberror.DecryptingError, "Error decrypting KRB_CRED EncPart")
 	}
 	var denc EncKrbCredPart
 	err = denc.Unmarshal(b)
 	if err != nil {
-		return krberror.Errorf(err, krberror.ENCODING_ERROR, "Error unmarshaling encrypted part of KRB_CRED")
+		return krberror.Errorf(err, krberror.EncodingError, "Error unmarshaling encrypted part of KRB_CRED")
 	}
 	k.DecryptedEncPart = denc
 	return nil
@@ -95,7 +95,7 @@ func (k *KRBCred) DecryptEncPart(key types.EncryptionKey) error {
 func (k *EncKrbCredPart) Unmarshal(b []byte) error {
 	_, err := asn1.UnmarshalWithParams(b, k, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.EncKrbCredPart))
 	if err != nil {
-		return krberror.Errorf(err, krberror.ENCODING_ERROR, "Error unmarshaling EncKrbCredPart")
+		return krberror.Errorf(err, krberror.EncodingError, "Error unmarshaling EncKrbCredPart")
 	}
 	return nil
 }

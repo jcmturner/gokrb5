@@ -34,7 +34,7 @@ func SetSPNEGOHeader(creds credentials.Credentials, tkt messages.Ticket, session
 	SPNEGOToken, err := gssapi.GetSPNEGOKrbNegTokenInit(creds, tkt, sessionKey)
 	nb, err := SPNEGOToken.Marshal()
 	if err != nil {
-		return krberror.Errorf(err, krberror.ENCODING_ERROR, "Could marshal SPNEGO")
+		return krberror.Errorf(err, krberror.EncodingError, "Could marshal SPNEGO")
 	}
 	hs := "Negotiate " + base64.StdEncoding.EncodeToString(nb)
 	r.Header.Set("Authorization", hs)

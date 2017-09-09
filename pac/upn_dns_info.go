@@ -6,8 +6,8 @@ import (
 	"sort"
 )
 
-// UPN_DNSInfo implements https://msdn.microsoft.com/en-us/library/dd240468.aspx
-type UPN_DNSInfo struct {
+// UPNDNSInfo implements https://msdn.microsoft.com/en-us/library/dd240468.aspx
+type UPNDNSInfo struct {
 	UPNLength           uint16 // An unsigned 16-bit integer in little-endian format that specifies the length, in bytes, of the UPN field.
 	UPNOffset           uint16 // An unsigned 16-bit integer in little-endian format that contains the offset to the beginning of the buffer, in bytes, from the beginning of the UPN_DNS_INFO structure.
 	DNSDomainNameLength uint16
@@ -18,11 +18,11 @@ type UPN_DNSInfo struct {
 }
 
 const (
-	UPN_NO_UPN_ATTR = 31 // The user account object does not have the userPrincipalName attribute ([MS-ADA3] section 2.349) set. A UPN constructed by concatenating the user name with the DNS domain name of the account domain is provided.
+	upnNoUPNAttr = 31 // The user account object does not have the userPrincipalName attribute ([MS-ADA3] section 2.349) set. A UPN constructed by concatenating the user name with the DNS domain name of the account domain is provided.
 )
 
 // Unmarshal bytes into the UPN_DNSInfo struct
-func (k *UPN_DNSInfo) Unmarshal(b []byte) error {
+func (k *UPNDNSInfo) Unmarshal(b []byte) error {
 	//The UPN_DNS_INFO structure is a simple structure that is not NDR-encoded.
 	var p int
 	var e binary.ByteOrder = binary.LittleEndian

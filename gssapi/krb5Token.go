@@ -124,7 +124,7 @@ func newAuthenticator(creds credentials.Credentials, keyType int) (types.Authent
 	//RFC 4121 Section 4.1.1
 	auth, err := types.NewAuthenticator(creds.Realm, creds.CName)
 	if err != nil {
-		return auth, krberror.Errorf(err, krberror.KRBMSG_ERROR, "Error generating new authenticator")
+		return auth, krberror.Errorf(err, krberror.KRBMsgError, "Error generating new authenticator")
 	}
 	etype, _ := crypto.GetEtype(keyType)
 	auth.GenerateSeqNumberAndSubKey(keyType, etype.GetKeyByteSize())

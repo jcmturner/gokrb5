@@ -7,13 +7,13 @@ import (
 )
 
 const (
-	SEPARATOR        = " < "
-	ENCODING_ERROR   = "Encoding_Error"
-	NETWORKING_ERROR = "Networking_Error"
-	DECRYPTING_ERROR = "Decrypting_Error"
-	ENCRYPTING_ERROR = "Encrypting_Error"
-	CHKSUM_ERROR     = "Checksum_Error"
-	KRBMSG_ERROR     = "KRBMessage_Handling_Error"
+	separator       = " < "
+	EncodingError   = "Encoding_Error"
+	NetworkingError = "Networking_Error"
+	DecryptingError = "Decrypting_Error"
+	EncryptingError = "Encrypting_Error"
+	ChksumError     = "Checksum_Error"
+	KRBMsgError     = "KRBMessage_Handling_Error"
 )
 
 // Krberror is an error type for gokrb5
@@ -24,7 +24,7 @@ type Krberror struct {
 
 // Error function to implement the error interface.
 func (e Krberror) Error() string {
-	return fmt.Sprintf("[Root cause: %s] ", e.RootCause) + strings.Join(e.EText, SEPARATOR)
+	return fmt.Sprintf("[Root cause: %s] ", e.RootCause) + strings.Join(e.EText, separator)
 }
 
 // Add another error statement to the error.

@@ -50,7 +50,7 @@ func NewAPReq(tkt Ticket, sessionKey types.EncryptionKey, auth types.Authenticat
 	var a APReq
 	ed, err := encryptAuthenticator(auth, sessionKey, tkt)
 	if err != nil {
-		return a, krberror.Errorf(err, krberror.KRBMSG_ERROR, "Error creating Authenticator for AP_REQ")
+		return a, krberror.Errorf(err, krberror.KRBMsgError, "Error creating Authenticator for AP_REQ")
 	}
 	a = APReq{
 		PVNO:          iana.PVNO,
@@ -67,7 +67,7 @@ func encryptAuthenticator(a types.Authenticator, sessionKey types.EncryptionKey,
 	var ed types.EncryptedData
 	m, err := a.Marshal()
 	if err != nil {
-		return ed, krberror.Errorf(err, krberror.ENCODING_ERROR, "Marshaling error of EncryptedData form of Authenticator")
+		return ed, krberror.Errorf(err, krberror.EncodingError, "Marshaling error of EncryptedData form of Authenticator")
 	}
 	var usage int
 	switch tkt.SName.NameType {
@@ -78,7 +78,7 @@ func encryptAuthenticator(a types.Authenticator, sessionKey types.EncryptionKey,
 	}
 	ed, err = crypto.GetEncryptedData(m, sessionKey, uint32(usage), tkt.EncPart.KVNO)
 	if err != nil {
-		return ed, krberror.Errorf(err, krberror.ENCRYPTING_ERROR, "Error encrypting Authenticator")
+		return ed, krberror.Errorf(err, krberror.EncryptingError, "Error encrypting Authenticator")
 	}
 	return ed, nil
 }
@@ -88,10 +88,10 @@ func (a *APReq) Unmarshal(b []byte) error {
 	var m marshalAPReq
 	_, err := asn1.UnmarshalWithParams(b, &m, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.APREQ))
 	if err != nil {
-		return krberror.Errorf(err, krberror.ENCODING_ERROR, "Unmarshal error of AP_REQ")
+		return krberror.Errorf(err, krberror.EncodingError, "Unmarshal error of AP_REQ")
 	}
 	if m.MsgType != msgtype.KRB_AP_REQ {
-		return krberror.NewErrorf(krberror.KRBMSG_ERROR, "Message ID does not indicate an AP_REQ. Expected: %v; Actual: %v", msgtype.KRB_AP_REQ, m.MsgType)
+		return krberror.NewErrorf(krberror.KRBMsgError, "Message ID does not indicate an AP_REQ. Expected: %v; Actual: %v", msgtype.KRB_AP_REQ, m.MsgType)
 	}
 	a.PVNO = m.PVNO
 	a.MsgType = m.MsgType
@@ -99,7 +99,7 @@ func (a *APReq) Unmarshal(b []byte) error {
 	a.Authenticator = m.Authenticator
 	a.Ticket, err = UnmarshalTicket(m.Ticket.Bytes)
 	if err != nil {
-		return krberror.Errorf(err, krberror.ENCODING_ERROR, "Unmarshaling error of Ticket within AP_REQ")
+		return krberror.Errorf(err, krberror.EncodingError, "Unmarshaling error of Ticket within AP_REQ")
 	}
 	return nil
 }
@@ -125,7 +125,7 @@ func (a *APReq) Marshal() ([]byte, error) {
 	}
 	mk, err := asn1.Marshal(m)
 	if err != nil {
-		return mk, krberror.Errorf(err, krberror.ENCODING_ERROR, "Marshaling error of AP_REQ")
+		return mk, krberror.Errorf(err, krberror.EncodingError, "Marshaling error of AP_REQ")
 	}
 	mk = asn1tools.AddASNAppTag(mk, asnAppTag.APREQ)
 	return mk, nil

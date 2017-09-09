@@ -49,11 +49,11 @@ func NewKRBError(sname types.PrincipalName, realm string, code int, etext string
 func (k *KRBError) Unmarshal(b []byte) error {
 	_, err := asn1.UnmarshalWithParams(b, k, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.KRBError))
 	if err != nil {
-		return krberror.Errorf(err, krberror.ENCODING_ERROR, "KRB_ERROR unmarshal error")
+		return krberror.Errorf(err, krberror.EncodingError, "KRB_ERROR unmarshal error")
 	}
 	expectedMsgType := msgtype.KRB_ERROR
 	if k.MsgType != expectedMsgType {
-		return krberror.NewErrorf(krberror.KRBMSG_ERROR, "Message ID does not indicate a KRB_ERROR. Expected: %v; Actual: %v", expectedMsgType, k.MsgType)
+		return krberror.NewErrorf(krberror.KRBMsgError, "Message ID does not indicate a KRB_ERROR. Expected: %v; Actual: %v", expectedMsgType, k.MsgType)
 	}
 	return nil
 }
@@ -73,10 +73,10 @@ func processUnmarshalReplyError(b []byte, err error) error {
 		var krberr KRBError
 		tmperr := krberr.Unmarshal(b)
 		if tmperr != nil {
-			return krberror.Errorf(err, krberror.ENCODING_ERROR, "Failed to unmarshal KDC's reply")
+			return krberror.Errorf(err, krberror.EncodingError, "Failed to unmarshal KDC's reply")
 		}
 		return krberr
 	default:
-		return krberror.Errorf(err, krberror.ENCODING_ERROR, "Failed to unmarshal KDC's reply")
+		return krberror.Errorf(err, krberror.EncodingError, "Failed to unmarshal KDC's reply")
 	}
 }

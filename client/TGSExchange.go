@@ -18,26 +18,26 @@ func (cl *Client) TGSExchange(spn types.PrincipalName, tkt messages.Ticket, sess
 	}
 	tgsReq, err = messages.NewTGSReq(cl.Credentials.CName, cl.Config, tkt, sessionKey, spn, renewal)
 	if err != nil {
-		return tgsReq, tgsRep, krberror.Errorf(err, krberror.KRBMSG_ERROR, "TGS Exchange Error: failed to generate a new TGS_REQ")
+		return tgsReq, tgsRep, krberror.Errorf(err, krberror.KRBMsgError, "TGS Exchange Error: failed to generate a new TGS_REQ")
 	}
 	b, err := tgsReq.Marshal()
 	if err != nil {
-		return tgsReq, tgsRep, krberror.Errorf(err, krberror.ENCODING_ERROR, "TGS Exchange Error: failed to generate a new TGS_REQ")
+		return tgsReq, tgsRep, krberror.Errorf(err, krberror.EncodingError, "TGS Exchange Error: failed to generate a new TGS_REQ")
 	}
 	r, err := cl.SendToKDC(b)
 	if err != nil {
-		return tgsReq, tgsRep, krberror.Errorf(err, krberror.NETWORKING_ERROR, "TGS Exchange Error: issue sending TGS_REQ to KDC")
+		return tgsReq, tgsRep, krberror.Errorf(err, krberror.NetworkingError, "TGS Exchange Error: issue sending TGS_REQ to KDC")
 	}
 	err = tgsRep.Unmarshal(r)
 	if err != nil {
-		return tgsReq, tgsRep, krberror.Errorf(err, krberror.ENCODING_ERROR, "TGS Exchange Error: failed to process the TGS_REP")
+		return tgsReq, tgsRep, krberror.Errorf(err, krberror.EncodingError, "TGS Exchange Error: failed to process the TGS_REP")
 	}
 	err = tgsRep.DecryptEncPart(sessionKey)
 	if err != nil {
-		return tgsReq, tgsRep, krberror.Errorf(err, krberror.ENCODING_ERROR, "TGS Exchange Error: failed to process the TGS_REP")
+		return tgsReq, tgsRep, krberror.Errorf(err, krberror.EncodingError, "TGS Exchange Error: failed to process the TGS_REP")
 	}
 	if ok, err := tgsRep.IsValid(cl.Config, tgsReq); !ok {
-		return tgsReq, tgsRep, krberror.Errorf(err, krberror.ENCODING_ERROR, "TGS Exchange Error: TGS_REP is not valid")
+		return tgsReq, tgsRep, krberror.Errorf(err, krberror.EncodingError, "TGS Exchange Error: TGS_REP is not valid")
 	}
 	return tgsReq, tgsRep, nil
 }

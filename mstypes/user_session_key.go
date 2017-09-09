@@ -16,7 +16,7 @@ type UserSessionKey struct {
 }
 
 // Read_UserSessionKey reads a UserSessionKey from the bytes slice.
-func Read_UserSessionKey(b *[]byte, p *int, e *binary.ByteOrder) UserSessionKey {
+func ReadUserSessionKey(b *[]byte, p *int, e *binary.ByteOrder) UserSessionKey {
 	cb1 := CypherBlock{
 		Data: ndr.Read_bytes(b, p, 8, e),
 	}

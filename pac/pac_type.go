@@ -22,7 +22,7 @@ type PACType struct {
 	KDCChecksum        *SignatureData
 	ClientInfo         *ClientInfo
 	S4U_DelegationInfo *S4UDelegationInfo
-	UPN_DNSInfo        *UPN_DNSInfo
+	UPN_DNSInfo        *UPNDNSInfo
 	ClientClaimsInfo   *ClientClaimsInfo
 	DeviceInfo         *DeviceInfo
 	DeviceClaimsInfo   *DeviceClaimsInfo
@@ -127,7 +127,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 				//Must ignore subsequent buffers of this type
 				continue
 			}
-			var k UPN_DNSInfo
+			var k UPNDNSInfo
 			err := k.Unmarshal(p)
 			if err != nil {
 				return fmt.Errorf("Error processing UPN_DNSInfo: %v", err)

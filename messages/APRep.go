@@ -48,7 +48,7 @@ func (a *APRep) Unmarshal(b []byte) error {
 	}
 	expectedMsgType := msgtype.KRB_AP_REP
 	if a.MsgType != expectedMsgType {
-		return krberror.NewErrorf(krberror.KRBMSG_ERROR, "Message ID does not indicate a KRB_AP_REP. Expected: %v; Actual: %v", expectedMsgType, a.MsgType)
+		return krberror.NewErrorf(krberror.KRBMsgError, "Message ID does not indicate a KRB_AP_REP. Expected: %v; Actual: %v", expectedMsgType, a.MsgType)
 	}
 	return nil
 }
@@ -57,7 +57,7 @@ func (a *APRep) Unmarshal(b []byte) error {
 func (a *EncAPRepPart) Unmarshal(b []byte) error {
 	_, err := asn1.UnmarshalWithParams(b, a, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.EncAPRepPart))
 	if err != nil {
-		return krberror.Errorf(err, krberror.ENCODING_ERROR, "AP_REP unmarshal error")
+		return krberror.Errorf(err, krberror.EncodingError, "AP_REP unmarshal error")
 	}
 	return nil
 }
