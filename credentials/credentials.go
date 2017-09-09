@@ -10,7 +10,8 @@ import (
 )
 
 const (
-	AttributeKey_ADCredentials = 1
+	// Assigned number for AD credentials.
+	AttributeKeyADCredentials = 1
 )
 
 // Credentials struct for a user.
@@ -108,8 +109,9 @@ func (c *Credentials) HasPassword() bool {
 	return false
 }
 
+// SetADCredentials adds ADCredentials attributes to the credentials
 func (c *Credentials) SetADCredentials(a ADCredentials) {
-	c.Attributes[AttributeKey_ADCredentials] = a
+	c.Attributes[AttributeKeyADCredentials] = a
 	if a.FullName != "" {
 		c.SetDisplayName(a.FullName)
 	}
@@ -120,46 +122,57 @@ func (c *Credentials) SetADCredentials(a ADCredentials) {
 
 // Methods to implement goidentity.Identity interface
 
+// UserName returns the credential's username.
 func (c *Credentials) UserName() string {
 	return c.Username
 }
 
+// SetUserName sets the username value on the credential.
 func (c *Credentials) SetUserName(s string) {
 	c.Username = s
 }
 
+// Domain returns the credential's domain.
 func (c *Credentials) Domain() string {
 	return c.Realm
 }
 
+// SetDomain sets the domain value on the credential.
 func (c *Credentials) SetDomain(s string) {
 	c.Realm = s
 }
 
+// DisplayName returns the credential's display name.
 func (c *Credentials) DisplayName() string {
 	return c.Username
 }
 
+// SetDisplayName sets the display name value on the credential.
 func (c *Credentials) SetDisplayName(s string) {
 	c.Username = s
 }
 
+// Human returns if the  credential represents a human or not.
 func (c *Credentials) Human() bool {
 	return c.human
 }
 
+// SetHuman sets the credential as human.
 func (c *Credentials) SetHuman(b bool) {
 	c.human = b
 }
 
+// AuthTime returns the time the credential was authenticated.
 func (c *Credentials) AuthTime() time.Time {
 	return c.authTime
 }
 
+// SetAuthTime sets the time the credential was authenticated.
 func (c *Credentials) SetAuthTime(t time.Time) {
 	c.authTime = t
 }
 
+// AuthzAttributes returns the credentials authorizing attributes.
 func (c *Credentials) AuthzAttributes() []string {
 	s := make([]string, len(c.groupMembership))
 	i := 0
@@ -170,18 +183,22 @@ func (c *Credentials) AuthzAttributes() []string {
 	return s
 }
 
+// Authenticated indicates if the credential has been successfully authenticated or not.
 func (c *Credentials) Authenticated() bool {
 	return c.authenticated
 }
 
+// SetAuthenticated sets the credential as having been successfully authenticated.
 func (c *Credentials) SetAuthenticated(b bool) {
 	c.authenticated = b
 }
 
+// AddAuthzAttribute adds an authorization attribute to the credential.
 func (c *Credentials) AddAuthzAttribute(a string) {
 	c.groupMembership[a] = true
 }
 
+// AddAuthzAttribute removes an authorization attribute from the credential.
 func (c *Credentials) RemoveAuthzAttribute(a string) {
 	if _, ok := c.groupMembership[a]; !ok {
 		return
@@ -189,18 +206,21 @@ func (c *Credentials) RemoveAuthzAttribute(a string) {
 	delete(c.groupMembership, a)
 }
 
+// EnableAuthzAttribute toggles an authorization attribute to an enabled state on the credential.
 func (c *Credentials) EnableAuthzAttribute(a string) {
 	if enabled, ok := c.groupMembership[a]; ok && !enabled {
 		c.groupMembership[a] = true
 	}
 }
 
+// DisableAuthzAttribute toggles an authorization attribute to a disabled state on the credential.
 func (c *Credentials) DisableAuthzAttribute(a string) {
 	if enabled, ok := c.groupMembership[a]; ok && enabled {
 		c.groupMembership[a] = false
 	}
 }
 
+// Authorized indicates if the credential has the specified authorizing attribute.
 func (c *Credentials) Authorized(a string) bool {
 	if enabled, ok := c.groupMembership[a]; ok && enabled {
 		return true
@@ -208,6 +228,7 @@ func (c *Credentials) Authorized(a string) bool {
 	return false
 }
 
+// SessionID returns the credential's session ID.
 func (c *Credentials) SessionID() string {
 	return c.sessionID
 }

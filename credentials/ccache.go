@@ -104,14 +104,14 @@ func ParseCCache(b []byte) (c CCache, err error) {
 		endian = binary.LittleEndian
 	}
 	if c.Version == 4 {
-		err = parse_header(b, &p, &c, &endian)
+		err = parseHeader(b, &p, &c, &endian)
 		if err != nil {
 			return
 		}
 	}
-	c.DefaultPrincipal = parse_principal(b, &p, &c, &endian)
+	c.DefaultPrincipal = parsePrincipal(b, &p, &c, &endian)
 	for p < len(b) {
-		cred, e := parse_credential(b, &p, &c, &endian)
+		cred, e := parseCredential(b, &p, &c, &endian)
 		if e != nil {
 			err = e
 			return
@@ -121,16 +121,16 @@ func ParseCCache(b []byte) (c CCache, err error) {
 	return
 }
 
-func parse_header(b []byte, p *int, c *CCache, e *binary.ByteOrder) error {
+func parseHeader(b []byte, p *int, c *CCache, e *binary.ByteOrder) error {
 	if c.Version != 4 {
 		return errors.New("Credentials cache version is not 4 so there is no header to parse.")
 	}
 	h := header{}
-	h.length = uint16(read_int16(b, p, e))
+	h.length = uint16(readInt16(b, p, e))
 	for *p <= int(h.length) {
 		f := headerField{}
-		f.tag = uint16(read_int16(b, p, e))
-		f.length = uint16(read_int16(b, p, e))
+		f.tag = uint16(readInt16(b, p, e))
+		f.length = uint16(readInt16(b, p, e))
 		f.value = b[*p : *p+int(f.length)]
 		*p += int(f.length)
 		if !f.valid() {
@@ -143,59 +143,59 @@ func parse_header(b []byte, p *int, c *CCache, e *binary.ByteOrder) error {
 }
 
 // Parse the Keytab bytes of a principal into a Keytab entry's principal.
-func parse_principal(b []byte, p *int, c *CCache, e *binary.ByteOrder) (princ principal) {
+func parsePrincipal(b []byte, p *int, c *CCache, e *binary.ByteOrder) (princ principal) {
 	if c.Version != 1 {
 		//Name Type is omitted in version 1
-		princ.PrincipalName.NameType = int(read_int32(b, p, e))
+		princ.PrincipalName.NameType = int(readInt32(b, p, e))
 	}
-	nc := int(read_int32(b, p, e))
+	nc := int(readInt32(b, p, e))
 	if c.Version == 1 {
 		//In version 1 the number of components includes the realm. Minus 1 to make consistent with version 2
 		nc--
 	}
-	len_realm := read_int32(b, p, e)
-	princ.Realm = string(read_Bytes(b, p, int(len_realm), e))
+	len_realm := readInt32(b, p, e)
+	princ.Realm = string(readBytes(b, p, int(len_realm), e))
 	for i := 0; i < int(nc); i++ {
-		l := read_int32(b, p, e)
-		princ.PrincipalName.NameString = append(princ.PrincipalName.NameString, string(read_Bytes(b, p, int(l), e)))
+		l := readInt32(b, p, e)
+		princ.PrincipalName.NameString = append(princ.PrincipalName.NameString, string(readBytes(b, p, int(l), e)))
 	}
 	return princ
 }
 
-func parse_credential(b []byte, p *int, c *CCache, e *binary.ByteOrder) (cred credential, err error) {
-	cred.Client = parse_principal(b, p, c, e)
-	cred.Server = parse_principal(b, p, c, e)
+func parseCredential(b []byte, p *int, c *CCache, e *binary.ByteOrder) (cred credential, err error) {
+	cred.Client = parsePrincipal(b, p, c, e)
+	cred.Server = parsePrincipal(b, p, c, e)
 	key := types.EncryptionKey{}
-	key.KeyType = int(read_int16(b, p, e))
+	key.KeyType = int(readInt16(b, p, e))
 	if c.Version == 3 {
 		//repeated twice in version 3
-		key.KeyType = int(read_int16(b, p, e))
+		key.KeyType = int(readInt16(b, p, e))
 	}
-	key.KeyValue = read_data(b, p, e)
+	key.KeyValue = readData(b, p, e)
 	cred.Key = key
-	cred.AuthTime = read_timestamp(b, p, e)
-	cred.StartTime = read_timestamp(b, p, e)
-	cred.EndTime = read_timestamp(b, p, e)
-	cred.RenewTill = read_timestamp(b, p, e)
-	if ik := read_int8(b, p, e); ik == 0 {
+	cred.AuthTime = readTimestamp(b, p, e)
+	cred.StartTime = readTimestamp(b, p, e)
+	cred.EndTime = readTimestamp(b, p, e)
+	cred.RenewTill = readTimestamp(b, p, e)
+	if ik := readInt8(b, p, e); ik == 0 {
 		cred.IsSKey = false
 	} else {
 		cred.IsSKey = true
 	}
 	cred.TicketFlags = types.NewKrbFlags()
-	cred.TicketFlags.Bytes = read_Bytes(b, p, 4, e)
-	l := int(read_int32(b, p, e))
+	cred.TicketFlags.Bytes = readBytes(b, p, 4, e)
+	l := int(readInt32(b, p, e))
 	cred.Addresses = make([]types.HostAddress, l, l)
 	for i := range cred.Addresses {
-		cred.Addresses[i] = read_address(b, p, e)
+		cred.Addresses[i] = readAddress(b, p, e)
 	}
-	l = int(read_int32(b, p, e))
+	l = int(readInt32(b, p, e))
 	cred.AuthData = make([]types.AuthorizationDataEntry, l, l)
 	for i := range cred.AuthData {
-		cred.AuthData[i] = read_authDataEntry(b, p, e)
+		cred.AuthData[i] = readAuthDataEntry(b, p, e)
 	}
-	cred.Ticket = read_data(b, p, e)
-	cred.SecondTicket = read_data(b, p, e)
+	cred.Ticket = readData(b, p, e)
+	cred.SecondTicket = readData(b, p, e)
 	return
 }
 
@@ -276,32 +276,32 @@ func (h *headerField) valid() bool {
 	return false
 }
 
-func read_data(b []byte, p *int, e *binary.ByteOrder) []byte {
-	l := read_int32(b, p, e)
-	return read_Bytes(b, p, int(l), e)
+func readData(b []byte, p *int, e *binary.ByteOrder) []byte {
+	l := readInt32(b, p, e)
+	return readBytes(b, p, int(l), e)
 }
 
-func read_address(b []byte, p *int, e *binary.ByteOrder) types.HostAddress {
+func readAddress(b []byte, p *int, e *binary.ByteOrder) types.HostAddress {
 	a := types.HostAddress{}
-	a.AddrType = int(read_int16(b, p, e))
-	a.Address = read_data(b, p, e)
+	a.AddrType = int(readInt16(b, p, e))
+	a.Address = readData(b, p, e)
 	return a
 }
 
-func read_authDataEntry(b []byte, p *int, e *binary.ByteOrder) types.AuthorizationDataEntry {
+func readAuthDataEntry(b []byte, p *int, e *binary.ByteOrder) types.AuthorizationDataEntry {
 	a := types.AuthorizationDataEntry{}
-	a.ADType = int(read_int16(b, p, e))
-	a.ADData = read_data(b, p, e)
+	a.ADType = int(readInt16(b, p, e))
+	a.ADData = readData(b, p, e)
 	return a
 }
 
 // Read bytes representing a timestamp.
-func read_timestamp(b []byte, p *int, e *binary.ByteOrder) time.Time {
-	return time.Unix(int64(read_int32(b, p, e)), 0)
+func readTimestamp(b []byte, p *int, e *binary.ByteOrder) time.Time {
+	return time.Unix(int64(readInt32(b, p, e)), 0)
 }
 
 // Read bytes representing an eight bit integer.
-func read_int8(b []byte, p *int, e *binary.ByteOrder) (i int8) {
+func readInt8(b []byte, p *int, e *binary.ByteOrder) (i int8) {
 	buf := bytes.NewBuffer(b[*p : *p+1])
 	binary.Read(buf, *e, &i)
 	*p++
@@ -309,7 +309,7 @@ func read_int8(b []byte, p *int, e *binary.ByteOrder) (i int8) {
 }
 
 // Read bytes representing a sixteen bit integer.
-func read_int16(b []byte, p *int, e *binary.ByteOrder) (i int16) {
+func readInt16(b []byte, p *int, e *binary.ByteOrder) (i int16) {
 	buf := bytes.NewBuffer(b[*p : *p+2])
 	binary.Read(buf, *e, &i)
 	*p += 2
@@ -317,14 +317,14 @@ func read_int16(b []byte, p *int, e *binary.ByteOrder) (i int16) {
 }
 
 // Read bytes representing a thirty two bit integer.
-func read_int32(b []byte, p *int, e *binary.ByteOrder) (i int32) {
+func readInt32(b []byte, p *int, e *binary.ByteOrder) (i int32) {
 	buf := bytes.NewBuffer(b[*p : *p+4])
 	binary.Read(buf, *e, &i)
 	*p += 4
 	return
 }
 
-func read_Bytes(b []byte, p *int, s int, e *binary.ByteOrder) []byte {
+func readBytes(b []byte, p *int, s int, e *binary.ByteOrder) []byte {
 	buf := bytes.NewBuffer(b[*p : *p+s])
 	r := make([]byte, s)
 	binary.Read(buf, *e, &r)

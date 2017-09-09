@@ -6,11 +6,11 @@ import (
 )
 
 const (
-	SE_GROUP_MANDATORY          = 31
-	SE_GROUP_ENABLED_BY_DEFAULT = 30
-	SE_GROUP_ENABLED            = 29
-	SE_GROUP_OWNER              = 28
-	SE_GROUP_RESOURCE           = 2
+	SEGroupMandatory         = 31
+	SSEGroupEnabledByDefault = 30
+	SEGroupEnabled           = 29
+	SEGroupOwner             = 28
+	SEGroupResource          = 2
 	//All other bits MUST be set to zero and MUST be  ignored on receipt.
 )
 
@@ -20,8 +20,8 @@ type KerbSidAndAttributes struct {
 	Attributes uint32
 }
 
-// Read_KerbSidAndAttributes reads a KerbSidAndAttribute from the bytes slice.
-func Read_KerbSidAndAttributes(b *[]byte, p *int, e *binary.ByteOrder) (KerbSidAndAttributes, error) {
+// ReadKerbSidAndAttributes reads a KerbSidAndAttribute from the bytes slice.
+func ReadKerbSidAndAttributes(b *[]byte, p *int, e *binary.ByteOrder) (KerbSidAndAttributes, error) {
 	s, err := Read_RPC_SID(b, p, e)
 	if err != nil {
 		return KerbSidAndAttributes{}, err
