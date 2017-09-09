@@ -34,8 +34,10 @@ const krb5Conf = `
 [realms]
  TEST.GOKRB5 = {
   kdc = 10.80.88.88:88
+  kdc = assume.port.num
+  kdc = some.other.port:1234
 
-  kdc = 10.80.88.88:88*
+  kdc = 10.80.88.88*
   kdc = 10.1.2.3.4:88
 
   admin_server = 10.80.88.88:749
@@ -89,8 +91,8 @@ func TestLoad(t *testing.T) {
 	assert.Equal(t, []string{"10.80.88.88:749"}, c.Realms[0].Admin_server, "[realm] Admin_server not as expectd")
 	assert.Equal(t, []string{"10.80.88.88:464"}, c.Realms[0].Kpasswd_server, "[realm] Kpasswd_server not as expectd")
 	assert.Equal(t, "test.gokrb5", c.Realms[0].Default_domain, "[realm] Default_domain not as expectd")
-	assert.Equal(t, []string{"10.80.88.88:88", "10.80.88.88:88"}, c.Realms[0].Kdc, "[realm] Kdc not as expectd")
-	assert.Equal(t, []string{"kerberos.example.com", "kerberos-1.example.com"}, c.Realms[1].Kdc, "[realm] Kdc not as expectd")
+	assert.Equal(t, []string{"10.80.88.88:88", "assume.port.num:88", "some.other.port:1234", "10.80.88.88:88"}, c.Realms[0].Kdc, "[realm] Kdc not as expectd")
+	assert.Equal(t, []string{"kerberos.example.com:88", "kerberos-1.example.com:88"}, c.Realms[1].Kdc, "[realm] Kdc not as expectd")
 	assert.Equal(t, []string{"kerberos.example.com"}, c.Realms[1].Admin_server, "[realm] Admin_server not as expectd")
 
 	assert.Equal(t, "TEST.GOKRB5", c.DomainRealm[".test.gokrb5"], "Domain to realm mapping not as expected")
