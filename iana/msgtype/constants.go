@@ -2,6 +2,7 @@
 package msgtype
 
 const (
+	// Message type ID for AS_REQ
 	KRB_AS_REQ     = 10 //Request for initial authentication
 	KRB_AS_REP     = 11 //Response to KRB_AS_REQ request
 	KRB_TGS_REQ    = 12 //Request for authentication based on TGT
