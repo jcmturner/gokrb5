@@ -98,7 +98,7 @@ func (m *MechToken) IsKRBError() bool {
 // NewKRB5APREQMechToken creates new kerberos AP_REQ MechToken
 func NewKRB5APREQMechToken(creds credentials.Credentials, tkt messages.Ticket, sessionKey types.EncryptionKey) ([]byte, error) {
 	// Create the header
-	b, _ := asn1.Marshal(MechTypeOID_Krb5)
+	b, _ := asn1.Marshal(MechTypeOIDKRB5)
 	tb, _ := hex.DecodeString(TOK_ID_KRB_AP_REQ)
 	b = append(b, tb...)
 	// Add the token

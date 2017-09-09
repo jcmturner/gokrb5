@@ -35,7 +35,7 @@ func (a SPNEGOAuthenticator) Authenticate() (i goidentity.Identity, ok bool, err
 		err = fmt.Errorf("SPNEGO negotiation token is not a NegTokenInit: %v", err)
 		return
 	}
-	if !spnego.NegTokenInit.MechTypes[0].Equal(gssapi.MechTypeOID_Krb5) {
+	if !spnego.NegTokenInit.MechTypes[0].Equal(gssapi.MechTypeOIDKRB5) {
 		err = errors.New("SPNEGO OID of MechToken is not of type KRB5")
 		return
 	}

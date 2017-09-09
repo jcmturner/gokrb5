@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	// Assigned number for AD credentials.
+	// AttributeKeyADCredentials assigned number for AD credentials.
 	AttributeKeyADCredentials = 1
 )
 
@@ -198,7 +198,7 @@ func (c *Credentials) AddAuthzAttribute(a string) {
 	c.groupMembership[a] = true
 }
 
-// AddAuthzAttribute removes an authorization attribute from the credential.
+// RemoveAuthzAttribute removes an authorization attribute from the credential.
 func (c *Credentials) RemoveAuthzAttribute(a string) {
 	if _, ok := c.groupMembership[a]; !ok {
 		return

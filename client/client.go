@@ -170,7 +170,7 @@ func (cl *Client) IsConfigured() bool {
 	}
 	for _, r := range cl.Config.Realms {
 		if r.Realm == cl.Config.LibDefaults.DefaultRealm {
-			if len(r.Kdc) > 0 {
+			if len(r.KDC) > 0 {
 				return true
 			}
 			return false

@@ -54,7 +54,7 @@ type KerbValidationInfo struct {
 	LogonServer             mstypes.RPC_UnicodeString
 	LogonDomainName         mstypes.RPC_UnicodeString
 	pLogonDomainID          uint32
-	LogonDomainID           mstypes.RPC_SID
+	LogonDomainID           mstypes.RPCSID
 	Reserved1               []uint32 // Has 2 elements
 	UserAccountControl      uint32
 	SubAuthStatus           uint32
@@ -66,7 +66,7 @@ type KerbValidationInfo struct {
 	pExtraSIDs              uint32
 	ExtraSIDs               []mstypes.KerbSidAndAttributes
 	pResourceGroupDomainSID uint32
-	ResourceGroupDomainSID  mstypes.RPC_SID
+	ResourceGroupDomainSID  mstypes.RPCSID
 	ResourceGroupCount      uint32
 	pResourceGroupIDs       uint32
 	ResourceGroupIDs        []mstypes.GroupMembership

@@ -28,7 +28,7 @@ func ReadGroupMembership(b *[]byte, p *int, e *binary.ByteOrder) GroupMembership
 // GroupCount: A 32-bit unsigned integer that contains the number of groups within the domain to which the account belongs.
 // GroupIds: A pointer to a list of GROUP_MEMBERSHIP structures that contain the groups to which the account belongs in the domain. The number of groups in this list MUST be equal to GroupCount.
 type DomainGroupMembership struct {
-	DomainID   RPC_SID
+	DomainID   RPCSID
 	GroupCount uint32
 	GroupIDs   []GroupMembership // Size is value of GroupCount
 }

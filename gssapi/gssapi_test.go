@@ -26,9 +26,9 @@ func TestUnmarshal_SPNEGO_Init(t *testing.T) {
 	assert.False(t, s.Resp, "SPNEGO indicates is contains a NegTokenResp but it shouldn't")
 	assert.Equal(t, 4, len(s.NegTokenInit.MechTypes))
 	expectMechTypes := []asn1.ObjectIdentifier{
-		MechTypeOID_Krb5,
+		MechTypeOIDKRB5,
 		[]int{1, 3, 5, 1, 5, 2},
-		MechTypeOID_MSLegacyKrb5,
+		MechTypeOIDMSLegacyKRB5,
 		[]int{1, 3, 6, 1, 5, 2, 5},
 	}
 	assert.Equal(t, expectMechTypes, s.NegTokenInit.MechTypes, "MechTypes list in NegTokenInit not as expected")
@@ -48,7 +48,7 @@ func TestUnmarshal_SPNEGO_RespTarg(t *testing.T) {
 	assert.True(t, s.Resp, "SPNEGO does not indicate it contains NegTokenResp/Targ as expected")
 	assert.False(t, s.Init, "SPNEGO indicates is contains a NegTokenInit but it shouldn't")
 	assert.Equal(t, asn1.Enumerated(0), s.NegTokenResp.NegState, "Negtiation state not as expected.")
-	assert.Equal(t, MechTypeOID_Krb5, s.NegTokenResp.SupportedMech, "SupportedMech type not as expected.")
+	assert.Equal(t, MechTypeOIDKRB5, s.NegTokenResp.SupportedMech, "SupportedMech type not as expected.")
 }
 
 func TestMarshal_SPNEGO_Init(t *testing.T) {

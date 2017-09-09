@@ -18,7 +18,7 @@ func (cl *Client) SendToKDC(b []byte) ([]byte, error) {
 	var kdcs []string
 	for _, r := range cl.Config.Realms {
 		if r.Realm == cl.Config.LibDefaults.DefaultRealm {
-			kdcs = r.Kdc
+			kdcs = r.KDC
 			break
 		}
 	}

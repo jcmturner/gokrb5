@@ -17,14 +17,14 @@ type ClaimsSetMetadata struct {
 }
 
 const (
-	COMPRESSION_FORMAT_NONE        = 0
-	COMPRESSION_FORMAT_LZNT1       = 2
-	COMPRESSION_FORMAT_XPRESS      = 3
-	COMPRESSION_FORMAT_XPRESS_HUFF = 4
+	CompressionFormatNone       = 0
+	CompressionFormatLZNT1      = 2
+	CompressionFormatXPress     = 3
+	CompressionFormatXPressHuff = 4
 )
 
 // Read_ClaimsSetMetadata reads a ClaimsSetMetadata from the bytes slice.
-func Read_ClaimsSetMetadata(b *[]byte, p *int, e *binary.ByteOrder) ClaimsSetMetadata {
+func ReadClaimsSetMetadata(b *[]byte, p *int, e *binary.ByteOrder) ClaimsSetMetadata {
 	var c ClaimsSetMetadata
 	c.ULClaimsSetSize = ndr.Read_uint32(b, p, e)
 	c.ClaimsSet = ndr.Read_bytes(b, p, int(c.ULClaimsSetSize), e)

@@ -297,14 +297,14 @@ func (l *LibDefaults) parseLines(lines []string) error {
 
 // Realm represents an entry in the [realms] section of the configuration.
 type Realm struct {
-	Realm        string
-	Admin_server []string
+	Realm       string
+	AdminServer []string
 	//auth_to_local //Not implementing for now
 	//auth_to_local_names //Not implementing for now
-	Default_domain string
-	Kdc            []string
-	Kpasswd_server []string //default admin_server:464
-	Master_kdc     []string
+	DefaultDomain string
+	KDC           []string
+	KPasswdServer []string //default admin_server:464
+	MasterKDC     []string
 }
 
 // Parse the lines of a [realms] entry into the Realm struct.
@@ -327,9 +327,9 @@ func (r *Realm) parseLines(name string, lines []string) error {
 		v := strings.Replace(p[1], " ", "", -1)
 		switch key {
 		case "admin_server":
-			appendUntilFinal(&r.Admin_server, v, &admin_server_final)
+			appendUntilFinal(&r.AdminServer, v, &admin_server_final)
 		case "default_domain":
-			r.Default_domain = v
+			r.DefaultDomain = v
 		case "kdc":
 			if !strings.Contains(v, ":") {
 				// No port number specified default to 88
@@ -339,21 +339,21 @@ func (r *Realm) parseLines(name string, lines []string) error {
 					v = strings.TrimSpace(v) + ":88"
 				}
 			}
-			appendUntilFinal(&r.Kdc, v, &kdc_final)
+			appendUntilFinal(&r.KDC, v, &kdc_final)
 		case "kpasswd_server":
-			appendUntilFinal(&r.Kpasswd_server, v, &kpasswd_server_final)
+			appendUntilFinal(&r.KPasswdServer, v, &kpasswd_server_final)
 		case "master_kdc":
-			appendUntilFinal(&r.Master_kdc, v, &master_kdc_final)
+			appendUntilFinal(&r.MasterKDC, v, &master_kdc_final)
 		default:
 			//Ignore the line
 			continue
 		}
 	}
 	//default for Kpasswd_server = admin_server:464
-	if len(r.Kpasswd_server) < 1 {
-		for _, a := range r.Admin_server {
+	if len(r.KPasswdServer) < 1 {
+		for _, a := range r.AdminServer {
 			s := strings.Split(a, ":")
-			r.Kpasswd_server = append(r.Kpasswd_server, s[0]+":464")
+			r.KPasswdServer = append(r.KPasswdServer, s[0]+":464")
 		}
 	}
 	return nil

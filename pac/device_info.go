@@ -10,7 +10,7 @@ import (
 type DeviceInfo struct {
 	UserID            uint32                          // A 32-bit unsigned integer that contains the RID of the account. If the UserId member equals 0x00000000, the first group SID in this member is the SID for this account.
 	PrimaryGroupID    uint32                          // A 32-bit unsigned integer that contains the RID for the primary group to which this account belongs.
-	AccountDomainID   mstypes.RPC_SID                 // A SID structure that contains the SID for the domain of the account.This member is used in conjunction with the UserId, and GroupIds members to create the user and group SIDs for the client.
+	AccountDomainID   mstypes.RPCSID                  // A SID structure that contains the SID for the domain of the account.This member is used in conjunction with the UserId, and GroupIds members to create the user and group SIDs for the client.
 	AccountGroupCount uint32                          // A 32-bit unsigned integer that contains the number of groups within the account domain to which the account belongs
 	AccountGroupIDs   []mstypes.GroupMembership       // A pointer to a list of GROUP_MEMBERSHIP (section 2.2.2) structures that contains the groups to which the account belongs in the account domain. The number of groups in this list MUST be equal to GroupCount.
 	SIDCount          uint32                          // A 32-bit unsigned integer that contains the total number of SIDs present in the ExtraSids member.

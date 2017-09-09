@@ -26,7 +26,7 @@ type InfoBuffer struct {
 }
 
 // Read_PACInfoBuffer reads a InfoBuffer from the byte slice.
-func Read_PACInfoBuffer(b *[]byte, p *int, e *binary.ByteOrder) InfoBuffer {
+func ReadPACInfoBuffer(b *[]byte, p *int, e *binary.ByteOrder) InfoBuffer {
 	u := ndr.Read_uint32(b, p, e)
 	s := ndr.Read_uint32(b, p, e)
 	o := ndr.Read_uint64(b, p, e)

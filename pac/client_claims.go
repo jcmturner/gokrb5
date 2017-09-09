@@ -22,7 +22,7 @@ func (k *ClientClaimsInfo) Unmarshal(b []byte) error {
 	//The next 4 bytes are an RPC unique pointer referent. We just skip these
 	p += 4
 
-	k.Claims = mstypes.Read_ClaimsSetMetadata(&b, &p, e)
+	k.Claims = mstypes.ReadClaimsSetMetadata(&b, &p, e)
 
 	//Check that there is only zero padding left
 	if len(b) >= p {

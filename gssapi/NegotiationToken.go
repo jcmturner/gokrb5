@@ -138,7 +138,7 @@ func NewNegTokenInitKrb5(creds credentials.Credentials, tkt messages.Ticket, ses
 		return NegTokenInit{}, fmt.Errorf("Error getting MechToken; %v", err)
 	}
 	return NegTokenInit{
-		MechTypes: []asn1.ObjectIdentifier{MechTypeOID_Krb5},
+		MechTypes: []asn1.ObjectIdentifier{MechTypeOIDKRB5},
 		MechToken: mt,
 	}, nil
 }

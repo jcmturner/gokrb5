@@ -27,7 +27,7 @@ func TestMechToken_Unmarshal(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error unmarshalling MechToken: %v", err)
 	}
-	assert.Equal(t, MechTypeOID_Krb5, mt.OID, "MechToken OID not as expected.")
+	assert.Equal(t, MechTypeOIDKRB5, mt.OID, "MechToken OID not as expected.")
 	assert.Equal(t, []byte{1, 0}, mt.TokID, "TokID not as expected")
 	assert.Equal(t, msgtype.KRB_AP_REQ, mt.APReq.MsgType, "MechToken AP_REQ does not have the right message type.")
 	assert.Equal(t, 0, mt.KRBError.ErrorCode, "KRBError in MechToken does not indicate no error.")
@@ -92,7 +92,7 @@ func TestNewKRB5APREQMechToken(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error unmarshalling MechToken: %v", err)
 	}
-	assert.Equal(t, MechTypeOID_Krb5, mt.OID, "MechToken OID not as expected.")
+	assert.Equal(t, MechTypeOIDKRB5, mt.OID, "MechToken OID not as expected.")
 	assert.Equal(t, []byte{1, 0}, mt.TokID, "TokID not as expected")
 	assert.Equal(t, msgtype.KRB_AP_REQ, mt.APReq.MsgType, "MechToken AP_REQ does not have the right message type.")
 	assert.Equal(t, 0, mt.KRBError.ErrorCode, "KRBError in MechToken does not indicate no error.")

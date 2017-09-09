@@ -14,12 +14,12 @@ import (
 type ctxKey int
 
 const (
-	// SPNEGO_NegTokenResp_Krb_Accept_Completed - The response on successful authentication always has this header. Capturing as const so we don't have marshaling and encoding overhead.
-	SPNEGO_NegTokenResp_Krb_Accept_Completed = "Negotiate oRQwEqADCgEAoQsGCSqGSIb3EgECAg=="
-	// SPNEGO_NegTokenResp_Reject - pThe response on a failed authentication always has this rejection header. Capturing as const so we don't have marshaling and encoding overhead.
-	SPNEGO_NegTokenResp_Reject        = "Negotiate oQcwBaADCgEC"
-	CTXKey_Authenticated       ctxKey = 0
-	CTXKey_Credentials         ctxKey = 1
+	// SPNEGONegTokenRespKRBAcceptCompleted - The response on successful authentication always has this header. Capturing as const so we don't have marshaling and encoding overhead.
+	SPNEGONegTokenRespKRBAcceptCompleted = "Negotiate oRQwEqADCgEAoQsGCSqGSIb3EgECAg=="
+	// SPNEGONegTokenRespReject - The response on a failed authentication always has this rejection header. Capturing as const so we don't have marshaling and encoding overhead.
+	SPNEGONegTokenRespReject        = "Negotiate oQcwBaADCgEC"
+	CTXKeyAuthenticated      ctxKey = 0
+	CTXKeyCredentials        ctxKey = 1
 )
 
 // SPNEGOKRB5Authenticate is a Kerberos SPNEGO authentication HTTP handler wrapper.
@@ -49,7 +49,7 @@ func SPNEGOKRB5Authenticate(f http.Handler, kt keytab.Keytab, sa string, l *log.
 			rejectSPNEGO(w, l, fmt.Sprintf("%v - SPNEGO negotiation token is not a NegTokenInit: %v", r.RemoteAddr, err))
 			return
 		}
-		if !spnego.NegTokenInit.MechTypes[0].Equal(gssapi.MechTypeOID_Krb5) {
+		if !spnego.NegTokenInit.MechTypes[0].Equal(gssapi.MechTypeOIDKRB5) {
 			rejectSPNEGO(w, l, fmt.Sprintf("%v - SPNEGO OID of MechToken is not of type KRB5", r.RemoteAddr))
 			return
 		}
@@ -66,8 +66,8 @@ func SPNEGOKRB5Authenticate(f http.Handler, kt keytab.Keytab, sa string, l *log.
 
 		if ok, creds, err := ValidateAPREQ(mt.APReq, kt, sa, r.RemoteAddr); ok {
 			ctx := r.Context()
-			ctx = context.WithValue(ctx, CTXKey_Credentials, creds)
-			ctx = context.WithValue(ctx, CTXKey_Authenticated, true)
+			ctx = context.WithValue(ctx, CTXKeyCredentials, creds)
+			ctx = context.WithValue(ctx, CTXKeyAuthenticated, true)
 			if l != nil {
 				l.Printf("%v %s@%s - SPNEGO authentication succeeded", r.RemoteAddr, creds.Username, creds.Realm)
 			}
@@ -89,11 +89,11 @@ func rejectSPNEGO(w http.ResponseWriter, l *log.Logger, logMsg string) {
 }
 
 func SPNEGOResponseReject(w http.ResponseWriter) {
-	w.Header().Set("WWW-Authenticate", SPNEGO_NegTokenResp_Reject)
+	w.Header().Set("WWW-Authenticate", SPNEGONegTokenRespReject)
 	w.WriteHeader(http.StatusUnauthorized)
 	w.Write([]byte("Unauthorised.\n"))
 }
 
 func SPNEGOResponseAcceptCompleted(w http.ResponseWriter) {
-	w.Header().Set("WWW-Authenticate", SPNEGO_NegTokenResp_Krb_Accept_Completed)
+	w.Header().Set("WWW-Authenticate", SPNEGONegTokenRespKRBAcceptCompleted)
 }
