@@ -21,7 +21,7 @@ type PACType struct {
 	ServerChecksum     *SignatureData
 	KDCChecksum        *SignatureData
 	ClientInfo         *ClientInfo
-	S4U_DelegationInfo *S4U_DelegationInfo
+	S4U_DelegationInfo *S4UDelegationInfo
 	UPN_DNSInfo        *UPN_DNSInfo
 	ClientClaimsInfo   *ClientClaimsInfo
 	DeviceInfo         *DeviceInfo
@@ -116,7 +116,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 				//Must ignore subsequent buffers of this type
 				continue
 			}
-			var k S4U_DelegationInfo
+			var k S4UDelegationInfo
 			err := k.Unmarshal(p)
 			if err != nil {
 				return fmt.Errorf("Error processing S4U_DelegationInfo: %v", err)

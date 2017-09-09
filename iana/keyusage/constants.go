@@ -2,7 +2,7 @@
 package keyusage
 
 const (
-	//Key usage numbers
+	// Key usage numbers.
 	AS_REQ_PA_ENC_TIMESTAMP                        = 1
 	KDC_REP_TICKET                                 = 2
 	AS_REP_ENCPART                                 = 3

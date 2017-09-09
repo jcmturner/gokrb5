@@ -7,14 +7,14 @@ import (
 )
 
 // S4U_DelegationInfo implements https://msdn.microsoft.com/en-us/library/cc237944.aspx
-type S4U_DelegationInfo struct {
+type S4UDelegationInfo struct {
 	S4U2proxyTarget      mstypes.RPC_UnicodeString // The name of the principal to whom the application can forward the ticket.
 	TransitedListSize    uint32
 	S4UTransitedServices []mstypes.RPC_UnicodeString // List of all services that have been delegated through by this client and subsequent services or servers.. Size is value of TransitedListSize
 }
 
 // Unmarshal bytes into the S4U_DelegationInfo struct
-func (k *S4U_DelegationInfo) Unmarshal(b []byte) error {
+func (k *S4UDelegationInfo) Unmarshal(b []byte) error {
 	ch, _, p, err := ndr.ReadHeaders(&b)
 	if err != nil {
 		return fmt.Errorf("Error parsing byte stream headers: %v", err)
