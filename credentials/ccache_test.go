@@ -15,6 +15,9 @@ func TestParse(t *testing.T) {
 		t.Fatal("Error decoding test data")
 	}
 	c, err := ParseCCache(b)
+	if err != nil {
+		t.Fatalf("Error parsing cache: %v", err)
+	}
 	assert.Equal(t, uint8(4), c.Version, "Version not as expected")
 	assert.Equal(t, 1, len(c.Header.fields), "Number of header fields not as expected")
 	assert.Equal(t, uint16(1), c.Header.fields[0].tag, "Header tag not as expected")
@@ -40,6 +43,9 @@ func TestCCache_GetClientPrincipalName(t *testing.T) {
 		t.Fatal("Error decoding test data")
 	}
 	c, err := ParseCCache(b)
+	if err != nil {
+		t.Fatalf("Error parsing cache: %v", err)
+	}
 	pn := types.PrincipalName{
 		NameType:   nametype.KRB_NT_PRINCIPAL,
 		NameString: []string{"testuser1"},
@@ -53,6 +59,9 @@ func TestCCache_GetClientCredentials(t *testing.T) {
 		t.Fatal("Error decoding test data")
 	}
 	c, err := ParseCCache(b)
+	if err != nil {
+		t.Fatalf("Error parsing cache: %v", err)
+	}
 	pn := types.PrincipalName{
 		NameType:   nametype.KRB_NT_PRINCIPAL,
 		NameString: []string{"testuser1"},
@@ -69,6 +78,9 @@ func TestCCache_GetClientRealm(t *testing.T) {
 		t.Fatal("Error decoding test data")
 	}
 	c, err := ParseCCache(b)
+	if err != nil {
+		t.Fatalf("Error parsing cache: %v", err)
+	}
 	assert.Equal(t, "TEST.GOKRB5", c.GetClientRealm(), "Client realm not as expected")
 }
 
@@ -78,6 +90,9 @@ func TestCCache_GetEntry(t *testing.T) {
 		t.Fatal("Error decoding test data")
 	}
 	c, err := ParseCCache(b)
+	if err != nil {
+		t.Fatalf("Error parsing cache: %v", err)
+	}
 	httppn := types.PrincipalName{
 		NameType:   nametype.KRB_NT_PRINCIPAL,
 		NameString: []string{"HTTP", "host.test.gokrb5"},
@@ -95,6 +110,9 @@ func TestCCache_GetEntries(t *testing.T) {
 		t.Fatal("Error decoding test data")
 	}
 	c, err := ParseCCache(b)
+	if err != nil {
+		t.Fatalf("Error parsing cache: %v", err)
+	}
 	creds := c.GetEntries()
 	assert.Equal(t, 2, len(creds), "Number of credentials entries not as expected")
 }
