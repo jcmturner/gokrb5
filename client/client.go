@@ -29,8 +29,8 @@ type Client struct {
 // Set Disable_PA_FX_FAST to true to force this behaviour off.
 // Set Assume_PA_ENC_TIMESTAMP_Required to send the PA_ENC_TIMESTAMP pro-actively rather than waiting for a KRB_ERROR response from the KDC indicating it is required.
 type Config struct {
-	Disable_PA_FX_FAST               bool
-	Assume_PA_ENC_TIMESTAMP_Required bool
+	DisablePAFXFast              bool
+	AssumePAEncTimestampRequired bool
 }
 
 // NewClientWithPassword creates a new client from a password credential.
@@ -163,13 +163,13 @@ func (cl *Client) IsConfigured() bool {
 	if cl.Credentials.Username == "" {
 		return false
 	}
-	if cl.Config.LibDefaults.Default_realm == "" {
+	if cl.Config.LibDefaults.DefaultRealm == "" {
 		fmt.Fprintf(os.Stderr, "hello: %v\n", cl)
 
 		return false
 	}
 	for _, r := range cl.Config.Realms {
-		if r.Realm == cl.Config.LibDefaults.Default_realm {
+		if r.Realm == cl.Config.LibDefaults.DefaultRealm {
 			if len(r.Kdc) > 0 {
 				return true
 			}

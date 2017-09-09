@@ -77,14 +77,14 @@ func TestLoad(t *testing.T) {
 		t.Fatalf("Error loading config: %v", err)
 	}
 
-	assert.Equal(t, "TEST.GOKRB5", c.LibDefaults.Default_realm, "[libdefaults] default_realm not as expected")
-	assert.Equal(t, false, c.LibDefaults.Dns_lookup_realm, "[libdefaults] dns_lookup_realm not as expected")
-	assert.Equal(t, false, c.LibDefaults.Dns_lookup_kdc, "[libdefaults] dns_lookup_kdc not as expected")
-	assert.Equal(t, time.Duration(10)*time.Hour, c.LibDefaults.Ticket_lifetime, "[libdefaults] Ticket lifetime not as expected")
+	assert.Equal(t, "TEST.GOKRB5", c.LibDefaults.DefaultRealm, "[libdefaults] default_realm not as expected")
+	assert.Equal(t, false, c.LibDefaults.DNSLookupRealm, "[libdefaults] dns_lookup_realm not as expected")
+	assert.Equal(t, false, c.LibDefaults.DNSLookupKDC, "[libdefaults] dns_lookup_kdc not as expected")
+	assert.Equal(t, time.Duration(10)*time.Hour, c.LibDefaults.TicketLifetime, "[libdefaults] Ticket lifetime not as expected")
 	assert.Equal(t, true, c.LibDefaults.Forwardable, "[libdefaults] forwardable not as expected")
-	assert.Equal(t, "FILE:/etc/krb5.keytab", c.LibDefaults.Default_keytab_name, "[libdefaults] default_keytab_name not as expected")
-	assert.Equal(t, "FILE:/home/gokrb5/client.keytab", c.LibDefaults.Default_client_keytab_name, "[libdefaults] default_client_keytab_name not as expected")
-	assert.Equal(t, []string{"aes256-cts-hmac-sha1-96", "aes128-cts-hmac-sha1-96"}, c.LibDefaults.Default_tkt_enctypes, "[libdefaults] default_tkt_enctypes not as expected")
+	assert.Equal(t, "FILE:/etc/krb5.keytab", c.LibDefaults.DefaultKeytabName, "[libdefaults] default_keytab_name not as expected")
+	assert.Equal(t, "FILE:/home/gokrb5/client.keytab", c.LibDefaults.DefaultClientKeytabName, "[libdefaults] default_client_keytab_name not as expected")
+	assert.Equal(t, []string{"aes256-cts-hmac-sha1-96", "aes128-cts-hmac-sha1-96"}, c.LibDefaults.DefaultTktEnctypes, "[libdefaults] default_tkt_enctypes not as expected")
 
 	assert.Equal(t, 2, len(c.Realms), "Number of realms not as expected")
 	assert.Equal(t, "TEST.GOKRB5", c.Realms[0].Realm, "[realm] realm name not as expectd")

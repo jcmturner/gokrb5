@@ -36,7 +36,7 @@ func (cl *Client) ASExchange() error {
 	if err != nil {
 		if e, ok := err.(messages.KRBError); ok && e.ErrorCode == errorcode.KDC_ERR_PREAUTH_REQUIRED {
 			// From now on assume this client will need to do this pre-auth and set the PAData
-			cl.GoKrb5Conf.Assume_PA_ENC_TIMESTAMP_Required = true
+			cl.GoKrb5Conf.AssumePAEncTimestampRequired = true
 			err = setPAData(cl, e, &ASReq)
 			if err != nil {
 				return krberror.Errorf(err, krberror.KRBMsgError, "AS Exchange Error: failed setting AS_REQ PAData for pre-authentication required")
@@ -72,17 +72,17 @@ func (cl *Client) ASExchange() error {
 }
 
 func setPAData(cl *Client, krberr messages.KRBError, ASReq *messages.ASReq) error {
-	if !cl.GoKrb5Conf.Disable_PA_FX_FAST {
+	if !cl.GoKrb5Conf.DisablePAFXFast {
 		pa := types.PAData{PADataType: patype.PA_REQ_ENC_PA_REP}
 		ASReq.PAData = append(ASReq.PAData, pa)
 	}
-	if cl.GoKrb5Conf.Assume_PA_ENC_TIMESTAMP_Required {
+	if cl.GoKrb5Conf.AssumePAEncTimestampRequired {
 		paTSb, err := types.GetPAEncTSEncAsnMarshalled()
 		if err != nil {
 			return krberror.Errorf(err, krberror.KRBMsgError, "Error creating PAEncTSEnc for Pre-Authentication")
 		}
-		sort.Sort(sort.Reverse(sort.IntSlice(cl.Config.LibDefaults.Default_tkt_enctype_ids)))
-		etype, err := crypto.GetEtype(cl.Config.LibDefaults.Default_tkt_enctype_ids[0])
+		sort.Sort(sort.Reverse(sort.IntSlice(cl.Config.LibDefaults.DefaultTktEnctypeIDs)))
+		etype, err := crypto.GetEtype(cl.Config.LibDefaults.DefaultTktEnctypeIDs[0])
 		if err != nil {
 			return krberror.Errorf(err, krberror.EncryptingError, "Error creating etype")
 		}

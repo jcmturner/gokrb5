@@ -17,13 +17,13 @@ func (cl *Client) SendToKDC(b []byte) ([]byte, error) {
 	var rb []byte
 	var kdcs []string
 	for _, r := range cl.Config.Realms {
-		if r.Realm == cl.Config.LibDefaults.Default_realm {
+		if r.Realm == cl.Config.LibDefaults.DefaultRealm {
 			kdcs = r.Kdc
 			break
 		}
 	}
 	if len(kdcs) < 1 {
-		return rb, fmt.Errorf("No KDCs defined in configuration for realm: %v", cl.Config.LibDefaults.Default_realm)
+		return rb, fmt.Errorf("No KDCs defined in configuration for realm: %v", cl.Config.LibDefaults.DefaultRealm)
 	}
 	var kdc string
 	if len(kdcs) > 1 {
@@ -33,7 +33,7 @@ func (cl *Client) SendToKDC(b []byte) ([]byte, error) {
 		kdc = kdcs[0]
 	}
 
-	if cl.Config.LibDefaults.Udp_preference_limit == 1 {
+	if cl.Config.LibDefaults.UDPPreferenceLimit == 1 {
 		//1 means we should always use TCP
 		rb, errtcp := sendTCP(kdc, b)
 		if errtcp != nil {
@@ -47,7 +47,7 @@ func (cl *Client) SendToKDC(b []byte) ([]byte, error) {
 		}
 		return rb, nil
 	}
-	if len(b) <= cl.Config.LibDefaults.Udp_preference_limit {
+	if len(b) <= cl.Config.LibDefaults.UDPPreferenceLimit {
 		//Try UDP first, TCP second
 		rb, errudp := sendUDP(kdc, b)
 		if errudp != nil {

@@ -7,7 +7,8 @@ import (
 )
 
 const (
-	separator       = " < "
+	separator = " < "
+	// Error type descriptions.
 	EncodingError   = "Encoding_Error"
 	NetworkingError = "Networking_Error"
 	DecryptingError = "Decrypting_Error"

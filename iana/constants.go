@@ -2,5 +2,6 @@
 package iana
 
 const (
+	// PVNO is the Protocol Version Number.
 	PVNO = 5
 )

@@ -59,6 +59,7 @@ func (a SPNEGOAuthenticator) Authenticate() (i goidentity.Identity, ok bool, err
 	return
 }
 
+// Mechanism returns the authentication mechanism.
 func (a SPNEGOAuthenticator) Mechanism() string {
 	return "SPNEGO Kerberos"
 }
@@ -76,6 +77,7 @@ type KRB5BasicAuthenticator struct {
 	SPN              string
 }
 
+// Authenticate and return the identity. The boolean indicates if the authentication was successful.
 func (a KRB5BasicAuthenticator) Authenticate() (i goidentity.Identity, ok bool, err error) {
 	a.realm, a.username, a.password, err = parseBasicHeaderValue(a.BasicHeaderValue)
 	if err != nil {
@@ -128,6 +130,7 @@ func (a KRB5BasicAuthenticator) Authenticate() (i goidentity.Identity, ok bool, 
 	return
 }
 
+// Mechanism returns the authentication mechanism.
 func (a KRB5BasicAuthenticator) Mechanism() string {
 	return "Kerberos Basic"
 }

@@ -95,17 +95,17 @@ func NewASReq(c *config.Config, cname types.PrincipalName) (ASReq, error) {
 			MsgType: msgtype.KRB_AS_REQ,
 			PAData:  types.PADataSequence{},
 			ReqBody: KDCReqBody{
-				KDCOptions: c.LibDefaults.Kdc_default_options,
-				Realm:      c.LibDefaults.Default_realm,
+				KDCOptions: c.LibDefaults.KDCDefaultOptions,
+				Realm:      c.LibDefaults.DefaultRealm,
 				CName:      cname,
 				SName: types.PrincipalName{
 					NameType:   nametype.KRB_NT_SRV_INST,
-					NameString: []string{"krbtgt", c.LibDefaults.Default_realm},
+					NameString: []string{"krbtgt", c.LibDefaults.DefaultRealm},
 				},
-				Till: t.Add(c.LibDefaults.Ticket_lifetime),
+				Till: t.Add(c.LibDefaults.TicketLifetime),
 				//Till:  t.Add(time.Duration(24) * time.Hour),
 				Nonce: int(nonce.Int64()),
-				EType: c.LibDefaults.Default_tkt_enctype_ids,
+				EType: c.LibDefaults.DefaultTktEnctypeIDs,
 			},
 		},
 	}
@@ -118,9 +118,9 @@ func NewASReq(c *config.Config, cname types.PrincipalName) (ASReq, error) {
 	if c.LibDefaults.Proxiable {
 		types.SetFlag(&a.ReqBody.KDCOptions, flags.Proxiable)
 	}
-	if c.LibDefaults.Renew_lifetime != 0 {
+	if c.LibDefaults.RenewLifetime != 0 {
 		types.SetFlag(&a.ReqBody.KDCOptions, flags.Renewable)
-		a.ReqBody.RTime = t.Add(c.LibDefaults.Renew_lifetime)
+		a.ReqBody.RTime = t.Add(c.LibDefaults.RenewLifetime)
 		a.ReqBody.RTime = t.Add(time.Duration(48) * time.Hour)
 
 	}
@@ -142,10 +142,10 @@ func NewTGSReq(cname types.PrincipalName, c *config.Config, tkt Ticket, sessionK
 				KDCOptions: types.NewKrbFlags(),
 				Realm:      c.ResolveRealm(spn.NameString[len(spn.NameString)-1]),
 				SName:      spn,
-				Till:       t.Add(c.LibDefaults.Ticket_lifetime),
+				Till:       t.Add(c.LibDefaults.TicketLifetime),
 				//Till:  t.Add(time.Duration(2) * time.Minute),
 				Nonce: int(nonce.Int64()),
-				EType: c.LibDefaults.Default_tgs_enctype_ids,
+				EType: c.LibDefaults.DefaultTGSEnctypeIDs,
 			},
 			Renewal: renewal,
 		},
@@ -159,15 +159,15 @@ func NewTGSReq(cname types.PrincipalName, c *config.Config, tkt Ticket, sessionK
 	if c.LibDefaults.Proxiable {
 		types.SetFlag(&a.ReqBody.KDCOptions, flags.Proxiable)
 	}
-	if c.LibDefaults.Renew_lifetime > time.Duration(0) {
+	if c.LibDefaults.RenewLifetime > time.Duration(0) {
 		types.SetFlag(&a.ReqBody.KDCOptions, flags.Renewable)
-		a.ReqBody.RTime = t.Add(c.LibDefaults.Renew_lifetime)
+		a.ReqBody.RTime = t.Add(c.LibDefaults.RenewLifetime)
 	}
 	if renewal {
 		types.SetFlag(&a.ReqBody.KDCOptions, flags.Renew)
 		types.SetFlag(&a.ReqBody.KDCOptions, flags.Renewable)
 	}
-	auth, err := types.NewAuthenticator(c.LibDefaults.Default_realm, cname)
+	auth, err := types.NewAuthenticator(c.LibDefaults.DefaultRealm, cname)
 	if err != nil {
 		return a, krberror.Errorf(err, krberror.KRBMsgError, "Error generating new authenticator")
 	}

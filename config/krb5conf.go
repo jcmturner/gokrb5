@@ -27,8 +27,8 @@ type Config struct {
 	//Plugins
 }
 
-// List of encryption types that have been deemed weak.
-const WEAK_ETYPE_LIST = "des-cbc-crc des-cbc-md4 des-cbc-md5 des-cbc-raw des3-cbc-raw des-hmac-sha1 arcfour-hmac-exp rc4-hmac-exp arcfour-hmac-md5-exp des"
+// WeakETypeList is a list of encryption types that have been deemed weak.
+const WeakETypeList = "des-cbc-crc des-cbc-md4 des-cbc-md5 des-cbc-raw des3-cbc-raw des-hmac-sha1 arcfour-hmac-exp rc4-hmac-exp arcfour-hmac-md5-exp des"
 
 // NewConfig creates a new config struct instance.
 func NewConfig() *Config {
@@ -41,43 +41,43 @@ func NewConfig() *Config {
 
 // LibDefaults represents the [libdefaults] section of the configuration.
 type LibDefaults struct {
-	Allow_weak_crypto bool //default false
+	AllowWeakCrypto bool //default false
 	// ap_req_checksum_type int //unlikely to support this
 	Canonicalize bool          //default false
-	Ccache_type  int           //default is 4. unlikely to implement older
+	CCacheType   int           //default is 4. unlikely to implement older
 	Clockskew    time.Duration //max allowed skew in seconds, default 300
 	//Default_ccache_name string // default /tmp/krb5cc_%{uid} //Not implementing as will hold in memory
-	Default_client_keytab_name string //default /usr/local/var/krb5/user/%{euid}/client.keytab
-	Default_keytab_name        string //default /etc/krb5.keytab
-	Default_realm              string
-	Default_tgs_enctypes       []string //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
-	Default_tkt_enctypes       []string //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
-	Default_tgs_enctype_ids    []int    //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
-	Default_tkt_enctype_ids    []int    //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
-	Dns_canonicalize_hostname  bool     //default true
-	Dns_lookup_kdc             bool     //default false
-	Dns_lookup_realm           bool
+	DefaultClientKeytabName string //default /usr/local/var/krb5/user/%{euid}/client.keytab
+	DefaultKeytabName       string //default /etc/krb5.keytab
+	DefaultRealm            string
+	DefaultTGSEnctypes      []string //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
+	DefaultTktEnctypes      []string //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
+	DefaultTGSEnctypeIDs    []int    //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
+	DefaultTktEnctypeIDs    []int    //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
+	DNSCanonicalizeHostname bool     //default true
+	DNSLookupKDC            bool     //default false
+	DNSLookupRealm          bool
 	//extra_addresses []net.IPAddr //Not implementing yet
-	Forwardable              bool           //default false
-	Ignore_acceptor_hostname bool           //default false
-	K5login_authoritative    bool           //default false
-	K5login_directory        string         //default user's home directory. Must be owned by the user or root
-	Kdc_default_options      asn1.BitString //default 0x00000010 (KDC_OPT_RENEWABLE_OK)
-	Kdc_timesync             int            //default 1
+	Forwardable            bool           //default false
+	IgnoreAcceptorHostname bool           //default false
+	K5LoginAuthoritative   bool           //default false
+	K5LoginDirectory       string         //default user's home directory. Must be owned by the user or root
+	KDCDefaultOptions      asn1.BitString //default 0x00000010 (KDC_OPT_RENEWABLE_OK)
+	KDCTimeSync            int            //default 1
 	//kdc_req_checksum_type int //unlikely to implement as for very old KDCs
-	Noaddresses           bool     //default true
-	Permitted_enctypes    []string //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
-	Permitted_enctype_ids []int
+	NoAddresses         bool     //default true
+	PermittedEnctypes   []string //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
+	PermittedEnctypeIDs []int
 	//plugin_base_dir string //not supporting plugins
-	Preferred_preauth_types []int         //default “17, 16, 15, 14”, which forces libkrb5 to attempt to use PKINIT if it is supported
-	Proxiable               bool          //default false
-	Rdns                    bool          //default true
-	Realm_try_domains       int           //default -1
-	Renew_lifetime          time.Duration //default 0
-	Safe_checksum_type      int           //default 8
-	Ticket_lifetime         time.Duration //default 1 day
-	Udp_preference_limit    int           // 1 means to always use tcp. MIT krb5 has a default value of 1465, and it prevents user setting more than 32700.
-	Verify_ap_req_nofail    bool          //default false
+	PreferredPreauthTypes []int         //default “17, 16, 15, 14”, which forces libkrb5 to attempt to use PKINIT if it is supported
+	Proxiable             bool          //default false
+	RDNS                  bool          //default true
+	RealmTryDomains       int           //default -1
+	RenewLifetime         time.Duration //default 0
+	SafeChecksumType      int           //default 8
+	TicketLifetime        time.Duration //default 1 day
+	UDPPreferenceLimit    int           // 1 means to always use tcp. MIT krb5 has a default value of 1465, and it prevents user setting more than 32700.
+	VerifyAPReqNofail     bool          //default false
 }
 
 // Create a new LibDefaults struct.
@@ -87,24 +87,24 @@ func newLibDefaults() *LibDefaults {
 	opts.Bytes, _ = hex.DecodeString("00000010")
 	opts.BitLength = len(opts.Bytes) * 8
 	return &LibDefaults{
-		Ccache_type:                4,
-		Clockskew:                  time.Duration(300) * time.Second,
-		Default_client_keytab_name: fmt.Sprintf("/usr/local/var/krb5/user/%v/client.keytab", usr.Uid),
-		Default_keytab_name:        "/etc/krb5.keytab",
-		Default_tgs_enctypes:       []string{"aes256-cts-hmac-sha1-96", "aes128-cts-hmac-sha1-96", "des3-cbc-sha1", "arcfour-hmac-md5", "camellia256-cts-cmac", "camellia128-cts-cmac", "des-cbc-crc", "des-cbc-md5", "des-cbc-md4"},
-		Default_tkt_enctypes:       []string{"aes256-cts-hmac-sha1-96", "aes128-cts-hmac-sha1-96", "des3-cbc-sha1", "arcfour-hmac-md5", "camellia256-cts-cmac", "camellia128-cts-cmac", "des-cbc-crc", "des-cbc-md5", "des-cbc-md4"},
-		Dns_canonicalize_hostname:  true,
-		K5login_directory:          usr.HomeDir,
-		Kdc_default_options:        opts,
-		Kdc_timesync:               1,
-		Noaddresses:                true,
-		Permitted_enctypes:         []string{"aes256-cts-hmac-sha1-96", "aes128-cts-hmac-sha1-96", "des3-cbc-sha1", "arcfour-hmac-md5", "camellia256-cts-cmac", "camellia128-cts-cmac", "des-cbc-crc", "des-cbc-md5", "des-cbc-md4"},
-		Preferred_preauth_types:    []int{17, 16, 15, 14},
-		Rdns:                 true,
-		Realm_try_domains:    -1,
-		Safe_checksum_type:   8,
-		Ticket_lifetime:      time.Duration(24) * time.Hour,
-		Udp_preference_limit: 1465,
+		CCacheType:              4,
+		Clockskew:               time.Duration(300) * time.Second,
+		DefaultClientKeytabName: fmt.Sprintf("/usr/local/var/krb5/user/%v/client.keytab", usr.Uid),
+		DefaultKeytabName:       "/etc/krb5.keytab",
+		DefaultTGSEnctypes:      []string{"aes256-cts-hmac-sha1-96", "aes128-cts-hmac-sha1-96", "des3-cbc-sha1", "arcfour-hmac-md5", "camellia256-cts-cmac", "camellia128-cts-cmac", "des-cbc-crc", "des-cbc-md5", "des-cbc-md4"},
+		DefaultTktEnctypes:      []string{"aes256-cts-hmac-sha1-96", "aes128-cts-hmac-sha1-96", "des3-cbc-sha1", "arcfour-hmac-md5", "camellia256-cts-cmac", "camellia128-cts-cmac", "des-cbc-crc", "des-cbc-md5", "des-cbc-md4"},
+		DNSCanonicalizeHostname: true,
+		K5LoginDirectory:        usr.HomeDir,
+		KDCDefaultOptions:       opts,
+		KDCTimeSync:             1,
+		NoAddresses:             true,
+		PermittedEnctypes:       []string{"aes256-cts-hmac-sha1-96", "aes128-cts-hmac-sha1-96", "des3-cbc-sha1", "arcfour-hmac-md5", "camellia256-cts-cmac", "camellia128-cts-cmac", "des-cbc-crc", "des-cbc-md5", "des-cbc-md4"},
+		PreferredPreauthTypes:   []int{17, 16, 15, 14},
+		RDNS:               true,
+		RealmTryDomains:    -1,
+		SafeChecksumType:   8,
+		TicketLifetime:     time.Duration(24) * time.Hour,
+		UDPPreferenceLimit: 1465,
 	}
 }
 
@@ -129,7 +129,7 @@ func (l *LibDefaults) parseLines(lines []string) error {
 			if err != nil {
 				return fmt.Errorf("libdefaults configuration line invalid. %v: %s", err, line)
 			}
-			l.Allow_weak_crypto = v
+			l.AllowWeakCrypto = v
 		case "canonicalize":
 			v, err := parseBoolean(p[1])
 			if err != nil {
@@ -142,7 +142,7 @@ func (l *LibDefaults) parseLines(lines []string) error {
 			if err != nil || v < 0 || v > 4 {
 				return fmt.Errorf("libdefaults configuration line invalid: %s", line)
 			}
-			l.Ccache_type = int(v)
+			l.CCacheType = int(v)
 		case "clockskew":
 			d, err := parseDuration(p[1])
 			if err != nil {
@@ -150,33 +150,33 @@ func (l *LibDefaults) parseLines(lines []string) error {
 			}
 			l.Clockskew = d
 		case "default_client_keytab_name":
-			l.Default_client_keytab_name = strings.Replace(p[1], " ", "", -1)
+			l.DefaultClientKeytabName = strings.Replace(p[1], " ", "", -1)
 		case "default_keytab_name":
-			l.Default_keytab_name = strings.Replace(p[1], " ", "", -1)
+			l.DefaultKeytabName = strings.Replace(p[1], " ", "", -1)
 		case "default_realm":
-			l.Default_realm = strings.Replace(p[1], " ", "", -1)
+			l.DefaultRealm = strings.Replace(p[1], " ", "", -1)
 		case "default_tgs_enctypes":
-			l.Default_tgs_enctypes = strings.Fields(p[1])
+			l.DefaultTGSEnctypes = strings.Fields(p[1])
 		case "default_tkt_enctypes":
-			l.Default_tkt_enctypes = strings.Fields(p[1])
+			l.DefaultTktEnctypes = strings.Fields(p[1])
 		case "dns_canonicalize_hostname":
 			v, err := parseBoolean(p[1])
 			if err != nil {
 				return fmt.Errorf("libdefaults configuration line invalid. %v: %s", err, line)
 			}
-			l.Dns_canonicalize_hostname = v
+			l.DNSCanonicalizeHostname = v
 		case "dns_lookup_kdc":
 			v, err := parseBoolean(p[1])
 			if err != nil {
 				return fmt.Errorf("libdefaults configuration line invalid. %v: %s", err, line)
 			}
-			l.Dns_lookup_kdc = v
+			l.DNSLookupKDC = v
 		case "dns_lookup_realm":
 			v, err := parseBoolean(p[1])
 			if err != nil {
 				return fmt.Errorf("libdefaults configuration line invalid. %v: %s", err, line)
 			}
-			l.Dns_lookup_realm = v
+			l.DNSLookupRealm = v
 		case "forwardable":
 			v, err := parseBoolean(p[1])
 			if err != nil {
@@ -188,15 +188,15 @@ func (l *LibDefaults) parseLines(lines []string) error {
 			if err != nil {
 				return fmt.Errorf("libdefaults configuration line invalid. %v: %s", err, line)
 			}
-			l.Ignore_acceptor_hostname = v
+			l.IgnoreAcceptorHostname = v
 		case "k5login_authoritative":
 			v, err := parseBoolean(p[1])
 			if err != nil {
 				return fmt.Errorf("libdefaults configuration line invalid. %v: %s", err, line)
 			}
-			l.K5login_authoritative = v
+			l.K5LoginAuthoritative = v
 		case "k5login_directory":
-			l.K5login_directory = strings.Replace(p[1], " ", "", -1)
+			l.K5LoginDirectory = strings.Replace(p[1], " ", "", -1)
 		case "kdc_default_options":
 			v := strings.Replace(p[1], " ", "", -1)
 			v = strings.Replace(v, "0x", "", -1)
@@ -204,23 +204,23 @@ func (l *LibDefaults) parseLines(lines []string) error {
 			if err != nil {
 				return fmt.Errorf("libdefaults configuration line invalid: %s", line)
 			}
-			l.Kdc_default_options.Bytes = b
-			l.Kdc_default_options.BitLength = len(b) * 8
+			l.KDCDefaultOptions.Bytes = b
+			l.KDCDefaultOptions.BitLength = len(b) * 8
 		case "kdc_timesync":
 			p[1] = strings.Replace(p[1], " ", "", -1)
 			v, err := strconv.ParseInt(p[1], 10, 32)
 			if err != nil || v < 0 {
 				return fmt.Errorf("libdefaults configuration line invalid: %s", line)
 			}
-			l.Kdc_timesync = int(v)
+			l.KDCTimeSync = int(v)
 		case "noaddresses":
 			v, err := parseBoolean(p[1])
 			if err != nil {
 				return fmt.Errorf("libdefaults configuration line invalid. %v: %s", err, line)
 			}
-			l.Noaddresses = v
+			l.NoAddresses = v
 		case "permitted_enctypes":
-			l.Permitted_enctypes = strings.Fields(p[1])
+			l.PermittedEnctypes = strings.Fields(p[1])
 		case "preferred_preauth_types":
 			p[1] = strings.Replace(p[1], " ", "", -1)
 			t := strings.Split(p[1], ",")
@@ -232,7 +232,7 @@ func (l *LibDefaults) parseLines(lines []string) error {
 				}
 				v = append(v, int(i))
 			}
-			l.Preferred_preauth_types = v
+			l.PreferredPreauthTypes = v
 		case "proxiable":
 			v, err := parseBoolean(p[1])
 			if err != nil {
@@ -244,54 +244,54 @@ func (l *LibDefaults) parseLines(lines []string) error {
 			if err != nil {
 				return fmt.Errorf("libdefaults configuration line invalid. %v: %s", err, line)
 			}
-			l.Rdns = v
+			l.RDNS = v
 		case "realm_try_domains":
 			p[1] = strings.Replace(p[1], " ", "", -1)
 			v, err := strconv.ParseInt(p[1], 10, 32)
 			if err != nil || v < -1 {
 				return fmt.Errorf("libdefaults configuration line invalid: %s", line)
 			}
-			l.Realm_try_domains = int(v)
+			l.RealmTryDomains = int(v)
 		case "renew_lifetime":
 			d, err := parseDuration(p[1])
 			if err != nil {
 				return fmt.Errorf("libdefaults configuration line invalid. %v: %s", err, line)
 			}
-			l.Renew_lifetime = d
+			l.RenewLifetime = d
 		case "safe_checksum_type":
 			p[1] = strings.Replace(p[1], " ", "", -1)
 			v, err := strconv.ParseInt(p[1], 10, 32)
 			if err != nil || v < 0 {
 				return fmt.Errorf("libdefaults configuration line invalid: %s", line)
 			}
-			l.Safe_checksum_type = int(v)
+			l.SafeChecksumType = int(v)
 		case "ticket_lifetime":
 			d, err := parseDuration(p[1])
 			if err != nil {
 				return fmt.Errorf("libdefaults configuration line invalid. %v: %s", err, line)
 			}
-			l.Ticket_lifetime = d
+			l.TicketLifetime = d
 		case "udp_preference_limit":
 			p[1] = strings.Replace(p[1], " ", "", -1)
 			v, err := strconv.ParseUint(p[1], 10, 32)
 			if err != nil || v > 32700 {
 				return fmt.Errorf("libdefaults configuration line invalid: %s", line)
 			}
-			l.Udp_preference_limit = int(v)
+			l.UDPPreferenceLimit = int(v)
 		case "verify_ap_req_nofail":
 			v, err := parseBoolean(p[1])
 			if err != nil {
 				return fmt.Errorf("libdefaults configuration line invalid. %v: %s", err, line)
 			}
-			l.Verify_ap_req_nofail = v
+			l.VerifyAPReqNofail = v
 		default:
 			//Ignore the line
 			continue
 		}
 	}
-	l.Default_tgs_enctype_ids = parseETypes(l.Default_tgs_enctypes, l.Allow_weak_crypto)
-	l.Default_tkt_enctype_ids = parseETypes(l.Default_tkt_enctypes, l.Allow_weak_crypto)
-	l.Permitted_enctype_ids = parseETypes(l.Permitted_enctypes, l.Allow_weak_crypto)
+	l.DefaultTGSEnctypeIDs = parseETypes(l.DefaultTGSEnctypes, l.AllowWeakCrypto)
+	l.DefaultTktEnctypeIDs = parseETypes(l.DefaultTktEnctypes, l.AllowWeakCrypto)
+	l.PermittedEnctypeIDs = parseETypes(l.PermittedEnctypes, l.AllowWeakCrypto)
 	return nil
 }
 
@@ -438,7 +438,7 @@ func (c *Config) ResolveRealm(domainName string) string {
 			return r
 		}
 	}
-	return c.LibDefaults.Default_realm
+	return c.LibDefaults.DefaultRealm
 }
 
 // Load the KRB5 configuration from the specified file path.
@@ -534,7 +534,7 @@ func parseETypes(s []string, w bool) []int {
 	for _, et := range s {
 		if !w {
 			var weak bool
-			for _, wet := range strings.Fields(WEAK_ETYPE_LIST) {
+			for _, wet := range strings.Fields(WeakETypeList) {
 				if et == wet {
 					weak = true
 					break
