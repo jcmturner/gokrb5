@@ -327,7 +327,7 @@ func TestValidateAPREQ_ExpiredTicket(t *testing.T) {
 }
 
 func newTestAuthenticator(creds credentials.Credentials) types.Authenticator {
-	auth := types.NewAuthenticator(creds.Realm, creds.CName)
+	auth, _ := types.NewAuthenticator(creds.Realm, creds.CName)
 	auth.GenerateSeqNumberAndSubKey(18, 32)
 	//auth.Cksum = types.Checksum{
 	//	CksumType: chksumtype.GSSAPI,

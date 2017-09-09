@@ -2,12 +2,14 @@
 package types
 
 import (
+	"crypto/rand"
 	"fmt"
 	"github.com/jcmturner/asn1"
 	"github.com/jcmturner/gokrb5/asn1tools"
 	"github.com/jcmturner/gokrb5/iana"
 	"github.com/jcmturner/gokrb5/iana/asnAppTag"
-	"math/rand"
+	"math"
+	"math/big"
 	"time"
 )
 
@@ -46,7 +48,11 @@ type Authenticator struct {
 }
 
 // NewAuthenticator creates a new Authenticator.
-func NewAuthenticator(realm string, cname PrincipalName) Authenticator {
+func NewAuthenticator(realm string, cname PrincipalName) (Authenticator, error) {
+	seq, err := rand.Int(rand.Reader, big.NewInt(math.MaxInt32))
+	if err != nil {
+		return Authenticator{}, err
+	}
 	t := time.Now().UTC()
 	return Authenticator{
 		AVNO:      iana.PVNO,
@@ -55,13 +61,17 @@ func NewAuthenticator(realm string, cname PrincipalName) Authenticator {
 		Cksum:     Checksum{},
 		Cusec:     int((t.UnixNano() / int64(time.Microsecond)) - (t.Unix() * 1e6)),
 		CTime:     t,
-		SeqNumber: int(rand.Int31()),
-	}
+		SeqNumber: int(seq.Int64()),
+	}, nil
 }
 
 // GenerateSeqNumberAndSubKey sets the Authenticator's sequence number and subkey.
-func (a *Authenticator) GenerateSeqNumberAndSubKey(keyType, keySize int) {
-	a.SeqNumber = int(rand.Int31())
+func (a *Authenticator) GenerateSeqNumberAndSubKey(keyType, keySize int) error {
+	seq, err := rand.Int(rand.Reader, big.NewInt(math.MaxUint32))
+	if err != nil {
+		return err
+	}
+	a.SeqNumber = int(seq.Int64())
 	//Generate subkey value
 	sk := make([]byte, keySize, keySize)
 	rand.Read(sk)
@@ -69,6 +79,7 @@ func (a *Authenticator) GenerateSeqNumberAndSubKey(keyType, keySize int) {
 		KeyType:  keyType,
 		KeyValue: sk,
 	}
+	return nil
 }
 
 // Unmarshal bytes into the Authenticator.
