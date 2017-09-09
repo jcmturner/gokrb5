@@ -4,6 +4,7 @@ package messages
 // Section: 5.4.1
 
 import (
+	"crypto/rand"
 	"fmt"
 	"github.com/jcmturner/asn1"
 	"github.com/jcmturner/gokrb5/asn1tools"
@@ -18,7 +19,8 @@ import (
 	"github.com/jcmturner/gokrb5/iana/patype"
 	"github.com/jcmturner/gokrb5/krberror"
 	"github.com/jcmturner/gokrb5/types"
-	"math/rand"
+	"math"
+	"math/big"
 	"time"
 )
 
@@ -81,10 +83,12 @@ type KDCReqBody struct {
 }
 
 // NewASReq generates a new KRB_AS_REQ struct.
-func NewASReq(c *config.Config, cname types.PrincipalName) ASReq {
-	nonce := int(rand.Int31())
+func NewASReq(c *config.Config, cname types.PrincipalName) (ASReq, error) {
+	nonce, err := rand.Int(rand.Reader, big.NewInt(math.MaxInt32))
+	if err != nil {
+		return ASReq{}, err
+	}
 	t := time.Now().UTC()
-
 	a := ASReq{
 		KDCReqFields{
 			PVNO:    iana.PVNO,
@@ -100,7 +104,7 @@ func NewASReq(c *config.Config, cname types.PrincipalName) ASReq {
 				},
 				Till: t.Add(c.LibDefaults.Ticket_lifetime),
 				//Till:  t.Add(time.Duration(24) * time.Hour),
-				Nonce: nonce,
+				Nonce: int(nonce.Int64()),
 				EType: c.LibDefaults.Default_tkt_enctype_ids,
 			},
 		},
@@ -120,12 +124,15 @@ func NewASReq(c *config.Config, cname types.PrincipalName) ASReq {
 		a.ReqBody.RTime = t.Add(time.Duration(48) * time.Hour)
 
 	}
-	return a
+	return a, nil
 }
 
 // NewTGSReq generates a new KRB_TGS_REQ struct.
 func NewTGSReq(cname types.PrincipalName, c *config.Config, tkt Ticket, sessionKey types.EncryptionKey, spn types.PrincipalName, renewal bool) (TGSReq, error) {
-	nonce := int(rand.Int31())
+	nonce, err := rand.Int(rand.Reader, big.NewInt(math.MaxInt32))
+	if err != nil {
+		return TGSReq{}, err
+	}
 	t := time.Now().UTC()
 	a := TGSReq{
 		KDCReqFields{
@@ -137,7 +144,7 @@ func NewTGSReq(cname types.PrincipalName, c *config.Config, tkt Ticket, sessionK
 				SName:      spn,
 				Till:       t.Add(c.LibDefaults.Ticket_lifetime),
 				//Till:  t.Add(time.Duration(2) * time.Minute),
-				Nonce: nonce,
+				Nonce: int(nonce.Int64()),
 				EType: c.LibDefaults.Default_tgs_enctype_ids,
 			},
 			Renewal: renewal,
@@ -160,7 +167,10 @@ func NewTGSReq(cname types.PrincipalName, c *config.Config, tkt Ticket, sessionK
 		types.SetFlag(&a.ReqBody.KDCOptions, flags.Renew)
 		types.SetFlag(&a.ReqBody.KDCOptions, flags.Renewable)
 	}
-	auth := types.NewAuthenticator(c.LibDefaults.Default_realm, cname)
+	auth, err := types.NewAuthenticator(c.LibDefaults.Default_realm, cname)
+	if err != nil {
+		return a, krberror.Errorf(err, krberror.KRBMSG_ERROR, "Error generating new authenticator")
+	}
 	// Add the CName to make validation of the reply easier
 	a.ReqBody.CName = auth.CName
 	b, err := a.ReqBody.Marshal()

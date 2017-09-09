@@ -9,6 +9,7 @@ import (
 	"github.com/jcmturner/gokrb5/credentials"
 	"github.com/jcmturner/gokrb5/crypto"
 	"github.com/jcmturner/gokrb5/iana/chksumtype"
+	"github.com/jcmturner/gokrb5/krberror"
 	"github.com/jcmturner/gokrb5/messages"
 	"github.com/jcmturner/gokrb5/types"
 )
@@ -101,10 +102,14 @@ func NewKRB5APREQMechToken(creds credentials.Credentials, tkt messages.Ticket, s
 	tb, _ := hex.DecodeString(TOK_ID_KRB_AP_REQ)
 	b = append(b, tb...)
 	// Add the token
+	auth, err := newAuthenticator(creds, sessionKey.KeyType)
+	if err != nil {
+		return []byte{}, err
+	}
 	APReq, err := messages.NewAPReq(
 		tkt,
 		sessionKey,
-		newAuthenticator(creds, sessionKey.KeyType),
+		auth,
 	)
 	tb, err = APReq.Marshal()
 	if err != nil {
@@ -115,16 +120,19 @@ func NewKRB5APREQMechToken(creds credentials.Credentials, tkt messages.Ticket, s
 }
 
 // Create new kerberos authenticator for kerberos MechToken
-func newAuthenticator(creds credentials.Credentials, keyType int) types.Authenticator {
+func newAuthenticator(creds credentials.Credentials, keyType int) (types.Authenticator, error) {
 	//RFC 4121 Section 4.1.1
-	auth := types.NewAuthenticator(creds.Realm, creds.CName)
+	auth, err := types.NewAuthenticator(creds.Realm, creds.CName)
+	if err != nil {
+		return auth, krberror.Errorf(err, krberror.KRBMSG_ERROR, "Error generating new authenticator")
+	}
 	etype, _ := crypto.GetEtype(keyType)
 	auth.GenerateSeqNumberAndSubKey(keyType, etype.GetKeyByteSize())
 	auth.Cksum = types.Checksum{
 		CksumType: chksumtype.GSSAPI,
 		Checksum:  newAuthenticatorChksum([]int{GSS_C_INTEG_FLAG, GSS_C_CONF_FLAG}),
 	}
-	return auth
+	return auth, nil
 }
 
 // Create new authenticator checksum for kerberos MechToken

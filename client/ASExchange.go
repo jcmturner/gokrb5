@@ -17,8 +17,11 @@ func (cl *Client) ASExchange() error {
 	if !cl.IsConfigured() {
 		return errors.New("Client is not configured correctly")
 	}
-	ASReq := messages.NewASReq(cl.Config, cl.Credentials.CName)
-	err := setPAData(cl, messages.KRBError{}, &ASReq)
+	ASReq, err := messages.NewASReq(cl.Config, cl.Credentials.CName)
+	if err != nil {
+		return krberror.Errorf(err, krberror.KRBMSG_ERROR, "Error generating new AS_REQ")
+	}
+	err = setPAData(cl, messages.KRBError{}, &ASReq)
 	if err != nil {
 		return krberror.Errorf(err, krberror.KRBMSG_ERROR, "AS Exchange Error: failed setting AS_REQ PAData")
 	}
