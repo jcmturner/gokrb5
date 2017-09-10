@@ -27,24 +27,24 @@ func (k *UPNDNSInfo) Unmarshal(b []byte) error {
 	var p int
 	var e binary.ByteOrder = binary.LittleEndian
 
-	k.UPNLength = ndr.Read_uint16(&b, &p, &e)
-	k.UPNOffset = ndr.Read_uint16(&b, &p, &e)
-	k.DNSDomainNameLength = ndr.Read_uint16(&b, &p, &e)
-	k.DNSDomainNameOffset = ndr.Read_uint16(&b, &p, &e)
-	k.Flags = ndr.Read_uint32(&b, &p, &e)
+	k.UPNLength = ndr.ReadUint16(&b, &p, &e)
+	k.UPNOffset = ndr.ReadUint16(&b, &p, &e)
+	k.DNSDomainNameLength = ndr.ReadUint16(&b, &p, &e)
+	k.DNSDomainNameOffset = ndr.ReadUint16(&b, &p, &e)
+	k.Flags = ndr.ReadUint32(&b, &p, &e)
 	ub := b[k.UPNOffset : k.UPNOffset+k.UPNLength]
 	db := b[k.DNSDomainNameOffset : k.DNSDomainNameOffset+k.DNSDomainNameLength]
 
 	u := make([]rune, k.UPNLength/2, k.UPNLength/2)
 	for i := 0; i < len(u); i++ {
 		q := i * 2
-		u[i] = rune(ndr.Read_uint16(&ub, &q, &e))
+		u[i] = rune(ndr.ReadUint16(&ub, &q, &e))
 	}
 	k.UPN = string(u)
 	d := make([]rune, k.DNSDomainNameLength/2, k.DNSDomainNameLength/2)
 	for i := 0; i < len(d); i++ {
 		q := i * 2
-		d[i] = rune(ndr.Read_uint16(&db, &q, &e))
+		d[i] = rune(ndr.ReadUint16(&db, &q, &e))
 	}
 	k.DNSDomain = string(d)
 

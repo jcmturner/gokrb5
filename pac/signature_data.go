@@ -42,7 +42,7 @@ func (k *SignatureData) Unmarshal(b []byte) ([]byte, error) {
 	var p int
 	var e binary.ByteOrder = binary.LittleEndian
 
-	k.SignatureType = ndr.Read_uint32(&b, &p, &e)
+	k.SignatureType = ndr.ReadUint32(&b, &p, &e)
 	var c int
 	switch k.SignatureType {
 	case chksumtype.KERB_CHECKSUM_HMAC_MD5_UNSIGNED:
@@ -53,8 +53,8 @@ func (k *SignatureData) Unmarshal(b []byte) ([]byte, error) {
 		c = 12
 	}
 	sp := p
-	k.Signature = ndr.Read_bytes(&b, &p, c, &e)
-	k.RODCIdentifier = ndr.Read_uint16(&b, &p, &e)
+	k.Signature = ndr.ReadBytes(&b, &p, c, &e)
+	k.RODCIdentifier = ndr.ReadUint16(&b, &p, &e)
 
 	//Check that there is only zero padding left
 	for _, v := range b[p:] {

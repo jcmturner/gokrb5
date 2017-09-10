@@ -126,20 +126,20 @@ func (cl *Client) WithPassword(password string) *Client {
 // Key returns a key for the client. Preferably from a keytab and then generated from the password.
 // The KRBError would have been returned from the KDC and must be of type KDC_ERR_PREAUTH_REQUIRED.
 // If a KRBError is not available pass nil and a key will be returned from the credentials keytab.
-func (c *Client) Key(etype etype.EType, krberr messages.KRBError) (types.EncryptionKey, error) {
-	if c.Credentials.HasKeytab() && etype != nil {
-		return c.Credentials.Keytab.GetEncryptionKey(c.Credentials.CName.NameString, c.Credentials.Realm, 0, etype.GetETypeID())
-	} else if c.Credentials.HasPassword() {
+func (cl *Client) Key(etype etype.EType, krberr messages.KRBError) (types.EncryptionKey, error) {
+	if cl.Credentials.HasKeytab() && etype != nil {
+		return cl.Credentials.Keytab.GetEncryptionKey(cl.Credentials.CName.NameString, cl.Credentials.Realm, 0, etype.GetETypeID())
+	} else if cl.Credentials.HasPassword() {
 		if krberr.ErrorCode == errorcode.KDC_ERR_PREAUTH_REQUIRED {
 			var pas types.PADataSequence
 			err := pas.Unmarshal(krberr.EData)
 			if err != nil {
 				return types.EncryptionKey{}, fmt.Errorf("Could not get PAData from KRBError to generate key from password: %v", err)
 			}
-			key, _, err := crypto.GetKeyFromPassword(c.Credentials.Password, krberr.CName, krberr.CRealm, etype.GetETypeID(), pas)
+			key, _, err := crypto.GetKeyFromPassword(cl.Credentials.Password, krberr.CName, krberr.CRealm, etype.GetETypeID(), pas)
 			return key, err
 		}
-		key, _, err := crypto.GetKeyFromPassword(c.Credentials.Password, c.Credentials.CName, c.Credentials.Realm, etype.GetETypeID(), types.PADataSequence{})
+		key, _, err := crypto.GetKeyFromPassword(cl.Credentials.Password, cl.Credentials.CName, cl.Credentials.Realm, etype.GetETypeID(), types.PADataSequence{})
 		return key, err
 	}
 	return types.EncryptionKey{}, errors.New("Credential has neither keytab or password to generate key.")

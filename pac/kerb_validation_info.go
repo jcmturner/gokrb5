@@ -36,12 +36,12 @@ type KerbValidationInfo struct {
 	PasswordLastSet         mstypes.FileTime
 	PasswordCanChange       mstypes.FileTime
 	PasswordMustChange      mstypes.FileTime
-	EffectiveName           mstypes.RPC_UnicodeString
-	FullName                mstypes.RPC_UnicodeString
-	LogonScript             mstypes.RPC_UnicodeString
-	ProfilePath             mstypes.RPC_UnicodeString
-	HomeDirectory           mstypes.RPC_UnicodeString
-	HomeDirectoryDrive      mstypes.RPC_UnicodeString
+	EffectiveName           mstypes.RPCUnicodeString
+	FullName                mstypes.RPCUnicodeString
+	LogonScript             mstypes.RPCUnicodeString
+	ProfilePath             mstypes.RPCUnicodeString
+	HomeDirectory           mstypes.RPCUnicodeString
+	HomeDirectoryDrive      mstypes.RPCUnicodeString
 	LogonCount              uint16
 	BadPasswordCount        uint16
 	UserID                  uint32
@@ -51,8 +51,8 @@ type KerbValidationInfo struct {
 	GroupIDs                []mstypes.GroupMembership
 	UserFlags               uint32
 	UserSessionKey          mstypes.UserSessionKey
-	LogonServer             mstypes.RPC_UnicodeString
-	LogonDomainName         mstypes.RPC_UnicodeString
+	LogonServer             mstypes.RPCUnicodeString
+	LogonDomainName         mstypes.RPCUnicodeString
 	pLogonDomainID          uint32
 	LogonDomainID           mstypes.RPCSID
 	Reserved1               []uint32 // Has 2 elements
@@ -83,59 +83,59 @@ func (k *KerbValidationInfo) Unmarshal(b []byte) (err error) {
 	//The next 4 bytes are an RPC unique pointer referent. We just skip these
 	p += 4
 
-	k.LogOnTime = mstypes.Read_FileTime(&b, &p, e)
-	k.LogOffTime = mstypes.Read_FileTime(&b, &p, e)
-	k.KickOffTime = mstypes.Read_FileTime(&b, &p, e)
-	k.PasswordLastSet = mstypes.Read_FileTime(&b, &p, e)
-	k.PasswordCanChange = mstypes.Read_FileTime(&b, &p, e)
-	k.PasswordMustChange = mstypes.Read_FileTime(&b, &p, e)
+	k.LogOnTime = mstypes.ReadFileTime(&b, &p, e)
+	k.LogOffTime = mstypes.ReadFileTime(&b, &p, e)
+	k.KickOffTime = mstypes.ReadFileTime(&b, &p, e)
+	k.PasswordLastSet = mstypes.ReadFileTime(&b, &p, e)
+	k.PasswordCanChange = mstypes.ReadFileTime(&b, &p, e)
+	k.PasswordMustChange = mstypes.ReadFileTime(&b, &p, e)
 
-	k.EffectiveName, err = mstypes.Read_RPC_UnicodeString(&b, &p, e)
-	k.FullName, err = mstypes.Read_RPC_UnicodeString(&b, &p, e)
-	k.LogonScript, err = mstypes.Read_RPC_UnicodeString(&b, &p, e)
-	k.ProfilePath, err = mstypes.Read_RPC_UnicodeString(&b, &p, e)
-	k.HomeDirectory, err = mstypes.Read_RPC_UnicodeString(&b, &p, e)
-	k.HomeDirectoryDrive, err = mstypes.Read_RPC_UnicodeString(&b, &p, e)
+	k.EffectiveName, err = mstypes.ReadRPCUnicodeString(&b, &p, e)
+	k.FullName, err = mstypes.ReadRPCUnicodeString(&b, &p, e)
+	k.LogonScript, err = mstypes.ReadRPCUnicodeString(&b, &p, e)
+	k.ProfilePath, err = mstypes.ReadRPCUnicodeString(&b, &p, e)
+	k.HomeDirectory, err = mstypes.ReadRPCUnicodeString(&b, &p, e)
+	k.HomeDirectoryDrive, err = mstypes.ReadRPCUnicodeString(&b, &p, e)
 	if err != nil {
 		return
 	}
 
-	k.LogonCount = ndr.Read_uint16(&b, &p, e)
-	k.BadPasswordCount = ndr.Read_uint16(&b, &p, e)
-	k.UserID = ndr.Read_uint32(&b, &p, e)
-	k.PrimaryGroupID = ndr.Read_uint32(&b, &p, e)
-	k.GroupCount = ndr.Read_uint32(&b, &p, e)
-	k.pGroupIDs = ndr.Read_uint32(&b, &p, e)
+	k.LogonCount = ndr.ReadUint16(&b, &p, e)
+	k.BadPasswordCount = ndr.ReadUint16(&b, &p, e)
+	k.UserID = ndr.ReadUint32(&b, &p, e)
+	k.PrimaryGroupID = ndr.ReadUint32(&b, &p, e)
+	k.GroupCount = ndr.ReadUint32(&b, &p, e)
+	k.pGroupIDs = ndr.ReadUint32(&b, &p, e)
 
-	k.UserFlags = ndr.Read_uint32(&b, &p, e)
+	k.UserFlags = ndr.ReadUint32(&b, &p, e)
 	k.UserSessionKey = mstypes.ReadUserSessionKey(&b, &p, e)
 
-	k.LogonServer, err = mstypes.Read_RPC_UnicodeString(&b, &p, e)
-	k.LogonDomainName, err = mstypes.Read_RPC_UnicodeString(&b, &p, e)
+	k.LogonServer, err = mstypes.ReadRPCUnicodeString(&b, &p, e)
+	k.LogonDomainName, err = mstypes.ReadRPCUnicodeString(&b, &p, e)
 	if err != nil {
 		return
 	}
 
-	k.pLogonDomainID = ndr.Read_uint32(&b, &p, e)
+	k.pLogonDomainID = ndr.ReadUint32(&b, &p, e)
 
 	k.Reserved1 = []uint32{
-		ndr.Read_uint32(&b, &p, e),
-		ndr.Read_uint32(&b, &p, e),
+		ndr.ReadUint32(&b, &p, e),
+		ndr.ReadUint32(&b, &p, e),
 	}
 
-	k.UserAccountControl = ndr.Read_uint32(&b, &p, e)
-	k.SubAuthStatus = ndr.Read_uint32(&b, &p, e)
-	k.LastSuccessfulILogon = mstypes.Read_FileTime(&b, &p, e)
-	k.LastFailedILogon = mstypes.Read_FileTime(&b, &p, e)
-	k.FailedILogonCount = ndr.Read_uint32(&b, &p, e)
-	k.Reserved3 = ndr.Read_uint32(&b, &p, e)
+	k.UserAccountControl = ndr.ReadUint32(&b, &p, e)
+	k.SubAuthStatus = ndr.ReadUint32(&b, &p, e)
+	k.LastSuccessfulILogon = mstypes.ReadFileTime(&b, &p, e)
+	k.LastFailedILogon = mstypes.ReadFileTime(&b, &p, e)
+	k.FailedILogonCount = ndr.ReadUint32(&b, &p, e)
+	k.Reserved3 = ndr.ReadUint32(&b, &p, e)
 
-	k.SIDCount = ndr.Read_uint32(&b, &p, e)
-	k.pExtraSIDs = ndr.Read_uint32(&b, &p, e)
+	k.SIDCount = ndr.ReadUint32(&b, &p, e)
+	k.pExtraSIDs = ndr.ReadUint32(&b, &p, e)
 
-	k.pResourceGroupDomainSID = ndr.Read_uint32(&b, &p, e)
-	k.ResourceGroupCount = ndr.Read_uint32(&b, &p, e)
-	k.pResourceGroupIDs = ndr.Read_uint32(&b, &p, e)
+	k.pResourceGroupDomainSID = ndr.ReadUint32(&b, &p, e)
+	k.ResourceGroupCount = ndr.ReadUint32(&b, &p, e)
+	k.pResourceGroupIDs = ndr.ReadUint32(&b, &p, e)
 
 	// Populate pointers
 	err = k.EffectiveName.UnmarshalString(&b, &p, e)
@@ -146,7 +146,7 @@ func (k *KerbValidationInfo) Unmarshal(b []byte) (err error) {
 	err = k.HomeDirectoryDrive.UnmarshalString(&b, &p, e)
 
 	if k.GroupCount > 0 {
-		ac := ndr.Read_UniDimensionalConformantArrayHeader(&b, &p, e)
+		ac := ndr.ReadUniDimensionalConformantArrayHeader(&b, &p, e)
 		if ac != int(k.GroupCount) {
 			return errors.New("Error with size of group list")
 		}
@@ -161,14 +161,14 @@ func (k *KerbValidationInfo) Unmarshal(b []byte) (err error) {
 	err = k.LogonDomainName.UnmarshalString(&b, &p, e)
 
 	if k.pLogonDomainID != 0 {
-		k.LogonDomainID, err = mstypes.Read_RPC_SID(&b, &p, e)
+		k.LogonDomainID, err = mstypes.ReadRPCSID(&b, &p, e)
 		if err != nil {
 			return fmt.Errorf("Error reading LogonDomainID: %v", err)
 		}
 	}
 
 	if k.SIDCount > 0 {
-		ac := ndr.Read_UniDimensionalConformantArrayHeader(&b, &p, e)
+		ac := ndr.ReadUniDimensionalConformantArrayHeader(&b, &p, e)
 		if ac != int(k.SIDCount) {
 			return fmt.Errorf("Error with size of ExtraSIDs list. Expected: %d, Actual: %d", k.SIDCount, ac)
 		}
@@ -176,12 +176,12 @@ func (k *KerbValidationInfo) Unmarshal(b []byte) (err error) {
 		attr := make([]uint32, k.SIDCount, k.SIDCount)
 		ptr := make([]uint32, k.SIDCount, k.SIDCount)
 		for i := range attr {
-			ptr[i] = ndr.Read_uint32(&b, &p, e)
-			attr[i] = ndr.Read_uint32(&b, &p, e)
+			ptr[i] = ndr.ReadUint32(&b, &p, e)
+			attr[i] = ndr.ReadUint32(&b, &p, e)
 		}
 		for i := range es {
 			if ptr[i] != 0 {
-				s, err := mstypes.Read_RPC_SID(&b, &p, e)
+				s, err := mstypes.ReadRPCSID(&b, &p, e)
 				es[i] = mstypes.KerbSidAndAttributes{SID: s, Attributes: attr[i]}
 				if err != nil {
 					return ndr.Malformed{EText: fmt.Sprintf("Could not read ExtraSIDs: %v", err)}
@@ -192,14 +192,14 @@ func (k *KerbValidationInfo) Unmarshal(b []byte) (err error) {
 	}
 
 	if k.pResourceGroupDomainSID != 0 {
-		k.ResourceGroupDomainSID, err = mstypes.Read_RPC_SID(&b, &p, e)
+		k.ResourceGroupDomainSID, err = mstypes.ReadRPCSID(&b, &p, e)
 		if err != nil {
 			return err
 		}
 	}
 
 	if k.ResourceGroupCount > 0 {
-		ac := ndr.Read_UniDimensionalConformantArrayHeader(&b, &p, e)
+		ac := ndr.ReadUniDimensionalConformantArrayHeader(&b, &p, e)
 		if ac != int(k.ResourceGroupCount) {
 			return fmt.Errorf("Error with size of ResourceGroup list. Expected: %d, Actual: %d", k.ResourceGroupCount, ac)
 		}

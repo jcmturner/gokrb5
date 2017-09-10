@@ -7,7 +7,7 @@ import (
 	"github.com/jcmturner/gokrb5/ndr"
 )
 
-// RPC_SID implements https://msdn.microsoft.com/en-us/library/cc230364.aspx
+// RPCSID implements https://msdn.microsoft.com/en-us/library/cc230364.aspx
 type RPCSID struct {
 	Revision            uint8                     // An 8-bit unsigned integer that specifies the revision level of the SID. This value MUST be set to 0x01.
 	SubAuthorityCount   uint8                     // An 8-bit unsigned integer that specifies the number of elements in the SubAuthority array. The maximum number of elements allowed is 15.
@@ -15,26 +15,26 @@ type RPCSID struct {
 	SubAuthority        []uint32                  // A variable length array of unsigned 32-bit integers that uniquely identifies a principal relative to the IdentifierAuthority. Its length is determined by SubAuthorityCount.
 }
 
-// RPC_SIDIdentifierAuthority implements https://msdn.microsoft.com/en-us/library/cc230372.aspx
+// RPCSIDIdentifierAuthority implements https://msdn.microsoft.com/en-us/library/cc230372.aspx
 type RPCSIDIdentifierAuthority struct {
 	Value []byte // 6 bytes
 }
 
-// Read_RPC_SID reads a RPC_SID from the bytes slice.
-func Read_RPC_SID(b *[]byte, p *int, e *binary.ByteOrder) (RPCSID, error) {
-	size := int(ndr.Read_uint32(b, p, e)) // This is part of the NDR encoding rather than the data type.
-	r := ndr.Read_uint8(b, p)
+// ReadRPCSID reads a RPC_SID from the bytes slice.
+func ReadRPCSID(b *[]byte, p *int, e *binary.ByteOrder) (RPCSID, error) {
+	size := int(ndr.ReadUint32(b, p, e)) // This is part of the NDR encoding rather than the data type.
+	r := ndr.ReadUint8(b, p)
 	if r != uint8(1) {
 		return RPCSID{}, ndr.Malformed{EText: fmt.Sprintf("SID revision value read as %d when it must be 1", r)}
 	}
-	c := ndr.Read_uint8(b, p)
+	c := ndr.ReadUint8(b, p)
 	a := ReadRPCSIDIdentifierAuthority(b, p, e)
 	s := make([]uint32, c, c)
 	if size != len(s) {
 		return RPCSID{}, ndr.Malformed{EText: fmt.Sprintf("Number of elements (%d) within SID in the byte stream does not equal the SubAuthorityCount (%d)", size, c)}
 	}
 	for i := 0; i < len(s); i++ {
-		s[i] = ndr.Read_uint32(b, p, e)
+		s[i] = ndr.ReadUint32(b, p, e)
 	}
 	return RPCSID{
 		Revision:            r,
@@ -44,10 +44,10 @@ func Read_RPC_SID(b *[]byte, p *int, e *binary.ByteOrder) (RPCSID, error) {
 	}, nil
 }
 
-// Read_RPC_SIDIdentifierAuthority reads a RPC_SIDIdentifierAuthority from the bytes slice.
+// ReadRPCSIDIdentifierAuthority reads a RPC_SIDIdentifierAuthority from the bytes slice.
 func ReadRPCSIDIdentifierAuthority(b *[]byte, p *int, e *binary.ByteOrder) RPCSIDIdentifierAuthority {
 	return RPCSIDIdentifierAuthority{
-		Value: ndr.Read_bytes(b, p, 6, e),
+		Value: ndr.ReadBytes(b, p, 6, e),
 	}
 }
 

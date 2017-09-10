@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func unmarshalAuthenticator_test(t *testing.T, v string) Authenticator {
+func unmarshalAuthenticatorTest(t *testing.T, v string) Authenticator {
 	var a Authenticator
 	//t.Logf("Starting unmarshal tests of %s", v)
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -23,7 +23,7 @@ func unmarshalAuthenticator_test(t *testing.T, v string) Authenticator {
 	return a
 }
 func TestUnmarshalAuthenticator(t *testing.T) {
-	a := unmarshalAuthenticator_test(t, "encode_krb5_authenticator")
+	a := unmarshalAuthenticatorTest(t, "encode_krb5_authenticator")
 	//Parse the test time value into a time.Time type
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
 
@@ -46,7 +46,7 @@ func TestUnmarshalAuthenticator(t *testing.T) {
 }
 
 func TestUnmarshalAuthenticator_optionalsempty(t *testing.T) {
-	a := unmarshalAuthenticator_test(t, "encode_krb5_authenticator(optionalsempty)")
+	a := unmarshalAuthenticatorTest(t, "encode_krb5_authenticator(optionalsempty)")
 	//Parse the test time value into a time.Time type
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
 
@@ -60,7 +60,7 @@ func TestUnmarshalAuthenticator_optionalsempty(t *testing.T) {
 }
 
 func TestUnmarshalAuthenticator_optionalsNULL(t *testing.T) {
-	a := unmarshalAuthenticator_test(t, "encode_krb5_authenticator(optionalsNULL)")
+	a := unmarshalAuthenticatorTest(t, "encode_krb5_authenticator(optionalsNULL)")
 	//Parse the test time value into a time.Time type
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
 

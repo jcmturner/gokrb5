@@ -37,8 +37,8 @@ func (pac *PACType) Unmarshal(b []byte) error {
 	zb := make([]byte, len(b), len(b))
 	copy(zb, b)
 	pac.ZeroSigData = zb
-	pac.CBuffers = ndr.Read_uint32(&b, &p, &e)
-	pac.Version = ndr.Read_uint32(&b, &p, &e)
+	pac.CBuffers = ndr.ReadUint32(&b, &p, &e)
+	pac.Version = ndr.ReadUint32(&b, &p, &e)
 	buf := make([]InfoBuffer, pac.CBuffers, pac.CBuffers)
 	for i := range buf {
 		buf[i] = ReadPACInfoBuffer(&b, &p, &e)

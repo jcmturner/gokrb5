@@ -26,12 +26,12 @@ const (
 // Read_ClaimsSetMetadata reads a ClaimsSetMetadata from the bytes slice.
 func ReadClaimsSetMetadata(b *[]byte, p *int, e *binary.ByteOrder) ClaimsSetMetadata {
 	var c ClaimsSetMetadata
-	c.ULClaimsSetSize = ndr.Read_uint32(b, p, e)
-	c.ClaimsSet = ndr.Read_bytes(b, p, int(c.ULClaimsSetSize), e)
-	c.USCompressionFormat = ndr.Read_uint32(b, p, e)
-	c.ULUncompressedClaimsSetSize = ndr.Read_uint32(b, p, e)
-	c.USReservedType = ndr.Read_uint16(b, p, e)
-	c.ULReservedFieldSize = ndr.Read_uint32(b, p, e)
-	c.ReservedField = ndr.Read_bytes(b, p, int(c.ULReservedFieldSize), e)
+	c.ULClaimsSetSize = ndr.ReadUint32(b, p, e)
+	c.ClaimsSet = ndr.ReadBytes(b, p, int(c.ULClaimsSetSize), e)
+	c.USCompressionFormat = ndr.ReadUint32(b, p, e)
+	c.ULUncompressedClaimsSetSize = ndr.ReadUint32(b, p, e)
+	c.USReservedType = ndr.ReadUint16(b, p, e)
+	c.ULReservedFieldSize = ndr.ReadUint32(b, p, e)
+	c.ReservedField = ndr.ReadBytes(b, p, int(c.ULReservedFieldSize), e)
 	return c
 }

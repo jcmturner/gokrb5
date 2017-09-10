@@ -209,13 +209,13 @@ func (t *Ticket) DecryptEncPart(keytab keytab.Keytab, sa string) error {
 func (t *Ticket) GetPACType(keytab keytab.Keytab, sa string) (bool, pac.PACType, error) {
 	var isPAC bool
 	for _, ad := range t.DecryptedEncPart.AuthorizationData {
-		if ad.ADType == adtype.AD_IF_RELEVANT {
+		if ad.ADType == adtype.ADIfRelevant {
 			var ad2 types.AuthorizationData
 			err := ad2.Unmarshal(ad.ADData)
 			if err != nil {
 				continue
 			}
-			if ad2[0].ADType == adtype.AD_WIN2K_PAC {
+			if ad2[0].ADType == adtype.ADWin2KPAC {
 				isPAC = true
 				var pac pac.PACType
 				err = pac.Unmarshal(ad2[0].ADData)

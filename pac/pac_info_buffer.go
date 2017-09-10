@@ -25,11 +25,11 @@ type InfoBuffer struct {
 	Offset       uint64 // A 64-bit unsigned integer in little-endian format that contains the offset to the beginning of the buffer, in bytes, from the beginning of the PACTYPE structure. The data offset MUST be a multiple of eight. The following sections specify the format of each type of element.
 }
 
-// Read_PACInfoBuffer reads a InfoBuffer from the byte slice.
+// ReadPACInfoBuffer reads a InfoBuffer from the byte slice.
 func ReadPACInfoBuffer(b *[]byte, p *int, e *binary.ByteOrder) InfoBuffer {
-	u := ndr.Read_uint32(b, p, e)
-	s := ndr.Read_uint32(b, p, e)
-	o := ndr.Read_uint64(b, p, e)
+	u := ndr.ReadUint32(b, p, e)
+	s := ndr.ReadUint32(b, p, e)
+	o := ndr.ReadUint64(b, p, e)
 	return InfoBuffer{
 		ULType:       u,
 		CBBufferSize: s,

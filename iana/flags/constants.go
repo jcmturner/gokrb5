@@ -1,6 +1,7 @@
 // Package flags provides Kerberos 5 flag assigned numbers.
 package flags
 
+// Flag values for KRB5 messages and tickets.
 const (
 	Reserved               = 0
 	Forwardable            = 1

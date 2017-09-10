@@ -35,15 +35,15 @@ address
 */
 
 const (
-	AddrType_IPv4            = 2
-	AddrType_Directional     = 3
-	AddrType_ChaosNet        = 5
-	AddrType_XNS             = 6
-	AddrType_ISO             = 7
-	AddrType_DECNET_Phase_IV = 12
-	AddrType_AppleTalk_DDP   = 16
-	AddrType_NetBios         = 20
-	AddrType_IPv6            = 24
+	addrTypeIPv4          = 2
+	addrTypeDirectional   = 3
+	addrTypeChaosNet      = 5
+	addrTypeXNS           = 6
+	addrTypeISO           = 7
+	addrTypeDECNETPhaseIV = 12
+	addrTypeAppleTalkDDP  = 16
+	addrTypeNetBios       = 20
+	addrTypeIPv6          = 24
 )
 
 // HostAddresses implements RFC 4120 type: https://tools.ietf.org/html/rfc4120#section-5.2.5
@@ -69,9 +69,9 @@ func GetHostAddress(s string) (HostAddress, error) {
 	}
 	var ht int
 	if ip.To4() != nil {
-		ht = AddrType_IPv4
+		ht = addrTypeIPv4
 	} else if ip.To16() != nil {
-		ht = AddrType_IPv6
+		ht = addrTypeIPv6
 	} else {
 		return h, fmt.Errorf("Could not determine client's address types: %v", err)
 	}

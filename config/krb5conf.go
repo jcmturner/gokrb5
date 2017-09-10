@@ -310,10 +310,10 @@ type Realm struct {
 // Parse the lines of a [realms] entry into the Realm struct.
 func (r *Realm) parseLines(name string, lines []string) error {
 	r.Realm = name
-	var admin_server_final bool
-	var kdc_final bool
-	var kpasswd_server_final bool
-	var master_kdc_final bool
+	var adminServerFinal bool
+	var KDCFinal bool
+	var kpasswdServerFinal bool
+	var masterKDCFinal bool
 	for _, line := range lines {
 		if strings.TrimSpace(line) == "" {
 			continue
@@ -327,7 +327,7 @@ func (r *Realm) parseLines(name string, lines []string) error {
 		v := strings.Replace(p[1], " ", "", -1)
 		switch key {
 		case "admin_server":
-			appendUntilFinal(&r.AdminServer, v, &admin_server_final)
+			appendUntilFinal(&r.AdminServer, v, &adminServerFinal)
 		case "default_domain":
 			r.DefaultDomain = v
 		case "kdc":
@@ -339,11 +339,11 @@ func (r *Realm) parseLines(name string, lines []string) error {
 					v = strings.TrimSpace(v) + ":88"
 				}
 			}
-			appendUntilFinal(&r.KDC, v, &kdc_final)
+			appendUntilFinal(&r.KDC, v, &KDCFinal)
 		case "kpasswd_server":
-			appendUntilFinal(&r.KPasswdServer, v, &kpasswd_server_final)
+			appendUntilFinal(&r.KPasswdServer, v, &kpasswdServerFinal)
 		case "master_kdc":
-			appendUntilFinal(&r.MasterKDC, v, &master_kdc_final)
+			appendUntilFinal(&r.MasterKDC, v, &masterKDCFinal)
 		default:
 			//Ignore the line
 			continue

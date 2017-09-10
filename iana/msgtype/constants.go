@@ -1,8 +1,8 @@
 // Package msgtype provides Kerberos 5 message type assigned numbers.
 package msgtype
 
+// KRB message type IDs.
 const (
-	// KRB message type IDs.
 	KRB_AS_REQ     = 10 //Request for initial authentication
 	KRB_AS_REP     = 11 //Response to KRB_AS_REQ request
 	KRB_TGS_REQ    = 12 //Request for authentication based on TGT

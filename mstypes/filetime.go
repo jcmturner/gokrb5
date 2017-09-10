@@ -54,9 +54,9 @@ func GetFileTime(t time.Time) FileTime {
 }
 
 // Read_FileTime reads a FileTime from the bytes slice.
-func Read_FileTime(b *[]byte, p *int, e *binary.ByteOrder) FileTime {
-	l := ndr.Read_uint32(b, p, e)
-	h := ndr.Read_uint32(b, p, e)
+func ReadFileTime(b *[]byte, p *int, e *binary.ByteOrder) FileTime {
+	l := ndr.ReadUint32(b, p, e)
+	h := ndr.ReadUint32(b, p, e)
 	return FileTime{
 		LowDateTime:  l,
 		HighDateTime: h,

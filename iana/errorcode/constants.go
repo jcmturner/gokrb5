@@ -3,6 +3,7 @@ package errorcode
 
 import "fmt"
 
+// Kerberos error codes.
 const (
 	KDC_ERR_NONE                          = 0  //No error
 	KDC_ERR_NAME_EXP                      = 1  //Client's entry in database has expired
@@ -74,6 +75,7 @@ const (
 	KDC_ERR_KDC_NAME_MISMATCH             = 76 //Reserved for PKINIT
 )
 
+// Lookup an error code description.
 func Lookup(i int) string {
 	if s, ok := errorcodeLookup[i]; ok {
 		return fmt.Sprintf("(%d) %s", i, s)

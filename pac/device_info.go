@@ -30,13 +30,13 @@ func (k *DeviceInfo) Unmarshal(b []byte) error {
 	//The next 4 bytes are an RPC unique pointer referent. We just skip these
 	p += 4
 
-	k.UserID = ndr.Read_uint32(&b, &p, e)
-	k.PrimaryGroupID = ndr.Read_uint32(&b, &p, e)
-	k.AccountDomainID, err = mstypes.Read_RPC_SID(&b, &p, e)
+	k.UserID = ndr.ReadUint32(&b, &p, e)
+	k.PrimaryGroupID = ndr.ReadUint32(&b, &p, e)
+	k.AccountDomainID, err = mstypes.ReadRPCSID(&b, &p, e)
 	if err != nil {
 		return err
 	}
-	k.AccountGroupCount = ndr.Read_uint32(&b, &p, e)
+	k.AccountGroupCount = ndr.ReadUint32(&b, &p, e)
 	if k.AccountGroupCount > 0 {
 		ag := make([]mstypes.GroupMembership, k.AccountGroupCount, k.AccountGroupCount)
 		for i := range ag {
@@ -45,9 +45,9 @@ func (k *DeviceInfo) Unmarshal(b []byte) error {
 		k.AccountGroupIDs = ag
 	}
 
-	k.SIDCount = ndr.Read_uint32(&b, &p, e)
+	k.SIDCount = ndr.ReadUint32(&b, &p, e)
 	if k.SIDCount > 0 {
-		ac := ndr.Read_UniDimensionalConformantArrayHeader(&b, &p, e)
+		ac := ndr.ReadUniDimensionalConformantArrayHeader(&b, &p, e)
 		if ac != int(k.SIDCount) {
 			return fmt.Errorf("Error with size of ExtraSIDs list. Expected: %d, Actual: %d", k.SIDCount, ac)
 		}
@@ -55,12 +55,12 @@ func (k *DeviceInfo) Unmarshal(b []byte) error {
 		attr := make([]uint32, k.SIDCount, k.SIDCount)
 		ptr := make([]uint32, k.SIDCount, k.SIDCount)
 		for i := range attr {
-			ptr[i] = ndr.Read_uint32(&b, &p, e)
-			attr[i] = ndr.Read_uint32(&b, &p, e)
+			ptr[i] = ndr.ReadUint32(&b, &p, e)
+			attr[i] = ndr.ReadUint32(&b, &p, e)
 		}
 		for i := range es {
 			if ptr[i] != 0 {
-				s, err := mstypes.Read_RPC_SID(&b, &p, e)
+				s, err := mstypes.ReadRPCSID(&b, &p, e)
 				es[i] = mstypes.KerbSidAndAttributes{SID: s, Attributes: attr[i]}
 				if err != nil {
 					return ndr.Malformed{EText: fmt.Sprintf("Could not read ExtraSIDs: %v", err)}
@@ -70,7 +70,7 @@ func (k *DeviceInfo) Unmarshal(b []byte) error {
 		k.ExtraSIDs = es
 	}
 
-	k.DomainGroupCount = ndr.Read_uint32(&b, &p, e)
+	k.DomainGroupCount = ndr.ReadUint32(&b, &p, e)
 	if k.DomainGroupCount > 0 {
 		dg := make([]mstypes.DomainGroupMembership, k.DomainGroupCount, k.DomainGroupCount)
 		for i := range dg {

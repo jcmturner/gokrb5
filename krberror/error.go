@@ -6,9 +6,9 @@ import (
 	"strings"
 )
 
+// Error type descriptions.
 const (
-	separator = " < "
-	// Error type descriptions.
+	separator       = " < "
 	EncodingError   = "Encoding_Error"
 	NetworkingError = "Networking_Error"
 	DecryptingError = "Decrypting_Error"

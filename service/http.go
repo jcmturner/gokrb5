@@ -14,12 +14,14 @@ import (
 type ctxKey int
 
 const (
-	// SPNEGONegTokenRespKRBAcceptCompleted - The response on successful authentication always has this header. Capturing as const so we don't have marshaling and encoding overhead.
-	SPNEGONegTokenRespKRBAcceptCompleted = "Negotiate oRQwEqADCgEAoQsGCSqGSIb3EgECAg=="
-	// SPNEGONegTokenRespReject - The response on a failed authentication always has this rejection header. Capturing as const so we don't have marshaling and encoding overhead.
-	SPNEGONegTokenRespReject        = "Negotiate oQcwBaADCgEC"
-	CTXKeyAuthenticated      ctxKey = 0
-	CTXKeyCredentials        ctxKey = 1
+	// spnegoNegTokenRespKRBAcceptCompleted - The response on successful authentication always has this header. Capturing as const so we don't have marshaling and encoding overhead.
+	spnegoNegTokenRespKRBAcceptCompleted = "Negotiate oRQwEqADCgEAoQsGCSqGSIb3EgECAg=="
+	// spnegoNegTokenRespReject - The response on a failed authentication always has this rejection header. Capturing as const so we don't have marshaling and encoding overhead.
+	spnegoNegTokenRespReject = "Negotiate oQcwBaADCgEC"
+	// CTXKeyAuthenticated is the request context key holding a boolean indicating if the request has been authenticated.
+	CTXKeyAuthenticated ctxKey = 0
+	// CTXKeyCredentials is the request context key holding the credentials jcmturner/goidentity/Identity object.
+	CTXKeyCredentials ctxKey = 1
 )
 
 // SPNEGOKRB5Authenticate is a Kerberos SPNEGO authentication HTTP handler wrapper.
@@ -89,11 +91,11 @@ func rejectSPNEGO(w http.ResponseWriter, l *log.Logger, logMsg string) {
 }
 
 func SPNEGOResponseReject(w http.ResponseWriter) {
-	w.Header().Set("WWW-Authenticate", SPNEGONegTokenRespReject)
+	w.Header().Set("WWW-Authenticate", spnegoNegTokenRespReject)
 	w.WriteHeader(http.StatusUnauthorized)
 	w.Write([]byte("Unauthorised.\n"))
 }
 
 func SPNEGOResponseAcceptCompleted(w http.ResponseWriter) {
-	w.Header().Set("WWW-Authenticate", SPNEGONegTokenRespKRBAcceptCompleted)
+	w.Header().Set("WWW-Authenticate", spnegoNegTokenRespKRBAcceptCompleted)
 }

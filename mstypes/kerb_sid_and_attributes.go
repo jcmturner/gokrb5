@@ -22,11 +22,11 @@ type KerbSidAndAttributes struct {
 
 // ReadKerbSidAndAttributes reads a KerbSidAndAttribute from the bytes slice.
 func ReadKerbSidAndAttributes(b *[]byte, p *int, e *binary.ByteOrder) (KerbSidAndAttributes, error) {
-	s, err := Read_RPC_SID(b, p, e)
+	s, err := ReadRPCSID(b, p, e)
 	if err != nil {
 		return KerbSidAndAttributes{}, err
 	}
-	a := ndr.Read_uint32(b, p, e)
+	a := ndr.ReadUint32(b, p, e)
 	return KerbSidAndAttributes{
 		SID:        s,
 		Attributes: a,

@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func TestPAC_Type_Validate(t *testing.T) {
+func TestPACTypeValidate(t *testing.T) {
 	v := "PAC_AD_WIN2K_PAC"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
 	if err != nil {
@@ -32,26 +32,26 @@ func TestPAC_Type_Validate(t *testing.T) {
 		t.Fatalf("Processing reference pac error: %v", err)
 	}
 
-	pac_invalid_server_sig := pac
+	pacInvalidServerSig := pac
 	// Check the signature to force failure
-	pac_invalid_server_sig.ServerChecksum.Signature[0] ^= 0xFF
-	pac_invalid_nil_kerb_validation_info := pac
-	pac_invalid_nil_kerb_validation_info.KerbValidationInfo = nil
-	pac_invalid_nil_server_sig := pac
-	pac_invalid_nil_server_sig.ServerChecksum = nil
-	pac_invalid_nil_kdc_sig := pac
-	pac_invalid_nil_kdc_sig.KDCChecksum = nil
-	pac_invalid_client_info := pac
-	pac_invalid_client_info.ClientInfo = nil
+	pacInvalidServerSig.ServerChecksum.Signature[0] ^= 0xFF
+	pacInvalidNilKerbValidationInfo := pac
+	pacInvalidNilKerbValidationInfo.KerbValidationInfo = nil
+	pacInvalidNilServerSig := pac
+	pacInvalidNilServerSig.ServerChecksum = nil
+	pacInvalidNilKdcSig := pac
+	pacInvalidNilKdcSig.KDCChecksum = nil
+	pacInvalid_clientInfo := pac
+	pacInvalid_clientInfo.ClientInfo = nil
 
 	var pacs = []struct {
 		pac PACType
 	}{
-		{pac_invalid_server_sig},
-		{pac_invalid_nil_kerb_validation_info},
-		{pac_invalid_nil_server_sig},
-		{pac_invalid_nil_kdc_sig},
-		{pac_invalid_client_info},
+		{pacInvalidServerSig},
+		{pacInvalidNilKerbValidationInfo},
+		{pacInvalidNilServerSig},
+		{pacInvalidNilKdcSig},
+		{pacInvalid_clientInfo},
 	}
 	for i, s := range pacs {
 		v, _ := s.pac.validate(key)

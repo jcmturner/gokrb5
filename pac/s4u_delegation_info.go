@@ -8,9 +8,9 @@ import (
 
 // S4UDelegationInfo implements https://msdn.microsoft.com/en-us/library/cc237944.aspx
 type S4UDelegationInfo struct {
-	S4U2proxyTarget      mstypes.RPC_UnicodeString // The name of the principal to whom the application can forward the ticket.
+	S4U2proxyTarget      mstypes.RPCUnicodeString // The name of the principal to whom the application can forward the ticket.
 	TransitedListSize    uint32
-	S4UTransitedServices []mstypes.RPC_UnicodeString // List of all services that have been delegated through by this client and subsequent services or servers.. Size is value of TransitedListSize
+	S4UTransitedServices []mstypes.RPCUnicodeString // List of all services that have been delegated through by this client and subsequent services or servers.. Size is value of TransitedListSize
 }
 
 // Unmarshal bytes into the S4UDelegationInfo struct
@@ -24,15 +24,15 @@ func (k *S4UDelegationInfo) Unmarshal(b []byte) error {
 	//The next 4 bytes are an RPC unique pointer referent. We just skip these
 	p += 4
 
-	k.S4U2proxyTarget, err = mstypes.Read_RPC_UnicodeString(&b, &p, e)
+	k.S4U2proxyTarget, err = mstypes.ReadRPCUnicodeString(&b, &p, e)
 	if err != nil {
 		return err
 	}
-	k.TransitedListSize = ndr.Read_uint32(&b, &p, e)
+	k.TransitedListSize = ndr.ReadUint32(&b, &p, e)
 	if k.TransitedListSize > 0 {
-		ts := make([]mstypes.RPC_UnicodeString, k.TransitedListSize, k.TransitedListSize)
+		ts := make([]mstypes.RPCUnicodeString, k.TransitedListSize, k.TransitedListSize)
 		for i := range ts {
-			ts[i], err = mstypes.Read_RPC_UnicodeString(&b, &p, e)
+			ts[i], err = mstypes.ReadRPCUnicodeString(&b, &p, e)
 			if err != nil {
 				return err
 			}

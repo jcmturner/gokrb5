@@ -153,8 +153,8 @@ func parsePrincipal(b []byte, p *int, c *CCache, e *binary.ByteOrder) (princ pri
 		//In version 1 the number of components includes the realm. Minus 1 to make consistent with version 2
 		nc--
 	}
-	len_realm := readInt32(b, p, e)
-	princ.Realm = string(readBytes(b, p, int(len_realm), e))
+	lenRealm := readInt32(b, p, e)
+	princ.Realm = string(readBytes(b, p, int(lenRealm), e))
 	for i := 0; i < int(nc); i++ {
 		l := readInt32(b, p, e)
 		princ.PrincipalName.NameString = append(princ.PrincipalName.NameString, string(readBytes(b, p, int(l), e)))
