@@ -34,6 +34,7 @@ const (
 	//UNASSIGNED : 66-2147483647
 )
 
+// ETypesByName is a map of EncType names to their assigned EncType number.
 var ETypesByName = map[string]int{
 	"des-cbc-crc":                  DES_CBC_CRC,
 	"des-cbc-md4":                  DES_CBC_MD4,
