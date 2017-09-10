@@ -8,6 +8,7 @@ import (
 	"github.com/jcmturner/gokrb5/ndr"
 )
 
+// KERB_VALIDATION_INFO flags.
 const (
 	USERFLAG_GUEST                                    = 31 // Authentication was done via the GUEST account; no password was used.
 	USERFLAG_NO_ENCRYPTION_AVAILABLE                  = 30 // No encryption is available.

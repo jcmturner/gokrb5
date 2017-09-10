@@ -16,6 +16,7 @@ type ClaimsSetMetadata struct {
 	ReservedField               []byte
 }
 
+// Compression format assigned numbers.
 const (
 	CompressionFormatNone       = 0
 	CompressionFormatLZNT1      = 2
@@ -23,7 +24,7 @@ const (
 	CompressionFormatXPressHuff = 4
 )
 
-// Read_ClaimsSetMetadata reads a ClaimsSetMetadata from the bytes slice.
+// ReadClaimsSetMetadata reads a ClaimsSetMetadata from the bytes slice.
 func ReadClaimsSetMetadata(b *[]byte, p *int, e *binary.ByteOrder) ClaimsSetMetadata {
 	var c ClaimsSetMetadata
 	c.ULClaimsSetSize = ndr.ReadUint32(b, p, e)

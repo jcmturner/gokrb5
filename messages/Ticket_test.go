@@ -147,7 +147,7 @@ func TestAuthorizationData_GetPACType_GOKRB5TestData(t *testing.T) {
 	assert.Equal(t, uint32(0), pac.Version, "PAC version not as expected")
 	assert.NotNil(t, pac.KerbValidationInfo, "PAC Kerb Validation info is nil")
 	assert.NotNil(t, pac.ClientInfo, "PAC Client Info info is nil")
-	assert.NotNil(t, pac.UPN_DNSInfo, "PAC UPN DNS Info info is nil")
+	assert.NotNil(t, pac.UPNDNSInfo, "PAC UPN DNS Info info is nil")
 	assert.NotNil(t, pac.KDCChecksum, "PAC KDC Checksum info is nil")
 	assert.NotNil(t, pac.ServerChecksum, "PAC Server checksum info is nil")
 }

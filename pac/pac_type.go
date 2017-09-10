@@ -21,8 +21,8 @@ type PACType struct {
 	ServerChecksum     *SignatureData
 	KDCChecksum        *SignatureData
 	ClientInfo         *ClientInfo
-	S4U_DelegationInfo *S4UDelegationInfo
-	UPN_DNSInfo        *UPNDNSInfo
+	S4UDelegationInfo  *S4UDelegationInfo
+	UPNDNSInfo         *UPNDNSInfo
 	ClientClaimsInfo   *ClientClaimsInfo
 	DeviceInfo         *DeviceInfo
 	DeviceClaimsInfo   *DeviceClaimsInfo
@@ -112,7 +112,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			}
 			pac.ClientInfo = &k
 		case ulTypeS4UDelegationInfo:
-			if pac.S4U_DelegationInfo != nil {
+			if pac.S4UDelegationInfo != nil {
 				//Must ignore subsequent buffers of this type
 				continue
 			}
@@ -121,9 +121,9 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			if err != nil {
 				return fmt.Errorf("Error processing S4U_DelegationInfo: %v", err)
 			}
-			pac.S4U_DelegationInfo = &k
+			pac.S4UDelegationInfo = &k
 		case ulTypeUPNDNSInfo:
-			if pac.UPN_DNSInfo != nil {
+			if pac.UPNDNSInfo != nil {
 				//Must ignore subsequent buffers of this type
 				continue
 			}
@@ -132,7 +132,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			if err != nil {
 				return fmt.Errorf("Error processing UPN_DNSInfo: %v", err)
 			}
-			pac.UPN_DNSInfo = &k
+			pac.UPNDNSInfo = &k
 		case ulTypePACClientClaimsInfo:
 			if pac.ClientClaimsInfo != nil {
 				//Must ignore subsequent buffers of this type

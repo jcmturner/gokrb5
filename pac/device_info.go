@@ -74,7 +74,7 @@ func (k *DeviceInfo) Unmarshal(b []byte) error {
 	if k.DomainGroupCount > 0 {
 		dg := make([]mstypes.DomainGroupMembership, k.DomainGroupCount, k.DomainGroupCount)
 		for i := range dg {
-			dg[i], _ = mstypes.Read_DomainGroupMembership(&b, &p, e)
+			dg[i], _ = mstypes.ReadDomainGroupMembership(&b, &p, e)
 		}
 		k.DomainGroup = dg
 	}
