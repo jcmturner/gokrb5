@@ -153,9 +153,9 @@ If Microsoft Active Directory is used as the KDC then additional ADCredentials a
 Access the credentials within your application:
 ```go
 ctx := r.Context()
-if validuser, ok := ctx.Value(service.CTXKey_Authenticated).(bool); ok && validuser {
-        if creds, ok := ctx.Value(service.CTXKey_Credentials).(credentials.Credentials); ok {
-                if ADCreds, ok := creds.Attributes[credentials.AttributeKey_ADCredentials].(credentials.ADCredentials); ok {
+if validuser, ok := ctx.Value(service.CTXKeyAuthenticated).(bool); ok && validuser {
+        if creds, ok := ctx.Value(service.CTXKeyCredentials).(credentials.Credentials); ok {
+                if ADCreds, ok := creds.Attributes[credentials.AttributeKeyADCredentials].(credentials.ADCredentials); ok {
                         // Now access the fields of the ADCredentials struct. For example:
                         groupSids := ADCreds.GroupMembershipSIDs
                 }
