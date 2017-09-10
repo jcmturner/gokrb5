@@ -124,6 +124,8 @@ func ReadNTLMSupplementalCred(b *[]byte, p *int, e *binary.ByteOrder) NTLMSupple
 }
 
 const (
-	NTLM_SUP_CRED_LMOWF = 31 // Indicates that the LM OWF member is present and valid.
-	NTLM_SUP_CRED_NTOWF = 30 // Indicates that the NT OWF member is present and valid.
+	// NTLMSupCredLMOWF indicates that the LM OWF member is present and valid.
+	NTLMSupCredLMOWF = 31
+	// NTLMSupCredNTOWF indicates that the NT OWF member is present and valid.
+	NTLMSupCredNTOWF = 30
 )

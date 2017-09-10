@@ -41,8 +41,8 @@ func TestPACTypeValidate(t *testing.T) {
 	pacInvalidNilServerSig.ServerChecksum = nil
 	pacInvalidNilKdcSig := pac
 	pacInvalidNilKdcSig.KDCChecksum = nil
-	pacInvalid_clientInfo := pac
-	pacInvalid_clientInfo.ClientInfo = nil
+	pacInvalidClientInfo := pac
+	pacInvalidClientInfo.ClientInfo = nil
 
 	var pacs = []struct {
 		pac PACType
@@ -51,7 +51,7 @@ func TestPACTypeValidate(t *testing.T) {
 		{pacInvalidNilKerbValidationInfo},
 		{pacInvalidNilServerSig},
 		{pacInvalidNilKdcSig},
-		{pacInvalid_clientInfo},
+		{pacInvalidClientInfo},
 	}
 	for i, s := range pacs {
 		v, _ := s.pac.validate(key)

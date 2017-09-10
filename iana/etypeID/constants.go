@@ -1,6 +1,7 @@
 // Package etypeID provides Kerberos 5 encryption type assigned numbers.
 package etypeID
 
+// Kerberos encryption type assigned numbers.
 const (
 	//RESERVED : 0
 	DES_CBC_CRC                  = 1

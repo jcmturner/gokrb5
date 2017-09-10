@@ -14,6 +14,7 @@ import (
 	"github.com/jcmturner/gokrb5/types"
 )
 
+// GSSAPI MechToken IDs and flags.
 const (
 	TOK_ID_KRB_AP_REQ = "0100"
 	TOK_ID_KRB_AP_REP = "0200"

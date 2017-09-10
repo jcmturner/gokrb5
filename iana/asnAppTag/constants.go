@@ -1,6 +1,7 @@
 // Package asnAppTag provides ASN1 application tag numbers.
 package asnAppTag
 
+// ASN1 application tag numbers.
 const (
 	Ticket         = 1
 	Authenticator  = 2

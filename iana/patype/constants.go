@@ -1,6 +1,7 @@
 // Package patype provides Kerberos 5 pre-authentication type assigned numbers.
 package patype
 
+// Kerberos pre-authentication type assigned numbers.
 const (
 	PA_TGS_REQ       = 1
 	PA_ENC_TIMESTAMP = 2

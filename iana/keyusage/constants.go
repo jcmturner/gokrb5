@@ -1,8 +1,8 @@
 // Package keyusage provides Kerberos 5 key usage assigned numbers.
 package keyusage
 
+// Key usage numbers.
 const (
-	// Key usage numbers.
 	AS_REQ_PA_ENC_TIMESTAMP                        = 1
 	KDC_REP_TICKET                                 = 2
 	AS_REP_ENCPART                                 = 3

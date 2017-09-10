@@ -5,12 +5,14 @@ import (
 	"github.com/jcmturner/gokrb5/ndr"
 )
 
+// Attributes of a security group membership and can be combined by using the bitwise OR operation.
+// They are used by an access check mechanism to specify whether the membership is to be used in an access check decision.
 const (
-	SEGroupMandatory         = 31
-	SSEGroupEnabledByDefault = 30
-	SEGroupEnabled           = 29
-	SEGroupOwner             = 28
-	SEGroupResource          = 2
+	SEGroupMandatory        = 31
+	SEGroupEnabledByDefault = 30
+	SEGroupEnabled          = 29
+	SEGroupOwner            = 28
+	SEGroupResource         = 2
 	//All other bits MUST be set to zero and MUST be  ignored on receipt.
 )
 

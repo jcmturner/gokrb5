@@ -1,8 +1,8 @@
 // Package chksumtype provides Kerberos 5 checksum type assigned numbers.
 package chksumtype
 
+// Checksum type IDs.
 const (
-	// Checksum type IDs.
 	//RESERVED : 0
 	CRC32         = 1
 	RSA_MD4       = 2
