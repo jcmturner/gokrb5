@@ -283,5 +283,7 @@ func TestNewClientFromCCache(t *testing.T) {
 	}
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	cl.WithConfig(c)
-	assert.True(t, cl.IsConfigured(), "Client was not configured from CCache")
+	if ok, err := cl.IsConfigured(); !ok {
+		t.Fatalf("Client was not configured from CCache: %v", err)
+	}
 }

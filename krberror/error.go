@@ -15,6 +15,7 @@ const (
 	EncryptingError = "Encrypting_Error"
 	ChksumError     = "Checksum_Error"
 	KRBMsgError     = "KRBMessage_Handling_Error"
+	ConfigError     = "Configuration_Error"
 )
 
 // Krberror is an error type for gokrb5
