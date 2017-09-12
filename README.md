@@ -71,7 +71,7 @@ cl.WithConfig(cfg)
 ```
 Login:
 ```go
-err := cl.Login
+err := cl.Login()
 ```
 (Optional) Enable automatic refresh of Kerberos Ticket Granting Ticket (TGT):
 ```go
