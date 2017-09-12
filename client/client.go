@@ -13,7 +13,6 @@ import (
 	"github.com/jcmturner/gokrb5/keytab"
 	"github.com/jcmturner/gokrb5/messages"
 	"github.com/jcmturner/gokrb5/types"
-	"os"
 )
 
 // Client side configuration and state.
@@ -156,27 +155,26 @@ func (cl *Client) LoadConfig(cfgPath string) (*Client, error) {
 }
 
 // IsConfigured indicates if the client has the values required set.
-func (cl *Client) IsConfigured() bool {
+func (cl *Client) IsConfigured() (bool, error) {
+	// Client needs to have either a password, keytab or a session already (later when loading from CCache)
 	if !cl.Credentials.HasPassword() && !cl.Credentials.HasKeytab() && cl.session.AuthTime.IsZero() {
-		return false
+		return false, errors.New("client has neither a keytab nor a password set and no session")
 	}
 	if cl.Credentials.Username == "" {
-		return false
+		return false, errors.New("client does not have a username")
 	}
 	if cl.Config.LibDefaults.DefaultRealm == "" {
-		fmt.Fprintf(os.Stderr, "hello: %v\n", cl)
-
-		return false
+		return false, errors.New("client krb5 config does not have a default realm")
 	}
 	for _, r := range cl.Config.Realms {
 		if r.Realm == cl.Config.LibDefaults.DefaultRealm {
 			if len(r.KDC) > 0 {
-				return true
+				return true, nil
 			}
-			return false
+			return false, errors.New("client krb5 config does not have any defined KDCs for the default realm")
 		}
 	}
-	return false
+	return false, errors.New("client does not have KDCs configured for the default realm")
 }
 
 // Login the client with the KDC via an AS exchange.

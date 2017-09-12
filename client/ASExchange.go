@@ -1,7 +1,6 @@
 package client
 
 import (
-	"errors"
 	"github.com/jcmturner/gokrb5/crypto"
 	"github.com/jcmturner/gokrb5/iana/errorcode"
 	"github.com/jcmturner/gokrb5/iana/keyusage"
@@ -14,8 +13,8 @@ import (
 
 // ASExchange performs an AS exchange for the client to retrieve a TGT.
 func (cl *Client) ASExchange() error {
-	if !cl.IsConfigured() {
-		return errors.New("Client is not configured correctly")
+	if ok, err := cl.IsConfigured(); !ok {
+		return krberror.Errorf(err, krberror.ConfigError, "AS Exchange cannot be preformed")
 	}
 	ASReq, err := messages.NewASReq(cl.Config, cl.Credentials.CName)
 	if err != nil {
