@@ -106,6 +106,23 @@ func TestClient_SuccessfulLogin_ETYPE_AES256_CTS_HMAC_SHA384_192(t *testing.T) {
 	}
 }
 
+func TestClient_SuccessfulLogin_RC4HMAC(t *testing.T) {
+	b, err := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	kt, _ := keytab.Parse(b)
+	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	c.LibDefaults.DefaultTktEnctypes = []string{"rc4-hmac"}
+	c.LibDefaults.DefaultTktEnctypeIDs = []int{etypeID.RC4_HMAC}
+	c.LibDefaults.DefaultTGSEnctypes = []string{"rc4-hmac"}
+	c.LibDefaults.DefaultTGSEnctypeIDs = []int{etypeID.RC4_HMAC}
+	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
+	cl.WithConfig(c)
+
+	err = cl.Login()
+	if err != nil {
+		t.Fatalf("Error on login: %v\n", err)
+	}
+}
+
 func TestClient_SuccessfulLogin_AD(t *testing.T) {
 	b, err := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)

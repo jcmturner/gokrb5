@@ -24,6 +24,7 @@
 | aes256-cts-hmac-sha1-96 | 18 | 16 | 3962 |
 | aes128-cts-hmac-sha256-128 | 19 | 19 | 8009 |
 | aes256-cts-hmac-sha384-192 | 20 | 20 | 8009 |
+| rc4-hmac | 23 | -138 | 4757 |
 
 
 Currently the following is working/tested:
