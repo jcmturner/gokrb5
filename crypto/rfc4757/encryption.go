@@ -72,6 +72,7 @@ func DecryptMessage(key, data []byte, usage uint32, export bool, e etype.EType) 
 	return pt[e.GetConfounderByteSize():], nil
 }
 
+// VerifyIntegrity checks the integrity checksum of the data matches that calculated from the decrypted data.
 func VerifyIntegrity(key, pt, data []byte, e etype.EType) bool {
 	chksum := HMAC(key, pt)
 	if bytes.Equal(chksum, data[:e.GetHMACBitLength()/8]) {
