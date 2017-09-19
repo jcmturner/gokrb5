@@ -7,7 +7,7 @@ import (
 	"io"
 )
 
-func Checksum(key []byte, T uint32, data []byte) ([]byte, error) {
+func Checksum(key []byte, usage uint32, data []byte) ([]byte, error) {
 	// Create hashing key
 	s := append([]byte(`signaturekey`), byte(0x00)) //includes zero octet at end
 	mac := hmac.New(md5.New, key)
@@ -15,7 +15,7 @@ func Checksum(key []byte, T uint32, data []byte) ([]byte, error) {
 	Ksign := mac.Sum(nil)
 
 	// Format data
-	tb := MessageTypeBytes(T)
+	tb := MessageTypeBytes(usage)
 	p := append(tb, data...)
 	h := md5.New()
 	rb := bytes.NewReader(p)

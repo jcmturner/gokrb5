@@ -3,7 +3,6 @@ package crypto
 import (
 	"bytes"
 	"crypto/md5"
-	"github.com/jcmturner/gokrb5/crypto/common"
 	"github.com/jcmturner/gokrb5/crypto/rfc3961"
 	"github.com/jcmturner/gokrb5/crypto/rfc4757"
 	"github.com/jcmturner/gokrb5/iana/chksumtype"
@@ -121,7 +120,7 @@ func (e RC4HMAC) VerifyIntegrity(protocolKey, ct, pt []byte, usage uint32) bool 
 
 // GetChecksumHash returns a keyed checksum hash of the bytes provided.
 func (e RC4HMAC) GetChecksumHash(protocolKey, data []byte, usage uint32) ([]byte, error) {
-	return common.GetHash(data, protocolKey, common.GetUsageKc(usage), e)
+	return rfc4757.Checksum(protocolKey, usage, data)
 }
 
 // VerifyChecksum compares the checksum of the message bytes is the same as the checksum provided.
