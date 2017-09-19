@@ -555,6 +555,16 @@ func parseETypes(s []string, w bool) []int {
 // Parse a time duration string in the configuration to a golang time.Duration.
 func parseDuration(s string) (time.Duration, error) {
 	s = strings.Replace(s, " ", "", -1)
+	if strings.Contains(s, "d") {
+		s = strings.Replace(s, "d", "", -1)
+		// assume this is a round number for days...
+		days, err := strconv.ParseInt(s, 10, 32)
+		if err != nil {
+			return time.Duration(0), errors.New("Invalid time duration.")
+		}
+		var secs = int(days) * 86400
+		s = strconv.Itoa(secs)
+	}
 	d, err := time.ParseDuration(s)
 	if err == nil {
 		return d, nil
