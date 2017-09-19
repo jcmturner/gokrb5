@@ -1,4 +1,4 @@
-// Package rfc3962 provides encryption and checksum methods as specified in RFC 4757
+// Package rfc4757 provides encryption and checksum methods as specified in RFC 4757
 package rfc4757
 
 import (
