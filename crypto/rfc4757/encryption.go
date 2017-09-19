@@ -40,7 +40,7 @@ func EncryptMessage(key, data []byte, usage uint32, export bool, e etype.EType) 
 		return []byte{}, fmt.Errorf("Error generating confounder: %v", err)
 	}
 	k1 := key
-	k2 := HMAC(k1, MessageTypeBytes(usage))
+	k2 := HMAC(k1, UsageToMSMsgType(usage))
 	toenc := append(confounder, data...)
 	chksum := HMAC(k2, toenc)
 	k3 := HMAC(k2, chksum)

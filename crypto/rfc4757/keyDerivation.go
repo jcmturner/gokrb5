@@ -48,7 +48,7 @@ func deriveKeys(key, checksum []byte, usage uint32, export bool) (k1, k2, k3 []b
 	//k3 = HMAC(k1, checksum)
 	//return
 	k1 = key
-	k2 = HMAC(k1, MessageTypeBytes(usage))
+	k2 = HMAC(k1, UsageToMSMsgType(usage))
 	k3 = HMAC(k2, checksum)
 	return
 }
