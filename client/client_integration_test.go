@@ -136,26 +136,37 @@ func TestClient_SuccessfulLogin_AD(t *testing.T) {
 	}
 }
 
-func TestClient_TGSExchange_AD(t *testing.T) {
+func TestClient_TGSExchange_EncTypes(t *testing.T) {
 	b, err := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF_AD)
-	c.LibDefaults.DefaultTktEnctypes = []string{"rc4-hmac"}
-	c.LibDefaults.DefaultTktEnctypeIDs = []int{etypeID.RC4_HMAC}
-	c.LibDefaults.DefaultTGSEnctypes = []string{"rc4-hmac"}
-	c.LibDefaults.DefaultTGSEnctypeIDs = []int{etypeID.RC4_HMAC}
-	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
-	cl.WithConfig(c)
-
-	err = cl.Login()
-	if err != nil {
-		t.Fatalf("Error on login: %v\n", err)
+	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF_LATESTKDC)
+	var tests = []string{
+		"des3-cbc-sha1-kd",
+		"aes128-cts-hmac-sha1-96",
+		"aes256-cts-hmac-sha1-96",
+		"aes128-cts-hmac-sha256-128",
+		"aes256-cts-hmac-sha384-192",
+		"rc4-hmac",
 	}
-	_, _, err = cl.GetServiceTicket("HTTP/host.test.gokrb5")
-	if err != nil {
-		t.Fatalf("Error in TGS exchange: %v", err)
-	}
+	for _, test := range tests {
+		c.LibDefaults.DefaultTktEnctypes = []string{test}
+		c.LibDefaults.DefaultTktEnctypeIDs = []int{etypeID.ETypesByName[test]}
+		c.LibDefaults.DefaultTGSEnctypes = []string{test}
+		c.LibDefaults.DefaultTGSEnctypeIDs = []int{etypeID.ETypesByName[test]}
+		cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
+		cl.WithConfig(c)
 
+		err = cl.Login()
+		if err != nil {
+			t.Errorf("Error on login using enctype %s: %v\n", test, err)
+		}
+		tkt, key, err := cl.GetServiceTicket("HTTP/host.test.gokrb5")
+		if err != nil {
+			t.Errorf("Error in TGS exchange using enctype %s: %v", test, err)
+		}
+		assert.Equal(t, "TEST.GOKRB5", tkt.Realm, "Realm in ticket not as expected for %s test", test)
+		assert.Equal(t, etypeID.ETypesByName[test], key.KeyType, "Key is not for enctype %s", test)
+	}
 }
 
 func TestClient_FailedLogin(t *testing.T) {

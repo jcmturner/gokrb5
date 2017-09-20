@@ -16,7 +16,6 @@ import (
 func DES3EncryptData(key, data []byte, e etype.EType) ([]byte, []byte, error) {
 	if len(key) != e.GetKeyByteSize() {
 		return nil, nil, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeyByteSize(), len(key))
-
 	}
 	data, _ = common.ZeroPad(data, e.GetMessageBlockByteSize())
 
@@ -31,7 +30,7 @@ func DES3EncryptData(key, data []byte, e etype.EType) ([]byte, []byte, error) {
 	ct := make([]byte, len(data))
 	mode := cipher.NewCBCEncrypter(block, ivz)
 	mode.CryptBlocks(ct, data)
-	return ivz, ct, nil
+	return ct[len(ct)-e.GetMessageBlockByteSize():], ct, nil
 }
 
 // DES3EncryptMessage encrypts the message provided using DES3 and methods specific to the etype provided.
@@ -44,6 +43,7 @@ func DES3EncryptMessage(key, message []byte, usage uint32, e etype.EType) ([]byt
 		return []byte{}, []byte{}, fmt.Errorf("Could not generate random confounder: %v", err)
 	}
 	plainBytes := append(c, message...)
+	plainBytes, _ = common.ZeroPad(plainBytes, e.GetMessageBlockByteSize())
 
 	// Derive key for encryption from usage
 	var k []byte
