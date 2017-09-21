@@ -148,9 +148,10 @@ http.Handler("/", service.SPNEGOKRB5Authenticate(h, kt, serivceAccountName, l))
 The serviceAccountName needs to be defined when using Active Directory where the SPN is mapped to a user account.
 If this is not required it should be set to an empty string "".
 If authentication succeeds then the request's context will have the following values added so they can be accessed within the application's handler:
-* service.CTXKey_Authenticated - Boolean indicating if the user is authenticated. Use of this value should also handle that this value may not be set and should assume "false" in that case.
-* service.CTXKey_Credentials - The authenticated user's credentials.
-If Microsoft Active Directory is used as the KDC then additional ADCredentials are available in the credentials.Attributes map under the key credentials.AttributeKey_ADCredentials. For example the SIDs of the users group membership are available and can be used by your application for authorization.
+* service.CTXKeyAuthenticated - Boolean indicating if the user is authenticated. Use of this value should also handle that this value may not be set and should assume "false" in that case.
+* service.CTXKeyCredentials - The authenticated user's credentials.
+If Microsoft Active Directory is used as the KDC then additional ADCredentials are available in the credentials.Attributes map under the key credentials.AttributeKeyADCredentials. For example the SIDs of the users group membership are available and can be used by your application for authorization.
+
 Access the credentials within your application:
 ```go
 ctx := r.Context()
@@ -178,23 +179,16 @@ if ok, creds, err := serivce.ValidateAPREQ(mt.APReq, kt, r.RemoteAddr); ok {
 ---
 
 ## References
-* RFC 4120 The Kerberos Network Authentication Service (V5)
-[text](https://www.ietf.org/rfc/rfc4120.txt) [html](https://tools.ietf.org/html/rfc4120)
-* RFC 3961 Encryption and Checksum Specifications for Kerberos 5
-[text](https://www.ietf.org/rfc/rfc3961.txt) [html](https://tools.ietf.org/html/rfc3961)
-* RFC 3962 Advanced Encryption Standard (AES) Encryption for Kerberos 5
-[text](https://www.ietf.org/rfc/rfc3962.txt) [html](https://tools.ietf.org/html/rfc3962)
-* RFC 4121 The Kerberos Version 5 GSS-API Mechanism [text](https://www.ietf.org/rfc/rfc4121.txt) [html](https://tools.ietf.org/html/rfc4121)
-* RFC 4178 The Simple and Protected Generic Security Service Application Program Interface (GSS-API) Negotiation Mechanism
-[text](https://www.ietf.org/rfc/rfc4178.txt) [html](https://tools.ietf.org/html/rfc4178.html)
-* RFC 4559 SPNEGO-based Kerberos and NTLM HTTP Authentication in Microsoft Windows
-[text](https://www.ietf.org/rfc/rfc4559.txt) [html](https://tools.ietf.org/html/rfc4559.html)
-* RFC 6806 Kerberos Principal Name Canonicalization and Cross-Realm Referrals
-[text](https://www.ietf.org/rfc/rfc6806.txt) [html](https://tools.ietf.org/html/rfc6806.html)
-* RFC 6113 A Generalized Framework for Kerberos Pre-Authentication
-[text](https://www.ietf.org/rfc/rfc6113.txt) [html](https://tools.ietf.org/html/rfc6113.html)
-* RFC 8009 AES Encryption with HMAC-SHA2 for Kerberos 5
-[text](https://www.ietf.org/rfc/rfc8009.txt) [html](https://tools.ietf.org/html/rfc8009)
+* [RFC 4120 The Kerberos Network Authentication Service (V5)](https://tools.ietf.org/html/rfc4120)
+* [RFC 3961 Encryption and Checksum Specifications for Kerberos 5](https://tools.ietf.org/html/rfc3961)
+* [RFC 3962 Advanced Encryption Standard (AES) Encryption for Kerberos 5](https://tools.ietf.org/html/rfc3962)
+* [RFC 4121 The Kerberos Version 5 GSS-API Mechanism](https://tools.ietf.org/html/rfc4121)
+* [RFC 4178 The Simple and Protected Generic Security Service Application Program Interface (GSS-API) Negotiation Mechanism](https://tools.ietf.org/html/rfc4178.html)
+* [The RC4-HMAC Kerberos Encryption Types Used by Microsoft Windows](https://tools.ietf.org/html/rfc4757)
+* [RFC 4559 SPNEGO-based Kerberos and NTLM HTTP Authentication in Microsoft Windows](https://tools.ietf.org/html/rfc4559.html)
+* [RFC 6806 Kerberos Principal Name Canonicalization and Cross-Realm Referrals](https://tools.ietf.org/html/rfc6806.html)
+* [RFC 6113 A Generalized Framework for Kerberos Pre-Authentication](https://tools.ietf.org/html/rfc6113.html)
+* [RFC 8009 AES Encryption with HMAC-SHA2 for Kerberos 5](https://tools.ietf.org/html/rfc8009)
 * [IANA Assigned Kerberos Numbers](http://www.iana.org/assignments/kerberos-parameters/kerberos-parameters.xhtml)
 * [HTTP-Based Cross-Platform Authentication by Using the Negotiate Protocol - Part 1](https://msdn.microsoft.com/en-us/library/ms995329.aspx)
 * [HTTP-Based Cross-Platform Authentication by Using the Negotiate Protocol - Part 2](https://msdn.microsoft.com/en-us/library/ms995330.aspx)
