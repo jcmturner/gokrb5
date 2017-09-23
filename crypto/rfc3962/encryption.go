@@ -5,9 +5,9 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
-	"github.com/jcmturner/gokrb5/crypto/aescts"
 	"github.com/jcmturner/gokrb5/crypto/common"
 	"github.com/jcmturner/gokrb5/crypto/etype"
+	aescts "gopkg.in/jcmturner/aescts.v1"
 )
 
 // EncryptData encrypts the data provided using methods specific to the etype provided as defined in RFC 3962.
