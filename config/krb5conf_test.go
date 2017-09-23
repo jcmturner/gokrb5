@@ -99,3 +99,31 @@ func TestLoad(t *testing.T) {
 	assert.Equal(t, "TEST.GOKRB5", c.DomainRealm["test.gokrb5"], "Domain to realm mapping not as expected")
 
 }
+
+func TestParseDuration(t *testing.T) {
+	// https://web.mit.edu/kerberos/krb5-1.12/doc/basic/date_format.html#duration
+	hms, _ := time.ParseDuration("12h30m15s")
+	hm, _ := time.ParseDuration("12h30m")
+	h, _ := time.ParseDuration("12h")
+	var tests = []struct {
+		timeStr  string
+		duration time.Duration
+	}{
+		{"100", time.Duration(100) * time.Second},
+		{"12:30", hm},
+		{"12:30:15", hms},
+		{"1d12h30m15s", time.Duration(24)*time.Hour + hms},
+		{"1d12h30m", time.Duration(24)*time.Hour + hm},
+		{"1d12h", time.Duration(24)*time.Hour + h},
+		{"1d", time.Duration(24) * time.Hour},
+	}
+	for _, test := range tests {
+		d, err := parseDuration(test.timeStr)
+		if err != nil {
+			t.Errorf("Error parsing %s: %v", test.timeStr, err)
+		}
+		assert.Equal(t, test.duration, d, "Duration not as expected for: "+test.timeStr)
+
+	}
+
+}

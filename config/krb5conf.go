@@ -555,24 +555,38 @@ func parseETypes(s []string, w bool) []int {
 // Parse a time duration string in the configuration to a golang time.Duration.
 func parseDuration(s string) (time.Duration, error) {
 	s = strings.Replace(s, " ", "", -1)
+
+	// handle Nd[NmNs]
 	if strings.Contains(s, "d") {
-		s = strings.Replace(s, "d", "", -1)
-		// assume this is a round number for days...
-		days, err := strconv.ParseInt(s, 10, 32)
+		ds := strings.SplitN(s, "d", 2)
+		dn, err := strconv.ParseUint(ds[0], 10, 32)
 		if err != nil {
-			return time.Duration(0), errors.New("Invalid time duration.")
+			return time.Duration(0), errors.New("invalid time duration.")
 		}
-		var secs = int(days) * 86400
-		s = strconv.Itoa(secs)
+		d := time.Duration(dn*24) * time.Hour
+		if ds[1] != "" {
+			dp, err := time.ParseDuration(ds[1])
+			if err != nil {
+				return time.Duration(0), errors.New("invalid time duration.")
+			}
+			d = d + dp
+		}
+		return d, nil
 	}
+
+	// handle Nm[Ns]
 	d, err := time.ParseDuration(s)
 	if err == nil {
 		return d, nil
 	}
+
+	// handle N
 	v, err := strconv.ParseUint(s, 10, 32)
 	if err == nil && v > 0 {
 		return time.Duration(v) * time.Second, nil
 	}
+
+	// handle h:m[:s]
 	if strings.Contains(s, ":") {
 		t := strings.Split(s, ":")
 		if 2 > len(t) || len(t) > 3 {
