@@ -1,6 +1,17 @@
 # gokrb5
 [![GoDoc](https://godoc.org/github.com/jcmturner/gokrb5?status.svg)](https://godoc.org/github.com/jcmturner/gokrb5) [![Go Report Card](https://goreportcard.com/badge/github.com/jcmturner/gokrb5)](https://goreportcard.com/report/github.com/jcmturner/gokrb5)
 
+To get the package, execute:
+```
+go get gopkg.in/jcmturner/gokrb5.v1
+
+```
+To import this package, add the following line to your code:
+```go
+import "gopkg.in/jcmturner/gokrb5.v1"
+
+```
+
 ## Features
 * Pure Go - no dependency on external libraries 
 * No platform specific code
