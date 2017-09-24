@@ -16,14 +16,14 @@ create_entropy() {
    done
 }
 
-#create_entropy &
-#ENTROPY_PID=$!
-
+create_entropy &
+ENTROPY_PID=$!
 
   echo "Kerberos initialisation required. Creating database for ${REALM} ..."
   echo "This can take a long time if there is little entropy. A process has been started to create some."
   MASTER_PASSWORD=$(echo $RANDOM$RANDOM$RANDOM | md5sum | awk '{print $1}')
   /usr/local/sbin/kdb5_util create -r ${REALM} -s -P ${MASTER_PASSWORD}
+  kill -9 ${ENTROPY_PID}
   echo "Kerberos database created."
   /usr/local/sbin/kadmin.local -q "add_principal -randkey ${ADMIN_USERNAME}/admin"
   echo "Kerberos admin user created: ${ADMIN_USERNAME} To update password: sudo /usr/sbin/kadmin.local -q \"change_password ${ADMIN_USERNAME}/admin\""
@@ -56,6 +56,3 @@ create_entropy() {
   fi
 
   echo "Kerberos initialisation complete"
-
-#Start the kdc 
-#kill -9 $ENTROPY_PID
