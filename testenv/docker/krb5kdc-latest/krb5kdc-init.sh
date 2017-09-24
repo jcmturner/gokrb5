@@ -16,8 +16,8 @@ create_entropy() {
    done
 }
 
-create_entropy &
-ENTROPY_PID=$!
+#create_entropy &
+#ENTROPY_PID=$!
 
 
   echo "Kerberos initialisation required. Creating database for ${REALM} ..."
@@ -58,4 +58,4 @@ ENTROPY_PID=$!
   echo "Kerberos initialisation complete"
 
 #Start the kdc 
-kill -9 $ENTROPY_PID
+#kill -9 $ENTROPY_PID
