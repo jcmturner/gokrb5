@@ -6,7 +6,6 @@ SERVER_HOST=kdc.test.gokrb5
 ADMIN_USERNAME=adminuser
 HOST_PRINCIPALS="kdc.test.gokrb5 host.test.gokrb5"
 SPNs="HTTP/host.test.gokrb5"
-INITIAL_USERS="testuser1 testuser2 testuser3"
 
 create_entropy() {
    while true
@@ -47,12 +46,8 @@ ENTROPY_PID=$!
     done
   fi
 
-  if [ ! -z "$INITIAL_USERS" ]; then
-    for user in $INITIAL_USERS
-    do
-      /usr/local/sbin/kadmin.local -q "add_principal -pw passwordvalue -kvno 1 $user"
-      echo "User $user added to kerberos database. To update password: sudo /usr/sbin/kadmin.local -q \"change_password $user\""
-    done
-  fi
+  /usr/sbin/kadmin.local -q "add_principal -pw passwordvalue -kvno 1 testuser1"
+  /usr/sbin/kadmin.local -q "add_principal +requires_preauth -pw passwordvalue -kvno 1 testuser2"
+  /usr/sbin/kadmin.local -q "add_principal -pw passwordvalue -kvno 1 testuser3"
 
   echo "Kerberos initialisation complete"
