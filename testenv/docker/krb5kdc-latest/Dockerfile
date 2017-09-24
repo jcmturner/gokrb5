@@ -22,6 +22,6 @@ RUN mkdir -p /opt/krb5/log && \
   chmod 700 /opt/krb5/bin/krb5kdc-init.sh && /opt/krb5/bin/krb5kdc-init.sh && \
   ln -sf /dev/stdout /var/log/krb5kdc.log
 
-ENTRYPOINT ["/usr/sbin/krb5kdc", "-n"]
+ENTRYPOINT ["/usr/local/sbin/krb5kdc", "-n"]
 
 RUN yum update -y && yum clean all
