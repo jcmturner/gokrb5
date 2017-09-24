@@ -4,7 +4,7 @@ DO NOT USE THIS CONTAINER FOR ANY PRODUCTION USE!!!
 
 To run:
 ```bash
-docker run -v /etc/localtime:/etc/localtime:ro -p 88:88 -p 88:88/udp --rm --name gokrb5-kdc-older jcmturner/gokrb5:kdc-older &
+docker run -v /etc/localtime:/etc/localtime:ro -p 78:88 -p 78:88/udp --rm --name gokrb5-kdc-older jcmturner/gokrb5:kdc-older &
 ```
 
 To build:
