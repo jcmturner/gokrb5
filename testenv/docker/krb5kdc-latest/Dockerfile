@@ -10,7 +10,7 @@ RUN yum install -y \
  && yum clean all
 
 ADD krb5-1.15.1.tar.gz /tmp
-RUN cd /tmp && ls -l \
+RUN cd /tmp && ls -l && \
   cd krb5-1.15.1/src && \
   ./configure && make && make install
 
