@@ -46,8 +46,8 @@ ENTROPY_PID=$!
     done
   fi
 
-  /usr/sbin/kadmin.local -q "add_principal -pw passwordvalue -kvno 1 testuser1"
-  /usr/sbin/kadmin.local -q "add_principal +requires_preauth -pw passwordvalue -kvno 1 testuser2"
-  /usr/sbin/kadmin.local -q "add_principal -pw passwordvalue -kvno 1 testuser3"
+  /usr/local/sbin/kadmin.local -q "add_principal -pw passwordvalue -kvno 1 testuser1"
+  /usr/local/sbin/kadmin.local -q "add_principal +requires_preauth -pw passwordvalue -kvno 1 testuser2"
+  /usr/local/sbin/kadmin.local -q "add_principal -pw passwordvalue -kvno 1 testuser3"
 
   echo "Kerberos initialisation complete"
