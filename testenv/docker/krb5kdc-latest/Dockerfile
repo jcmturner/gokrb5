@@ -13,11 +13,9 @@ ADD krb5-1.15.1.tar.gz /tmp
 RUN cd /tmp/krb5-1.15.1/src && \
   ./configure && make && make install
 
-ENV KRB5_KDC_PROFILE /var/kerberos/krb5kdc/kdc.conf
-
 ADD krb5.conf /etc/krb5.conf
-ADD kdc.conf /var/kerberos/krb5kdc/kdc.conf
-ADD kadm5.acl /var/kerberos/krb5kdc/kadm5.acl
+ADD kdc.conf /usr/local/var/krb5kdc/kdc.conf
+ADD kadm5.acl /usr/local/var/krb5kdc/kadm5.acl
 ADD krb5kdc-init.sh /opt/krb5/bin/krb5kdc-init.sh
 RUN mkdir -p /opt/krb5/log && \
   mkdir -p /var/log/kerberos && \
