@@ -4,12 +4,12 @@ package messages
 import (
 	"fmt"
 	"github.com/jcmturner/asn1"
-	"github.com/jcmturner/gokrb5/iana"
-	"github.com/jcmturner/gokrb5/iana/asnAppTag"
-	"github.com/jcmturner/gokrb5/iana/errorcode"
-	"github.com/jcmturner/gokrb5/iana/msgtype"
-	"github.com/jcmturner/gokrb5/krberror"
-	"github.com/jcmturner/gokrb5/types"
+	"gopkg.in/jcmturner/gokrb5.v1/iana"
+	"gopkg.in/jcmturner/gokrb5.v1/iana/asnAppTag"
+	"gopkg.in/jcmturner/gokrb5.v1/iana/errorcode"
+	"gopkg.in/jcmturner/gokrb5.v1/iana/msgtype"
+	"gopkg.in/jcmturner/gokrb5.v1/krberror"
+	"gopkg.in/jcmturner/gokrb5.v1/types"
 	"time"
 )
 

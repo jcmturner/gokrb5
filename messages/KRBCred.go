@@ -3,12 +3,12 @@ package messages
 import (
 	"fmt"
 	"github.com/jcmturner/asn1"
-	"github.com/jcmturner/gokrb5/crypto"
-	"github.com/jcmturner/gokrb5/iana/asnAppTag"
-	"github.com/jcmturner/gokrb5/iana/keyusage"
-	"github.com/jcmturner/gokrb5/iana/msgtype"
-	"github.com/jcmturner/gokrb5/krberror"
-	"github.com/jcmturner/gokrb5/types"
+	"gopkg.in/jcmturner/gokrb5.v1/crypto"
+	"gopkg.in/jcmturner/gokrb5.v1/iana/asnAppTag"
+	"gopkg.in/jcmturner/gokrb5.v1/iana/keyusage"
+	"gopkg.in/jcmturner/gokrb5.v1/iana/msgtype"
+	"gopkg.in/jcmturner/gokrb5.v1/krberror"
+	"gopkg.in/jcmturner/gokrb5.v1/types"
 	"time"
 )
 

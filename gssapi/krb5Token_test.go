@@ -2,12 +2,12 @@ package gssapi
 
 import (
 	"encoding/hex"
-	"github.com/jcmturner/gokrb5/credentials"
-	"github.com/jcmturner/gokrb5/iana/msgtype"
-	"github.com/jcmturner/gokrb5/messages"
-	"github.com/jcmturner/gokrb5/testdata"
-	"github.com/jcmturner/gokrb5/types"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/jcmturner/gokrb5.v1/credentials"
+	"gopkg.in/jcmturner/gokrb5.v1/iana/msgtype"
+	"gopkg.in/jcmturner/gokrb5.v1/messages"
+	"gopkg.in/jcmturner/gokrb5.v1/testdata"
+	"gopkg.in/jcmturner/gokrb5.v1/types"
 	"math"
 	"testing"
 )

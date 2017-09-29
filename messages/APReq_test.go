@@ -2,9 +2,9 @@ package messages
 
 import (
 	"encoding/hex"
-	"github.com/jcmturner/gokrb5/iana/msgtype"
-	"github.com/jcmturner/gokrb5/testdata"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/jcmturner/gokrb5.v1/iana/msgtype"
+	"gopkg.in/jcmturner/gokrb5.v1/testdata"
 	"testing"
 )
 

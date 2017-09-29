@@ -5,9 +5,9 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
-	"github.com/jcmturner/gokrb5/crypto/etype"
-	"github.com/jcmturner/gokrb5/iana/etypeID"
 	"golang.org/x/crypto/pbkdf2"
+	"gopkg.in/jcmturner/gokrb5.v1/crypto/etype"
+	"gopkg.in/jcmturner/gokrb5.v1/iana/etypeID"
 )
 
 const (

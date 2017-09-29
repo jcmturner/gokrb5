@@ -2,7 +2,7 @@ package pac
 
 import (
 	"encoding/binary"
-	"github.com/jcmturner/gokrb5/ndr"
+	"gopkg.in/jcmturner/gokrb5.v1/ndr"
 )
 
 const (

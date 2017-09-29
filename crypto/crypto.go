@@ -4,11 +4,11 @@ package crypto
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/jcmturner/gokrb5/crypto/etype"
-	"github.com/jcmturner/gokrb5/iana/chksumtype"
-	"github.com/jcmturner/gokrb5/iana/etypeID"
-	"github.com/jcmturner/gokrb5/iana/patype"
-	"github.com/jcmturner/gokrb5/types"
+	"gopkg.in/jcmturner/gokrb5.v1/crypto/etype"
+	"gopkg.in/jcmturner/gokrb5.v1/iana/chksumtype"
+	"gopkg.in/jcmturner/gokrb5.v1/iana/etypeID"
+	"gopkg.in/jcmturner/gokrb5.v1/iana/patype"
+	"gopkg.in/jcmturner/gokrb5.v1/types"
 	"os"
 )
 

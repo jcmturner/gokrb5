@@ -2,8 +2,8 @@ package types
 
 import (
 	"encoding/hex"
-	"github.com/jcmturner/gokrb5/testdata"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/jcmturner/gokrb5.v1/testdata"
 	"testing"
 )
 

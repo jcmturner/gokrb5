@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jcmturner/asn1"
-	"github.com/jcmturner/gokrb5/iana/etypeID"
+	"gopkg.in/jcmturner/gokrb5.v1/iana/etypeID"
 	"io"
 	"os"
 	"os/user"

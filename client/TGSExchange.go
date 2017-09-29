@@ -2,10 +2,10 @@ package client
 
 import (
 	"errors"
-	"github.com/jcmturner/gokrb5/iana/nametype"
-	"github.com/jcmturner/gokrb5/krberror"
-	"github.com/jcmturner/gokrb5/messages"
-	"github.com/jcmturner/gokrb5/types"
+	"gopkg.in/jcmturner/gokrb5.v1/iana/nametype"
+	"gopkg.in/jcmturner/gokrb5.v1/krberror"
+	"gopkg.in/jcmturner/gokrb5.v1/messages"
+	"gopkg.in/jcmturner/gokrb5.v1/types"
 	"strings"
 	"time"
 )

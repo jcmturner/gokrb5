@@ -4,15 +4,15 @@ package client
 import (
 	"errors"
 	"fmt"
-	"github.com/jcmturner/gokrb5/config"
-	"github.com/jcmturner/gokrb5/credentials"
-	"github.com/jcmturner/gokrb5/crypto"
-	"github.com/jcmturner/gokrb5/crypto/etype"
-	"github.com/jcmturner/gokrb5/iana/errorcode"
-	"github.com/jcmturner/gokrb5/iana/nametype"
-	"github.com/jcmturner/gokrb5/keytab"
-	"github.com/jcmturner/gokrb5/messages"
-	"github.com/jcmturner/gokrb5/types"
+	"gopkg.in/jcmturner/gokrb5.v1/config"
+	"gopkg.in/jcmturner/gokrb5.v1/credentials"
+	"gopkg.in/jcmturner/gokrb5.v1/crypto"
+	"gopkg.in/jcmturner/gokrb5.v1/crypto/etype"
+	"gopkg.in/jcmturner/gokrb5.v1/iana/errorcode"
+	"gopkg.in/jcmturner/gokrb5.v1/iana/nametype"
+	"gopkg.in/jcmturner/gokrb5.v1/keytab"
+	"gopkg.in/jcmturner/gokrb5.v1/messages"
+	"gopkg.in/jcmturner/gokrb5.v1/types"
 )
 
 // Client side configuration and state.

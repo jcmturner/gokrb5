@@ -3,9 +3,9 @@ package pac
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/jcmturner/gokrb5/keytab"
-	"github.com/jcmturner/gokrb5/testdata"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/jcmturner/gokrb5.v1/keytab"
+	"gopkg.in/jcmturner/gokrb5.v1/testdata"
 	"testing"
 )
 

@@ -2,8 +2,8 @@ package types
 
 import (
 	"github.com/jcmturner/asn1"
-	"github.com/jcmturner/gokrb5/iana/flags"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/jcmturner/gokrb5.v1/iana/flags"
 	"testing"
 )
 

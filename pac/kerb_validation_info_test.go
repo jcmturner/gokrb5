@@ -2,9 +2,9 @@ package pac
 
 import (
 	"encoding/hex"
-	"github.com/jcmturner/gokrb5/mstypes"
-	"github.com/jcmturner/gokrb5/testdata"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/jcmturner/gokrb5.v1/mstypes"
+	"gopkg.in/jcmturner/gokrb5.v1/testdata"
 	"testing"
 	"time"
 )

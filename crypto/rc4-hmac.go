@@ -3,11 +3,11 @@ package crypto
 import (
 	"bytes"
 	"crypto/md5"
-	"github.com/jcmturner/gokrb5/crypto/rfc3961"
-	"github.com/jcmturner/gokrb5/crypto/rfc4757"
-	"github.com/jcmturner/gokrb5/iana/chksumtype"
-	"github.com/jcmturner/gokrb5/iana/etypeID"
 	"golang.org/x/crypto/md4"
+	"gopkg.in/jcmturner/gokrb5.v1/crypto/rfc3961"
+	"gopkg.in/jcmturner/gokrb5.v1/crypto/rfc4757"
+	"gopkg.in/jcmturner/gokrb5.v1/iana/chksumtype"
+	"gopkg.in/jcmturner/gokrb5.v1/iana/etypeID"
 	"hash"
 	"io"
 )

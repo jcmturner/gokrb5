@@ -1,9 +1,9 @@
 package rfc3962
 
 import (
-	"github.com/jcmturner/gokrb5/crypto/common"
-	"github.com/jcmturner/gokrb5/crypto/etype"
 	"golang.org/x/crypto/pbkdf2"
+	"gopkg.in/jcmturner/gokrb5.v1/crypto/common"
+	"gopkg.in/jcmturner/gokrb5.v1/crypto/etype"
 )
 
 // StringToKey returns a key derived from the string provided according to the definition in RFC 3961.
