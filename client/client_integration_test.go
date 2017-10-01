@@ -301,7 +301,7 @@ func TestClient_SetSPNEGOHeader(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error on AS_REQ: %v\n", err)
 	}
-	r, _ := http.NewRequest("GET", "http://10.80.88.90/index.html", nil)
+	r, _ := http.NewRequest("GET", "http://10.80.88.88/index.html", nil)
 	httpResp, err := http.DefaultClient.Do(r)
 	if err != nil {
 		t.Fatalf("Request error: %v\n", err)
