@@ -27,7 +27,7 @@ ENTROPY_PID=$!
   /usr/local/sbin/kadmin.local -q "add_principal -randkey ${ADMIN_USERNAME}/admin"
   echo "Kerberos admin user created: ${ADMIN_USERNAME} To update password: sudo /usr/sbin/kadmin.local -q \"change_password ${ADMIN_USERNAME}/admin\""
 
-  KEYTAB_DIR="/opt/krb5/data/keytabs"
+  KEYTAB_DIR="/keytabs"
   mkdir -p $KEYTAB_DIR
 
   if [ ! -z "${HOST_PRINCIPALS}" ]; then
@@ -38,13 +38,7 @@ ENTROPY_PID=$!
     done
   fi
 
-  if [ ! -z "${SPNs}" ]; then
-    for service in ${SPNs}
-    do
-      /usr/local/sbin/kadmin.local -q "add_principal -pw spnpasswordvalue -kvno 1 ${service}"
-      echo "Created principal for service $service"
-    done
-  fi
+  /usr/local/sbin/kadmin.local -q "add_principal -pw spnpasswordvalue -kvno 1 HTTP/host.test.gokrb5"
 
   /usr/local/sbin/kadmin.local -q "add_principal -pw passwordvalue -kvno 1 testuser1"
   /usr/local/sbin/kadmin.local -q "add_principal +requires_preauth -pw passwordvalue -kvno 1 testuser2"

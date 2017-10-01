@@ -6,7 +6,7 @@ setenforce 0
 sed -i "s/SELINUX=enforcing/SELINUX=permissive/g" /etc/sysconfig/selinux
 
 yum update -y && yum clean all
-yum install -y tcpdump ntp docker net-tools
+yum install -y tcpdump ntp docker net-tools krb5-workstation vim
 
 systemctl stop firewalld
 systemctl disable firewalld
@@ -24,6 +24,7 @@ net.ipv6.conf.default.disable_ipv6 = 1
 net.ipv6.conf.lo.disable_ipv6 = 1
 EOF
 
+cp /vagrant/krb5.conf /etc/krb5.conf
 cp /vagrant/*.service /etc/systemd/system/
 systemctl enable krb5kdc krb5kdc-latest krb5kdc-older httpd
 

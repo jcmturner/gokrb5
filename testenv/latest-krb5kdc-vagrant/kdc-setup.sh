@@ -7,9 +7,6 @@ DOMAIN=test.gokrb5
 SERVER_HOST=kdc.test.gokrb5
 ADMIN_USERNAME=adminuser
 HOST_PRINCIPALS="kdc.test.gokrb5 host.test.gokrb5"
-SPNs="HTTP/host.test.gokrb5"
-KEYTABS="http.testtab!0:48!HTTP/host.test.gokrb5"
-INITIAL_USERS="testuser1 testuser2 testuser3"
 
 cp /vagrant/krb5.conf /etc/krb5.conf
 cp /var/kerberos/krb5kdc/kdc.conf /var/kerberos/krb5kdc/kdc.conf-old
@@ -41,36 +38,22 @@ create_entropy &
   /usr/local/sbin/kadmin.local -q "add_principal -randkey ${ADMIN_USERNAME}/admin"
   echo "Kerberos admin user created: ${ADMIN_USERNAME} To update password: sudo /usr/local/sbin/kadmin.local -q \"change_password ${ADMIN_USERNAME}/admin\""
 
-  KEYTAB_DIR="/opt/krb5/data/keytabs"
+  KEYTAB_DIR="/keytabs"
   mkdir -p $KEYTAB_DIR
 
   if [ ! -z "${HOST_PRINCIPALS}" ]; then
     for host in ${HOST_PRINCIPALS}
     do
       /usr/local/sbin/kadmin.local -q "add_principal -pw hostpasswordvalue -kvno 1 host/$host"
-      #/usr/sbin/kadmin.local -q "ktadd -k ${KEYTAB_DIR}/${host}.keytab host/$host"
-      #chmod 600 ${KEYTAB_DIR}/${host}.keytab
       echo "Created host principal host/$host"
     done
   fi
 
-  if [ ! -z "${SPNs}" ]; then
-    for service in ${SPNs}
-    do
-      /usr/local/sbin/kadmin.local -q "add_principal -pw spnpasswordvalue -kvno 1 ${service}"
-      #/usr/sbin/kadmin.local -q "cpw -pw passwordvalue ${service}"
-      echo "Created principal for service $service"
-    done
-  fi
+  /usr/local/sbin/kadmin.local -q "add_principal -pw spnpasswordvalue -kvno 1 HTTP/host.test.gokrb5"
 
-  if [ ! -z "$INITIAL_USERS" ]; then
-    for user in $INITIAL_USERS
-    do
-      /usr/local/sbin/kadmin.local -q "add_principal -pw passwordvalue -kvno 1 $user"
-      #/usr/sbin/kadmin.local -q "ktadd -k ${KEYTAB_DIR}/${user}.testtab $user"
-      echo "User $user added to kerberos database. To update password: sudo /usr/local/sbin/kadmin.local -q \"change_password $user\""
-    done
-  fi
+  /usr/local/sbin/kadmin.local -q "add_principal -pw passwordvalue -kvno 1 testuser1"
+  /usr/local/sbin/kadmin.local -q "add_principal +requires_preauth -pw passwordvalue -kvno 1 testuser2"
+  /usr/local/sbin/kadmin.local -q "add_principal -pw passwordvalue -kvno 1 testuser3"
 
   echo "Kerberos initialisation complete"
 
