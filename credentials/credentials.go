@@ -77,6 +77,7 @@ func NewCredentialsFromPrincipal(cname types.PrincipalName, realm string) Creden
 		CName:      cname,
 		Keytab:     keytab.NewKeytab(),
 		Attributes: make(map[int]interface{}),
+		groupMembership: make(map[string]bool),
 		sessionID:  uid,
 	}
 }
