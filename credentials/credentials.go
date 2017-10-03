@@ -19,6 +19,7 @@ const (
 // Keytabs are used over passwords if both are defined.
 type Credentials struct {
 	Username        string
+	displayName     string
 	Realm           string
 	CName           types.PrincipalName
 	Keytab          keytab.Keytab
@@ -53,8 +54,9 @@ func NewCredentials(username string, realm string) Credentials {
 		uid = "00unique-sess-ions-uuid-unavailable0"
 	}
 	return Credentials{
-		Username: username,
-		Realm:    realm,
+		Username:    username,
+		displayName: username,
+		Realm:       realm,
 		CName: types.PrincipalName{
 			NameType:   nametype.KRB_NT_PRINCIPAL,
 			NameString: []string{username},
@@ -72,13 +74,14 @@ func NewCredentialsFromPrincipal(cname types.PrincipalName, realm string) Creden
 		uid = "00unique-sess-ions-uuid-unavailable0"
 	}
 	return Credentials{
-		Username:   cname.GetPrincipalNameString(),
-		Realm:      realm,
-		CName:      cname,
-		Keytab:     keytab.NewKeytab(),
-		Attributes: make(map[int]interface{}),
+		Username:        cname.GetPrincipalNameString(),
+		displayName:     cname.GetPrincipalNameString(),
+		Realm:           realm,
+		CName:           cname,
+		Keytab:          keytab.NewKeytab(),
+		Attributes:      make(map[int]interface{}),
 		groupMembership: make(map[string]bool),
-		sessionID:  uid,
+		sessionID:       uid,
 	}
 }
 
@@ -116,6 +119,12 @@ func (c *Credentials) SetADCredentials(a ADCredentials) {
 	if a.FullName != "" {
 		c.SetDisplayName(a.FullName)
 	}
+	if a.EffectiveName != "" {
+		c.SetUserName(a.EffectiveName)
+	}
+	if a.LogonDomainName != "" {
+		c.SetDomain(a.LogonDomainName)
+	}
 	for i := range a.GroupMembershipSIDs {
 		c.AddAuthzAttribute(a.GroupMembershipSIDs[i])
 	}
@@ -145,12 +154,12 @@ func (c *Credentials) SetDomain(s string) {
 
 // DisplayName returns the credential's display name.
 func (c *Credentials) DisplayName() string {
-	return c.Username
+	return c.displayName
 }
 
 // SetDisplayName sets the display name value on the credential.
 func (c *Credentials) SetDisplayName(s string) {
-	c.Username = s
+	c.displayName = s
 }
 
 // Human returns if the  credential represents a human or not.
