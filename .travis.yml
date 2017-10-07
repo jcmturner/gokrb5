@@ -1,0 +1,30 @@
+language: go
+
+go:
+  - 1.7.x
+  - 1.8.x
+  - 1.9.x
+  - master
+
+go_import_path: gopkg.in/jcmturner/gokrb5.v1
+
+gobuild_args: -tags=integration
+
+sudo: required
+
+services:
+  - docker
+
+before_install:
+  - docker pull jcmturner/gokrb5:http
+  - docker pull jcmturner/gokrb5:kdc-centos-default
+  - docker pull jcmturner/gokrb5:kdc-older
+  - docker pull jcmturner/gokrb5:kdc-latest
+  - docker run -h kdc.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -p 88:88 -p 88:88/udp --rm --name krb5kdc jcmturner/gokrb5:kdc-centos-default
+  - docker run -h kdc.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -p 78:88 -p 88:88/udp --rm --name krb5kdc-old jcmturner/gokrb5:kdc-older
+  - docker run -h kdc.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -p 98:88 -p 88:88/udp --rm --name krb5kdc-latest jcmturner/gokrb5:kdc-latest
+  - docker run --add-host host.test.gokrb5:127.0.0.1 -v /etc/localtime:/etc/localtime:ro -p 80:80 -p 443:443 --rm --name gokrb5-http jcmturner/gokrb5:http
+
+env:
+  - TEST_KDC_ADDR=127.0.0.1
+
