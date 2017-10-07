@@ -26,8 +26,7 @@ before_install:
   - docker run -d --add-host host.test.gokrb5:127.0.0.1 -v /etc/localtime:/etc/localtime:ro -p 80:80 -p 443:443 --name gokrb5-http jcmturner/gokrb5:http
 
 env:
-  - TEST_KDC_ADDR=127.0.0.1
-  - TEST_HTTP_URL="http://host.test.gokrb5/index.html"
+  - TEST_KDC_ADDR=127.0.0.1 TEST_HTTP_URL="http://host.test.gokrb5/index.html"
 
 addons:
   hosts:
