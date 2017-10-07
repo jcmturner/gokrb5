@@ -27,4 +27,9 @@ before_install:
 
 env:
   - TEST_KDC_ADDR=127.0.0.1
+  - TEST_HTTP_URL="http://host.test.gokrb5/index.html"
+
+addons:
+  hosts:
+    - host.test.gokrb5
 

@@ -12,8 +12,8 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v1/keytab"
 	"gopkg.in/jcmturner/gokrb5.v1/testdata"
 	"net/http"
-	"testing"
 	"os"
+	"testing"
 )
 
 func TestClient_SuccessfulLogin(t *testing.T) {
@@ -241,7 +241,11 @@ func TestClient_SetSPNEGOHeader(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error on AS_REQ: %v\n", err)
 	}
-	r, _ := http.NewRequest("GET", "http://10.80.88.88/index.html", nil)
+	url := os.Getenv("TEST_HTTP_URL")
+	if url == "" {
+		url = testdata.TEST_HTTP_URL
+	}
+	r, _ := http.NewRequest("GET", url, nil)
 	httpResp, err := http.DefaultClient.Do(r)
 	if err != nil {
 		t.Fatalf("Request error: %v\n", err)
