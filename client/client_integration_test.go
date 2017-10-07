@@ -19,12 +19,20 @@ func TestClient_SuccessfulLogin(t *testing.T) {
 	b, err := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
-	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
-	cl.WithConfig(c)
+	var tests = []string{
+		testdata.TEST_KDC,
+		testdata.TEST_KDC_OLD,
+		testdata.TEST_KDC_LASTEST,
+	}
+	for _, test := range tests {
+		c.Realms[0].KDC = []string{test}
+		cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
+		cl.WithConfig(c)
 
-	err = cl.Login()
-	if err != nil {
-		t.Fatalf("Error on login: %v\n", err)
+		err = cl.Login()
+		if err != nil {
+			t.Errorf("Error on logging in with KDC %s: %v\n", test, err)
+		}
 	}
 }
 
@@ -42,104 +50,11 @@ func TestClient_SuccessfulLogin_TCPOnly(t *testing.T) {
 	}
 }
 
-func TestClient_SuccessfulLogin_OlderKDC(t *testing.T) {
-	b, err := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
-	kt, _ := keytab.Parse(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF_OLDERKDC)
-	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
-	cl.WithConfig(c)
-
-	err = cl.Login()
-	if err != nil {
-		t.Fatalf("Error on login: %v\n", err)
-	}
-}
-
-func TestClient_SuccessfulLogin_ETYPE_DES3_CBC_SHA1_KD(t *testing.T) {
+func TestClient_ASExchange_TGSExchange_EncTypes(t *testing.T) {
 	b, err := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
-	c.LibDefaults.DefaultTktEnctypes = []string{"des3-cbc-sha1-kd"}
-	c.LibDefaults.DefaultTktEnctypeIDs = []int{etypeID.DES3_CBC_SHA1_KD}
-	c.LibDefaults.DefaultTGSEnctypes = []string{"des3-cbc-sha1-kd"}
-	c.LibDefaults.DefaultTGSEnctypeIDs = []int{etypeID.DES3_CBC_SHA1_KD}
-	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
-	cl.WithConfig(c)
-
-	err = cl.Login()
-	if err != nil {
-		t.Fatalf("Error on login: %v\n", err)
-	}
-}
-
-func TestClient_SuccessfulLogin_ETYPE_AES128_CTS_HMAC_SHA256_128(t *testing.T) {
-	b, err := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
-	kt, _ := keytab.Parse(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF_LATESTKDC)
-	c.LibDefaults.DefaultTktEnctypes = []string{"aes128-cts-hmac-sha256-128"}
-	c.LibDefaults.DefaultTktEnctypeIDs = []int{etypeID.AES128_CTS_HMAC_SHA256_128}
-	c.LibDefaults.DefaultTGSEnctypes = []string{"aes128-cts-hmac-sha256-128"}
-	c.LibDefaults.DefaultTGSEnctypeIDs = []int{etypeID.AES128_CTS_HMAC_SHA256_128}
-	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
-	cl.WithConfig(c)
-
-	err = cl.Login()
-	if err != nil {
-		t.Fatalf("Error on login: %v\n", err)
-	}
-}
-
-func TestClient_SuccessfulLogin_ETYPE_AES256_CTS_HMAC_SHA384_192(t *testing.T) {
-	b, err := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
-	kt, _ := keytab.Parse(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF_LATESTKDC)
-	c.LibDefaults.DefaultTktEnctypes = []string{"aes256-cts-hmac-sha384-192"}
-	c.LibDefaults.DefaultTktEnctypeIDs = []int{etypeID.AES256_CTS_HMAC_SHA384_192}
-	c.LibDefaults.DefaultTGSEnctypes = []string{"aes256-cts-hmac-sha384-192"}
-	c.LibDefaults.DefaultTGSEnctypeIDs = []int{etypeID.AES256_CTS_HMAC_SHA384_192}
-	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
-	cl.WithConfig(c)
-
-	err = cl.Login()
-	if err != nil {
-		t.Fatalf("Error on login: %v\n", err)
-	}
-}
-
-func TestClient_SuccessfulLogin_RC4HMAC(t *testing.T) {
-	b, err := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
-	kt, _ := keytab.Parse(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF_AD)
-	c.LibDefaults.DefaultTktEnctypes = []string{"rc4-hmac"}
-	c.LibDefaults.DefaultTktEnctypeIDs = []int{etypeID.RC4_HMAC}
-	c.LibDefaults.DefaultTGSEnctypes = []string{"rc4-hmac"}
-	c.LibDefaults.DefaultTGSEnctypeIDs = []int{etypeID.RC4_HMAC}
-	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
-	cl.WithConfig(c)
-
-	err = cl.Login()
-	if err != nil {
-		t.Fatalf("Error on login: %v\n", err)
-	}
-}
-
-func TestClient_SuccessfulLogin_AD(t *testing.T) {
-	b, err := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
-	kt, _ := keytab.Parse(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF_AD)
-	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
-	cl.WithConfig(c)
-
-	err = cl.Login()
-	if err != nil {
-		t.Fatalf("Error on login: %v\n", err)
-	}
-}
-
-func TestClient_TGSExchange_EncTypes(t *testing.T) {
-	b, err := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
-	kt, _ := keytab.Parse(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF_LATESTKDC)
+	c.Realms[0].KDC = []string{testdata.TEST_KDC_LASTEST}
 	var tests = []string{
 		"des3-cbc-sha1-kd",
 		"aes128-cts-hmac-sha1-96",
@@ -212,7 +127,8 @@ func TestClient_SuccessfulLogin_UserRequiringPreAuth_TCPOnly(t *testing.T) {
 func TestClient_NetworkTimeout(t *testing.T) {
 	b, err := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF_BAD_KDC_ADDRESS)
+	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	c.Realms[0].KDC = []string{testdata.TEST_KDC_BADADDR}
 	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 
@@ -253,27 +169,8 @@ func TestClient_GetServiceTicket(t *testing.T) {
 func TestClient_GetServiceTicket_OlderKDC(t *testing.T) {
 	b, err := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF_OLDERKDC)
-	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
-	cl.WithConfig(c)
-
-	err = cl.Login()
-	if err != nil {
-		t.Fatalf("Error on login: %v\n", err)
-	}
-	spn := "HTTP/host.test.gokrb5"
-	tkt, key, err := cl.GetServiceTicket(spn)
-	if err != nil {
-		t.Fatalf("Error getting service ticket: %v\n", err)
-	}
-	assert.Equal(t, spn, tkt.SName.GetPrincipalNameString())
-	assert.Equal(t, 18, key.KeyType)
-}
-
-func TestClient_GetServiceTicket_AD(t *testing.T) {
-	b, err := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
-	kt, _ := keytab.Parse(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF_AD)
+	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	c.Realms[0].KDC = []string{testdata.TEST_KDC_OLD}
 	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 
