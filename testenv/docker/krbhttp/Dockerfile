@@ -10,16 +10,16 @@ RUN yum install -y \
   mod_auth_kerb \
   mod_ssl \
   tcpdump krb5-workstation vim \
- && yum clean all
+  && yum update -y && yum clean all
 
-ADD krb5.conf /etc/krb5.conf
-ADD http.testtab /etc/httpd/
 ADD httpd-krb5.conf /etc/httpd/conf.d/
 ADD index.html /var/www/html/index.html
-RUN ln -sf /dev/stdout /var/log/httpd/access_log && \
- ln -sf /dev/stdout /var/log/httpd/ssl_access_log && \
- ln -sf /dev/stdout /var/log/httpd/ssl_request_log && \
- ln -sf /dev/stderr /var/log/httpd/error_log && \
- ln -sf /dev/stderr /var/log/httpd/ssl_error_log
+ADD krb5.conf /etc/krb5.conf
+ADD http.testtab /etc/httpd/
+#RUN ln -sf /dev/stdout /var/log/httpd/access_log && \
+# ln -sf /dev/stdout /var/log/httpd/ssl_access_log && \
+# ln -sf /dev/stdout /var/log/httpd/ssl_request_log && \
+# ln -sf /dev/stderr /var/log/httpd/error_log && \
+# ln -sf /dev/stderr /var/log/httpd/ssl_error_log
 
-RUN yum update -y && yum clean all
+
