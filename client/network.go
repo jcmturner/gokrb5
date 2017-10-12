@@ -5,7 +5,9 @@ import (
 	"encoding/binary"
 	"fmt"
 	"gopkg.in/jcmturner/gokrb5.v1/iana/errorcode"
+	"gopkg.in/jcmturner/gokrb5.v1/iana/nametype"
 	"gopkg.in/jcmturner/gokrb5.v1/messages"
+	"gopkg.in/jcmturner/gokrb5.v1/types"
 	"io"
 	"math/rand"
 	"net"
@@ -13,11 +15,18 @@ import (
 )
 
 // SendToKDC performs network actions to send data to the KDC.
-func (cl *Client) SendToKDC(b []byte) ([]byte, error) {
+func (cl *Client) SendToKDC(b []byte, spn types.PrincipalName) ([]byte, error) {
 	var rb []byte
 	var kdcs []string
+	var realm string
+	switch spn.NameType {
+	case nametype.KRB_NT_PRINCIPAL:
+		realm = cl.Config.ResolveRealm(spn.NameString[1])
+	case nametype.KRB_NT_SRV_INST:
+		realm = cl.Config.LibDefaults.DefaultRealm
+	}
 	for _, r := range cl.Config.Realms {
-		if r.Realm == cl.Config.LibDefaults.DefaultRealm {
+		if r.Realm == realm {
 			kdcs = r.KDC
 			break
 		}

@@ -31,7 +31,7 @@ func (cl *Client) ASExchange() error {
 
 	var ASRep messages.ASRep
 
-	rb, err := cl.SendToKDC(b)
+	rb, err := cl.SendToKDC(b, ASReq.ReqBody.SName)
 	if err != nil {
 		if e, ok := err.(messages.KRBError); ok && e.ErrorCode == errorcode.KDC_ERR_PREAUTH_REQUIRED {
 			// From now on assume this client will need to do this pre-auth and set the PAData
@@ -44,7 +44,7 @@ func (cl *Client) ASExchange() error {
 			if err != nil {
 				return krberror.Errorf(err, krberror.EncodingError, "AS Exchange Error: failed marshaling AS_REQ with PAData")
 			}
-			rb, err = cl.SendToKDC(b)
+			rb, err = cl.SendToKDC(b, ASReq.ReqBody.SName)
 			if err != nil {
 				return krberror.Errorf(err, krberror.NetworkingError, "AS Exchange Error: failed sending AS_REQ to KDC")
 			}
