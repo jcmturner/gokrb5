@@ -83,7 +83,7 @@ type KDCReqBody struct {
 }
 
 // NewASReq generates a new KRB_AS_REQ struct.
-func NewASReq(c *config.Config, cname types.PrincipalName) (ASReq, error) {
+func NewASReq(realm string, c *config.Config, cname types.PrincipalName) (ASReq, error) {
 	nonce, err := rand.Int(rand.Reader, big.NewInt(math.MaxInt32))
 	if err != nil {
 		return ASReq{}, err
@@ -96,11 +96,11 @@ func NewASReq(c *config.Config, cname types.PrincipalName) (ASReq, error) {
 			PAData:  types.PADataSequence{},
 			ReqBody: KDCReqBody{
 				KDCOptions: c.LibDefaults.KDCDefaultOptions,
-				Realm:      c.LibDefaults.DefaultRealm,
+				Realm:      realm,
 				CName:      cname,
 				SName: types.PrincipalName{
 					NameType:   nametype.KRB_NT_SRV_INST,
-					NameString: []string{"krbtgt", c.LibDefaults.DefaultRealm},
+					NameString: []string{"krbtgt", realm},
 				},
 				Till: t.Add(c.LibDefaults.TicketLifetime),
 				//Till:  t.Add(time.Duration(24) * time.Hour),

@@ -200,3 +200,87 @@ func TestKerbValidationInfo_Unmarshal(t *testing.T) {
 	assert.Equal(t, uint32(0), k2.pResourceGroupIDs, "pResourceGroupIDs not as expected")
 	assert.Equal(t, 0, len(k2.ResourceGroupIDs), "ResourceGroupIDs not as expected")
 }
+
+func TestKerbValidationInfo_Unmarshal_DomainTrust(t *testing.T) {
+	b, err := hex.DecodeString(testdata.TestVectors["PAC_Kerb_Validation_Info_Trust"])
+	if err != nil {
+		t.Fatal("Could not decode test data hex string")
+	}
+	var k KerbValidationInfo
+	err = k.Unmarshal(b)
+	if err != nil {
+		t.Fatalf("Error unmarshaling KerbValidationInfo: %v", err)
+	}
+	assert.Equal(t, time.Date(2017, 10, 14, 12, 03, 41, 52409900, time.UTC), k.LogOnTime.Time(), "LogOnTime not as expected")
+	assert.Equal(t, time.Date(2185, 7, 21, 23, 34, 33, 709551516, time.UTC), k.LogOffTime.Time(), "LogOffTime not as expected")
+	assert.Equal(t, time.Date(2185, 7, 21, 23, 34, 33, 709551516, time.UTC), k.KickOffTime.Time(), "KickOffTime not as expected")
+	assert.Equal(t, time.Date(2017, 10, 10, 20, 42, 56, 220282300, time.UTC), k.PasswordLastSet.Time(), "PasswordLastSet not as expected")
+	assert.Equal(t, time.Date(2017, 10, 11, 20, 42, 56, 220282300, time.UTC), k.PasswordCanChange.Time(), "PasswordCanChange not as expected")
+
+	assert.Equal(t, "testuser1", k.EffectiveName.Value, "EffectiveName not as expected")
+	assert.Equal(t, "Test1 User1", k.FullName.Value, "EffectiveName not as expected")
+	assert.Equal(t, "", k.LogonScript.Value, "EffectiveName not as expected")
+	assert.Equal(t, "", k.ProfilePath.Value, "EffectiveName not as expected")
+	assert.Equal(t, "", k.HomeDirectory.Value, "EffectiveName not as expected")
+	assert.Equal(t, "", k.HomeDirectoryDrive.Value, "EffectiveName not as expected")
+	assert.Equal(t, uint32(131088), k.ProfilePath.BufferPrt, "EffectiveName not as expected")
+	assert.Equal(t, uint32(131092), k.HomeDirectory.BufferPrt, "EffectiveName not as expected")
+	assert.Equal(t, uint32(131096), k.HomeDirectoryDrive.BufferPrt, "EffectiveName not as expected")
+
+	assert.Equal(t, uint16(46), k.LogonCount, "LogonCount not as expected")
+	assert.Equal(t, uint16(0), k.BadPasswordCount, "BadPasswordCount not as expected")
+	assert.Equal(t, uint32(1106), k.UserID, "UserID not as expected")
+	assert.Equal(t, uint32(513), k.PrimaryGroupID, "PrimaryGroupID not as expected")
+	assert.Equal(t, uint32(3), k.GroupCount, "GroupCount not as expected")
+	assert.Equal(t, uint32(131100), k.pGroupIDs, "pGroupIDs not as expected")
+
+	gids := []mstypes.GroupMembership{
+		{RelativeID: 1110, Attributes: 7},
+		{RelativeID: 513, Attributes: 7},
+		{RelativeID: 1109, Attributes: 7},
+	}
+	assert.Equal(t, gids, k.GroupIDs, "GroupIDs not as expected")
+
+	assert.Equal(t, uint32(544), k.UserFlags, "UserFlags not as expected")
+
+	assert.Equal(t, mstypes.UserSessionKey{Data: []mstypes.CypherBlock{{Data: make([]byte, 8, 8)}, {Data: make([]byte, 8, 8)}}}, k.UserSessionKey, "UserSessionKey not as expected")
+
+	assert.Equal(t, "UDC", k.LogonServer.Value, "LogonServer not as expected")
+	assert.Equal(t, "USER", k.LogonDomainName.Value, "LogonDomainName not as expected")
+
+	assert.Equal(t, uint32(131112), k.pLogonDomainID, "pLogonDomainID not as expected")
+
+	assert.Equal(t, "S-1-5-21-2284869408-3503417140-1141177250", k.LogonDomainID.ToString(), "LogonDomainID not as expected")
+
+	assert.Equal(t, uint32(528), k.UserAccountControl, "UserAccountControl not as expected")
+	assert.Equal(t, uint32(0), k.SubAuthStatus, "SubAuthStatus not as expected")
+	assert.Equal(t, time.Date(2185, 7, 21, 23, 34, 33, 709551616, time.UTC), k.LastSuccessfulILogon.Time(), "LastSuccessfulILogon not as expected")
+	assert.Equal(t, time.Date(2185, 7, 21, 23, 34, 33, 709551616, time.UTC), k.LastFailedILogon.Time(), "LastSuccessfulILogon not as expected")
+	assert.Equal(t, uint32(0), k.FailedILogonCount, "FailedILogonCount not as expected")
+
+	assert.Equal(t, uint32(1), k.SIDCount, "SIDCount not as expected")
+	assert.Equal(t, uint32(131116), k.pExtraSIDs, "SIDCount not as expected")
+	assert.Equal(t, int(k.SIDCount), len(k.ExtraSIDs), "SIDCount and size of ExtraSIDs list are not the same")
+
+	var es = []struct {
+		sid  string
+		attr uint32
+	}{
+		{"S-1-18-1", uint32(7)},
+	}
+	for i, s := range es {
+		assert.Equal(t, s.sid, k.ExtraSIDs[i].SID.ToString(), "ExtraSID SID value not as epxected")
+		assert.Equal(t, s.attr, k.ExtraSIDs[i].Attributes, "ExtraSID Attributes value not as epxected")
+	}
+
+	assert.Equal(t, uint32(131124), k.pResourceGroupDomainSID, "pResourceGroupDomainSID not as expected")
+	assert.Equal(t, uint8(4), k.ResourceGroupDomainSID.SubAuthorityCount, "ResourceGroupDomainSID not as expected")
+	assert.Equal(t, "S-1-5-21-3062750306-1230139592-1973306805", k.ResourceGroupDomainSID.ToString(), "ResourceGroupDomainSID value not as expected")
+	assert.Equal(t, uint32(131128), k.pResourceGroupIDs, "pResourceGroupIDs not as expected")
+	assert.Equal(t, 2, len(k.ResourceGroupIDs), "ResourceGroupIDs not as expected")
+	rgids := []mstypes.GroupMembership{
+		{RelativeID: 1107, Attributes: 536870919},
+		{RelativeID: 1108, Attributes: 536870919},
+	}
+	assert.Equal(t, rgids, k.ResourceGroupIDs, "ResourceGroupIDs not as expected")
+}

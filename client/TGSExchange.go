@@ -1,7 +1,6 @@
 package client
 
 import (
-	"errors"
 	"gopkg.in/jcmturner/gokrb5.v1/iana/nametype"
 	"gopkg.in/jcmturner/gokrb5.v1/krberror"
 	"gopkg.in/jcmturner/gokrb5.v1/messages"
@@ -13,9 +12,6 @@ import (
 // TGSExchange performs a TGS exchange to retrieve a ticket to the specified SPN.
 // The ticket retrieved is added to the client's cache.
 func (cl *Client) TGSExchange(spn types.PrincipalName, tkt messages.Ticket, sessionKey types.EncryptionKey, renewal bool) (tgsReq messages.TGSReq, tgsRep messages.TGSRep, err error) {
-	if cl.session == nil {
-		return tgsReq, tgsRep, errors.New("TGS Exchange Error: client does not have a session. Client needs to login first")
-	}
 	tgsReq, err = messages.NewTGSReq(cl.Credentials.CName, cl.Config, tkt, sessionKey, spn, renewal)
 	if err != nil {
 		return tgsReq, tgsRep, krberror.Errorf(err, krberror.KRBMsgError, "TGS Exchange Error: failed to generate a new TGS_REQ")
@@ -52,19 +48,23 @@ func (cl *Client) GetServiceTicket(spn string) (messages.Ticket, types.Encryptio
 		// Already a valid ticket in the cache
 		return tkt, skey, nil
 	}
-	// Ensure TGT still valid
-	if time.Now().UTC().After(cl.session.EndTime) {
-		err := cl.updateTGT()
-		if err != nil {
-			return tkt, skey, err
-		}
-	}
 	s := strings.Split(spn, "/")
 	princ := types.PrincipalName{
 		NameType:   nametype.KRB_NT_PRINCIPAL,
 		NameString: s,
 	}
-	_, tgsRep, err := cl.TGSExchange(princ, cl.session.TGT, cl.session.SessionKey, false)
+	sess, err := cl.GetSessionFromPrincipalName(princ)
+	if err != nil {
+		return tkt, skey, err
+	}
+	// Ensure TGT still valid
+	if time.Now().UTC().After(sess.EndTime) {
+		err := cl.updateSession(sess)
+		if err != nil {
+			return tkt, skey, err
+		}
+	}
+	_, tgsRep, err := cl.TGSExchange(princ, sess.TGT, sess.SessionKey, false)
 	if err != nil {
 		return tkt, skey, err
 	}

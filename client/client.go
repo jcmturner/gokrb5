@@ -20,7 +20,7 @@ type Client struct {
 	Credentials *credentials.Credentials
 	Config      *config.Config
 	GoKrb5Conf  *Config
-	session     *session
+	sessions    sessions
 	Cache       *Cache
 }
 
@@ -39,7 +39,7 @@ func NewClientWithPassword(username, realm, password string) Client {
 		Credentials: creds.WithPassword(password),
 		Config:      config.NewConfig(),
 		GoKrb5Conf:  &Config{},
-		session:     &session{},
+		sessions:    make(sessions),
 		Cache:       NewCache(),
 	}
 }
@@ -51,7 +51,7 @@ func NewClientWithKeytab(username, realm string, kt keytab.Keytab) Client {
 		Credentials: creds.WithKeytab(kt),
 		Config:      config.NewConfig(),
 		GoKrb5Conf:  &Config{},
-		session:     &session{},
+		sessions:    make(sessions),
 		Cache:       NewCache(),
 	}
 }
@@ -64,6 +64,7 @@ func NewClientFromCCache(c credentials.CCache) (Client, error) {
 		Credentials: c.GetClientCredentials(),
 		Config:      config.NewConfig(),
 		GoKrb5Conf:  &Config{},
+		sessions:    make(sessions),
 		Cache:       NewCache(),
 	}
 	spn := types.PrincipalName{
@@ -79,7 +80,8 @@ func NewClientFromCCache(c credentials.CCache) (Client, error) {
 	if err != nil {
 		return cl, fmt.Errorf("TGT bytes in cache are not valid: %v", err)
 	}
-	cl.session = &session{
+	cl.sessions[c.DefaultPrincipal.Realm] = &session{
+		Realm:      c.DefaultPrincipal.Realm,
 		AuthTime:   cred.AuthTime,
 		EndTime:    cred.EndTime,
 		RenewTill:  cred.RenewTill,
@@ -157,7 +159,7 @@ func (cl *Client) LoadConfig(cfgPath string) (*Client, error) {
 // IsConfigured indicates if the client has the values required set.
 func (cl *Client) IsConfigured() (bool, error) {
 	// Client needs to have either a password, keytab or a session already (later when loading from CCache)
-	if !cl.Credentials.HasPassword() && !cl.Credentials.HasKeytab() && cl.session.AuthTime.IsZero() {
+	if !cl.Credentials.HasPassword() && !cl.Credentials.HasKeytab() && cl.sessions[cl.Config.LibDefaults.DefaultRealm].AuthTime.IsZero() {
 		return false, errors.New("client has neither a keytab nor a password set and no session")
 	}
 	if cl.Credentials.Username == "" {
@@ -179,5 +181,5 @@ func (cl *Client) IsConfigured() (bool, error) {
 
 // Login the client with the KDC via an AS exchange.
 func (cl *Client) Login() error {
-	return cl.ASExchange()
+	return cl.ASExchange(cl.Config.LibDefaults.DefaultRealm)
 }
