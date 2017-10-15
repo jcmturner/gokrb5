@@ -12,11 +12,11 @@ import (
 )
 
 // ASExchange performs an AS exchange for the client to retrieve a TGT.
-func (cl *Client) ASExchange() error {
+func (cl *Client) ASExchange(realm string) error {
 	if ok, err := cl.IsConfigured(); !ok {
 		return krberror.Errorf(err, krberror.ConfigError, "AS Exchange cannot be preformed")
 	}
-	ASReq, err := messages.NewASReq(cl.Config, cl.Credentials.CName)
+	ASReq, err := messages.NewASReq(realm, cl.Config, cl.Credentials.CName)
 	if err != nil {
 		return krberror.Errorf(err, krberror.KRBMsgError, "Error generating new AS_REQ")
 	}
@@ -59,7 +59,8 @@ func (cl *Client) ASExchange() error {
 	if ok, err := ASRep.IsValid(cl.Config, cl.Credentials, ASReq); !ok {
 		return krberror.Errorf(err, krberror.KRBMsgError, "AS Exchange Error: AS_REP is not valid")
 	}
-	cl.session = &session{
+	s := &session{
+		Realm:                realm,
 		AuthTime:             ASRep.DecryptedEncPart.AuthTime,
 		EndTime:              ASRep.DecryptedEncPart.EndTime,
 		RenewTill:            ASRep.DecryptedEncPart.RenewTill,
@@ -67,6 +68,8 @@ func (cl *Client) ASExchange() error {
 		SessionKey:           ASRep.DecryptedEncPart.Key,
 		SessionKeyExpiration: ASRep.DecryptedEncPart.KeyExpiration,
 	}
+	cl.sessions[realm] = s
+	cl.EnableAutoSessionRenewal(s)
 	return nil
 }
 
