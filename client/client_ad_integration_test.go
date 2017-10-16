@@ -103,7 +103,4 @@ func TestClient_GetServiceTicket_AD_TRUST_USER_DOMAIN(t *testing.T) {
 	}
 	assert.True(t, isPAC, "Did not find PAC in service ticket")
 
-	t.Logf("Res Group prefix: %+v\n", pac.KerbValidationInfo.ResourceGroupDomainSID.ToString())
-
-	t.Logf("PAC: %+v\n", pac.KerbValidationInfo.GetGroupMembershipSIDs())
 }
