@@ -31,7 +31,7 @@ func (cl *Client) ASExchange(realm string) error {
 
 	var ASRep messages.ASRep
 
-	rb, err := cl.SendToKDC(b, ASReq.ReqBody.SName)
+	rb, err := cl.SendToKDC(b, realm)
 	if err != nil {
 		if e, ok := err.(messages.KRBError); ok && e.ErrorCode == errorcode.KDC_ERR_PREAUTH_REQUIRED {
 			// From now on assume this client will need to do this pre-auth and set the PAData
@@ -44,7 +44,7 @@ func (cl *Client) ASExchange(realm string) error {
 			if err != nil {
 				return krberror.Errorf(err, krberror.EncodingError, "AS Exchange Error: failed marshaling AS_REQ with PAData")
 			}
-			rb, err = cl.SendToKDC(b, ASReq.ReqBody.SName)
+			rb, err = cl.SendToKDC(b, realm)
 			if err != nil {
 				return krberror.Errorf(err, krberror.NetworkingError, "AS Exchange Error: failed sending AS_REQ to KDC")
 			}
@@ -59,17 +59,7 @@ func (cl *Client) ASExchange(realm string) error {
 	if ok, err := ASRep.IsValid(cl.Config, cl.Credentials, ASReq); !ok {
 		return krberror.Errorf(err, krberror.KRBMsgError, "AS Exchange Error: AS_REP is not valid")
 	}
-	s := &session{
-		Realm:                realm,
-		AuthTime:             ASRep.DecryptedEncPart.AuthTime,
-		EndTime:              ASRep.DecryptedEncPart.EndTime,
-		RenewTill:            ASRep.DecryptedEncPart.RenewTill,
-		TGT:                  ASRep.Ticket,
-		SessionKey:           ASRep.DecryptedEncPart.Key,
-		SessionKeyExpiration: ASRep.DecryptedEncPart.KeyExpiration,
-	}
-	cl.sessions[realm] = s
-	cl.EnableAutoSessionRenewal(s)
+	cl.AddSession(ASRep.Ticket, ASRep.DecryptedEncPart)
 	return nil
 }
 
