@@ -102,5 +102,6 @@ func TestClient_GetServiceTicket_AD_TRUST_USER_DOMAIN(t *testing.T) {
 		t.Errorf("Error getting PAC: %v", err)
 	}
 	assert.True(t, isPAC, "Did not find PAC in service ticket")
+	assert.Equal(t, "testuser1", pac.KerbValidationInfo.EffectiveName.Value, "PAC value not parsed")
 
 }
