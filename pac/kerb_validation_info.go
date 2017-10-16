@@ -225,11 +225,10 @@ func (k *KerbValidationInfo) Unmarshal(b []byte) (err error) {
 
 // GetGroupMembershipSIDs returns a slice of strings containing the group membership SIDs found in the PAC.
 func (k *KerbValidationInfo) GetGroupMembershipSIDs() []string {
-	gSize := len(k.GroupIDs) + len(k.ExtraSIDs)
-	g := make([]string, gSize, gSize)
+	var g []string
 	lSID := k.LogonDomainID.ToString()
 	for i := range k.GroupIDs {
-		g[i] = fmt.Sprintf("%s-%d", lSID, k.GroupIDs[i].RelativeID)
+		g = append(g, fmt.Sprintf("%s-%d", lSID, k.GroupIDs[i].RelativeID))
 	}
 	for _, s := range k.ExtraSIDs {
 		var exists = false
@@ -245,7 +244,7 @@ func (k *KerbValidationInfo) GetGroupMembershipSIDs() []string {
 	}
 	for _, r := range k.ResourceGroupIDs {
 		var exists = false
-		s := fmt.Sprintf("%s-%d", lSID, r)
+		s := fmt.Sprintf("%s-%d", k.ResourceGroupDomainSID.ToString(), r.RelativeID)
 		for _, es := range g {
 			if es == s {
 				exists = true

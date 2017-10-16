@@ -265,35 +265,35 @@ func (k *TGSRep) DecryptEncPart(key types.EncryptionKey) error {
 // IsValid checks the validity of the TGS_REP message.
 func (k *TGSRep) IsValid(cfg *config.Config, tgsReq TGSReq) (bool, error) {
 	if k.CName.NameType != tgsReq.ReqBody.CName.NameType || k.CName.NameString == nil {
-		return false, krberror.NewErrorf(krberror.KRBMsgError, "CName in response does not match what was requested. Requested: %+v; Reply: %+v", tgsReq.ReqBody.CName, k.CName)
+		return false, krberror.NewErrorf(krberror.KRBMsgError, "CName type in response does not match what was requested. Requested: %+v; Reply: %+v", tgsReq.ReqBody.CName, k.CName)
 	}
 	for i := range k.CName.NameString {
 		if k.CName.NameString[i] != tgsReq.ReqBody.CName.NameString[i] {
 			return false, krberror.NewErrorf(krberror.KRBMsgError, "CName in response does not match what was requested. Requested: %+v; Reply: %+v", tgsReq.ReqBody.CName, k.CName)
 		}
 	}
-	if k.CRealm != tgsReq.ReqBody.Realm {
-		return false, krberror.NewErrorf(krberror.KRBMsgError, "CRealm in response does not match what was requested. Requested: %s; Reply: %s", tgsReq.ReqBody.Realm, k.CRealm)
+	if k.Ticket.Realm != tgsReq.ReqBody.Realm {
+		return false, krberror.NewErrorf(krberror.KRBMsgError, "Realm in response ticket does not match what was requested. Requested: %s; Reply: %s", tgsReq.ReqBody.Realm, k.Ticket.Realm)
 	}
 	if k.DecryptedEncPart.Nonce != tgsReq.ReqBody.Nonce {
 		return false, krberror.NewErrorf(krberror.KRBMsgError, "Possible replay attack, nonce in response does not match that in request")
 	}
-	if k.Ticket.SName.NameType != tgsReq.ReqBody.SName.NameType || k.Ticket.SName.NameString == nil {
-		return false, krberror.NewErrorf(krberror.KRBMsgError, "SName in response ticket does not match what was requested. Requested: %v; Reply: %v", tgsReq.ReqBody.SName, k.Ticket.SName)
-	}
-	for i := range k.Ticket.SName.NameString {
-		if k.Ticket.SName.NameString[i] != tgsReq.ReqBody.SName.NameString[i] {
-			return false, krberror.NewErrorf(krberror.KRBMsgError, "SName in response ticket does not match what was requested. Requested: %+v; Reply: %+v", tgsReq.ReqBody.SName, k.Ticket.SName)
-		}
-	}
-	if k.DecryptedEncPart.SName.NameType != tgsReq.ReqBody.SName.NameType || k.DecryptedEncPart.SName.NameString == nil {
-		return false, krberror.NewErrorf(krberror.KRBMsgError, "SName in response does not match what was requested. Requested: %v; Reply: %v", tgsReq.ReqBody.SName, k.DecryptedEncPart.SName)
-	}
-	for i := range k.CName.NameString {
-		if k.DecryptedEncPart.SName.NameString[i] != tgsReq.ReqBody.SName.NameString[i] {
-			return false, krberror.NewErrorf(krberror.KRBMsgError, "SName in response does not match what was requested. Requested: %+v; Reply: %+v", tgsReq.ReqBody.SName, k.DecryptedEncPart.SName)
-		}
-	}
+	//if k.Ticket.SName.NameType != tgsReq.ReqBody.SName.NameType || k.Ticket.SName.NameString == nil {
+	//	return false, krberror.NewErrorf(krberror.KRBMsgError, "SName in response ticket does not match what was requested. Requested: %v; Reply: %v", tgsReq.ReqBody.SName, k.Ticket.SName)
+	//}
+	//for i := range k.Ticket.SName.NameString {
+	//	if k.Ticket.SName.NameString[i] != tgsReq.ReqBody.SName.NameString[i] {
+	//		return false, krberror.NewErrorf(krberror.KRBMsgError, "SName in response ticket does not match what was requested. Requested: %+v; Reply: %+v", tgsReq.ReqBody.SName, k.Ticket.SName)
+	//	}
+	//}
+	//if k.DecryptedEncPart.SName.NameType != tgsReq.ReqBody.SName.NameType || k.DecryptedEncPart.SName.NameString == nil {
+	//	return false, krberror.NewErrorf(krberror.KRBMsgError, "SName in response does not match what was requested. Requested: %v; Reply: %v", tgsReq.ReqBody.SName, k.DecryptedEncPart.SName)
+	//}
+	//for i := range k.DecryptedEncPart.SName.NameString {
+	//	if k.DecryptedEncPart.SName.NameString[i] != tgsReq.ReqBody.SName.NameString[i] {
+	//		return false, krberror.NewErrorf(krberror.KRBMsgError, "SName in response does not match what was requested. Requested: %+v; Reply: %+v", tgsReq.ReqBody.SName, k.DecryptedEncPart.SName)
+	//	}
+	//}
 	if k.DecryptedEncPart.SRealm != tgsReq.ReqBody.Realm {
 		return false, krberror.NewErrorf(krberror.KRBMsgError, "SRealm in response does not match what was requested. Requested: %s; Reply: %s", tgsReq.ReqBody.Realm, k.DecryptedEncPart.SRealm)
 	}

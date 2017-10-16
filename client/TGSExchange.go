@@ -11,8 +11,14 @@ import (
 
 // TGSExchange performs a TGS exchange to retrieve a ticket to the specified SPN.
 // The ticket retrieved is added to the client's cache.
-func (cl *Client) TGSExchange(spn types.PrincipalName, tkt messages.Ticket, sessionKey types.EncryptionKey, renewal bool) (tgsReq messages.TGSReq, tgsRep messages.TGSRep, err error) {
-	tgsReq, err = messages.NewTGSReq(cl.Credentials.CName, cl.Config, tkt, sessionKey, spn, renewal)
+func (cl *Client) TGSExchange(spn types.PrincipalName, kdcRealm string, tkt messages.Ticket, sessionKey types.EncryptionKey, renewal bool) (tgsReq messages.TGSReq, tgsRep messages.TGSRep, err error) {
+	//// Check what sessions we have for this SPN.
+	//// Will get the session to the default realm if one does not exist for requested SPN
+	//sess, err := cl.GetSessionFromPrincipalName(spn)
+	//if err != nil {
+	//	return tgsReq, tgsRep,  err
+	//}
+	tgsReq, err = messages.NewTGSReq(cl.Credentials.CName, kdcRealm, cl.Config, tkt, sessionKey, spn, renewal)
 	if err != nil {
 		return tgsReq, tgsRep, krberror.Errorf(err, krberror.KRBMsgError, "TGS Exchange Error: failed to generate a new TGS_REQ")
 	}
@@ -20,7 +26,7 @@ func (cl *Client) TGSExchange(spn types.PrincipalName, tkt messages.Ticket, sess
 	if err != nil {
 		return tgsReq, tgsRep, krberror.Errorf(err, krberror.EncodingError, "TGS Exchange Error: failed to generate a new TGS_REQ")
 	}
-	r, err := cl.SendToKDC(b, tgsReq.ReqBody.SName)
+	r, err := cl.SendToKDC(b, kdcRealm)
 	if err != nil {
 		return tgsReq, tgsRep, krberror.Errorf(err, krberror.NetworkingError, "TGS Exchange Error: issue sending TGS_REQ to KDC")
 	}
@@ -31,6 +37,15 @@ func (cl *Client) TGSExchange(spn types.PrincipalName, tkt messages.Ticket, sess
 	err = tgsRep.DecryptEncPart(sessionKey)
 	if err != nil {
 		return tgsReq, tgsRep, krberror.Errorf(err, krberror.EncodingError, "TGS Exchange Error: failed to process the TGS_REP")
+	}
+	if tgsRep.Ticket.SName.NameType == nametype.KRB_NT_SRV_INST {
+		if ok, err := tgsRep.IsValid(cl.Config, tgsReq); !ok {
+			return tgsReq, tgsRep, krberror.Errorf(err, krberror.EncodingError, "TGS Exchange Error: TGS_REP is not valid")
+		}
+		// The TGS Rep contains a TGT for another domain as the service resides in that domain.
+		cl.AddSession(tgsRep.Ticket, tgsRep.DecryptedEncPart)
+		realm := tgsRep.Ticket.SName.NameString[1]
+		return cl.TGSExchange(spn, realm, tgsRep.Ticket, tgsRep.DecryptedEncPart.Key, false)
 	}
 	if ok, err := tgsRep.IsValid(cl.Config, tgsReq); !ok {
 		return tgsReq, tgsRep, krberror.Errorf(err, krberror.EncodingError, "TGS Exchange Error: TGS_REP is not valid")
@@ -64,7 +79,7 @@ func (cl *Client) GetServiceTicket(spn string) (messages.Ticket, types.Encryptio
 			return tkt, skey, err
 		}
 	}
-	_, tgsRep, err := cl.TGSExchange(princ, sess.TGT, sess.SessionKey, false)
+	_, tgsRep, err := cl.TGSExchange(princ, sess.TGT.Realm, sess.TGT, sess.SessionKey, false)
 	if err != nil {
 		return tkt, skey, err
 	}

@@ -128,7 +128,7 @@ func NewASReq(realm string, c *config.Config, cname types.PrincipalName) (ASReq,
 }
 
 // NewTGSReq generates a new KRB_TGS_REQ struct.
-func NewTGSReq(cname types.PrincipalName, c *config.Config, tkt Ticket, sessionKey types.EncryptionKey, spn types.PrincipalName, renewal bool) (TGSReq, error) {
+func NewTGSReq(cname types.PrincipalName, kdcRealm string, c *config.Config, tkt Ticket, sessionKey types.EncryptionKey, spn types.PrincipalName, renewal bool) (TGSReq, error) {
 	nonce, err := rand.Int(rand.Reader, big.NewInt(math.MaxInt32))
 	if err != nil {
 		return TGSReq{}, err
@@ -140,12 +140,11 @@ func NewTGSReq(cname types.PrincipalName, c *config.Config, tkt Ticket, sessionK
 			MsgType: msgtype.KRB_TGS_REQ,
 			ReqBody: KDCReqBody{
 				KDCOptions: types.NewKrbFlags(),
-				Realm:      c.ResolveRealm(spn.NameString[len(spn.NameString)-1]),
+				Realm:      kdcRealm,
 				SName:      spn,
 				Till:       t.Add(c.LibDefaults.TicketLifetime),
-				//Till:  t.Add(time.Duration(2) * time.Minute),
-				Nonce: int(nonce.Int64()),
-				EType: c.LibDefaults.DefaultTGSEnctypeIDs,
+				Nonce:      int(nonce.Int64()),
+				EType:      c.LibDefaults.DefaultTGSEnctypeIDs,
 			},
 			Renewal: renewal,
 		},

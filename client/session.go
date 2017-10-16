@@ -1,7 +1,7 @@
 package client
 
 import (
-	"errors"
+	"fmt"
 	"gopkg.in/jcmturner/gokrb5.v1/iana/nametype"
 	"gopkg.in/jcmturner/gokrb5.v1/krberror"
 	"gopkg.in/jcmturner/gokrb5.v1/messages"
@@ -21,6 +21,21 @@ type session struct {
 	TGT                  messages.Ticket
 	SessionKey           types.EncryptionKey
 	SessionKeyExpiration time.Time
+}
+
+//
+func (cl *Client) AddSession(tkt messages.Ticket, dep messages.EncKDCRepPart) {
+	s := &session{
+		Realm:                tkt.SName.NameString[1],
+		AuthTime:             dep.AuthTime,
+		EndTime:              dep.EndTime,
+		RenewTill:            dep.RenewTill,
+		TGT:                  tkt,
+		SessionKey:           dep.Key,
+		SessionKeyExpiration: dep.KeyExpiration,
+	}
+	cl.sessions[tkt.SName.NameString[1]] = s
+	cl.EnableAutoSessionRenewal(s)
 }
 
 // EnableAutoSessionRenewal turns on the automatic renewal for the client's TGT session.
@@ -45,7 +60,7 @@ func (cl *Client) RenewTGT(s *session) error {
 		NameType:   nametype.KRB_NT_SRV_INST,
 		NameString: []string{"krbtgt", s.Realm},
 	}
-	_, tgsRep, err := cl.TGSExchange(spn, s.TGT, s.SessionKey, true)
+	_, tgsRep, err := cl.TGSExchange(spn, s.TGT.Realm, s.TGT, s.SessionKey, true)
 	if err != nil {
 		return krberror.Errorf(err, krberror.KRBMsgError, "Error renewing TGT")
 	}
@@ -80,7 +95,7 @@ func (cl *Client) GetSessionFromRealm(realm string) (sess *session, err error) {
 	if !ok {
 		sess, ok = cl.sessions[cl.Config.LibDefaults.DefaultRealm]
 		if !ok {
-			err = errors.New("client does not have a session, login first")
+			err = fmt.Errorf("client does not have a session for realm %s or for the default realm %s, login first", realm, cl.Config.LibDefaults.DefaultRealm)
 			return
 		}
 	}
