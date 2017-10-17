@@ -77,7 +77,7 @@ func (cl *Client) GetCachedTicket(spn string) (messages.Ticket, types.Encryption
 // RenewTicket renews a cache entry ticket
 func (cl *Client) RenewTicket(e CacheEntry) (CacheEntry, error) {
 	spn := e.Ticket.SName
-	_, tgsRep, err := cl.TGSExchange(spn, e.Ticket.Realm, e.Ticket, e.SessionKey, true)
+	_, tgsRep, err := cl.TGSExchange(spn, e.Ticket.Realm, e.Ticket, e.SessionKey, true, 0)
 	if err != nil {
 		return e, err
 	}

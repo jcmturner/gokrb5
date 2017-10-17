@@ -70,6 +70,7 @@ func TestClient_GetServiceTicket_AD_TRUST_USER_DOMAIN(t *testing.T) {
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	c.Realms[0].KDC = []string{testdata.TEST_KDC_AD_TRUST_USER_DOMAIN}
 	c.LibDefaults.DefaultRealm = "USER.GOKRB5"
+	c.LibDefaults.Canonicalize = true
 	cl := NewClientWithKeytab("testuser1", "USER.GOKRB5", kt)
 	c.LibDefaults.DefaultTktEnctypes = []string{"rc4-hmac"}
 	c.LibDefaults.DefaultTktEnctypeIDs = []int{etypeID.ETypesByName["rc4-hmac"]}
