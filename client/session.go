@@ -60,7 +60,7 @@ func (cl *Client) RenewTGT(s *session) error {
 		NameType:   nametype.KRB_NT_SRV_INST,
 		NameString: []string{"krbtgt", s.Realm},
 	}
-	_, tgsRep, err := cl.TGSExchange(spn, s.TGT.Realm, s.TGT, s.SessionKey, true)
+	_, tgsRep, err := cl.TGSExchange(spn, s.TGT.Realm, s.TGT, s.SessionKey, true, 0)
 	if err != nil {
 		return krberror.Errorf(err, krberror.KRBMsgError, "Error renewing TGT")
 	}
