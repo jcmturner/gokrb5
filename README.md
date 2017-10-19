@@ -84,10 +84,8 @@ Login:
 ```go
 err := cl.Login()
 ```
-(Optional) Enable automatic refresh of Kerberos Ticket Granting Ticket (TGT):
-```go
-cl.EnableAutoSessionRenewal()
-```
+Kerberos Ticket Granting Tickets (TGT) will be automatically renewed unless the client was created from a CCache.
+
 #### Authenticate to a Service
 
 ##### HTTP SPNEGO
