@@ -20,7 +20,7 @@ type Client struct {
 	Credentials *credentials.Credentials
 	Config      *config.Config
 	GoKrb5Conf  *Config
-	sessions    sessions
+	sessions    *sessions
 	Cache       *Cache
 }
 
@@ -39,8 +39,10 @@ func NewClientWithPassword(username, realm, password string) Client {
 		Credentials: creds.WithPassword(password),
 		Config:      config.NewConfig(),
 		GoKrb5Conf:  &Config{},
-		sessions:    make(sessions),
-		Cache:       NewCache(),
+		sessions: &sessions{
+			Entries: make(map[string]*session),
+		},
+		Cache: NewCache(),
 	}
 }
 
@@ -51,8 +53,10 @@ func NewClientWithKeytab(username, realm string, kt keytab.Keytab) Client {
 		Credentials: creds.WithKeytab(kt),
 		Config:      config.NewConfig(),
 		GoKrb5Conf:  &Config{},
-		sessions:    make(sessions),
-		Cache:       NewCache(),
+		sessions: &sessions{
+			Entries: make(map[string]*session),
+		},
+		Cache: NewCache(),
 	}
 }
 
@@ -64,8 +68,10 @@ func NewClientFromCCache(c credentials.CCache) (Client, error) {
 		Credentials: c.GetClientCredentials(),
 		Config:      config.NewConfig(),
 		GoKrb5Conf:  &Config{},
-		sessions:    make(sessions),
-		Cache:       NewCache(),
+		sessions: &sessions{
+			Entries: make(map[string]*session),
+		},
+		Cache: NewCache(),
 	}
 	spn := types.PrincipalName{
 		NameType:   nametype.KRB_NT_SRV_INST,
@@ -80,7 +86,7 @@ func NewClientFromCCache(c credentials.CCache) (Client, error) {
 	if err != nil {
 		return cl, fmt.Errorf("TGT bytes in cache are not valid: %v", err)
 	}
-	cl.sessions[c.DefaultPrincipal.Realm] = &session{
+	cl.sessions.Entries[c.DefaultPrincipal.Realm] = &session{
 		Realm:      c.DefaultPrincipal.Realm,
 		AuthTime:   cred.AuthTime,
 		EndTime:    cred.EndTime,
@@ -159,8 +165,11 @@ func (cl *Client) LoadConfig(cfgPath string) (*Client, error) {
 // IsConfigured indicates if the client has the values required set.
 func (cl *Client) IsConfigured() (bool, error) {
 	// Client needs to have either a password, keytab or a session already (later when loading from CCache)
-	if !cl.Credentials.HasPassword() && !cl.Credentials.HasKeytab() && cl.sessions[cl.Config.LibDefaults.DefaultRealm].AuthTime.IsZero() {
-		return false, errors.New("client has neither a keytab nor a password set and no session")
+	if !cl.Credentials.HasPassword() && !cl.Credentials.HasKeytab() {
+		sess, err := cl.GetSessionFromRealm(cl.Config.LibDefaults.DefaultRealm)
+		if err != nil || sess.AuthTime.IsZero() {
+			return false, errors.New("client has neither a keytab nor a password set and no session")
+		}
 	}
 	if cl.Credentials.Username == "" {
 		return false, errors.New("client does not have a username")

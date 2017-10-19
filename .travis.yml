@@ -8,7 +8,7 @@ go:
 
 go_import_path: gopkg.in/jcmturner/gokrb5.v1
 
-gobuild_args: -tags=integration
+gobuild_args: -tags=integration -race
 
 sudo: required
 
