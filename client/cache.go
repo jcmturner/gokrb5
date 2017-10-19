@@ -4,12 +4,14 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v1/messages"
 	"gopkg.in/jcmturner/gokrb5.v1/types"
 	"strings"
+	"sync"
 	"time"
 )
 
 // Cache for client tickets.
 type Cache struct {
 	Entries map[string]CacheEntry
+	mux     sync.RWMutex
 }
 
 // CacheEntry holds details for a client cache entry.
@@ -31,6 +33,8 @@ func NewCache() *Cache {
 
 // GetEntry returns a cache entry that matches the SPN.
 func (c *Cache) getEntry(spn string) (CacheEntry, bool) {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
 	e, ok := (*c).Entries[spn]
 	return e, ok
 }
@@ -38,6 +42,8 @@ func (c *Cache) getEntry(spn string) (CacheEntry, bool) {
 // AddEntry adds a ticket to the cache.
 func (c *Cache) addEntry(tkt messages.Ticket, authTime, startTime, endTime, renewTill time.Time, sessionKey types.EncryptionKey) CacheEntry {
 	spn := strings.Join(tkt.SName.NameString, "/")
+	c.mux.Lock()
+	defer c.mux.Unlock()
 	(*c).Entries[spn] = CacheEntry{
 		Ticket:     tkt,
 		AuthTime:   authTime,
@@ -51,6 +57,8 @@ func (c *Cache) addEntry(tkt messages.Ticket, authTime, startTime, endTime, rene
 
 // RemoveEntry removes the cache entry for the defined SPN.
 func (c *Cache) RemoveEntry(spn string) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
 	delete(c.Entries, spn)
 }
 

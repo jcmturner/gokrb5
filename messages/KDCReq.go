@@ -89,21 +89,24 @@ func NewASReq(realm string, c *config.Config, cname types.PrincipalName) (ASReq,
 		return ASReq{}, err
 	}
 	t := time.Now().UTC()
+	// Copy the default options to make this thread safe
+	var kopts asn1.BitString
+	copy(kopts.Bytes, c.LibDefaults.KDCDefaultOptions.Bytes)
+	kopts.BitLength = c.LibDefaults.KDCDefaultOptions.BitLength
 	a := ASReq{
 		KDCReqFields{
 			PVNO:    iana.PVNO,
 			MsgType: msgtype.KRB_AS_REQ,
 			PAData:  types.PADataSequence{},
 			ReqBody: KDCReqBody{
-				KDCOptions: c.LibDefaults.KDCDefaultOptions,
+				KDCOptions: kopts,
 				Realm:      realm,
 				CName:      cname,
 				SName: types.PrincipalName{
 					NameType:   nametype.KRB_NT_SRV_INST,
 					NameString: []string{"krbtgt", realm},
 				},
-				Till: t.Add(c.LibDefaults.TicketLifetime),
-				//Till:  t.Add(time.Duration(24) * time.Hour),
+				Till:  t.Add(c.LibDefaults.TicketLifetime),
 				Nonce: int(nonce.Int64()),
 				EType: c.LibDefaults.DefaultTktEnctypeIDs,
 			},

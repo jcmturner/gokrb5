@@ -6,11 +6,15 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v1/krberror"
 	"gopkg.in/jcmturner/gokrb5.v1/messages"
 	"gopkg.in/jcmturner/gokrb5.v1/types"
+	"sync"
 	"time"
 )
 
 // Sessions keyed on the realm name
-type sessions map[string]*session
+type sessions struct {
+	Entries map[string]*session
+	mux     sync.RWMutex
+}
 
 // Client session struct.
 type session struct {
@@ -25,6 +29,8 @@ type session struct {
 
 //
 func (cl *Client) AddSession(tkt messages.Ticket, dep messages.EncKDCRepPart) {
+	cl.sessions.mux.Lock()
+	defer cl.sessions.mux.Unlock()
 	s := &session{
 		Realm:                tkt.SName.NameString[1],
 		AuthTime:             dep.AuthTime,
@@ -34,7 +40,7 @@ func (cl *Client) AddSession(tkt messages.Ticket, dep messages.EncKDCRepPart) {
 		SessionKey:           dep.Key,
 		SessionKeyExpiration: dep.KeyExpiration,
 	}
-	cl.sessions[tkt.SName.NameString[1]] = s
+	cl.sessions.Entries[tkt.SName.NameString[1]] = s
 	cl.EnableAutoSessionRenewal(s)
 }
 
@@ -91,9 +97,11 @@ func (cl *Client) updateSession(s *session) error {
 
 func (cl *Client) GetSessionFromRealm(realm string) (sess *session, err error) {
 	var ok bool
-	sess, ok = cl.sessions[realm]
+	cl.sessions.mux.RLock()
+	defer cl.sessions.mux.RUnlock()
+	sess, ok = cl.sessions.Entries[realm]
 	if !ok {
-		sess, ok = cl.sessions[cl.Config.LibDefaults.DefaultRealm]
+		sess, ok = cl.sessions.Entries[cl.Config.LibDefaults.DefaultRealm]
 		if !ok {
 			err = fmt.Errorf("client does not have a session for realm %s or for the default realm %s, login first", realm, cl.Config.LibDefaults.DefaultRealm)
 			return
