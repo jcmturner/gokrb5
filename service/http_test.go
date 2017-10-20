@@ -122,8 +122,6 @@ func TestService_SPNEGOKRB_Replay(t *testing.T) {
 
 	// Form a 2nd ticket
 	st = time.Now().UTC()
-	t.Logf("%v\n", st)
-
 	tkt2, sessionKey2, err := messages.NewTicket(cl.Credentials.CName, cl.Credentials.Realm,
 		sname, "TEST.GOKRB5",
 		types.NewKrbFlags(),

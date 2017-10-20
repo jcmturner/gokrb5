@@ -190,5 +190,5 @@ func (cl *Client) IsConfigured() (bool, error) {
 
 // Login the client with the KDC via an AS exchange.
 func (cl *Client) Login() error {
-	return cl.ASExchange(cl.Config.LibDefaults.DefaultRealm)
+	return cl.ASExchange(cl.Config.LibDefaults.DefaultRealm, 0)
 }
