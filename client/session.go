@@ -27,7 +27,8 @@ type session struct {
 	SessionKeyExpiration time.Time
 }
 
-//
+// AddSession adds a session for a realm with a TGT to the client's session cache.
+// A goroutine is started to automatically renew the TGT before expiry.
 func (cl *Client) AddSession(tkt messages.Ticket, dep messages.EncKDCRepPart) {
 	cl.sessions.mux.Lock()
 	defer cl.sessions.mux.Unlock()
@@ -41,11 +42,11 @@ func (cl *Client) AddSession(tkt messages.Ticket, dep messages.EncKDCRepPart) {
 		SessionKeyExpiration: dep.KeyExpiration,
 	}
 	cl.sessions.Entries[tkt.SName.NameString[1]] = s
-	cl.EnableAutoSessionRenewal(s)
+	cl.enableAutoSessionRenewal(s)
 }
 
 // EnableAutoSessionRenewal turns on the automatic renewal for the client's TGT session.
-func (cl *Client) EnableAutoSessionRenewal(s *session) {
+func (cl *Client) enableAutoSessionRenewal(s *session) {
 	// TODO look into using a context here
 	go func(s *session) {
 		for {
@@ -61,7 +62,7 @@ func (cl *Client) EnableAutoSessionRenewal(s *session) {
 }
 
 // RenewTGT renews the client's TGT session.
-func (cl *Client) RenewTGT(s *session) error {
+func (cl *Client) renewTGT(s *session) error {
 	spn := types.PrincipalName{
 		NameType:   nametype.KRB_NT_SRV_INST,
 		NameString: []string{"krbtgt", s.Realm},
@@ -82,7 +83,7 @@ func (cl *Client) RenewTGT(s *session) error {
 
 func (cl *Client) updateSession(s *session) error {
 	if time.Now().UTC().Before(s.RenewTill) {
-		err := cl.RenewTGT(s)
+		err := cl.renewTGT(s)
 		if err != nil {
 			return err
 		}
@@ -95,6 +96,7 @@ func (cl *Client) updateSession(s *session) error {
 	return nil
 }
 
+// GetSessionFromRealm returns the session for the realm provided.
 func (cl *Client) GetSessionFromRealm(realm string) (sess *session, err error) {
 	var ok bool
 	cl.sessions.mux.RLock()
@@ -110,6 +112,7 @@ func (cl *Client) GetSessionFromRealm(realm string) (sess *session, err error) {
 	return
 }
 
+// GetSessionFromPrincipalName returns the session for the realm of the principal provided.
 func (cl *Client) GetSessionFromPrincipalName(spn types.PrincipalName) (*session, error) {
 	realm := cl.Config.ResolveRealm(spn.NameString[1])
 	return cl.GetSessionFromRealm(realm)
