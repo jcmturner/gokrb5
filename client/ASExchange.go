@@ -12,7 +12,7 @@ import (
 )
 
 // ASExchange performs an AS exchange for the client to retrieve a TGT.
-func (cl *Client) ASExchange(realm string) error {
+func (cl *Client) ASExchange(realm string, referral int) error {
 	if ok, err := cl.IsConfigured(); !ok {
 		return krberror.Errorf(err, krberror.ConfigError, "AS Exchange cannot be preformed")
 	}
@@ -33,20 +33,27 @@ func (cl *Client) ASExchange(realm string) error {
 
 	rb, err := cl.SendToKDC(b, realm)
 	if err != nil {
-		if e, ok := err.(messages.KRBError); ok && e.ErrorCode == errorcode.KDC_ERR_PREAUTH_REQUIRED {
-			// From now on assume this client will need to do this pre-auth and set the PAData
-			cl.GoKrb5Conf.AssumePAEncTimestampRequired = true
-			err = setPAData(cl, e, &ASReq)
-			if err != nil {
-				return krberror.Errorf(err, krberror.KRBMsgError, "AS Exchange Error: failed setting AS_REQ PAData for pre-authentication required")
-			}
-			b, err := ASReq.Marshal()
-			if err != nil {
-				return krberror.Errorf(err, krberror.EncodingError, "AS Exchange Error: failed marshaling AS_REQ with PAData")
-			}
-			rb, err = cl.SendToKDC(b, realm)
-			if err != nil {
-				return krberror.Errorf(err, krberror.NetworkingError, "AS Exchange Error: failed sending AS_REQ to KDC")
+		if e, ok := err.(messages.KRBError); ok {
+			switch e.ErrorCode {
+			case errorcode.KDC_ERR_PREAUTH_REQUIRED:
+				// From now on assume this client will need to do this pre-auth and set the PAData
+				cl.GoKrb5Conf.AssumePAEncTimestampRequired = true
+				err = setPAData(cl, e, &ASReq)
+				if err != nil {
+					return krberror.Errorf(err, krberror.KRBMsgError, "AS Exchange Error: failed setting AS_REQ PAData for pre-authentication required")
+				}
+				b, err := ASReq.Marshal()
+				if err != nil {
+					return krberror.Errorf(err, krberror.EncodingError, "AS Exchange Error: failed marshaling AS_REQ with PAData")
+				}
+				rb, err = cl.SendToKDC(b, realm)
+				if err != nil {
+					return krberror.Errorf(err, krberror.NetworkingError, "AS Exchange Error: failed sending AS_REQ to KDC")
+				}
+			case errorcode.KDC_ERR_WRONG_REALM:
+				// Client referral https://tools.ietf.org/html/rfc6806.html#section-7
+				referral += 1
+				cl.ASExchange(e.CRealm, referral)
 			}
 		} else {
 			return krberror.Errorf(err, krberror.NetworkingError, "AS Exchange Error: failed sending AS_REQ to KDC")
