@@ -111,14 +111,12 @@ func TestService_SPNEGOKRB_Replay(t *testing.T) {
 	}
 	assert.Equal(t, http.StatusOK, httpResp.StatusCode, "Status code in response to client SPNEGO request not as expected")
 
-	// A number of concurrent requests with the same ticket should be rejected due to replay
-	var wg sync.WaitGroup
-	noReq := 10
-	wg.Add(noReq)
-	for i := 0; i < noReq; i++ {
-		go httpGetReplay(t, r1, &wg)
+	// Use ticket again should be rejected
+	httpResp, err = http.DefaultClient.Do(r1)
+	if err != nil {
+		t.Fatalf("Request error: %v\n", err)
 	}
-	wg.Wait()
+	assert.Equal(t, http.StatusUnauthorized, httpResp.StatusCode, "Status code in response to client with no SPNEGO not as expected. Expected a replay to be detected.")
 
 	// Form a 2nd ticket
 	st = time.Now().UTC()
@@ -164,13 +162,82 @@ func TestService_SPNEGOKRB_Replay(t *testing.T) {
 	assert.Equal(t, http.StatusUnauthorized, httpResp.StatusCode, "Status code in response to client with no SPNEGO not as expected. Expected a replay to be detected.")
 }
 
-func httpGetReplay(t *testing.T, r *http.Request, wg *sync.WaitGroup) {
-	defer wg.Done()
-	httpResp, err := http.DefaultClient.Do(r)
-	if err != nil {
-		t.Fatalf("Request error: %v\n", err)
+func TestService_SPNEGOKRB_ReplayCache_Concurrency(t *testing.T) {
+	s := httpServer()
+	defer s.Close()
+
+	cl := getClient()
+	sname := types.PrincipalName{
+		NameType:   nametype.KRB_NT_PRINCIPAL,
+		NameString: []string{"HTTP", "host.test.gokrb5"},
 	}
-	assert.Equal(t, http.StatusUnauthorized, httpResp.StatusCode, "Status code in response to client with no SPNEGO not as expected. Expected a replay to be detected.")
+	b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
+	kt, _ := keytab.Parse(b)
+	st := time.Now().UTC()
+	tkt, sessionKey, err := messages.NewTicket(cl.Credentials.CName, cl.Credentials.Realm,
+		sname, "TEST.GOKRB5",
+		types.NewKrbFlags(),
+		kt,
+		18,
+		1,
+		st,
+		st,
+		st.Add(time.Duration(24)*time.Hour),
+		st.Add(time.Duration(48)*time.Hour),
+	)
+	if err != nil {
+		t.Fatalf("Error getting test ticket: %v", err)
+	}
+
+	r1, _ := http.NewRequest("GET", s.URL, nil)
+	err = client.SetSPNEGOHeader(*cl.Credentials, tkt, sessionKey, r1)
+	if err != nil {
+		t.Fatalf("Error setting client SPNEGO header: %v", err)
+	}
+
+	// Form a 2nd ticket
+	st = time.Now().UTC()
+	tkt2, sessionKey2, err := messages.NewTicket(cl.Credentials.CName, cl.Credentials.Realm,
+		sname, "TEST.GOKRB5",
+		types.NewKrbFlags(),
+		kt,
+		18,
+		1,
+		st,
+		st,
+		st.Add(time.Duration(24)*time.Hour),
+		st.Add(time.Duration(48)*time.Hour),
+	)
+	if err != nil {
+		t.Fatalf("Error getting test ticket: %v", err)
+	}
+	r2, _ := http.NewRequest("GET", s.URL, nil)
+	err = client.SetSPNEGOHeader(*cl.Credentials, tkt2, sessionKey2, r2)
+	if err != nil {
+		t.Fatalf("Error setting client SPNEGO header: %v", err)
+	}
+
+	// Concurrent 1st requests should be OK
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go httpGet(r1, &wg)
+	go httpGet(r2, &wg)
+	wg.Wait()
+
+	// A number of concurrent requests with the same ticket should be rejected due to replay
+	var wg2 sync.WaitGroup
+	noReq := 10
+	wg2.Add(noReq * 2)
+	for i := 0; i < noReq; i++ {
+		go httpGet(r1, &wg2)
+		go httpGet(r2, &wg2)
+	}
+	wg2.Wait()
+}
+
+func httpGet(r *http.Request, wg *sync.WaitGroup) {
+	defer wg.Done()
+	http.DefaultClient.Do(r)
 }
 
 func httpServer() *httptest.Server {
