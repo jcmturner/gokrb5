@@ -59,7 +59,6 @@ func httpRequest(url string, cl client.Client) {
 	if err != nil {
 		l.Printf("Error on AS_REQ: %v\n", err)
 	}
-	cl.EnableAutoSessionRenewal()
 	r, _ := http.NewRequest("GET", url, nil)
 	err = cl.SetSPNEGOHeader(r, "HTTP/host.test.gokrb5")
 	if err != nil {
