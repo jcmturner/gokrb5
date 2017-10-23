@@ -52,8 +52,11 @@ func (cl *Client) ASExchange(realm string, referral int) error {
 				}
 			case errorcode.KDC_ERR_WRONG_REALM:
 				// Client referral https://tools.ietf.org/html/rfc6806.html#section-7
+				if referral > 5 {
+					return krberror.Errorf(err, krberror.KRBMsgError, "maximum number of client referrals exceeded")
+				}
 				referral += 1
-				cl.ASExchange(e.CRealm, referral)
+				return cl.ASExchange(e.CRealm, referral)
 			}
 		} else {
 			return krberror.Errorf(err, krberror.NetworkingError, "AS Exchange Error: failed sending AS_REQ to KDC")
