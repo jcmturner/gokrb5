@@ -7,7 +7,7 @@ go get gopkg.in/jcmturner/gokrb5.v1
 ```
 To import this package, add the following line to your code:
 ```go
-import "gopkg.in/jcmturner/gokrb5.v1"
+import "gopkg.in/jcmturner/gokrb5.v1/<sub package>"
 
 ```
 
