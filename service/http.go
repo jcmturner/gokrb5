@@ -20,7 +20,7 @@ const (
 	spnegoNegTokenRespReject = "Negotiate oQcwBaADCgEC"
 	// CTXKeyAuthenticated is the request context key holding a boolean indicating if the request has been authenticated.
 	CTXKeyAuthenticated ctxKey = 0
-	// CTXKeyCredentials is the request context key holding the credentials jcmturner/goidentity/Identity object.
+	// CTXKeyCredentials is the request context key holding the credentials gopkg.in/jcmturner/goidentity.v1/Identity object.
 	CTXKeyCredentials ctxKey = 1
 )
 

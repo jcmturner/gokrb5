@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/jcmturner/goidentity"
+	goidentity "gopkg.in/jcmturner/goidentity.v1"
 	"gopkg.in/jcmturner/gokrb5.v1/client"
 	"gopkg.in/jcmturner/gokrb5.v1/config"
 	"gopkg.in/jcmturner/gokrb5.v1/credentials"
@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-// SPNEGOAuthenticator implements github.com/jcmturner/goidentity.Authenticator interface
+// SPNEGOAuthenticator implements gopkg.in/jcmturner/goidentity.v1.Authenticator interface
 type SPNEGOAuthenticator struct {
 	SPNEGOHeaderValue string
 	Keytab            *keytab.Keytab
@@ -64,7 +64,7 @@ func (a SPNEGOAuthenticator) Mechanism() string {
 	return "SPNEGO Kerberos"
 }
 
-// KRB5BasicAuthenticator implements github.com/jcmturner/goidentity.Authenticator interface.
+// KRB5BasicAuthenticator implements gopkg.in/jcmturner/goidentity.v1.Authenticator interface.
 // It takes username and password so can be used for basic authentication.
 type KRB5BasicAuthenticator struct {
 	BasicHeaderValue string

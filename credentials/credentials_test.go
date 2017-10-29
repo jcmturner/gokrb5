@@ -1,8 +1,8 @@
 package credentials
 
 import (
-	"github.com/jcmturner/goidentity"
 	"github.com/stretchr/testify/assert"
+	goidentity "gopkg.in/jcmturner/goidentity.v1"
 	"testing"
 )
 
