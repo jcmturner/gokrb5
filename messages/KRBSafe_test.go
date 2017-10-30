@@ -3,8 +3,8 @@ package messages
 import (
 	"encoding/hex"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v1/iana/msgtype"
-	"gopkg.in/jcmturner/gokrb5.v1/testdata"
+	"gopkg.in/jcmturner/gokrb5.v2/iana/msgtype"
+	"gopkg.in/jcmturner/gokrb5.v2/testdata"
 	"testing"
 	"time"
 )

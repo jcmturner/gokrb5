@@ -3,11 +3,11 @@ package client
 import (
 	"encoding/base64"
 	"fmt"
-	"gopkg.in/jcmturner/gokrb5.v1/credentials"
-	"gopkg.in/jcmturner/gokrb5.v1/gssapi"
-	"gopkg.in/jcmturner/gokrb5.v1/krberror"
-	"gopkg.in/jcmturner/gokrb5.v1/messages"
-	"gopkg.in/jcmturner/gokrb5.v1/types"
+	"gopkg.in/jcmturner/gokrb5.v2/credentials"
+	"gopkg.in/jcmturner/gokrb5.v2/gssapi"
+	"gopkg.in/jcmturner/gokrb5.v2/krberror"
+	"gopkg.in/jcmturner/gokrb5.v2/messages"
+	"gopkg.in/jcmturner/gokrb5.v2/types"
 	"net/http"
 	"strings"
 )

@@ -5,7 +5,7 @@ package types
 import (
 	"fmt"
 	"github.com/jcmturner/asn1"
-	"gopkg.in/jcmturner/gokrb5.v1/iana/patype"
+	"gopkg.in/jcmturner/gokrb5.v2/iana/patype"
 	"time"
 )
 

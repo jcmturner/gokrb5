@@ -3,10 +3,10 @@ package messages
 import (
 	"fmt"
 	"github.com/jcmturner/asn1"
-	"gopkg.in/jcmturner/gokrb5.v1/iana/asnAppTag"
-	"gopkg.in/jcmturner/gokrb5.v1/iana/msgtype"
-	"gopkg.in/jcmturner/gokrb5.v1/krberror"
-	"gopkg.in/jcmturner/gokrb5.v1/types"
+	"gopkg.in/jcmturner/gokrb5.v2/iana/asnAppTag"
+	"gopkg.in/jcmturner/gokrb5.v2/iana/msgtype"
+	"gopkg.in/jcmturner/gokrb5.v2/krberror"
+	"gopkg.in/jcmturner/gokrb5.v2/types"
 	"time"
 )
 

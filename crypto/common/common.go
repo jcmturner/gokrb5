@@ -8,7 +8,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"gopkg.in/jcmturner/gokrb5.v1/crypto/etype"
+	"gopkg.in/jcmturner/gokrb5.v2/crypto/etype"
 )
 
 const (

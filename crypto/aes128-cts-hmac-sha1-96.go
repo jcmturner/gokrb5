@@ -4,11 +4,11 @@ import (
 	"crypto/aes"
 	"crypto/hmac"
 	"crypto/sha1"
-	"gopkg.in/jcmturner/gokrb5.v1/crypto/common"
-	"gopkg.in/jcmturner/gokrb5.v1/crypto/rfc3961"
-	"gopkg.in/jcmturner/gokrb5.v1/crypto/rfc3962"
-	"gopkg.in/jcmturner/gokrb5.v1/iana/chksumtype"
-	"gopkg.in/jcmturner/gokrb5.v1/iana/etypeID"
+	"gopkg.in/jcmturner/gokrb5.v2/crypto/common"
+	"gopkg.in/jcmturner/gokrb5.v2/crypto/rfc3961"
+	"gopkg.in/jcmturner/gokrb5.v2/crypto/rfc3962"
+	"gopkg.in/jcmturner/gokrb5.v2/iana/chksumtype"
+	"gopkg.in/jcmturner/gokrb5.v2/iana/etypeID"
 	"hash"
 )
 

@@ -2,7 +2,7 @@ package mstypes
 
 import (
 	"encoding/binary"
-	"gopkg.in/jcmturner/gokrb5.v1/ndr"
+	"gopkg.in/jcmturner/gokrb5.v2/ndr"
 )
 
 // RPCUnicodeString implements https://msdn.microsoft.com/en-us/library/cc230365.aspx

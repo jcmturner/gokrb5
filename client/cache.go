@@ -1,8 +1,8 @@
 package client
 
 import (
-	"gopkg.in/jcmturner/gokrb5.v1/messages"
-	"gopkg.in/jcmturner/gokrb5.v1/types"
+	"gopkg.in/jcmturner/gokrb5.v2/messages"
+	"gopkg.in/jcmturner/gokrb5.v2/types"
 	"strings"
 	"sync"
 	"time"

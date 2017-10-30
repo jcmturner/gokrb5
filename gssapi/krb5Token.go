@@ -5,13 +5,13 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/jcmturner/asn1"
-	"gopkg.in/jcmturner/gokrb5.v1/asn1tools"
-	"gopkg.in/jcmturner/gokrb5.v1/credentials"
-	"gopkg.in/jcmturner/gokrb5.v1/crypto"
-	"gopkg.in/jcmturner/gokrb5.v1/iana/chksumtype"
-	"gopkg.in/jcmturner/gokrb5.v1/krberror"
-	"gopkg.in/jcmturner/gokrb5.v1/messages"
-	"gopkg.in/jcmturner/gokrb5.v1/types"
+	"gopkg.in/jcmturner/gokrb5.v2/asn1tools"
+	"gopkg.in/jcmturner/gokrb5.v2/credentials"
+	"gopkg.in/jcmturner/gokrb5.v2/crypto"
+	"gopkg.in/jcmturner/gokrb5.v2/iana/chksumtype"
+	"gopkg.in/jcmturner/gokrb5.v2/krberror"
+	"gopkg.in/jcmturner/gokrb5.v2/messages"
+	"gopkg.in/jcmturner/gokrb5.v2/types"
 )
 
 // GSSAPI MechToken IDs and flags.

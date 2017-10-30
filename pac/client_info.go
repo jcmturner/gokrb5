@@ -2,8 +2,8 @@ package pac
 
 import (
 	"encoding/binary"
-	"gopkg.in/jcmturner/gokrb5.v1/mstypes"
-	"gopkg.in/jcmturner/gokrb5.v1/ndr"
+	"gopkg.in/jcmturner/gokrb5.v2/mstypes"
+	"gopkg.in/jcmturner/gokrb5.v2/ndr"
 )
 
 // ClientInfo implements https://msdn.microsoft.com/en-us/library/cc237951.aspx

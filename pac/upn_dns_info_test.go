@@ -3,7 +3,7 @@ package pac
 import (
 	"encoding/hex"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v1/testdata"
+	"gopkg.in/jcmturner/gokrb5.v2/testdata"
 	"testing"
 )
 

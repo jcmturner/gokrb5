@@ -2,8 +2,8 @@ package pac
 
 import (
 	"fmt"
-	"gopkg.in/jcmturner/gokrb5.v1/mstypes"
-	"gopkg.in/jcmturner/gokrb5.v1/ndr"
+	"gopkg.in/jcmturner/gokrb5.v2/mstypes"
+	"gopkg.in/jcmturner/gokrb5.v2/ndr"
 )
 
 // DeviceClaimsInfo implements https://msdn.microsoft.com/en-us/library/hh554226.aspx

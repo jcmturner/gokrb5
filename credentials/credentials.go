@@ -3,9 +3,9 @@ package credentials
 
 import (
 	"github.com/hashicorp/go-uuid"
-	"gopkg.in/jcmturner/gokrb5.v1/iana/nametype"
-	"gopkg.in/jcmturner/gokrb5.v1/keytab"
-	"gopkg.in/jcmturner/gokrb5.v1/types"
+	"gopkg.in/jcmturner/gokrb5.v2/iana/nametype"
+	"gopkg.in/jcmturner/gokrb5.v2/keytab"
+	"gopkg.in/jcmturner/gokrb5.v2/types"
 	"time"
 )
 

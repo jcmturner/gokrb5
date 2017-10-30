@@ -3,11 +3,11 @@ package gssapi
 import (
 	"encoding/hex"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v1/credentials"
-	"gopkg.in/jcmturner/gokrb5.v1/iana/msgtype"
-	"gopkg.in/jcmturner/gokrb5.v1/messages"
-	"gopkg.in/jcmturner/gokrb5.v1/testdata"
-	"gopkg.in/jcmturner/gokrb5.v1/types"
+	"gopkg.in/jcmturner/gokrb5.v2/credentials"
+	"gopkg.in/jcmturner/gokrb5.v2/iana/msgtype"
+	"gopkg.in/jcmturner/gokrb5.v2/messages"
+	"gopkg.in/jcmturner/gokrb5.v2/testdata"
+	"gopkg.in/jcmturner/gokrb5.v2/types"
 	"math"
 	"testing"
 )

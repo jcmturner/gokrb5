@@ -1,13 +1,13 @@
 package client
 
 import (
-	"gopkg.in/jcmturner/gokrb5.v1/crypto"
-	"gopkg.in/jcmturner/gokrb5.v1/iana/errorcode"
-	"gopkg.in/jcmturner/gokrb5.v1/iana/keyusage"
-	"gopkg.in/jcmturner/gokrb5.v1/iana/patype"
-	"gopkg.in/jcmturner/gokrb5.v1/krberror"
-	"gopkg.in/jcmturner/gokrb5.v1/messages"
-	"gopkg.in/jcmturner/gokrb5.v1/types"
+	"gopkg.in/jcmturner/gokrb5.v2/crypto"
+	"gopkg.in/jcmturner/gokrb5.v2/iana/errorcode"
+	"gopkg.in/jcmturner/gokrb5.v2/iana/keyusage"
+	"gopkg.in/jcmturner/gokrb5.v2/iana/patype"
+	"gopkg.in/jcmturner/gokrb5.v2/krberror"
+	"gopkg.in/jcmturner/gokrb5.v2/messages"
+	"gopkg.in/jcmturner/gokrb5.v2/types"
 	"sort"
 )
 

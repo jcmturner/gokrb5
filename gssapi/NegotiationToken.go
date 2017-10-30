@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jcmturner/asn1"
-	"gopkg.in/jcmturner/gokrb5.v1/credentials"
-	"gopkg.in/jcmturner/gokrb5.v1/messages"
-	"gopkg.in/jcmturner/gokrb5.v1/types"
+	"gopkg.in/jcmturner/gokrb5.v2/credentials"
+	"gopkg.in/jcmturner/gokrb5.v2/messages"
+	"gopkg.in/jcmturner/gokrb5.v2/types"
 )
 
 /*
