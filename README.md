@@ -1,5 +1,5 @@
 # gokrb5
-[![GoDoc](https://godoc.org/gopkg.in/jcmturner/gokrb5.v1?status.svg)](https://godoc.org/gopkg.in/jcmturner/gokrb5.v1) [![Go Report Card](https://goreportcard.com/badge/gopkg.in/jcmturner/gokrb5.v1)](https://goreportcard.com/report/gopkg.in/jcmturner/gokrb5.v1) [![Build Status](https://travis-ci.org/jcmturner/gokrb5.svg?branch=master)](https://travis-ci.org/jcmturner/gokrb5)
+[![GoDoc](https://godoc.org/gopkg.in/jcmturner/gokrb5.v2?status.svg)](https://godoc.org/gopkg.in/jcmturner/gokrb5.v2) [![Go Report Card](https://goreportcard.com/badge/gopkg.in/jcmturner/gokrb5.v2)](https://goreportcard.com/report/gopkg.in/jcmturner/gokrb5.v2) [![Build Status](https://travis-ci.org/jcmturner/gokrb5.svg?branch=master)](https://travis-ci.org/jcmturner/gokrb5)
 
 To get the package, execute:
 ```
