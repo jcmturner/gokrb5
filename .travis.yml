@@ -6,7 +6,7 @@ go:
   - 1.9.x
   - master
 
-go_import_path: gopkg.in/jcmturner/gokrb5.v1
+go_import_path: gopkg.in/jcmturner/gokrb5.v2
 
 gobuild_args: -tags=integration -race
 
