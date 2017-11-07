@@ -472,25 +472,25 @@ func NewConfigFromScanner(scanner *bufio.Scanner) (*Config, error) {
 	var lines []string
 	for scanner.Scan() {
 		// Skip comments and blank lines
-		if matched, _ := regexp.MatchString(`\s*(#|;|\n)`, scanner.Text()); matched {
+		if matched, _ := regexp.MatchString(`^\s*(#|;|\n)`, scanner.Text()); matched {
 			continue
 		}
-		if matched, _ := regexp.MatchString(`\s*\[libdefaults\]\s*`, scanner.Text()); matched {
+		if matched, _ := regexp.MatchString(`^\s*\[libdefaults\]\s*`, scanner.Text()); matched {
 			sections[len(lines)] = "libdefaults"
 			sectionLineNum = append(sectionLineNum, len(lines))
 			continue
 		}
-		if matched, _ := regexp.MatchString(`\s*\[realms\]\s*`, scanner.Text()); matched {
+		if matched, _ := regexp.MatchString(`^\s*\[realms\]\s*`, scanner.Text()); matched {
 			sections[len(lines)] = "realms"
 			sectionLineNum = append(sectionLineNum, len(lines))
 			continue
 		}
-		if matched, _ := regexp.MatchString(`\s*\[domain_realm\]\s*`, scanner.Text()); matched {
+		if matched, _ := regexp.MatchString(`^\s*\[domain_realm\]\s*`, scanner.Text()); matched {
 			sections[len(lines)] = "domain_realm"
 			sectionLineNum = append(sectionLineNum, len(lines))
 			continue
 		}
-		if matched, _ := regexp.MatchString(`\s*\[.*\]\s*`, scanner.Text()); matched {
+		if matched, _ := regexp.MatchString(`^\s*\[.*\]\s*`, scanner.Text()); matched {
 			sections[len(lines)] = "unknown_section"
 			sectionLineNum = append(sectionLineNum, len(lines))
 			continue
