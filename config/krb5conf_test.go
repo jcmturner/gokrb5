@@ -48,6 +48,7 @@ const (
         kdc = kerberos.example.com
         kdc = kerberos-1.example.com
         admin_server = kerberos.example.com
+        auth_to_local = RULE:[1:$1@$0](.*@EXAMPLE.COM)s/.*//
  }
 
 
