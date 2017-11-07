@@ -500,7 +500,7 @@ func NewConfigFromScanner(scanner *bufio.Scanner) (*Config, error) {
 	for i, start := range sectionLineNum {
 		var end int
 		if i+1 >= len(sectionLineNum) {
-			end = len(lines) - 1
+			end = len(lines)
 		} else {
 			end = sectionLineNum[i+1] - 1
 		}
