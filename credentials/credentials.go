@@ -7,6 +7,7 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v2/keytab"
 	"gopkg.in/jcmturner/gokrb5.v2/types"
 	"time"
+	"strings"
 )
 
 const (
@@ -59,7 +60,7 @@ func NewCredentials(username string, realm string) Credentials {
 		Realm:       realm,
 		CName: types.PrincipalName{
 			NameType:   nametype.KRB_NT_PRINCIPAL,
-			NameString: []string{username},
+			NameString: strings.Split(username, "/"),
 		},
 		Keytab:     keytab.NewKeytab(),
 		Attributes: make(map[int]interface{}),
