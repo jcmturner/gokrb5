@@ -137,9 +137,8 @@ func Parse(b []byte) (kt Keytab, err error) {
 			//Zero padded so skip over
 			l = l * -1
 			n = n + int(l)
-		}
-		if l > 0 {
-			//fmt.Printf("Bytes for entry: %v\n", b[p:p+int(l)])
+		} else {
+			//fmt.Printf("Bytes for entry: %v\n", b[n:n+int(l)])
 			eb := b[n : n+int(l)]
 			n = n + int(l)
 			ke := newKeytabEntry()
@@ -166,7 +165,7 @@ func Parse(b []byte) (kt Keytab, err error) {
 			kt.Entries = append(kt.Entries, ke)
 		}
 		// Check if there are still 4 bytes left to read
-		if len(b[n:]) < 4 {
+		if n > len(b) || len(b[n:]) < 4 {
 			break
 		}
 		// Read the size of the next entry
