@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"gopkg.in/jcmturner/gokrb5.v2/iana/errorcode"
 	"gopkg.in/jcmturner/gokrb5.v2/messages"
-	"io"
 	"math/rand"
 	"net"
 	"time"
@@ -154,10 +153,21 @@ func sendTCP(kdc string, b []byte) ([]byte, error) {
 	if err != nil {
 		return r, fmt.Errorf("Error sending to KDC: %v", err)
 	}
-	var rBuf bytes.Buffer
-	io.Copy(&rBuf, conn)
-	r = rBuf.Bytes()
-	return checkForKRBError(r[4:])
+
+	sh := make([]byte, 4, 4)
+	_, err = conn.Read(sh)
+	if err != nil {
+		return r, fmt.Errorf("error reading response size header: %v", err)
+	}
+	s := binary.BigEndian.Uint32(sh)
+
+	rb := make([]byte, s, s)
+	_, err = conn.Read(rb)
+	if err != nil {
+		return r, fmt.Errorf("error reading response: %v", err)
+	}
+
+	return checkForKRBError(rb)
 }
 
 func checkForKRBError(b []byte) ([]byte, error) {
