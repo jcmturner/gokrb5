@@ -127,7 +127,10 @@ func newAuthenticator(creds credentials.Credentials, keyType int) (types.Authent
 	if err != nil {
 		return auth, krberror.Errorf(err, krberror.KRBMsgError, "Error generating new authenticator")
 	}
-	etype, _ := crypto.GetEtype(keyType)
+	etype, err := crypto.GetEtype(keyType)
+	if err != nil {
+		return auth, krberror.Errorf(err, krberror.KRBMsgError, "Error generating new authenticator")
+	}
 	auth.GenerateSeqNumberAndSubKey(keyType, etype.GetKeyByteSize())
 	auth.Cksum = types.Checksum{
 		CksumType: chksumtype.GSSAPI,
