@@ -502,7 +502,7 @@ func NewConfigFromScanner(scanner *bufio.Scanner) (*Config, error) {
 		if i+1 >= len(sectionLineNum) {
 			end = len(lines)
 		} else {
-			end = sectionLineNum[i+1] - 1
+			end = sectionLineNum[i+1]
 		}
 		switch section := sections[start]; section {
 		case "libdefaults":
