@@ -86,6 +86,15 @@ err := cl.Login()
 ```
 Kerberos Ticket Granting Tickets (TGT) will be automatically renewed unless the client was created from a CCache.
 
+#### Active Directory KDC and FAST negotiation
+Active Directory does not commonly support FAST negotiation so you will need to disable this on the client.
+If this is the case you will see this error:
+```KDC did not respond appropriately to FAST negotiation```
+To resolve this disable PA-FX-Fast on the client before performing Login() with the line below.
+```go
+cl.GoKrb5Conf.DisablePAFXFast = true
+```
+
 #### Authenticate to a Service
 
 ##### HTTP SPNEGO
