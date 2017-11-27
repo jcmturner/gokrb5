@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"gopkg.in/jcmturner/gokrb5.v2/iana/errorcode"
-	"gopkg.in/jcmturner/gokrb5.v2/messages"
+	"io"
 	"math/rand"
 	"net"
 	"time"
+
+	"gopkg.in/jcmturner/gokrb5.v2/iana/errorcode"
+	"gopkg.in/jcmturner/gokrb5.v2/messages"
 )
 
 // SendToKDC performs network actions to send data to the KDC.
@@ -162,7 +164,7 @@ func sendTCP(kdc string, b []byte) ([]byte, error) {
 	s := binary.BigEndian.Uint32(sh)
 
 	rb := make([]byte, s, s)
-	_, err = conn.Read(rb)
+	_, err = io.ReadFull(conn, rb)
 	if err != nil {
 		return r, fmt.Errorf("error reading response: %v", err)
 	}
