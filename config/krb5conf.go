@@ -544,7 +544,7 @@ func parseETypes(s []string, w bool) []int {
 				continue
 			}
 		}
-		i := etypeID.ETypesByName[et]
+		i := etypeID.EtypeSupported(et)
 		if i != 0 {
 			eti = append(eti, i)
 		}

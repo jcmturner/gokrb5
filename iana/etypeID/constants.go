@@ -75,3 +75,27 @@ var ETypesByName = map[string]int{
 	"camellia256-cts":              CAMELLIA256_CTS_CMAC,
 	"subkey-keymaterial":           SUBKEY_KEYMATERIAL,
 }
+
+// EtypeSupported resolves the etype name string to the etype ID.
+// If zero is returned the etype is not supported by gokrb5.
+func EtypeSupported(etype string) int {
+	// Slice of supported enctype IDs
+	s := []int{
+		AES128_CTS_HMAC_SHA1_96,
+		AES256_CTS_HMAC_SHA1_96,
+		AES128_CTS_HMAC_SHA256_128,
+		AES256_CTS_HMAC_SHA384_192,
+		DES3_CBC_SHA1_KD,
+		RC4_HMAC,
+	}
+	id := ETypesByName[etype]
+	if id == 0 {
+		return id
+	}
+	for _, sid := range s {
+		if id == sid {
+			return id
+		}
+	}
+	return 0
+}
