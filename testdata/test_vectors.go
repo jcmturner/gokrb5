@@ -132,6 +132,7 @@ const (
 	TEST_KDC_AD                   = "10.80.88.68:88"
 	TEST_KDC_AD_TRUST_USER_DOMAIN = "10.80.88.48:88"
 	TEST_KDC_AD_TRUST_RES_DOMAIN  = "10.80.88.49:88"
+	TEST_NS                       = "10.80.88.88:53"
 	TEST_KRB5CONF                 = `[libdefaults]
   default_realm = TEST.GOKRB5
   dns_lookup_realm = false
