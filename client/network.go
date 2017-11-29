@@ -10,6 +10,8 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v2/messages"
 	"math/rand"
 	"net"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -32,7 +34,7 @@ func (cl *Client) resolveKDC(realm string, tcp bool) (int, map[int]string, error
 		}
 		count = c
 		for k, v := range addrs {
-			kdcs[k] = v.Target + ":" + string(v.Port)
+			kdcs[k] = strings.TrimRight(v.Target, ".") + ":" + strconv.Itoa(int(v.Port))
 		}
 	} else {
 		// Get the KDCs from the krb5.conf an order them randomly for preference.
@@ -192,7 +194,7 @@ func (cl *Client) sendUDP(realm string, b []byte) ([]byte, error) {
 // Send the bytes to the KDC over TCP.
 func (cl *Client) sendTCP(realm string, b []byte) ([]byte, error) {
 	var r []byte
-	count, kdcs, err := cl.resolveKDC(realm, false)
+	count, kdcs, err := cl.resolveKDC(realm, true)
 	if err != nil {
 		return r, err
 	}
