@@ -177,15 +177,17 @@ func (cl *Client) IsConfigured() (bool, error) {
 	if cl.Config.LibDefaults.DefaultRealm == "" {
 		return false, errors.New("client krb5 config does not have a default realm")
 	}
-	for _, r := range cl.Config.Realms {
-		if r.Realm == cl.Config.LibDefaults.DefaultRealm {
-			if len(r.KDC) > 0 {
-				return true, nil
+	if !cl.Config.LibDefaults.DNSLookupKDC {
+		for _, r := range cl.Config.Realms {
+			if r.Realm == cl.Config.LibDefaults.DefaultRealm {
+				if len(r.KDC) > 0 {
+					return true, nil
+				}
+				return false, errors.New("client krb5 config does not have any defined KDCs for the default realm")
 			}
-			return false, errors.New("client krb5 config does not have any defined KDCs for the default realm")
 		}
 	}
-	return false, errors.New("client does not have KDCs configured for the default realm")
+	return true, nil
 }
 
 // Login the client with the KDC via an AS exchange.
