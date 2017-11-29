@@ -58,16 +58,16 @@ func (cl *Client) resolveKDC(realm string, tcp bool) (int, map[int]string, error
 				kdcs[i] = ks[ri]
 				if l > 1 {
 					// Remove the entry from the source slice by swapping with the last entry and truncating
-					ks[len(ks)-1], ks[i] = ks[i], ks[len(ks)-1]
+					ks[len(ks)-1], ks[ri] = ks[ri], ks[len(ks)-1]
 					ks = ks[:len(ks)-1]
 					l = len(ks)
 				} else {
 					l = 0
 				}
+				i += 1
 			}
-			//Select one of the KDCs at random
 		} else {
-			kdcs[i] = kdcs[0]
+			kdcs[i] = ks[0]
 		}
 	}
 	return count, kdcs, nil
