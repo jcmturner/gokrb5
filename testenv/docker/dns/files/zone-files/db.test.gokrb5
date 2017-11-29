@@ -14,4 +14,4 @@ _kerberos		IN	SRV	0 0 88 host.test.gokrb5.
 $ORIGIN _udp.test.gokrb5.
 _kerberos		IN	SRV	0 0 88 host.test.gokrb5.
 $ORIGIN test.gokrb5.
-host		IN	A	10.80.88.88
+host		IN	A	<TEST_KDC_ADDR>
