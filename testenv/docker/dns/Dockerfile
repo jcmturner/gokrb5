@@ -3,9 +3,7 @@ MAINTAINER Jonathan Turner <jt@jtnet.co.uk>
 
 EXPOSE 53
 
-# For some reason a space between -u and the user name results in trying to start as " named"
-ENTRYPOINT ["/usr/sbin/named"]
-CMD ["-g", "-c/etc/named.conf", "-ubind", "-4"]
+ENTRYPOINT ["/var/named/named.sh"]
 
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update && apt-get install -y bind9 && \
