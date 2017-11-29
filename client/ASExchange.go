@@ -2,13 +2,13 @@ package client
 
 import (
 	"gopkg.in/jcmturner/gokrb5.v2/crypto"
+	"gopkg.in/jcmturner/gokrb5.v2/crypto/etype"
 	"gopkg.in/jcmturner/gokrb5.v2/iana/errorcode"
 	"gopkg.in/jcmturner/gokrb5.v2/iana/keyusage"
 	"gopkg.in/jcmturner/gokrb5.v2/iana/patype"
 	"gopkg.in/jcmturner/gokrb5.v2/krberror"
 	"gopkg.in/jcmturner/gokrb5.v2/messages"
 	"gopkg.in/jcmturner/gokrb5.v2/types"
-	"sort"
 )
 
 // ASExchange performs an AS exchange for the client to retrieve a TGT.
@@ -83,10 +83,19 @@ func setPAData(cl *Client, krberr messages.KRBError, ASReq *messages.ASReq) erro
 		if err != nil {
 			return krberror.Errorf(err, krberror.KRBMsgError, "Error creating PAEncTSEnc for Pre-Authentication")
 		}
-		sort.Sort(sort.Reverse(sort.IntSlice(cl.Config.LibDefaults.DefaultTktEnctypeIDs)))
-		etype, err := crypto.GetEtype(cl.Config.LibDefaults.DefaultTktEnctypeIDs[0])
-		if err != nil {
-			return krberror.Errorf(err, krberror.EncryptingError, "Error creating etype")
+		var etype etype.EType
+		if krberr.ErrorCode == 0 {
+			// This is not in response to an error from the KDC. It is preemptive
+			etype, err = crypto.GetEtype(ASReq.ReqBody.EType[0]) // Take the first as preference
+			if err != nil {
+				return krberror.Errorf(err, krberror.EncryptingError, "error getting etype for pre-auth encryption")
+			}
+		} else {
+			// Get the etype to use from the PA data in the KRBError e-data
+			etype, err = preAuthEType(krberr)
+			if err != nil {
+				return krberror.Errorf(err, krberror.EncryptingError, "error getting etype for pre-auth encryption")
+			}
 		}
 		key, err := cl.Key(etype, krberr)
 		if err != nil {
@@ -107,4 +116,48 @@ func setPAData(cl *Client, krberr messages.KRBError, ASReq *messages.ASReq) erro
 		ASReq.PAData = append(ASReq.PAData, pa)
 	}
 	return nil
+}
+
+func preAuthEType(krberr messages.KRBError) (etype etype.EType, err error) {
+	//The preferred ordering of the "hint" pre-authentication data that
+	//affect client key selection is: ETYPE-INFO2, followed by ETYPE-INFO,
+	//followed by PW-SALT.
+	//A KDC SHOULD NOT send PA-PW-SALT when issuing a KRB-ERROR message
+	//that requests additional pre-authentication.  Implementation note:
+	//Some KDC implementations issue an erroneous PA-PW-SALT when issuing a
+	//KRB-ERROR message that requests additional pre-authentication.
+	//Therefore, clients SHOULD ignore a PA-PW-SALT accompanying a
+	//KRB-ERROR message that requests additional pre-authentication.
+	var etypeID int
+	var pas types.PADataSequence
+	e := pas.Unmarshal(krberr.EData)
+	if e != nil {
+		err = krberror.Errorf(e, krberror.EncodingError, "error unmashalling KRBError data")
+		return
+	}
+	for _, pa := range pas {
+		switch pa.PADataType {
+		case patype.PA_ETYPE_INFO2:
+			info, e := pa.GetETypeInfo2()
+			if e != nil {
+				err = krberror.Errorf(e, krberror.EncodingError, "error unmashalling ETYPE-INFO2 data")
+				return
+			}
+			etypeID = info[0].EType
+			break
+		case patype.PA_ETYPE_INFO:
+			info, e := pa.GetETypeInfo()
+			if e != nil {
+				err = krberror.Errorf(e, krberror.EncodingError, "error unmashalling ETYPE-INFO data")
+				return
+			}
+			etypeID = info[0].EType
+		}
+	}
+	etype, e = crypto.GetEtype(etypeID)
+	if e != nil {
+		err = krberror.Errorf(e, krberror.EncryptingError, "Error creating etype")
+		return
+	}
+	return etype, nil
 }
