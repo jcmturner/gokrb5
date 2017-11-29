@@ -31,7 +31,7 @@ before_stript:
   - cat /etc/resolv.conf
 
 env:
-  - TEST_KDC_ADDR=127.0.0.1 TEST_HTTP_URL="http://host.test.gokrb5/index.html" TEST_NS=127.0.0.1
+  - TEST_KDC_ADDR=127.0.0.1 TEST_HTTP_URL="http://host.test.gokrb5/index.html" DNSUTILS_OVERRIDE_NS=127.0.0.1
 
 addons:
   hosts:

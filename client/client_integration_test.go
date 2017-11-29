@@ -372,9 +372,9 @@ func TestResolveKDC(t *testing.T) {
 	c.LibDefaults.DNSLookupKDC = false
 	count, res, err = cl.resolveKDC(c.LibDefaults.DefaultRealm, true)
 	if err != nil {
-		t.Errorf("error resolving KDC via DNS TCP: %v", err)
+		t.Errorf("error resolving KDCs from config: %v", err)
 	}
-	t.Logf("no dns: %v", res)
+	assert.Equal(t, "127.0.0.1:88", res[1], "KDC not read from config as expected")
 }
 
 func TestClient_Login_(t *testing.T) {
