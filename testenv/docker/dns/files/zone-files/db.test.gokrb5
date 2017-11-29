@@ -1,0 +1,17 @@
+$ORIGIN .
+$TTL 86400	; 1 day
+test.gokrb5		IN SOA	test.gokrb5. ns.test.gokrb5. (
+				2017112801 ; serial
+				604800     ; refresh (1 week)
+				86400      ; retry (1 day)
+				2419200    ; expire (4 weeks)
+				86400      ; minimum (1 day)
+				)
+			NS	test.gokrb5.
+			A	10.80.88.88
+$ORIGIN _tcp.test.gokrb5.
+_kerberos		IN	SRV	0 0 88 host.test.gokrb5.
+$ORIGIN _udp.test.gokrb5.
+_kerberos		IN	SRV	0 0 88 host.test.gokrb5.
+$ORIGIN test.gokrb5.
+host		IN	A	10.80.88.88
