@@ -140,6 +140,7 @@ func dialKDCUDP(count int, kdcs map[int]string) (conn *net.UDPConn, err error) {
 			conn.SetDeadline(time.Now().Add(time.Duration(5 * time.Second)))
 			return
 		}
+		i += 1
 	}
 	err = errors.New("error in getting a UDP connection to any of the KDCs")
 	return
@@ -158,6 +159,7 @@ func dialKDCTCP(count int, kdcs map[int]string) (conn *net.TCPConn, err error) {
 			conn.SetDeadline(time.Now().Add(time.Duration(5 * time.Second)))
 			return
 		}
+		i += 1
 	}
 	err = errors.New("error in getting a TCP connection to any of the KDCs")
 	return
