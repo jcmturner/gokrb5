@@ -369,6 +369,12 @@ func TestResolveKDC(t *testing.T) {
 		}
 		assert.True(t, found, "Record %s not found in results", s)
 	}
+	c.LibDefaults.DNSLookupKDC = false
+	count, res, err = cl.resolveKDC(c.LibDefaults.DefaultRealm, true)
+	if err != nil {
+		t.Errorf("error resolving KDC via DNS TCP: %v", err)
+	}
+	t.Logf("no dns: %v", res)
 }
 
 func TestClient_Login_(t *testing.T) {
