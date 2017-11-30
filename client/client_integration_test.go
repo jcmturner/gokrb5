@@ -16,7 +16,7 @@ import (
 	"testing"
 )
 
-func TestClient_SuccessfulLogin(t *testing.T) {
+func TestClient_SuccessfulLogin_Keytab(t *testing.T) {
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
 		addr = testdata.TEST_KDC_ADDR
@@ -35,6 +35,29 @@ func TestClient_SuccessfulLogin(t *testing.T) {
 		cl.WithConfig(c)
 
 		err = cl.Login()
+		if err != nil {
+			t.Errorf("Error on logging in with KDC %s: %v\n", test, err)
+		}
+	}
+}
+
+func TestClient_SuccessfulLogin_Password(t *testing.T) {
+	addr := os.Getenv("TEST_KDC_ADDR")
+	if addr == "" {
+		addr = testdata.TEST_KDC_ADDR
+	}
+	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	var tests = []string{
+		testdata.TEST_KDC,
+		testdata.TEST_KDC_OLD,
+		testdata.TEST_KDC_LASTEST,
+	}
+	for _, test := range tests {
+		c.Realms[0].KDC = []string{addr + ":" + test}
+		cl := NewClientWithPassword("testuser1", "TESTGOKRB5", "passwordvalue")
+		cl.WithConfig(c)
+
+		err := cl.Login()
 		if err != nil {
 			t.Errorf("Error on logging in with KDC %s: %v\n", test, err)
 		}
@@ -60,7 +83,7 @@ func TestClient_SuccessfulLogin_TCPOnly(t *testing.T) {
 	}
 }
 
-func TestClient_ASExchange_TGSExchange_EncTypes(t *testing.T) {
+func TestClient_ASExchange_TGSExchange_EncTypes_Keytab(t *testing.T) {
 	b, err := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
@@ -86,6 +109,42 @@ func TestClient_ASExchange_TGSExchange_EncTypes(t *testing.T) {
 		cl.WithConfig(c)
 
 		err = cl.Login()
+		if err != nil {
+			t.Errorf("Error on login using enctype %s: %v\n", test, err)
+		}
+		tkt, key, err := cl.GetServiceTicket("HTTP/host.test.gokrb5")
+		if err != nil {
+			t.Errorf("Error in TGS exchange using enctype %s: %v", test, err)
+		}
+		assert.Equal(t, "TEST.GOKRB5", tkt.Realm, "Realm in ticket not as expected for %s test", test)
+		assert.Equal(t, etypeID.ETypesByName[test], key.KeyType, "Key is not for enctype %s", test)
+	}
+}
+
+func TestClient_ASExchange_TGSExchange_EncTypes_Password(t *testing.T) {
+	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	addr := os.Getenv("TEST_KDC_ADDR")
+	if addr == "" {
+		addr = testdata.TEST_KDC_ADDR
+	}
+	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC_LASTEST}
+	var tests = []string{
+		"des3-cbc-sha1-kd",
+		"aes128-cts-hmac-sha1-96",
+		"aes256-cts-hmac-sha1-96",
+		"aes128-cts-hmac-sha256-128",
+		"aes256-cts-hmac-sha384-192",
+		"rc4-hmac",
+	}
+	for _, test := range tests {
+		c.LibDefaults.DefaultTktEnctypes = []string{test}
+		c.LibDefaults.DefaultTktEnctypeIDs = []int{etypeID.ETypesByName[test]}
+		c.LibDefaults.DefaultTGSEnctypes = []string{test}
+		c.LibDefaults.DefaultTGSEnctypeIDs = []int{etypeID.ETypesByName[test]}
+		cl := NewClientWithPassword("testuser1", "TESTGOKRB5", "passwordvalue")
+		cl.WithConfig(c)
+
+		err := cl.Login()
 		if err != nil {
 			t.Errorf("Error on login using enctype %s: %v\n", test, err)
 		}

@@ -9,7 +9,6 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v2/iana/etypeID"
 	"gopkg.in/jcmturner/gokrb5.v2/iana/patype"
 	"gopkg.in/jcmturner/gokrb5.v2/types"
-	"os"
 )
 
 // GetEtype returns an instances of the required etype struct for the etype ID.
@@ -84,7 +83,6 @@ func GetKeyFromPassword(passwd string, cname types.PrincipalName, realm string, 
 				continue
 			}
 			salt = string(pa.PADataValue)
-			fmt.Fprintf(os.Stderr, "1Salt: %v\n", salt)
 		case patype.PA_ETYPE_INFO:
 			if paID > pa.PADataType {
 				continue
