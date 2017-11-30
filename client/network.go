@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"github.com/jcmturner/dnsutils"
+	"gopkg.in/jcmturner/dnsutils.v1"
 	"gopkg.in/jcmturner/gokrb5.v2/iana/errorcode"
 	"gopkg.in/jcmturner/gokrb5.v2/messages"
 	"math/rand"
