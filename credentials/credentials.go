@@ -6,8 +6,8 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v2/iana/nametype"
 	"gopkg.in/jcmturner/gokrb5.v2/keytab"
 	"gopkg.in/jcmturner/gokrb5.v2/types"
-	"time"
 	"strings"
+	"time"
 )
 
 const (
