@@ -47,7 +47,7 @@ func TestMechToken_newAuthenticator(t *testing.T) {
 	creds := credentials.NewCredentials("hftsai", testdata.TEST_REALM)
 	creds.CName.NameString = testdata.TEST_PRINCIPALNAME_NAMESTRING
 	etypeID := 18
-	a, err := newAuthenticator(creds, etypeID)
+	a, err := NewAuthenticator(creds, etypeID, []int{GSS_C_INTEG_FLAG, GSS_C_CONF_FLAG})
 	if err != nil {
 		t.Fatalf("Error creating authenticator: %v", err)
 	}
@@ -66,7 +66,7 @@ func TestMechToken_newAuthenticator(t *testing.T) {
 	}))
 }
 
-func TestNewKRB5APREQMechToken(t *testing.T) {
+func TestNewAPREQMechToken_and_Marshal(t *testing.T) {
 	creds := credentials.NewCredentials("hftsai", testdata.TEST_REALM)
 	creds.CName.NameString = testdata.TEST_PRINCIPALNAME_NAMESTRING
 
@@ -86,8 +86,14 @@ func TestNewKRB5APREQMechToken(t *testing.T) {
 		KeyValue: make([]byte, 32),
 	}
 
-	mb, err := NewKRB5APREQMechToken(creds, tkt, key)
-	var mt MechToken
+	mt, err := NewAPREQMechToken(creds, tkt, key, []int{GSS_C_INTEG_FLAG, GSS_C_CONF_FLAG}, []int{})
+	if err != nil {
+		t.Fatalf("Error creating MechToken: %v", err)
+	}
+	mb, err := mt.Marshal()
+	if err != nil {
+		t.Fatalf("Error unmarshalling MechToken: %v", err)
+	}
 	err = mt.Unmarshal(mb)
 	if err != nil {
 		t.Fatalf("Error unmarshalling MechToken: %v", err)

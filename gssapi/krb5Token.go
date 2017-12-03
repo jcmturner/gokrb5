@@ -28,7 +28,7 @@ const (
 	GSS_C_INTEG_FLAG    = 32
 )
 
-// MechToken implementation for GSSAPI
+// MechToken implementation for GSSAPI.
 type MechToken struct {
 	OID      asn1.ObjectIdentifier
 	TokID    []byte
@@ -37,7 +37,32 @@ type MechToken struct {
 	KRBError messages.KRBError
 }
 
-// Unmarshal a MechToken
+// Marshal a MechToken into a slice of bytes.
+func (m *MechToken) Marshal() ([]byte, error) {
+	// Create the header
+	b, _ := asn1.Marshal(m.OID)
+	b = append(b, m.TokID...)
+	var tb []byte
+	var err error
+	switch hex.EncodeToString(m.TokID) {
+	case TOK_ID_KRB_AP_REQ:
+		tb, err = m.APReq.Marshal()
+		if err != nil {
+			return []byte{}, fmt.Errorf("error marshalling AP_REQ for MechToken: %v", err)
+		}
+	case TOK_ID_KRB_AP_REP:
+		return []byte{}, errors.New("marshal of AP_REP GSSAPI MechToken not supported by gokrb5")
+	case TOK_ID_KRB_ERROR:
+		return []byte{}, errors.New("marshal of KRB_ERROR GSSAPI MechToken not supported by gokrb5")
+	}
+	if err != nil {
+		return []byte{}, fmt.Errorf("error mashalling kerberos message within mech token: %v", err)
+	}
+	b = append(b, tb...)
+	return asn1tools.AddASNAppTag(b, 0), nil
+}
+
+// Unmarshal a MechToken.
 func (m *MechToken) Unmarshal(b []byte) error {
 	var oid asn1.ObjectIdentifier
 	r, err := asn1.UnmarshalWithParams(b, &oid, fmt.Sprintf("application,explicit,tag:%v", 0))
@@ -72,7 +97,7 @@ func (m *MechToken) Unmarshal(b []byte) error {
 	return nil
 }
 
-// IsAPReq tests if the MechToken contains an AP_REQ
+// IsAPReq tests if the MechToken contains an AP_REQ.
 func (m *MechToken) IsAPReq() bool {
 	if hex.EncodeToString(m.TokID) == TOK_ID_KRB_AP_REQ {
 		return true
@@ -80,7 +105,7 @@ func (m *MechToken) IsAPReq() bool {
 	return false
 }
 
-// IsAPRep tests if the MechToken contains an AP_REP
+// IsAPRep tests if the MechToken contains an AP_REP.
 func (m *MechToken) IsAPRep() bool {
 	if hex.EncodeToString(m.TokID) == TOK_ID_KRB_AP_REP {
 		return true
@@ -88,7 +113,7 @@ func (m *MechToken) IsAPRep() bool {
 	return false
 }
 
-// IsKRBError tests if the MechToken contains an KRB_ERROR
+// IsKRBError tests if the MechToken contains an KRB_ERROR.
 func (m *MechToken) IsKRBError() bool {
 	if hex.EncodeToString(m.TokID) == TOK_ID_KRB_ERROR {
 		return true
@@ -96,16 +121,16 @@ func (m *MechToken) IsKRBError() bool {
 	return false
 }
 
-// NewKRB5APREQMechToken creates new kerberos AP_REQ MechToken
-func NewKRB5APREQMechToken(creds credentials.Credentials, tkt messages.Ticket, sessionKey types.EncryptionKey) ([]byte, error) {
-	// Create the header
-	b, _ := asn1.Marshal(MechTypeOIDKRB5)
+// NewAPREQMechToken creates new Kerberos AP_REQ MechToken.
+func NewAPREQMechToken(creds credentials.Credentials, tkt messages.Ticket, sessionKey types.EncryptionKey, GSSAPIFlags []int, APOptions []int) (MechToken, error) {
+	var m MechToken
+	m.OID = MechTypeOIDKRB5
 	tb, _ := hex.DecodeString(TOK_ID_KRB_AP_REQ)
-	b = append(b, tb...)
-	// Add the token
-	auth, err := newAuthenticator(creds, sessionKey.KeyType)
+	m.TokID = tb
+
+	auth, err := NewAuthenticator(creds, sessionKey.KeyType, GSSAPIFlags)
 	if err != nil {
-		return []byte{}, err
+		return m, err
 	}
 	APReq, err := messages.NewAPReq(
 		tkt,
@@ -113,31 +138,31 @@ func NewKRB5APREQMechToken(creds credentials.Credentials, tkt messages.Ticket, s
 		auth,
 	)
 	if err != nil {
-		return []byte{}, fmt.Errorf("could not create new AP_REQ: %v", err)
+		return m, err
 	}
+	for _, o := range APOptions {
+		types.SetFlag(&APReq.APOptions, o)
+	}
+	m.APReq = APReq
 	tb, err = APReq.Marshal()
-	if err != nil {
-		return []byte{}, fmt.Errorf("could not marshal AP_REQ: %v", err)
-	}
-	b = append(b, tb...)
-	return asn1tools.AddASNAppTag(b, 0), nil
+	return m, nil
 }
 
-// Create new kerberos authenticator for kerberos MechToken
-func newAuthenticator(creds credentials.Credentials, keyType int) (types.Authenticator, error) {
+// NewAuthenticator creates a new kerberos authenticator for kerberos MechToken
+func NewAuthenticator(creds credentials.Credentials, keyType int, flags []int) (types.Authenticator, error) {
 	//RFC 4121 Section 4.1.1
 	auth, err := types.NewAuthenticator(creds.Realm, creds.CName)
 	if err != nil {
-		return auth, krberror.Errorf(err, krberror.KRBMsgError, "Error generating new authenticator")
+		return auth, krberror.Errorf(err, krberror.KRBMsgError, "error generating new authenticator")
 	}
 	etype, err := crypto.GetEtype(keyType)
 	if err != nil {
-		return auth, krberror.Errorf(err, krberror.KRBMsgError, "Error generating new authenticator")
+		return auth, krberror.Errorf(err, krberror.KRBMsgError, "error getting etype for authenticator")
 	}
 	auth.GenerateSeqNumberAndSubKey(keyType, etype.GetKeyByteSize())
 	auth.Cksum = types.Checksum{
 		CksumType: chksumtype.GSSAPI,
-		Checksum:  newAuthenticatorChksum([]int{GSS_C_INTEG_FLAG, GSS_C_CONF_FLAG}),
+		Checksum:  newAuthenticatorChksum(flags),
 	}
 	return auth, nil
 }
@@ -180,3 +205,30 @@ Octet        Name      Description
 28..(n-1)    Deleg   A KRB_CRED message (n = Dlgth + 28) [optional].
 n..last      Exts    Extensions [optional].
 */
+
+// NewKRB5APREQMechToken (DEPRECATED - use NewAPREQMechToken and then call Marshal() on the MechToken instead) creates new kerberos AP_REQ MechToken.
+func NewKRB5APREQMechToken(creds credentials.Credentials, tkt messages.Ticket, sessionKey types.EncryptionKey) ([]byte, error) {
+	// Create the header
+	b, _ := asn1.Marshal(MechTypeOIDKRB5)
+	tb, _ := hex.DecodeString(TOK_ID_KRB_AP_REQ)
+	b = append(b, tb...)
+	// Add the token
+	auth, err := NewAuthenticator(creds, sessionKey.KeyType, []int{GSS_C_INTEG_FLAG, GSS_C_CONF_FLAG})
+	if err != nil {
+		return []byte{}, err
+	}
+	APReq, err := messages.NewAPReq(
+		tkt,
+		sessionKey,
+		auth,
+	)
+	if err != nil {
+		return []byte{}, fmt.Errorf("could not create new AP_REQ: %v", err)
+	}
+	tb, err = APReq.Marshal()
+	if err != nil {
+		return []byte{}, fmt.Errorf("could not marshal AP_REQ: %v", err)
+	}
+	b = append(b, tb...)
+	return asn1tools.AddASNAppTag(b, 0), nil
+}
