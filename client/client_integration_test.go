@@ -397,11 +397,11 @@ func TestNewClientFromCCache(t *testing.T) {
 }
 
 func TestResolveKDC(t *testing.T) {
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	//ns := os.Getenv("DNSUTILS_OVERRIDE_NS")
 	//if ns == "" {
 	//	os.Setenv("DNSUTILS_OVERRIDE_NS", testdata.TEST_NS)
 	//}
+	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	c.LibDefaults.DNSLookupKDC = true
 	var cl Client
 	cl.WithConfig(c)
@@ -409,8 +409,8 @@ func TestResolveKDC(t *testing.T) {
 	if err != nil {
 		t.Errorf("error resolving KDC via DNS TCP: %v", err)
 	}
-	assert.Equal(t, 5, count, "Number of SRV records not as expected")
-	assert.Equal(t, count, len(res), "Map size does not match")
+	assert.Equal(t, 5, count, "Number of SRV records not as expected: %v", res)
+	assert.Equal(t, count, len(res), "Map size does not match: %v", res)
 	expected := []string{
 		"kdc.test.gokrb5:88",
 		"kdc1a.test.gokrb5:88",
@@ -441,7 +441,6 @@ func TestClient_Login_DNSKDCs(t *testing.T) {
 	//if ns == "" {
 	//	os.Setenv("DNSUTILS_OVERRIDE_NS", testdata.TEST_NS)
 	//}
-
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	// Set to lookup KDCs in DNS
 	c.LibDefaults.DNSLookupKDC = true
