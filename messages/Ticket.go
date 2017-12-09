@@ -76,6 +76,9 @@ func NewTicket(cname types.PrincipalName, crealm string, sname types.PrincipalNa
 		RenewTill: renewTill,
 	}
 	b, err := asn1.Marshal(etp)
+	if err != nil {
+		return Ticket{}, types.EncryptionKey{}, krberror.Errorf(err, krberror.EncodingError, "Error marshalling encpart")
+	}
 	b = asn1tools.AddASNAppTag(b, asnAppTag.EncTicketPart)
 	skey, err := sktab.GetEncryptionKey(sname.NameString, srealm, kvno, eTypeID)
 	if err != nil {
