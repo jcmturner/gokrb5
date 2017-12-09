@@ -107,7 +107,7 @@ HTTPResp, err := http.DefaultClient.Do(r)
 ```
 
 ##### Generic Kerberos Client
-To authenticate to a service a client will need to request a serivce ticket for a Service Principal Name (SPN) and form into an AP_REQ message along with an authenticator encrypted with the session key that was delivered from the KDC along with the service ticket.
+To authenticate to a service a client will need to request a service ticket for a Service Principal Name (SPN) and form into an AP_REQ message along with an authenticator encrypted with the session key that was delivered from the KDC along with the service ticket.
 
 The steps below outline how to do this.
 * Get the service ticket and session key for the service the client is authenticating to.
@@ -117,7 +117,7 @@ Therefore the GetServiceTicket method can be continually used for the most effic
 tkt, key, err := cl.GetServiceTicket("HTTP/host.test.gokrb5")
 ```
 
-The steps after this will be specifc to the application protocol but it will likely involve a client/server Authentication Protocol exchange (AP exchange).
+The steps after this will be specific to the application protocol but it will likely involve a client/server Authentication Protocol exchange (AP exchange).
 This will involve these steps:
 
 * Generate a new Authenticator and generate a sequence number and subkey:
@@ -139,7 +139,7 @@ auth.Cksum = types.Checksum{
 APReq, err := messages.NewAPReq(tkt, key, auth)
 ```
 
-Now send the AP_REQ to the serivce. How this is done will be specific to the application use case.
+Now send the AP_REQ to the service. How this is done will be specific to the application use case.
 
 
 ---
@@ -159,8 +159,8 @@ h := http.HandlerFunc(apphandler)
 ```
 Configure the HTTP handler:
 ```go
-serivceAccountName = ""
-http.Handler("/", service.SPNEGOKRB5Authenticate(h, kt, serivceAccountName, l))
+serviceAccountName = ""
+http.Handler("/", service.SPNEGOKRB5Authenticate(h, kt, serviceAccountName, l))
 ```
 The serviceAccountName needs to be defined when using Active Directory where the SPN is mapped to a user account.
 If this is not required it should be set to an empty string "".
@@ -187,7 +187,7 @@ if validuser, ok := ctx.Value(service.CTXKeyAuthenticated).(bool); ok && validus
 To validate the AP_REQ sent by the client on the service side call this method:
 ```go
 import 	"gopkg.in/jcmturner/gokrb5.v2/service"
-if ok, creds, err := serivce.ValidateAPREQ(mt.APReq, kt, r.RemoteAddr); ok {
+if ok, creds, err := service.ValidateAPREQ(mt.APReq, kt, r.RemoteAddr); ok {
         // Perform application specifc actions
         // creds object has details about the client identity
 }
