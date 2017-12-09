@@ -112,6 +112,9 @@ func NewKRB5APREQMechToken(creds credentials.Credentials, tkt messages.Ticket, s
 		sessionKey,
 		auth,
 	)
+	if err != nil {
+		return []byte{}, err
+	}
 	tb, err = APReq.Marshal()
 	if err != nil {
 		return []byte{}, fmt.Errorf("Could not marshal AP_REQ: %v", err)

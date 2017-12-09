@@ -91,13 +91,22 @@ func (k *KerbValidationInfo) Unmarshal(b []byte) (err error) {
 	k.PasswordCanChange = mstypes.ReadFileTime(&b, &p, e)
 	k.PasswordMustChange = mstypes.ReadFileTime(&b, &p, e)
 
-	k.EffectiveName, err = mstypes.ReadRPCUnicodeString(&b, &p, e)
-	k.FullName, err = mstypes.ReadRPCUnicodeString(&b, &p, e)
-	k.LogonScript, err = mstypes.ReadRPCUnicodeString(&b, &p, e)
-	k.ProfilePath, err = mstypes.ReadRPCUnicodeString(&b, &p, e)
-	k.HomeDirectory, err = mstypes.ReadRPCUnicodeString(&b, &p, e)
-	k.HomeDirectoryDrive, err = mstypes.ReadRPCUnicodeString(&b, &p, e)
-	if err != nil {
+	if k.EffectiveName, err = mstypes.ReadRPCUnicodeString(&b, &p, e); err != nil {
+		return
+	}
+	if k.FullName, err = mstypes.ReadRPCUnicodeString(&b, &p, e); err != nil {
+		return
+	}
+	if k.LogonScript, err = mstypes.ReadRPCUnicodeString(&b, &p, e); err != nil {
+		return
+	}
+	if k.ProfilePath, err = mstypes.ReadRPCUnicodeString(&b, &p, e); err != nil {
+		return
+	}
+	if k.HomeDirectory, err = mstypes.ReadRPCUnicodeString(&b, &p, e); err != nil {
+		return
+	}
+	if k.HomeDirectoryDrive, err = mstypes.ReadRPCUnicodeString(&b, &p, e); err != nil {
 		return
 	}
 
@@ -111,9 +120,10 @@ func (k *KerbValidationInfo) Unmarshal(b []byte) (err error) {
 	k.UserFlags = ndr.ReadUint32(&b, &p, e)
 	k.UserSessionKey = mstypes.ReadUserSessionKey(&b, &p, e)
 
-	k.LogonServer, err = mstypes.ReadRPCUnicodeString(&b, &p, e)
-	k.LogonDomainName, err = mstypes.ReadRPCUnicodeString(&b, &p, e)
-	if err != nil {
+	if k.LogonServer, err = mstypes.ReadRPCUnicodeString(&b, &p, e); err != nil {
+		return
+	}
+	if k.LogonDomainName, err = mstypes.ReadRPCUnicodeString(&b, &p, e); err != nil {
 		return
 	}
 
@@ -139,12 +149,24 @@ func (k *KerbValidationInfo) Unmarshal(b []byte) (err error) {
 	k.pResourceGroupIDs = ndr.ReadUint32(&b, &p, e)
 
 	// Populate pointers
-	err = k.EffectiveName.UnmarshalString(&b, &p, e)
-	err = k.FullName.UnmarshalString(&b, &p, e)
-	err = k.LogonScript.UnmarshalString(&b, &p, e)
-	err = k.ProfilePath.UnmarshalString(&b, &p, e)
-	err = k.HomeDirectory.UnmarshalString(&b, &p, e)
-	err = k.HomeDirectoryDrive.UnmarshalString(&b, &p, e)
+	if err = k.EffectiveName.UnmarshalString(&b, &p, e); err != nil {
+		return
+	}
+	if err = k.FullName.UnmarshalString(&b, &p, e); err != nil {
+		return
+	}
+	if err = k.LogonScript.UnmarshalString(&b, &p, e); err != nil {
+		return
+	}
+	if err = k.ProfilePath.UnmarshalString(&b, &p, e); err != nil {
+		return
+	}
+	if err = k.HomeDirectory.UnmarshalString(&b, &p, e); err != nil {
+		return
+	}
+	if err = k.HomeDirectoryDrive.UnmarshalString(&b, &p, e); err != nil {
+		return
+	}
 
 	if k.GroupCount > 0 {
 		ac := ndr.ReadUniDimensionalConformantArrayHeader(&b, &p, e)
@@ -158,8 +180,12 @@ func (k *KerbValidationInfo) Unmarshal(b []byte) (err error) {
 		k.GroupIDs = g
 	}
 
-	err = k.LogonServer.UnmarshalString(&b, &p, e)
-	err = k.LogonDomainName.UnmarshalString(&b, &p, e)
+	if err = k.LogonServer.UnmarshalString(&b, &p, e); err != nil {
+		return
+	}
+	if err = k.LogonDomainName.UnmarshalString(&b, &p, e); err != nil {
+		return
+	}
 
 	if k.pLogonDomainID != 0 {
 		k.LogonDomainID, err = mstypes.ReadRPCSID(&b, &p, e)

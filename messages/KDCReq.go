@@ -184,11 +184,17 @@ func NewTGSReq(cname types.PrincipalName, kdcRealm string, c *config.Config, tkt
 		return a, krberror.Errorf(err, krberror.EncryptingError, "Error getting etype to encrypt authenticator")
 	}
 	cb, err := etype.GetChecksumHash(sessionKey.KeyValue, b, keyusage.TGS_REQ_PA_TGS_REQ_AP_REQ_AUTHENTICATOR_CHKSUM)
+	if err != nil {
+		return a, krberror.Errorf(err, krberror.ChksumError, "Error getting etype checksum hash")
+	}
 	auth.Cksum = types.Checksum{
 		CksumType: etype.GetHashID(),
 		Checksum:  cb,
 	}
 	apReq, err := NewAPReq(tkt, sessionKey, auth)
+	if err != nil {
+		return a, err
+	}
 	apb, err := apReq.Marshal()
 	if err != nil {
 		return a, krberror.Errorf(err, krberror.EncodingError, "Error marshaling AP_REQ for pre-authentication data")

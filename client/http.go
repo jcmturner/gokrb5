@@ -32,6 +32,9 @@ func (cl *Client) SetSPNEGOHeader(r *http.Request, spn string) error {
 // SetSPNEGOHeader sets the provided ticket as the SPNEGO authorization header on HTTP request object.
 func SetSPNEGOHeader(creds credentials.Credentials, tkt messages.Ticket, sessionKey types.EncryptionKey, r *http.Request) error {
 	SPNEGOToken, err := gssapi.GetSPNEGOKrbNegTokenInit(creds, tkt, sessionKey)
+	if err != nil {
+		return err
+	}
 	nb, err := SPNEGOToken.Marshal()
 	if err != nil {
 		return krberror.Errorf(err, krberror.EncodingError, "Could marshal SPNEGO")
