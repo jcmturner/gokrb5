@@ -113,11 +113,11 @@ func NewKRB5APREQMechToken(creds credentials.Credentials, tkt messages.Ticket, s
 		auth,
 	)
 	if err != nil {
-		return []byte{}, err
+		return []byte{}, fmt.Errorf("could not create new AP_REQ: %v", err)
 	}
 	tb, err = APReq.Marshal()
 	if err != nil {
-		return []byte{}, fmt.Errorf("Could not marshal AP_REQ: %v", err)
+		return []byte{}, fmt.Errorf("could not marshal AP_REQ: %v", err)
 	}
 	b = append(b, tb...)
 	return asn1tools.AddASNAppTag(b, 0), nil

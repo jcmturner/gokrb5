@@ -33,11 +33,11 @@ func (cl *Client) SetSPNEGOHeader(r *http.Request, spn string) error {
 func SetSPNEGOHeader(creds credentials.Credentials, tkt messages.Ticket, sessionKey types.EncryptionKey, r *http.Request) error {
 	SPNEGOToken, err := gssapi.GetSPNEGOKrbNegTokenInit(creds, tkt, sessionKey)
 	if err != nil {
-		return err
+		return krberror.Errorf(err, krberror.EncodingError, "cound not generate SPNEGO negotiation token")
 	}
 	nb, err := SPNEGOToken.Marshal()
 	if err != nil {
-		return krberror.Errorf(err, krberror.EncodingError, "Could marshal SPNEGO")
+		return krberror.Errorf(err, krberror.EncodingError, "could not marshal SPNEGO")
 	}
 	hs := "Negotiate " + base64.StdEncoding.EncodeToString(nb)
 	r.Header.Set("Authorization", hs)

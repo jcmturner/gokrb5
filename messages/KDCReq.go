@@ -171,21 +171,21 @@ func NewTGSReq(cname types.PrincipalName, kdcRealm string, c *config.Config, tkt
 	}
 	auth, err := types.NewAuthenticator(c.LibDefaults.DefaultRealm, cname)
 	if err != nil {
-		return a, krberror.Errorf(err, krberror.KRBMsgError, "Error generating new authenticator")
+		return a, krberror.Errorf(err, krberror.KRBMsgError, "error generating new authenticator")
 	}
 	// Add the CName to make validation of the reply easier
 	a.ReqBody.CName = auth.CName
 	b, err := a.ReqBody.Marshal()
 	if err != nil {
-		return a, krberror.Errorf(err, krberror.EncodingError, "Error marshaling TGS_REQ body")
+		return a, krberror.Errorf(err, krberror.EncodingError, "error marshaling TGS_REQ body")
 	}
 	etype, err := crypto.GetEtype(sessionKey.KeyType)
 	if err != nil {
-		return a, krberror.Errorf(err, krberror.EncryptingError, "Error getting etype to encrypt authenticator")
+		return a, krberror.Errorf(err, krberror.EncryptingError, "error getting etype to encrypt authenticator")
 	}
 	cb, err := etype.GetChecksumHash(sessionKey.KeyValue, b, keyusage.TGS_REQ_PA_TGS_REQ_AP_REQ_AUTHENTICATOR_CHKSUM)
 	if err != nil {
-		return a, krberror.Errorf(err, krberror.ChksumError, "Error getting etype checksum hash")
+		return a, krberror.Errorf(err, krberror.ChksumError, "error getting etype checksum hash")
 	}
 	auth.Cksum = types.Checksum{
 		CksumType: etype.GetHashID(),
@@ -193,11 +193,11 @@ func NewTGSReq(cname types.PrincipalName, kdcRealm string, c *config.Config, tkt
 	}
 	apReq, err := NewAPReq(tkt, sessionKey, auth)
 	if err != nil {
-		return a, err
+		return a, krberror.Errorf(err, krberror.KRBMsgError, "error generating new AP_REQ")
 	}
 	apb, err := apReq.Marshal()
 	if err != nil {
-		return a, krberror.Errorf(err, krberror.EncodingError, "Error marshaling AP_REQ for pre-authentication data")
+		return a, krberror.Errorf(err, krberror.EncodingError, "error marshaling AP_REQ for pre-authentication data")
 	}
 	a.PAData = types.PADataSequence{
 		types.PAData{
@@ -222,7 +222,7 @@ func (k *ASReq) Unmarshal(b []byte) error {
 	var reqb KDCReqBody
 	err = reqb.Unmarshal(m.ReqBody.Bytes)
 	if err != nil {
-		return krberror.Errorf(err, krberror.EncodingError, "Error processing AS_REQ body")
+		return krberror.Errorf(err, krberror.EncodingError, "error processing AS_REQ body")
 	}
 	k.MsgType = m.MsgType
 	k.PAData = m.PAData
