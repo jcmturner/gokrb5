@@ -3,6 +3,7 @@ package gssapi
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"github.com/jcmturner/asn1"
 	"gopkg.in/jcmturner/gokrb5.v2/asn1tools"
