@@ -145,7 +145,6 @@ func NewAPREQMechToken(creds credentials.Credentials, tkt messages.Ticket, sessi
 		types.SetFlag(&APReq.APOptions, o)
 	}
 	m.APReq = APReq
-	tb, err = APReq.Marshal()
 	return m, nil
 }
 

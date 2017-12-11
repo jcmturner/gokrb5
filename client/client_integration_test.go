@@ -430,7 +430,7 @@ func TestResolveKDC(t *testing.T) {
 		assert.True(t, found, "Record %s not found in results", s)
 	}
 	c.LibDefaults.DNSLookupKDC = false
-	count, res, err = cl.resolveKDC(c.LibDefaults.DefaultRealm, true)
+	_, res, err = cl.resolveKDC(c.LibDefaults.DefaultRealm, true)
 	if err != nil {
 		t.Errorf("error resolving KDCs from config: %v", err)
 	}
