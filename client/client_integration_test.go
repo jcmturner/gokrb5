@@ -5,15 +5,16 @@ package client
 
 import (
 	"encoding/hex"
+	"net/http"
+	"os"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/gokrb5.v2/config"
 	"gopkg.in/jcmturner/gokrb5.v2/credentials"
 	"gopkg.in/jcmturner/gokrb5.v2/iana/etypeID"
 	"gopkg.in/jcmturner/gokrb5.v2/keytab"
 	"gopkg.in/jcmturner/gokrb5.v2/testdata"
-	"net/http"
-	"os"
-	"testing"
 )
 
 func TestClient_SuccessfulLogin_Keytab(t *testing.T) {
@@ -54,7 +55,7 @@ func TestClient_SuccessfulLogin_Password(t *testing.T) {
 	}
 	for _, test := range tests {
 		c.Realms[0].KDC = []string{addr + ":" + test}
-		cl := NewClientWithPassword("testuser1", "TESTGOKRB5", "passwordvalue")
+		cl := NewClientWithPassword("testuser1", "TEST.GOKRB5", "passwordvalue")
 		cl.WithConfig(c)
 
 		err := cl.Login()
@@ -141,7 +142,7 @@ func TestClient_ASExchange_TGSExchange_EncTypes_Password(t *testing.T) {
 		c.LibDefaults.DefaultTktEnctypeIDs = []int{etypeID.ETypesByName[test]}
 		c.LibDefaults.DefaultTGSEnctypes = []string{test}
 		c.LibDefaults.DefaultTGSEnctypeIDs = []int{etypeID.ETypesByName[test]}
-		cl := NewClientWithPassword("testuser1", "TESTGOKRB5", "passwordvalue")
+		cl := NewClientWithPassword("testuser1", "TEST.GOKRB5", "passwordvalue")
 		cl.WithConfig(c)
 
 		err := cl.Login()
