@@ -117,11 +117,6 @@ func NewClientFromCCache(c credentials.CCache) (Client, error) {
 // WithConfig sets the Kerberos configuration for the client.
 func (cl *Client) WithConfig(cfg *config.Config) *Client {
 	cl.Config = cfg
-
-	// Use the default Realm if user did not specified it when creating a client
-	if cl.Credentials.Realm == "" {
-		cl.Credentials.Realm = cl.Config.LibDefaults.DefaultRealm
-	}
 	return cl
 }
 
@@ -199,5 +194,8 @@ func (cl *Client) IsConfigured() (bool, error) {
 
 // Login the client with the KDC via an AS exchange.
 func (cl *Client) Login() error {
+	if cl.Credentials.Realm == "" {
+		cl.Credentials.Realm = cl.Config.LibDefaults.DefaultRealm
+	}
 	return cl.ASExchange(cl.Credentials.Realm, 0)
 }
