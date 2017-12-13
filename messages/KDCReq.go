@@ -6,6 +6,10 @@ package messages
 import (
 	"crypto/rand"
 	"fmt"
+	"math"
+	"math/big"
+	"time"
+
 	"github.com/jcmturner/asn1"
 	"gopkg.in/jcmturner/gokrb5.v2/asn1tools"
 	"gopkg.in/jcmturner/gokrb5.v2/config"
@@ -19,9 +23,6 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v2/iana/patype"
 	"gopkg.in/jcmturner/gokrb5.v2/krberror"
 	"gopkg.in/jcmturner/gokrb5.v2/types"
-	"math"
-	"math/big"
-	"time"
 )
 
 type marshalKDCReq struct {
@@ -169,7 +170,7 @@ func NewTGSReq(cname types.PrincipalName, kdcRealm string, c *config.Config, tkt
 		types.SetFlag(&a.ReqBody.KDCOptions, flags.Renew)
 		types.SetFlag(&a.ReqBody.KDCOptions, flags.Renewable)
 	}
-	auth, err := types.NewAuthenticator(c.LibDefaults.DefaultRealm, cname)
+	auth, err := types.NewAuthenticator(tkt.Realm, cname)
 	if err != nil {
 		return a, krberror.Errorf(err, krberror.KRBMsgError, "error generating new authenticator")
 	}

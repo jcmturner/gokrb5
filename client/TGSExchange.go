@@ -1,12 +1,13 @@
 package client
 
 import (
+	"strings"
+	"time"
+
 	"gopkg.in/jcmturner/gokrb5.v2/iana/nametype"
 	"gopkg.in/jcmturner/gokrb5.v2/krberror"
 	"gopkg.in/jcmturner/gokrb5.v2/messages"
 	"gopkg.in/jcmturner/gokrb5.v2/types"
-	"strings"
-	"time"
 )
 
 // TGSExchange performs a TGS exchange to retrieve a ticket to the specified SPN.
@@ -38,7 +39,7 @@ func (cl *Client) TGSExchange(spn types.PrincipalName, kdcRealm string, tkt mess
 	if err != nil {
 		return tgsReq, tgsRep, krberror.Errorf(err, krberror.EncodingError, "TGS Exchange Error: failed to process the TGS_REP")
 	}
-	if tgsRep.Ticket.SName.NameType == nametype.KRB_NT_SRV_INST {
+	if tgsRep.Ticket.SName.NameType == nametype.KRB_NT_SRV_INST && !tgsRep.Ticket.SName.Equal(spn) {
 		if referral > 5 {
 			return tgsReq, tgsRep, krberror.Errorf(err, krberror.KRBMsgError, "maximum number of referrals exceeded")
 		}
@@ -84,7 +85,7 @@ func (cl *Client) GetServiceTicket(spn string) (messages.Ticket, types.Encryptio
 			return tkt, skey, err
 		}
 	}
-	_, tgsRep, err := cl.TGSExchange(princ, sess.TGT.Realm, sess.TGT, sess.SessionKey, false, 0)
+	_, tgsRep, err := cl.TGSExchange(princ, sess.Realm, sess.TGT, sess.SessionKey, false, 0)
 	if err != nil {
 		return tkt, skey, err
 	}

@@ -2,12 +2,13 @@ package client
 
 import (
 	"fmt"
+	"sync"
+	"time"
+
 	"gopkg.in/jcmturner/gokrb5.v2/iana/nametype"
 	"gopkg.in/jcmturner/gokrb5.v2/krberror"
 	"gopkg.in/jcmturner/gokrb5.v2/messages"
 	"gopkg.in/jcmturner/gokrb5.v2/types"
-	"sync"
-	"time"
 )
 
 // Sessions keyed on the realm name
@@ -96,20 +97,40 @@ func (cl *Client) updateSession(s *session) error {
 	return nil
 }
 
-// GetSessionFromRealm returns the session for the realm provided.
-func (cl *Client) GetSessionFromRealm(realm string) (sess *session, err error) {
-	var ok bool
+func (cl *Client) getSessionFromRemoteRealm(realm string) (*session, error) {
+	cl.sessions.mux.RLock()
+	sess, ok := cl.sessions.Entries[cl.Credentials.Realm]
+	cl.sessions.mux.RUnlock()
+	if !ok {
+		return nil, fmt.Errorf("client does not have a session for realm %s, login first", cl.Credentials.Realm)
+	}
+
+	spn := types.PrincipalName{
+		NameType:   nametype.KRB_NT_SRV_INST,
+		NameString: []string{"krbtgt", realm},
+	}
+
+	_, tgsRep, err := cl.TGSExchange(spn, cl.Credentials.Realm, sess.TGT, sess.SessionKey, false, 0)
+	if err != nil {
+		return nil, err
+	}
+	cl.AddSession(tgsRep.Ticket, tgsRep.DecryptedEncPart)
+
 	cl.sessions.mux.RLock()
 	defer cl.sessions.mux.RUnlock()
-	sess, ok = cl.sessions.Entries[realm]
+	return cl.sessions.Entries[realm], nil
+}
+
+// GetSessionFromRealm returns the session for the realm provided.
+func (cl *Client) GetSessionFromRealm(realm string) (*session, error) {
+	cl.sessions.mux.RLock()
+	sess, ok := cl.sessions.Entries[realm]
+	cl.sessions.mux.RUnlock()
 	if !ok {
-		sess, ok = cl.sessions.Entries[cl.Config.LibDefaults.DefaultRealm]
-		if !ok {
-			err = fmt.Errorf("client does not have a session for realm %s or for the default realm %s, login first", realm, cl.Config.LibDefaults.DefaultRealm)
-			return
-		}
+		// Try to request TGT from trusted remote Realm
+		return cl.getSessionFromRemoteRealm(realm)
 	}
-	return
+	return sess, nil
 }
 
 // GetSessionFromPrincipalName returns the session for the realm of the principal provided.

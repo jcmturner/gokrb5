@@ -4,6 +4,7 @@ package client
 import (
 	"errors"
 	"fmt"
+
 	"gopkg.in/jcmturner/gokrb5.v2/config"
 	"gopkg.in/jcmturner/gokrb5.v2/credentials"
 	"gopkg.in/jcmturner/gokrb5.v2/crypto"
@@ -33,6 +34,7 @@ type Config struct {
 }
 
 // NewClientWithPassword creates a new client from a password credential.
+// Set the realm to empty string to use the default realm from config.
 func NewClientWithPassword(username, realm, password string) Client {
 	creds := credentials.NewCredentials(username, realm)
 	return Client{
@@ -115,6 +117,11 @@ func NewClientFromCCache(c credentials.CCache) (Client, error) {
 // WithConfig sets the Kerberos configuration for the client.
 func (cl *Client) WithConfig(cfg *config.Config) *Client {
 	cl.Config = cfg
+
+	// Use the default Realm if user did not specified it when creating a client
+	if cl.Credentials.Realm == "" {
+		cl.Credentials.Realm = cl.Config.LibDefaults.DefaultRealm
+	}
 	return cl
 }
 
@@ -192,5 +199,5 @@ func (cl *Client) IsConfigured() (bool, error) {
 
 // Login the client with the KDC via an AS exchange.
 func (cl *Client) Login() error {
-	return cl.ASExchange(cl.Config.LibDefaults.DefaultRealm, 0)
+	return cl.ASExchange(cl.Credentials.Realm, 0)
 }
