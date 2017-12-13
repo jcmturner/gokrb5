@@ -1,11 +1,12 @@
 package config
 
 import (
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -56,6 +57,10 @@ const (
  .test.gokrb5 = TEST.GOKRB5
 
  test.gokrb5 = TEST.GOKRB5
+ 
+  .example.com = EXAMPLE.COM
+ hostname1.example.com = EXAMPLE.COM
+ hostname2.example.com = TEST.GOKRB5
 
 [appdefaults]
  pam = {
@@ -280,4 +285,28 @@ func TestParseDuration(t *testing.T) {
 
 	}
 
+}
+
+func TestResolveRealm(t *testing.T) {
+	c, err := NewConfigFromString(krb5Conf)
+	if err != nil {
+		t.Fatalf("Error loading config: %v", err)
+	}
+
+	tests := []struct {
+		domainName string
+		want       string
+	}{
+		{"unknown.com", "TEST.GOKRB5"},
+		{"hostname1.example.com", "EXAMPLE.COM"},
+		{"hostname2.example.com", "TEST.GOKRB5"},
+		{"one.two.three.example.com", "EXAMPLE.COM"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.domainName, func(t *testing.T) {
+			if got := c.ResolveRealm(tt.domainName); got != tt.want {
+				t.Errorf("Config.ResolveRealm() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
