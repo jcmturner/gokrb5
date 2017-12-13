@@ -6,8 +6,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/jcmturner/asn1"
-	"gopkg.in/jcmturner/gokrb5.v2/iana/etypeID"
 	"io"
 	"os"
 	"os/user"
@@ -15,6 +13,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/jcmturner/asn1"
+	"gopkg.in/jcmturner/gokrb5.v2/iana/etypeID"
 )
 
 // Config represents the KRB5 configuration.
@@ -431,10 +432,17 @@ func (d *DomainRealm) deleteMapping(domain, realm string) {
 // The most specific mapping is returned.
 func (c *Config) ResolveRealm(domainName string) string {
 	domainName = strings.TrimSuffix(domainName, ".")
+
+	// Try to match the entire hostname first
+	if r, ok := c.DomainRealm[domainName]; ok {
+		return r
+	}
+
+	// Try to match all DNS domain parts
 	periods := strings.Count(domainName, ".") + 1
-	for i := 1; i <= periods; i++ {
+	for i := 2; i <= periods; i++ {
 		z := strings.SplitN(domainName, ".", i)
-		if r, ok := c.DomainRealm[z[len(z)-1]]; ok {
+		if r, ok := c.DomainRealm["."+z[len(z)-1]]; ok {
 			return r
 		}
 	}
