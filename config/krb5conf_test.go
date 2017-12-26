@@ -62,6 +62,7 @@ const (
  hostname1.example.com = EXAMPLE.COM
  hostname2.example.com = TEST.GOKRB5
 
+
 [appdefaults]
  pam = {
    debug = false
@@ -301,6 +302,7 @@ func TestResolveRealm(t *testing.T) {
 		{"hostname1.example.com", "EXAMPLE.COM"},
 		{"hostname2.example.com", "TEST.GOKRB5"},
 		{"one.two.three.example.com", "EXAMPLE.COM"},
+		{".test.gokrb5", "TEST.GOKRB5"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.domainName, func(t *testing.T) {

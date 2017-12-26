@@ -459,3 +459,52 @@ func TestClient_Login_DNSKDCs(t *testing.T) {
 		t.Errorf("Error on logging in using DNS lookup of KDCs: %v\n", err)
 	}
 }
+
+// Login to the TEST.GOKRB5 domain and request service ticket for resource in the RESDOM.GOKRB5 domain.
+// There is a trust between the two domains.
+func TestClient_GetServiceTicket_Trusted_Resource_Domain(t *testing.T) {
+	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	kt, _ := keytab.Parse(b)
+	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+
+	addr := os.Getenv("TEST_KDC_ADDR")
+	if addr == "" {
+		addr = testdata.TEST_KDC_ADDR
+	}
+	for i, r := range c.Realms {
+		if r.Realm == "TEST.GOKRB5" {
+			c.Realms[i].KDC = []string{addr + ":" + testdata.TEST_KDC}
+		}
+		if r.Realm == "RESDOM.GOKRB5" {
+			c.Realms[i].KDC = []string{addr + ":" + testdata.TEST_KDC_RESDOM}
+		}
+	}
+
+	c.LibDefaults.DefaultRealm = "TEST.GOKRB5"
+	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
+	c.LibDefaults.DefaultTktEnctypes = []string{"aes256-cts-hmac-sha1-96"}
+	c.LibDefaults.DefaultTktEnctypeIDs = []int{etypeID.ETypesByName["aes256-cts-hmac-sha1-96"]}
+	c.LibDefaults.DefaultTGSEnctypes = []string{"aes256-cts-hmac-sha1-96"}
+	c.LibDefaults.DefaultTGSEnctypeIDs = []int{etypeID.ETypesByName["aes256-cts-hmac-sha1-96"]}
+	cl.WithConfig(c)
+
+	err := cl.Login()
+
+	if err != nil {
+		t.Fatalf("Error on login: %v\n", err)
+	}
+	spn := "HTTP/host.resdom.gokrb5"
+	tkt, key, err := cl.GetServiceTicket(spn)
+	if err != nil {
+		t.Fatalf("Error getting service ticket: %v\n", err)
+	}
+	assert.Equal(t, spn, tkt.SName.GetPrincipalNameString())
+	assert.Equal(t, etypeID.ETypesByName["aes256-cts-hmac-sha1-96"], key.KeyType)
+
+	b, _ = hex.DecodeString(testdata.SYSHTTP_RESDOM_KEYTAB)
+	skt, _ := keytab.Parse(b)
+	err = tkt.DecryptEncPart(skt, "")
+	if err != nil {
+		t.Errorf("Error decrypting ticket with service keytab: %v", err)
+	}
+}
