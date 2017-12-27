@@ -3,7 +3,7 @@ package messages
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/jcmturner/asn1"
+	"github.com/jcmturner/gofork/encoding/asn1"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/gokrb5.v2/iana/msgtype"
 	"gopkg.in/jcmturner/gokrb5.v2/testdata"

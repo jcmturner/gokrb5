@@ -11,10 +11,6 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v2/crypto/etype"
 )
 
-const (
-	s2kParamsZero = 4294967296
-)
-
 // ZeroPad pads bytes with zeros to nearest multiple of message size m.
 func ZeroPad(b []byte, m int) ([]byte, error) {
 	if m <= 0 {
@@ -139,32 +135,8 @@ func getUsage(un uint32, o byte) []byte {
 }
 
 // IterationsToS2Kparams converts the number of iterations as an integer to a string representation.
-func IterationsToS2Kparams(i int) string {
+func IterationsToS2Kparams(i uint32) string {
 	b := make([]byte, 4, 4)
-	binary.BigEndian.PutUint32(b, uint32(i))
+	binary.BigEndian.PutUint32(b, i)
 	return hex.EncodeToString(b)
-}
-
-// S2KparamsToItertions converts the string representation of iterations to an integer
-func S2KparamsToItertions(s2kparams string) (int, error) {
-	//process s2kparams string
-	//The parameter string is four octets indicating an unsigned
-	//number in big-endian order.  This is the number of iterations to be
-	//performed.  If the value is 00 00 00 00, the number of iterations to
-	//be performed is 4,294,967,296 (2**32).
-	var i uint32
-	if len(s2kparams) != 8 {
-		return s2kParamsZero, errors.New("Invalid s2kparams length")
-	}
-	b, err := hex.DecodeString(s2kparams)
-	if err != nil {
-		return s2kParamsZero, errors.New("Invalid s2kparams, cannot decode string to bytes")
-	}
-	i = binary.BigEndian.Uint32(b)
-	//buf := bytes.NewBuffer(b)
-	//err = binary.Read(buf, binary.BigEndian, &i)
-	if err != nil {
-		return s2kParamsZero, errors.New("Invalid s2kparams, cannot convert to big endian int32")
-	}
-	return int(i), nil
 }

@@ -4,7 +4,7 @@ package types
 // Section: 5.2.8
 
 import (
-	"github.com/jcmturner/asn1"
+	"github.com/jcmturner/gofork/encoding/asn1"
 )
 
 /*

@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jcmturner/asn1"
+	"github.com/jcmturner/gofork/encoding/asn1"
 	"gopkg.in/jcmturner/gokrb5.v2/iana/etypeID"
 )
 

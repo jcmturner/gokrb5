@@ -1,6 +1,6 @@
 package gssapi
 
-import "github.com/jcmturner/asn1"
+import "github.com/jcmturner/gofork/encoding/asn1"
 
 /*
 ContextFlags ::= BIT STRING {
