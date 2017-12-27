@@ -6,7 +6,7 @@ package types
 import (
 	"bytes"
 	"fmt"
-	"github.com/jcmturner/asn1"
+	"github.com/jcmturner/gofork/encoding/asn1"
 	"net"
 )
 

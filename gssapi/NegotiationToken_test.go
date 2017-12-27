@@ -2,7 +2,7 @@ package gssapi
 
 import (
 	"encoding/hex"
-	"github.com/jcmturner/asn1"
+	"github.com/jcmturner/gofork/encoding/asn1"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

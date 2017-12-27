@@ -2,7 +2,7 @@ package messages
 
 import (
 	"fmt"
-	"github.com/jcmturner/asn1"
+	"github.com/jcmturner/gofork/encoding/asn1"
 	"gopkg.in/jcmturner/gokrb5.v2/asn1tools"
 	"gopkg.in/jcmturner/gokrb5.v2/crypto"
 	"gopkg.in/jcmturner/gokrb5.v2/iana"

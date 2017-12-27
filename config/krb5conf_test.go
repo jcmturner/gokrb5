@@ -307,7 +307,7 @@ func TestResolveRealm(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.domainName, func(t *testing.T) {
 			if got := c.ResolveRealm(tt.domainName); got != tt.want {
-				t.Errorf("Config.ResolveRealm() = %v, want %v", got, tt.want)
+				t.Errorf("config.ResolveRealm() = %v, want %v", got, tt.want)
 			}
 		})
 	}
