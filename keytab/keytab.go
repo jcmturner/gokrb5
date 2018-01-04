@@ -6,10 +6,12 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"gopkg.in/jcmturner/gokrb5.v2/types"
 	"io/ioutil"
 	"time"
 	"unsafe"
+
+	"github.com/zhuangsirui/binpacker"
+	"gopkg.in/jcmturner/gokrb5.v2/types"
 )
 
 // Keytab struct.
@@ -44,12 +46,71 @@ func NewKeytab() Keytab {
 	}
 }
 
+func (kt *Keytab) Bytes() []byte {
+	buffer := new(bytes.Buffer)
+	packer := binpacker.NewPacker(binary.BigEndian, buffer)
+
+	// First byte is always set to 5
+	packer.PushUint8(uint8(5))
+	packer.PushUint8(uint8(kt.Version))
+	for _, entry := range kt.Entries {
+		entryBytes := entry.Bytes()
+		packer.PushInt32(int32(len(entryBytes)))
+		packer.PushBytes(entryBytes)
+	}
+
+	return buffer.Bytes()
+}
+
+func (entry *entry) Bytes() []byte {
+	buffer := new(bytes.Buffer)
+	packer := binpacker.NewPacker(binary.BigEndian, buffer)
+
+	packer.PushBytes(entry.Principal.Bytes())
+	packer.PushInt32(int32(entry.Timestamp.Unix()))
+	packer.PushUint8(uint8(entry.KVNO8))
+	packer.PushInt16(int16(entry.Key.KeyType))
+	packer.PushInt16(int16(len(entry.Key.KeyValue)))
+	packer.PushBytes(entry.Key.KeyValue)
+	// This is only in KRB5 1.14 and later, not sure if we want to add it or not
+	if entry.KVNO != 0 {
+		packer.PushUint32(entry.KVNO)
+	}
+
+	return buffer.Bytes()
+}
+
+func (principal *principal) Bytes() []byte {
+	buffer := new(bytes.Buffer)
+	packer := binpacker.NewPacker(binary.BigEndian, buffer)
+
+	packer.PushInt16(principal.NumComponents)
+	packer.PushInt16(int16(len(principal.Realm)))
+	packer.PushString(principal.Realm)
+	for _, component := range principal.Components {
+		packer.PushInt16(int16(len(component)))
+		packer.PushString(component)
+	}
+	packer.PushInt32(principal.NameType)
+
+	return buffer.Bytes()
+}
+
+// The 32-bit key version overrides the 8-bit key version.
+func (entry *entry) KeyVersionNumber() int {
+	if entry.KVNO != 0 {
+		return int(entry.KVNO)
+	}
+
+	return int(entry.KVNO8)
+}
+
 // GetEncryptionKey returns the EncryptionKey from the Keytab for the newest entry with the required kvno, etype and matching principal.
 func (kt *Keytab) GetEncryptionKey(nameString []string, realm string, kvno, etype int) (types.EncryptionKey, error) {
 	var key types.EncryptionKey
 	var t time.Time
 	for _, k := range kt.Entries {
-		if k.Principal.Realm == realm && len(k.Principal.Components) == len(nameString) && int(k.Key.KeyType) == etype && (int(k.KVNO) == kvno || kvno == 0) && k.Timestamp.After(t) {
+		if k.Principal.Realm == realm && len(k.Principal.Components) == len(nameString) && int(k.Key.KeyType) == etype && (k.KeyVersionNumber() == kvno || kvno == 0) && k.Timestamp.After(t) {
 			p := true
 			for i, n := range k.Principal.Components {
 				if nameString[i] != n {
@@ -105,18 +166,25 @@ func Load(ktPath string) (kt Keytab, err error) {
 
 // Parse byte slice of Keytab data into Keytab type.
 func Parse(b []byte) (kt Keytab, err error) {
+	// n tracks position in the byte array
+	n := 0
+
 	//The first byte of the file always has the value 5
-	if int8(b[0]) != 5 {
+	if int8(b[n]) != 5 {
 		err = errors.New("Invalid keytab data. First byte does not equal 5")
 		return
 	}
+	n++
+
 	//Get keytab version
 	//The second byte contains the version number (1 or 2)
-	kt.Version = uint16(b[1])
+	kt.Version = uint16(b[n])
 	if kt.Version != 1 && kt.Version != 2 {
 		err = errors.New("Invalid keytab data. Keytab version is neither 1 nor 2")
 		return
 	}
+	n++
+
 	//Version 1 of the file format uses native byte order for integer representations. Version 2 always uses big-endian byte order
 	var endian binary.ByteOrder
 	endian = binary.BigEndian
@@ -129,8 +197,6 @@ func Parse(b []byte) (kt Keytab, err error) {
 		A negative length indicates a zero-filled hole whose size is the inverse of the length.
 		A length of 0 indicates the end of the file.
 	*/
-	// n tracks position in the byte array
-	n := 2
 	l := readInt32(b, &n, &endian)
 	for l != 0 {
 		if l < 0 {
@@ -157,10 +223,6 @@ func Parse(b []byte) (kt Keytab, err error) {
 				// The 32-bit key may be present
 				ke.KVNO = uint32(readInt32(eb, &p, &endian))
 			}
-			if ke.KVNO == 0 {
-				// Handles if the value from the last 4 bytes was zero and also if there are not the 4 bytes present. Makes sense to put the same value here as KVNO8
-				ke.KVNO = uint32(ke.KVNO8)
-			}
 			// Add the entry to the keytab
 			kt.Entries = append(kt.Entries, ke)
 		}
@@ -185,7 +247,8 @@ func parsePrincipal(b []byte, p *int, kt *Keytab, ke *entry, e *binary.ByteOrder
 	ke.Principal.Realm = string(readBytes(b, p, int(lenRealm), e))
 	for i := 0; i < int(ke.Principal.NumComponents); i++ {
 		l := readInt16(b, p, e)
-		ke.Principal.Components = append(ke.Principal.Components, string(readBytes(b, p, int(l), e)))
+		component := string(readBytes(b, p, int(l), e))
+		ke.Principal.Components = append(ke.Principal.Components, component)
 	}
 	if kt.Version != 1 {
 		//Name Type is omitted in version 1
