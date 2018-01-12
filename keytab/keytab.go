@@ -10,7 +10,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/zhuangsirui/binpacker"
+	"gopkg.in/jcmturner/gokrb5.v2/binpacker"
 	"gopkg.in/jcmturner/gokrb5.v2/types"
 )
 
