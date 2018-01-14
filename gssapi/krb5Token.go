@@ -205,30 +205,3 @@ Octet        Name      Description
 28..(n-1)    Deleg   A KRB_CRED message (n = Dlgth + 28) [optional].
 n..last      Exts    Extensions [optional].
 */
-
-// NewKRB5APREQMechToken (DEPRECATED - use NewAPREQMechToken and then call Marshal() on the MechToken instead) creates new kerberos AP_REQ MechToken.
-func NewKRB5APREQMechToken(creds credentials.Credentials, tkt messages.Ticket, sessionKey types.EncryptionKey) ([]byte, error) {
-	// Create the header
-	b, _ := asn1.Marshal(MechTypeOIDKRB5)
-	tb, _ := hex.DecodeString(TOK_ID_KRB_AP_REQ)
-	b = append(b, tb...)
-	// Add the token
-	auth, err := NewAuthenticator(creds, sessionKey.KeyType, []int{GSS_C_INTEG_FLAG, GSS_C_CONF_FLAG})
-	if err != nil {
-		return []byte{}, err
-	}
-	APReq, err := messages.NewAPReq(
-		tkt,
-		sessionKey,
-		auth,
-	)
-	if err != nil {
-		return []byte{}, fmt.Errorf("could not create new AP_REQ: %v", err)
-	}
-	tb, err = APReq.Marshal()
-	if err != nil {
-		return []byte{}, fmt.Errorf("could not marshal AP_REQ: %v", err)
-	}
-	b = append(b, tb...)
-	return asn1tools.AddASNAppTag(b, 0), nil
-}
