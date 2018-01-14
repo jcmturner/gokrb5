@@ -4,17 +4,17 @@ import (
 	"crypto/rand"
 	"fmt"
 	"github.com/jcmturner/gofork/encoding/asn1"
-	"gopkg.in/jcmturner/gokrb5.v2/asn1tools"
-	"gopkg.in/jcmturner/gokrb5.v2/crypto"
-	"gopkg.in/jcmturner/gokrb5.v2/iana"
-	"gopkg.in/jcmturner/gokrb5.v2/iana/adtype"
-	"gopkg.in/jcmturner/gokrb5.v2/iana/asnAppTag"
-	"gopkg.in/jcmturner/gokrb5.v2/iana/errorcode"
-	"gopkg.in/jcmturner/gokrb5.v2/iana/keyusage"
-	"gopkg.in/jcmturner/gokrb5.v2/keytab"
-	"gopkg.in/jcmturner/gokrb5.v2/krberror"
-	"gopkg.in/jcmturner/gokrb5.v2/pac"
-	"gopkg.in/jcmturner/gokrb5.v2/types"
+	"gopkg.in/jcmturner/gokrb5.v3/asn1tools"
+	"gopkg.in/jcmturner/gokrb5.v3/crypto"
+	"gopkg.in/jcmturner/gokrb5.v3/iana"
+	"gopkg.in/jcmturner/gokrb5.v3/iana/adtype"
+	"gopkg.in/jcmturner/gokrb5.v3/iana/asnAppTag"
+	"gopkg.in/jcmturner/gokrb5.v3/iana/errorcode"
+	"gopkg.in/jcmturner/gokrb5.v3/iana/keyusage"
+	"gopkg.in/jcmturner/gokrb5.v3/keytab"
+	"gopkg.in/jcmturner/gokrb5.v3/krberror"
+	"gopkg.in/jcmturner/gokrb5.v3/pac"
+	"gopkg.in/jcmturner/gokrb5.v3/types"
 	"time"
 )
 
@@ -220,10 +220,10 @@ func (t *Ticket) GetPACType(keytab keytab.Keytab, sa string) (bool, pac.PACType,
 			}
 			if ad2[0].ADType == adtype.ADWin2KPAC {
 				isPAC = true
-				var pac pac.PACType
-				err = pac.Unmarshal(ad2[0].ADData)
+				var p pac.PACType
+				err = p.Unmarshal(ad2[0].ADData)
 				if err != nil {
-					return isPAC, pac, fmt.Errorf("Error unmarshaling PAC: %v", err)
+					return isPAC, p, fmt.Errorf("Error unmarshaling PAC: %v", err)
 				}
 				var upn []string
 				if sa != "" {
@@ -233,10 +233,10 @@ func (t *Ticket) GetPACType(keytab keytab.Keytab, sa string) (bool, pac.PACType,
 				}
 				key, err := keytab.GetEncryptionKey(upn, t.Realm, t.EncPart.KVNO, t.EncPart.EType)
 				if err != nil {
-					return isPAC, pac, NewKRBError(t.SName, t.Realm, errorcode.KRB_AP_ERR_NOKEY, fmt.Sprintf("Could not get key from keytab: %v", err))
+					return isPAC, p, NewKRBError(t.SName, t.Realm, errorcode.KRB_AP_ERR_NOKEY, fmt.Sprintf("Could not get key from keytab: %v", err))
 				}
-				err = pac.ProcessPACInfoBuffers(key)
-				return isPAC, pac, err
+				err = p.ProcessPACInfoBuffers(key)
+				return isPAC, p, err
 			}
 		}
 	}

@@ -2,7 +2,7 @@ package mstypes
 
 import (
 	"encoding/binary"
-	"gopkg.in/jcmturner/gokrb5.v2/ndr"
+	"gopkg.in/jcmturner/gokrb5.v3/ndr"
 )
 
 // ClaimsSetMetadata implements https://msdn.microsoft.com/en-us/library/hh554073.aspx

@@ -2,7 +2,7 @@ package mstypes
 
 import (
 	"encoding/binary"
-	"gopkg.in/jcmturner/gokrb5.v2/ndr"
+	"gopkg.in/jcmturner/gokrb5.v3/ndr"
 )
 
 // Attributes of a security group membership and can be combined by using the bitwise OR operation.

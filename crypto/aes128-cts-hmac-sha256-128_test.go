@@ -3,8 +3,8 @@ package crypto
 import (
 	"encoding/hex"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v2/crypto/common"
-	"gopkg.in/jcmturner/gokrb5.v2/crypto/rfc8009"
+	"gopkg.in/jcmturner/gokrb5.v3/crypto/common"
+	"gopkg.in/jcmturner/gokrb5.v3/crypto/rfc8009"
 	"testing"
 )
 

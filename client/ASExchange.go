@@ -1,14 +1,14 @@
 package client
 
 import (
-	"gopkg.in/jcmturner/gokrb5.v2/crypto"
-	"gopkg.in/jcmturner/gokrb5.v2/crypto/etype"
-	"gopkg.in/jcmturner/gokrb5.v2/iana/errorcode"
-	"gopkg.in/jcmturner/gokrb5.v2/iana/keyusage"
-	"gopkg.in/jcmturner/gokrb5.v2/iana/patype"
-	"gopkg.in/jcmturner/gokrb5.v2/krberror"
-	"gopkg.in/jcmturner/gokrb5.v2/messages"
-	"gopkg.in/jcmturner/gokrb5.v2/types"
+	"gopkg.in/jcmturner/gokrb5.v3/crypto"
+	"gopkg.in/jcmturner/gokrb5.v3/crypto/etype"
+	"gopkg.in/jcmturner/gokrb5.v3/iana/errorcode"
+	"gopkg.in/jcmturner/gokrb5.v3/iana/keyusage"
+	"gopkg.in/jcmturner/gokrb5.v3/iana/patype"
+	"gopkg.in/jcmturner/gokrb5.v3/krberror"
+	"gopkg.in/jcmturner/gokrb5.v3/messages"
+	"gopkg.in/jcmturner/gokrb5.v3/types"
 )
 
 // ASExchange performs an AS exchange for the client to retrieve a TGT.
@@ -83,21 +83,21 @@ func setPAData(cl *Client, krberr messages.KRBError, ASReq *messages.ASReq) erro
 		if err != nil {
 			return krberror.Errorf(err, krberror.KRBMsgError, "Error creating PAEncTSEnc for Pre-Authentication")
 		}
-		var etype etype.EType
+		var et etype.EType
 		if krberr.ErrorCode == 0 {
 			// This is not in response to an error from the KDC. It is preemptive
-			etype, err = crypto.GetEtype(ASReq.ReqBody.EType[0]) // Take the first as preference
+			et, err = crypto.GetEtype(ASReq.ReqBody.EType[0]) // Take the first as preference
 			if err != nil {
 				return krberror.Errorf(err, krberror.EncryptingError, "error getting etype for pre-auth encryption")
 			}
 		} else {
 			// Get the etype to use from the PA data in the KRBError e-data
-			etype, err = preAuthEType(krberr)
+			et, err = preAuthEType(krberr)
 			if err != nil {
 				return krberror.Errorf(err, krberror.EncryptingError, "error getting etype for pre-auth encryption")
 			}
 		}
-		key, err := cl.Key(etype, krberr)
+		key, err := cl.Key(et, krberr)
 		if err != nil {
 			return krberror.Errorf(err, krberror.EncryptingError, "Error getting key from credentials")
 		}

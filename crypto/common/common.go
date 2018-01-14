@@ -8,7 +8,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"gopkg.in/jcmturner/gokrb5.v2/crypto/etype"
+	"gopkg.in/jcmturner/gokrb5.v3/crypto/etype"
 )
 
 // ZeroPad pads bytes with zeros to nearest multiple of message size m.
