@@ -55,8 +55,8 @@ incorporated faster this way.
 ```
 <short summary starting with a verb in lowercase and less than 50 characters>
 
-More detailed explanatory text, if necessary.  Wrap it to
-about 72 characters or so.
+More detailed explanatory text, if necessary.  Wrap it to about 72 
+characters or so.
 ```
 This to adhere to the [git best practice](https://git-scm.com/book/en/v2/Distributed-Git-Contributing-to-a-Project) and 
 mirror the [contribution guidelines for the Go standard libarary](https://golang.org/doc/contribute.html).
@@ -64,8 +64,8 @@ An Example:
 ```
 update to the godoc comments for the function Blah
 
-The godoc comments to function Blah have been updated to make it clearer 
-as to what the function is for.
+The godoc comments to function subpkg.Blah have been updated to make it 
+clearer as to what the function is for.
 ```
 
 ### Issue Raising Ground Rules
@@ -97,6 +97,6 @@ Running the tests without any particular switches runs only the unit tests.
 It is recommended to run tests with the ```-race``` argument.
 
 There are integration tests that run against various other network services such as KDCs, HTTP web servers, DNS servers, 
-etc. To run these pass ```-tags=adintegration``` as an argument to the go test command.
+etc. To run these pass ```-tags=integration``` as an argument to the go test command.
 There are vagrant and docker resources available to spin up these network services. See the 
 [readme](https://github.com/jcmturner/gokrb5/blob/master/testenv/README.md) in the testenv directory for instructions.
