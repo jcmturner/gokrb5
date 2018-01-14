@@ -221,7 +221,7 @@ if ok, creds, err := service.ValidateAPREQ(mt.APReq, kt, r.RemoteAddr); ok {
 
 ## Contributing
 Thank you for your interest in contributing to gokrb5 please read the 
-[contribution guide](https://github.com/jcmturner/gokrb5/blob/master/README.md) as it should help you get started.
+[contribution guide](https://github.com/jcmturner/gokrb5/blob/master/CONTRIBUTING.md) as it should help you get started.
 
 ## Known Issues
 | Issue | Worked around? | References |
