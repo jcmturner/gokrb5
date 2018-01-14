@@ -219,6 +219,10 @@ if ok, creds, err := service.ValidateAPREQ(mt.APReq, kt, r.RemoteAddr); ok {
 ## Thanks
 * Greg Hudson from the MIT Consortium for Kerberos and Internet Trust for providing useful advice.
 
+## Contributing
+Thank you for your interest in contributing to gokrb5 please read the 
+[contribution guide](https://github.com/jcmturner/gokrb5/blob/master/README.md) as it should help you get started.
+
 ## Known Issues
 | Issue | Worked around? | References |
 |-------|-------------|------------|
