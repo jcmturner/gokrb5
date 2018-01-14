@@ -3,9 +3,9 @@ package credentials
 import (
 	"encoding/hex"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v2/iana/nametype"
-	"gopkg.in/jcmturner/gokrb5.v2/testdata"
-	"gopkg.in/jcmturner/gokrb5.v2/types"
+	"gopkg.in/jcmturner/gokrb5.v3/iana/nametype"
+	"gopkg.in/jcmturner/gokrb5.v3/testdata"
+	"gopkg.in/jcmturner/gokrb5.v3/types"
 	"testing"
 )
 

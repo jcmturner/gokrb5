@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"github.com/jcmturner/gofork/x/crypto/pbkdf2"
-	"gopkg.in/jcmturner/gokrb5.v2/crypto/etype"
+	"gopkg.in/jcmturner/gokrb5.v3/crypto/etype"
 )
 
 const (

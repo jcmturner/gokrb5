@@ -3,11 +3,11 @@ package pac
 import (
 	"encoding/binary"
 	"fmt"
-	"gopkg.in/jcmturner/gokrb5.v2/crypto"
-	"gopkg.in/jcmturner/gokrb5.v2/iana/keyusage"
-	"gopkg.in/jcmturner/gokrb5.v2/mstypes"
-	"gopkg.in/jcmturner/gokrb5.v2/ndr"
-	"gopkg.in/jcmturner/gokrb5.v2/types"
+	"gopkg.in/jcmturner/gokrb5.v3/crypto"
+	"gopkg.in/jcmturner/gokrb5.v3/iana/keyusage"
+	"gopkg.in/jcmturner/gokrb5.v3/mstypes"
+	"gopkg.in/jcmturner/gokrb5.v3/ndr"
+	"gopkg.in/jcmturner/gokrb5.v3/types"
 )
 
 // https://msdn.microsoft.com/en-us/library/cc237931.aspx

@@ -5,10 +5,10 @@ import (
 	"crypto/hmac"
 	"crypto/sha1"
 	"errors"
-	"gopkg.in/jcmturner/gokrb5.v2/crypto/common"
-	"gopkg.in/jcmturner/gokrb5.v2/crypto/rfc3961"
-	"gopkg.in/jcmturner/gokrb5.v2/iana/chksumtype"
-	"gopkg.in/jcmturner/gokrb5.v2/iana/etypeID"
+	"gopkg.in/jcmturner/gokrb5.v3/crypto/common"
+	"gopkg.in/jcmturner/gokrb5.v3/crypto/rfc3961"
+	"gopkg.in/jcmturner/gokrb5.v3/iana/chksumtype"
+	"gopkg.in/jcmturner/gokrb5.v3/iana/etypeID"
 	"hash"
 )
 
@@ -149,7 +149,7 @@ func (e Des3CbcSha1Kd) DecryptData(key, data []byte) ([]byte, error) {
 }
 
 // DecryptMessage decrypts the message provided and verifies the integrity of the message.
-func (e Des3CbcSha1Kd) DecryptMessage(key, ciphertext []byte, usage uint32) (message []byte, err error) {
+func (e Des3CbcSha1Kd) DecryptMessage(key, ciphertext []byte, usage uint32) ([]byte, error) {
 	return rfc3961.DES3DecryptMessage(key, ciphertext, usage, e)
 }
 

@@ -3,15 +3,15 @@ package messages
 import (
 	"fmt"
 	"github.com/jcmturner/gofork/encoding/asn1"
-	"gopkg.in/jcmturner/gokrb5.v2/asn1tools"
-	"gopkg.in/jcmturner/gokrb5.v2/crypto"
-	"gopkg.in/jcmturner/gokrb5.v2/iana"
-	"gopkg.in/jcmturner/gokrb5.v2/iana/asnAppTag"
-	"gopkg.in/jcmturner/gokrb5.v2/iana/keyusage"
-	"gopkg.in/jcmturner/gokrb5.v2/iana/msgtype"
-	"gopkg.in/jcmturner/gokrb5.v2/iana/nametype"
-	"gopkg.in/jcmturner/gokrb5.v2/krberror"
-	"gopkg.in/jcmturner/gokrb5.v2/types"
+	"gopkg.in/jcmturner/gokrb5.v3/asn1tools"
+	"gopkg.in/jcmturner/gokrb5.v3/crypto"
+	"gopkg.in/jcmturner/gokrb5.v3/iana"
+	"gopkg.in/jcmturner/gokrb5.v3/iana/asnAppTag"
+	"gopkg.in/jcmturner/gokrb5.v3/iana/keyusage"
+	"gopkg.in/jcmturner/gokrb5.v3/iana/msgtype"
+	"gopkg.in/jcmturner/gokrb5.v3/iana/nametype"
+	"gopkg.in/jcmturner/gokrb5.v3/krberror"
+	"gopkg.in/jcmturner/gokrb5.v3/types"
 )
 
 /*AP-REQ          ::= [APPLICATION 14] SEQUENCE {

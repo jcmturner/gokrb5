@@ -1,12 +1,11 @@
 package rfc3961
 
 import (
-	"gopkg.in/jcmturner/gokrb5.v2/crypto/etype"
+	"gopkg.in/jcmturner/gokrb5.v3/crypto/etype"
 )
 
 const (
-	prfconstant   = "prf"
-	s2kParamsZero = 4294967296
+	prfconstant = "prf"
 )
 
 // DeriveRandom implements the RFC 3961 defined function: DR(Key, Constant) = k-truncate(E(Key, Constant, initial-cipher-state)).
