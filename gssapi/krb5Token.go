@@ -8,7 +8,6 @@ import (
 	"github.com/jcmturner/gofork/encoding/asn1"
 	"gopkg.in/jcmturner/gokrb5.v3/asn1tools"
 	"gopkg.in/jcmturner/gokrb5.v3/credentials"
-	"gopkg.in/jcmturner/gokrb5.v3/crypto"
 	"gopkg.in/jcmturner/gokrb5.v3/iana/chksumtype"
 	"gopkg.in/jcmturner/gokrb5.v3/krberror"
 	"gopkg.in/jcmturner/gokrb5.v3/messages"
@@ -155,11 +154,6 @@ func NewAuthenticator(creds credentials.Credentials, keyType int, flags []int) (
 	if err != nil {
 		return auth, krberror.Errorf(err, krberror.KRBMsgError, "error generating new authenticator")
 	}
-	etype, err := crypto.GetEtype(keyType)
-	if err != nil {
-		return auth, krberror.Errorf(err, krberror.KRBMsgError, "error getting etype for authenticator")
-	}
-	auth.GenerateSeqNumberAndSubKey(keyType, etype.GetKeyByteSize())
 	auth.Cksum = types.Checksum{
 		CksumType: chksumtype.GSSAPI,
 		Checksum:  newAuthenticatorChksum(flags),
