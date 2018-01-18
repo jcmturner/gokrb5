@@ -1,15 +1,16 @@
 package gssapi
 
 import (
-	"encoding/binary"
-	"errors"
 	"bytes"
-	"fmt"
+	"encoding/binary"
 	"encoding/hex"
-	"gopkg.in/jcmturner/gokrb5.v3/types"
+	"errors"
+	"fmt"
 	"gopkg.in/jcmturner/gokrb5.v3/crypto"
 	"gopkg.in/jcmturner/gokrb5.v3/iana/keyusage"
+	"gopkg.in/jcmturner/gokrb5.v3/types"
 )
+
 /*
 From RFC 4121, section 4.2.6.2:
 
@@ -60,13 +61,13 @@ var (
 
 type WrapToken struct {
 	// const GSS Token ID: 0x0504
-	Flags 		byte // acceptor, sealed, acceptor subkey
+	Flags byte // acceptor, sealed, acceptor subkey
 	// const Filler: 0xFF
-	EC 			uint16 // checksum length. big-endian
-	RRC 		uint16 // right rotation count. big-endian
-	SND_SEQ 	uint64 // sender's sequence number. big-endian
-	Payload 	[]byte // your data! :)
-	CheckSum 	[]byte // authenticated checksum of { payload | header }
+	EC       uint16 // checksum length. big-endian
+	RRC      uint16 // right rotation count. big-endian
+	SND_SEQ  uint64 // sender's sequence number. big-endian
+	Payload  []byte // your data! :)
+	CheckSum []byte // authenticated checksum of { payload | header }
 }
 
 // Get them bytes!
@@ -81,7 +82,7 @@ func (wt *WrapToken) Marshal() ([]byte, error) {
 	pldOffset := HdrLen                    // Offset of the payload in the token
 	chkSOffset := HdrLen + len(wt.Payload) // Offset of the checksum in the token
 
-	bytes := make([]byte, chkSOffset+ int(wt.EC))
+	bytes := make([]byte, chkSOffset+int(wt.EC))
 	copy(bytes[0:], GSSWrapTokenID[:])
 	bytes[2] = wt.Flags
 	bytes[3] = FillerByte
@@ -119,7 +120,7 @@ func (wt *WrapToken) ComputeCheckSum(key types.EncryptionKey, keyUsage uint32) (
 		return nil, errors.New("cannot compute checksum with uninitialized payload")
 	}
 	// Build a slice containing { payload | header }
-	checksumMe := make([]byte, HdrLen+ len(wt.Payload))
+	checksumMe := make([]byte, HdrLen+len(wt.Payload))
 	copy(checksumMe[0:], wt.Payload)
 	copy(checksumMe[len(wt.Payload):], getChecksumHeader(wt.Flags, wt.SND_SEQ))
 
@@ -170,7 +171,7 @@ func UnmarshalWrapToken(b []byte, expectFromAcceptor bool) (*WrapToken, error) {
 	}
 	// Check the acceptor flag
 	flags := b[2]
-	isFromAcceptor := flags & 0x01 == 1
+	isFromAcceptor := flags&0x01 == 1
 	if isFromAcceptor && !expectFromAcceptor {
 		return nil, errors.New("Unexpected acceptor flag is set. not expecting a token from the acceptor.")
 	}
@@ -184,21 +185,21 @@ func UnmarshalWrapToken(b []byte, expectFromAcceptor bool) (*WrapToken, error) {
 	}
 	checksumL := ENC.Uint16(b[4:6])
 	// Sanity check on the checksum length
-	if int(checksumL) > len(b) - HdrLen {
+	if int(checksumL) > len(b)-HdrLen {
 		return nil, errors.New(
 			fmt.Sprintf("Inconsistent checksum length. %d bytes to parse, checksum length is %d", len(b), checksumL))
 	}
 	rrc := ENC.Uint16(b[6:8])
 	seqNum := ENC.Uint64(b[8:16])
-	payload := b[16:len(b) - int(checksumL)]
-	checksum := b[len(b) - int(checksumL):]
+	payload := b[16 : len(b)-int(checksumL)]
+	checksum := b[len(b)-int(checksumL):]
 	return &WrapToken{
-		Flags: 		flags,
-		EC:			checksumL,
-		RRC:		rrc,
-		SND_SEQ:	seqNum,
-		Payload:	payload,
-		CheckSum:	checksum,
+		Flags:    flags,
+		EC:       checksumL,
+		RRC:      rrc,
+		SND_SEQ:  seqNum,
+		Payload:  payload,
+		CheckSum: checksum,
 	}, nil
 }
 
@@ -213,12 +214,12 @@ func NewInitiatorToken(payload []byte, key types.EncryptionKey) (*WrapToken, err
 	}
 
 	token := WrapToken{
-		Flags: 		0x00, // all zeroed out (this is a token sent by the initiator)
+		Flags: 0x00, // all zeroed out (this is a token sent by the initiator)
 		// Checksum size: lenth of output of the HMAC function, in bytes.
-		EC:			uint16(encType.GetHMACBitLength()/8),
-		RRC:		0,
-		SND_SEQ:	0,
-		Payload: 	payload,
+		EC:      uint16(encType.GetHMACBitLength() / 8),
+		RRC:     0,
+		SND_SEQ: 0,
+		Payload: payload,
 	}
 
 	if err := token.ComputeAndSetCheckSum(key, keyusage.GSSAPI_INITIATOR_SEAL); err != nil {

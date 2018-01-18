@@ -1,12 +1,12 @@
 package gssapi
 
 import (
-	"encoding/hex"
-	"testing"
-	"github.com/stretchr/testify/assert"
 	"encoding/binary"
-	"gopkg.in/jcmturner/gokrb5.v3/types"
+	"encoding/hex"
+	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/gokrb5.v3/iana/keyusage"
+	"gopkg.in/jcmturner/gokrb5.v3/types"
+	"testing"
 )
 
 const (
@@ -15,30 +15,30 @@ const (
 	// What an initiator client could reply
 	testChallengeReplyFromInitiator = "050400ff000c000000000000000000000101000079a033510b6f127212242b97"
 	// session key used to sign the tokens above
-	sessionKey = "14f9bde6b50ec508201a97f74c4e5bd3"
+	sessionKey     = "14f9bde6b50ec508201a97f74c4e5bd3"
 	sessionKeyType = 17
 
-	acceptorSeal = keyusage.GSSAPI_ACCEPTOR_SEAL
+	acceptorSeal  = keyusage.GSSAPI_ACCEPTOR_SEAL
 	initiatorSeal = keyusage.GSSAPI_INITIATOR_SEAL
 )
 
 func getSessionKey() types.EncryptionKey {
 	key, _ := hex.DecodeString(sessionKey)
 	return types.EncryptionKey{
-		KeyType: 	sessionKeyType,
-		KeyValue: 	key,
+		KeyType:  sessionKeyType,
+		KeyValue: key,
 	}
 }
 
 func getChallengeReference() *WrapToken {
 	challenge, _ := hex.DecodeString(testChallengeFromAcceptor)
 	return &WrapToken{
-		Flags: 		0x01,
-		EC:			12,
-		RRC:		0,
-		SND_SEQ:	binary.BigEndian.Uint64(challenge[8:16]),
-		Payload: 	[]byte{0x01, 0x01, 0x00, 0x00},
-		CheckSum:   challenge[20:32],
+		Flags:    0x01,
+		EC:       12,
+		RRC:      0,
+		SND_SEQ:  binary.BigEndian.Uint64(challenge[8:16]),
+		Payload:  []byte{0x01, 0x01, 0x00, 0x00},
+		CheckSum: challenge[20:32],
 	}
 }
 
@@ -51,12 +51,12 @@ func getChallengeReferenceNoChksum() *WrapToken {
 func getResponseReference() *WrapToken {
 	response, _ := hex.DecodeString(testChallengeReplyFromInitiator)
 	return &WrapToken{
-		Flags: 		0x00,
-		EC:			12,
-		RRC:		0,
-		SND_SEQ:	0,
-		Payload: 	[]byte{0x01, 0x01, 0x00, 0x00},
-		CheckSum:   response[20:32],
+		Flags:    0x00,
+		EC:       12,
+		RRC:      0,
+		SND_SEQ:  0,
+		Payload:  []byte{0x01, 0x01, 0x00, 0x00},
+		CheckSum: response[20:32],
 	}
 }
 
@@ -121,8 +121,8 @@ func TestChecksumVerificationFailure(t *testing.T) {
 
 	wrongKeyVal, _ := hex.DecodeString("14f9bde6b50ec508201a97f74c4effff")
 	badKey := types.EncryptionKey{
-		KeyType: 	sessionKeyType,
-		KeyValue: 	wrongKeyVal,
+		KeyType:  sessionKeyType,
+		KeyValue: wrongKeyVal,
 	}
 	// Test a failure with the wrong key but correct keyusage:
 	wrongKeyOk, wkErr := decodedToken.VerifyCheckSum(badKey, acceptorSeal)
@@ -157,6 +157,6 @@ func TestMarshal_Failures(t *testing.T) {
 
 func TestNewInitiatorTokenSignatureAndMarshalling(t *testing.T) {
 	token, tErr := NewInitiatorToken([]byte{0x01, 0x01, 0x00, 0x00}, getSessionKey())
-	assert.Nil(t,tErr, "Unexepected error.")
+	assert.Nil(t, tErr, "Unexepected error.")
 	assert.Equal(t, getResponseReference(), token)
 }
