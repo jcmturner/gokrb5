@@ -33,12 +33,12 @@ func getSessionKey() types.EncryptionKey {
 func getChallengeReference() *WrapToken {
 	challenge, _ := hex.DecodeString(testChallengeFromAcceptor)
 	return &WrapToken{
-		Flags:    0x01,
-		EC:       12,
-		RRC:      0,
-		SND_SEQ:  binary.BigEndian.Uint64(challenge[8:16]),
-		Payload:  []byte{0x01, 0x01, 0x00, 0x00},
-		CheckSum: challenge[20:32],
+		Flags:     0x01,
+		EC:        12,
+		RRC:       0,
+		SndSeqNum: binary.BigEndian.Uint64(challenge[8:16]),
+		Payload:   []byte{0x01, 0x01, 0x00, 0x00},
+		CheckSum:  challenge[20:32],
 	}
 }
 
@@ -51,12 +51,12 @@ func getChallengeReferenceNoChksum() *WrapToken {
 func getResponseReference() *WrapToken {
 	response, _ := hex.DecodeString(testChallengeReplyFromInitiator)
 	return &WrapToken{
-		Flags:    0x00,
-		EC:       12,
-		RRC:      0,
-		SND_SEQ:  0,
-		Payload:  []byte{0x01, 0x01, 0x00, 0x00},
-		CheckSum: response[20:32],
+		Flags:     0x00,
+		EC:        12,
+		RRC:       0,
+		SndSeqNum: 0,
+		Payload:   []byte{0x01, 0x01, 0x00, 0x00},
+		CheckSum:  response[20:32],
 	}
 }
 
@@ -68,54 +68,71 @@ func getResponseReferenceNoChkSum() *WrapToken {
 
 func TestUnmarshal_Challenge(t *testing.T) {
 	challenge, _ := hex.DecodeString(testChallengeFromAcceptor)
-	decodedToken, err := UnmarshalWrapToken(challenge, true)
+	var wt WrapToken
+	err := wt.Unmarshal(challenge, true)
 	assert.Nil(t, err, "Unexpected error occurred.")
-	assert.Equal(t, getChallengeReference(), decodedToken, "Token not decoded as expected.")
+	assert.Equal(t, getChallengeReference(), &wt, "Token not decoded as expected.")
 }
 
 func TestUnmarshalFailure_Challenge(t *testing.T) {
 	challenge, _ := hex.DecodeString(testChallengeFromAcceptor)
-	decodedToken, err := UnmarshalWrapToken(challenge, false)
+	var wt WrapToken
+	err := wt.Unmarshal(challenge, false)
 	assert.NotNil(t, err, "Expected error did not occur: a message from the acceptor cannot be expected to be sent from the initiator.")
-	assert.Nil(t, decodedToken, "Token should not have been decoded")
+	assert.Nil(t, wt.Payload, "Token fields should not have been initialised")
+	assert.Nil(t, wt.CheckSum, "Token fields should not have been initialised")
+	assert.Equal(t, byte(0x00), wt.Flags, "Token fields should not have been initialised")
+	assert.Equal(t, uint16(0), wt.EC, "Token fields should not have been initialised")
+	assert.Equal(t, uint16(0), wt.RRC, "Token fields should not have been initialised")
+	assert.Equal(t, uint64(0), wt.SndSeqNum, "Token fields should not have been initialised")
 }
 
 func TestUnmarshal_ChallengeReply(t *testing.T) {
 	response, _ := hex.DecodeString(testChallengeReplyFromInitiator)
-	decodedResp, err := UnmarshalWrapToken(response, false)
+	var wt WrapToken
+	err := wt.Unmarshal(response, false)
 	assert.Nil(t, err, "Unexpected error occurred.")
-	assert.Equal(t, getResponseReference(), decodedResp, "Token not decoded as expected.")
+	assert.Equal(t, getResponseReference(), &wt, "Token not decoded as expected.")
 }
 
 func TestUnmarshalFailure_ChallengeReply(t *testing.T) {
 	response, _ := hex.DecodeString(testChallengeReplyFromInitiator)
-	decodedResp, err := UnmarshalWrapToken(response, true)
+	var wt WrapToken
+	err := wt.Unmarshal(response, true)
 	assert.NotNil(t, err, "Expected error did not occur: a message from the initiator cannot be expected to be sent from the acceptor.")
-	assert.Nil(t, decodedResp, "Token should not have been decoded.")
+	assert.Nil(t, wt.Payload, "Token fields should not have been initialised")
+	assert.Nil(t, wt.CheckSum, "Token fields should not have been initialised")
+	assert.Equal(t, byte(0x00), wt.Flags, "Token fields should not have been initialised")
+	assert.Equal(t, uint16(0), wt.EC, "Token fields should not have been initialised")
+	assert.Equal(t, uint16(0), wt.RRC, "Token fields should not have been initialised")
+	assert.Equal(t, uint64(0), wt.SndSeqNum, "Token fields should not have been initialised")
 }
 
 func TestChallengeChecksumVerification(t *testing.T) {
 	challenge, _ := hex.DecodeString(testChallengeFromAcceptor)
-	decodedToken, _ := UnmarshalWrapToken(challenge, true)
-	challengeOk, cErr := decodedToken.VerifyCheckSum(getSessionKey(), acceptorSeal)
+	var wt WrapToken
+	wt.Unmarshal(challenge, true)
+	challengeOk, cErr := wt.VerifyCheckSum(getSessionKey(), acceptorSeal)
 	assert.Nil(t, cErr, "Error occurred during checksum verification.")
 	assert.True(t, challengeOk, "Checksum verification failed.")
 }
 
 func TestResponseChecksumVerification(t *testing.T) {
 	reply, _ := hex.DecodeString(testChallengeReplyFromInitiator)
-	decodedReply, _ := UnmarshalWrapToken(reply, false)
-	replyOk, rErr := decodedReply.VerifyCheckSum(getSessionKey(), initiatorSeal)
+	var wt WrapToken
+	wt.Unmarshal(reply, false)
+	replyOk, rErr := wt.VerifyCheckSum(getSessionKey(), initiatorSeal)
 	assert.Nil(t, rErr, "Error occurred during checksum verification.")
 	assert.True(t, replyOk, "Checksum verification failed.")
 }
 
 func TestChecksumVerificationFailure(t *testing.T) {
 	challenge, _ := hex.DecodeString(testChallengeFromAcceptor)
-	decodedToken, _ := UnmarshalWrapToken(challenge, true)
+	var wt WrapToken
+	wt.Unmarshal(challenge, true)
 
 	// Test a failure with the correct key but wrong keyusage:
-	challengeOk, cErr := decodedToken.VerifyCheckSum(getSessionKey(), initiatorSeal)
+	challengeOk, cErr := wt.VerifyCheckSum(getSessionKey(), initiatorSeal)
 	assert.NotNil(t, cErr, "Expected error did not occur.")
 	assert.False(t, challengeOk, "Checksum verification succeeded when it should have failed.")
 
@@ -125,7 +142,7 @@ func TestChecksumVerificationFailure(t *testing.T) {
 		KeyValue: wrongKeyVal,
 	}
 	// Test a failure with the wrong key but correct keyusage:
-	wrongKeyOk, wkErr := decodedToken.VerifyCheckSum(badKey, acceptorSeal)
+	wrongKeyOk, wkErr := wt.VerifyCheckSum(badKey, acceptorSeal)
 	assert.NotNil(t, wkErr, "Expected error did not occur.")
 	assert.False(t, wrongKeyOk, "Checksum verification succeeded when it should have failed.")
 }
@@ -158,5 +175,5 @@ func TestMarshal_Failures(t *testing.T) {
 func TestNewInitiatorTokenSignatureAndMarshalling(t *testing.T) {
 	token, tErr := NewInitiatorToken([]byte{0x01, 0x01, 0x00, 0x00}, getSessionKey())
 	assert.Nil(t, tErr, "Unexepected error.")
-	assert.Equal(t, getResponseReference(), token)
+	assert.Equal(t, getResponseReference(), token, "Token failed to be marshalled to the expected bytes.")
 }
