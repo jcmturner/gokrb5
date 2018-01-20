@@ -48,7 +48,7 @@ func TestMechToken_newAuthenticatorWithSubkeyGeneration(t *testing.T) {
 	creds := credentials.NewCredentials("hftsai", testdata.TEST_REALM)
 	creds.CName.NameString = testdata.TEST_PRINCIPALNAME_NAMESTRING
 	etypeID := 18
-	keyLen := 32 // etypeID 18 refers to AES255 -> 32 bytes key
+	keyLen := 32 // etypeID 18 refers to AES256 -> 32 bytes key
 	a, err := NewAuthenticator(creds, etypeID, []int{GSS_C_INTEG_FLAG, GSS_C_CONF_FLAG})
 	if err != nil {
 		t.Fatalf("Error creating authenticator: %v", err)
