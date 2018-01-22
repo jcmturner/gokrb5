@@ -135,6 +135,6 @@ func (cl *Client) GetSessionFromRealm(realm string) (*session, error) {
 
 // GetSessionFromPrincipalName returns the session for the realm of the principal provided.
 func (cl *Client) GetSessionFromPrincipalName(spn types.PrincipalName) (*session, error) {
-	realm := cl.Config.ResolveRealm(spn.NameString[1])
+	realm := cl.Config.ResolveRealm(spn.NameString[len(spn.NameString)-1])
 	return cl.GetSessionFromRealm(realm)
 }

@@ -15,6 +15,7 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v3/iana/etypeID"
 	"gopkg.in/jcmturner/gokrb5.v3/keytab"
 	"gopkg.in/jcmturner/gokrb5.v3/testdata"
+	"strings"
 )
 
 func TestClient_SuccessfulLogin_Keytab(t *testing.T) {
@@ -258,6 +259,28 @@ func TestClient_GetServiceTicket(t *testing.T) {
 	}
 	assert.Equal(t, tkt.EncPart.Cipher, tkt2.EncPart.Cipher)
 	assert.Equal(t, key.KeyValue, key2.KeyValue)
+}
+
+func TestClient_GetServiceTicket_InvalidSPN(t *testing.T) {
+	b, err := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	kt, _ := keytab.Parse(b)
+	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	addr := os.Getenv("TEST_KDC_ADDR")
+	if addr == "" {
+		addr = testdata.TEST_KDC_ADDR
+	}
+	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
+	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
+	cl.WithConfig(c)
+
+	err = cl.Login()
+	if err != nil {
+		t.Fatalf("Error on login: %v\n", err)
+	}
+	spn := "host.test.gokrb5"
+	_, _, err = cl.GetServiceTicket(spn)
+	assert.NotNil(t, err, "Expected unknown principal error")
+	assert.True(t, strings.Contains(err.Error(), "KDC_ERR_S_PRINCIPAL_UNKNOWN"), "Error text not as expected")
 }
 
 func TestClient_GetServiceTicket_OlderKDC(t *testing.T) {
