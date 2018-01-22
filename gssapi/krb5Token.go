@@ -8,7 +8,6 @@ import (
 	"github.com/jcmturner/gofork/encoding/asn1"
 	"gopkg.in/jcmturner/gokrb5.v3/asn1tools"
 	"gopkg.in/jcmturner/gokrb5.v3/credentials"
-	"gopkg.in/jcmturner/gokrb5.v3/crypto"
 	"gopkg.in/jcmturner/gokrb5.v3/iana/chksumtype"
 	"gopkg.in/jcmturner/gokrb5.v3/krberror"
 	"gopkg.in/jcmturner/gokrb5.v3/messages"
@@ -148,18 +147,15 @@ func NewAPREQMechToken(creds credentials.Credentials, tkt messages.Ticket, sessi
 	return m, nil
 }
 
-// NewAuthenticator creates a new kerberos authenticator for kerberos MechToken
+// NewAuthenticator (DEPRECATED - this method will be updated in future versions to remove
+// the obsolete keyType argument and may be made private to the gssapi package)
+// creates a new kerberos authenticator for kerberos MechToken
 func NewAuthenticator(creds credentials.Credentials, keyType int, flags []int) (types.Authenticator, error) {
 	//RFC 4121 Section 4.1.1
 	auth, err := types.NewAuthenticator(creds.Realm, creds.CName)
 	if err != nil {
 		return auth, krberror.Errorf(err, krberror.KRBMsgError, "error generating new authenticator")
 	}
-	etype, err := crypto.GetEtype(keyType)
-	if err != nil {
-		return auth, krberror.Errorf(err, krberror.KRBMsgError, "error getting etype for authenticator")
-	}
-	auth.GenerateSeqNumberAndSubKey(keyType, etype.GetKeyByteSize())
 	auth.Cksum = types.Checksum{
 		CksumType: chksumtype.GSSAPI,
 		Checksum:  newAuthenticatorChksum(flags),

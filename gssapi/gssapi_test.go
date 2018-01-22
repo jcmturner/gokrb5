@@ -47,7 +47,7 @@ func TestUnmarshal_SPNEGO_RespTarg(t *testing.T) {
 	}
 	assert.True(t, s.Resp, "SPNEGO does not indicate it contains NegTokenResp/Targ as expected")
 	assert.False(t, s.Init, "SPNEGO indicates is contains a NegTokenInit but it shouldn't")
-	assert.Equal(t, asn1.Enumerated(0), s.NegTokenResp.NegState, "Negtiation state not as expected.")
+	assert.Equal(t, asn1.Enumerated(0), s.NegTokenResp.NegState, "Negotiation state not as expected.")
 	assert.Equal(t, MechTypeOIDKRB5, s.NegTokenResp.SupportedMech, "SupportedMech type not as expected.")
 }
 
