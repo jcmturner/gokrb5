@@ -19,12 +19,12 @@ type RC4HMAC struct {
 }
 
 // GetETypeID returns the EType ID number.
-func (e RC4HMAC) GetETypeID() int {
+func (e RC4HMAC) GetETypeID() int32 {
 	return etypeID.RC4_HMAC
 }
 
 // GetHashID returns the checksum type ID number.
-func (e RC4HMAC) GetHashID() int {
+func (e RC4HMAC) GetHashID() int32 {
 	return chksumtype.KERB_CHECKSUM_HMAC_MD5
 }
 

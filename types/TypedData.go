@@ -4,7 +4,7 @@ import "github.com/jcmturner/gofork/encoding/asn1"
 
 // TypedData implements RFC 4120 type: https://tools.ietf.org/html/rfc4120#section-5.9.1
 type TypedData struct {
-	DataType  int    `asn1:"explicit,tag:0"`
+	DataType  int32  `asn1:"explicit,tag:0"`
 	DataValue []byte `asn1:"optional,explicit,tag:1"`
 }
 

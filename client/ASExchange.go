@@ -128,7 +128,7 @@ func preAuthEType(krberr messages.KRBError) (etype etype.EType, err error) {
 	//KRB-ERROR message that requests additional pre-authentication.
 	//Therefore, clients SHOULD ignore a PA-PW-SALT accompanying a
 	//KRB-ERROR message that requests additional pre-authentication.
-	var etypeID int
+	var etypeID int32
 	var pas types.PADataSequence
 	e := pas.Unmarshal(krberr.EData)
 	if e != nil {

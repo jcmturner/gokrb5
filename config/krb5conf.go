@@ -53,8 +53,8 @@ type LibDefaults struct {
 	DefaultRealm            string
 	DefaultTGSEnctypes      []string //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
 	DefaultTktEnctypes      []string //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
-	DefaultTGSEnctypeIDs    []int    //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
-	DefaultTktEnctypeIDs    []int    //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
+	DefaultTGSEnctypeIDs    []int32  //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
+	DefaultTktEnctypeIDs    []int32  //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
 	DNSCanonicalizeHostname bool     //default true
 	DNSLookupKDC            bool     //default false
 	DNSLookupRealm          bool
@@ -68,7 +68,7 @@ type LibDefaults struct {
 	//kdc_req_checksum_type int //unlikely to implement as for very old KDCs
 	NoAddresses         bool     //default true
 	PermittedEnctypes   []string //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
-	PermittedEnctypeIDs []int
+	PermittedEnctypeIDs []int32
 	//plugin_base_dir string //not supporting plugins
 	PreferredPreauthTypes []int         //default “17, 16, 15, 14”, which forces libkrb5 to attempt to use PKINIT if it is supported
 	Proxiable             bool          //default false
@@ -537,8 +537,8 @@ func NewConfigFromScanner(scanner *bufio.Scanner) (*Config, error) {
 }
 
 // Parse a space delimited list of ETypes into a list of EType numbers optionally filtering out weak ETypes.
-func parseETypes(s []string, w bool) []int {
-	var eti []int
+func parseETypes(s []string, w bool) []int32 {
+	var eti []int32
 	for _, et := range s {
 		if !w {
 			var weak bool

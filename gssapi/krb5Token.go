@@ -150,7 +150,7 @@ func NewAPREQMechToken(creds credentials.Credentials, tkt messages.Ticket, sessi
 // NewAuthenticator (DEPRECATED - this method will be updated in future versions to remove
 // the obsolete keyType argument and may be made private to the gssapi package)
 // creates a new kerberos authenticator for kerberos MechToken
-func NewAuthenticator(creds credentials.Credentials, keyType int, flags []int) (types.Authenticator, error) {
+func NewAuthenticator(creds credentials.Credentials, keyType int32, flags []int) (types.Authenticator, error) {
 	//RFC 4121 Section 4.1.1
 	auth, err := types.NewAuthenticator(creds.Realm, creds.CName)
 	if err != nil {

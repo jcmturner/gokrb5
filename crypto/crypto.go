@@ -12,7 +12,7 @@ import (
 )
 
 // GetEtype returns an instances of the required etype struct for the etype ID.
-func GetEtype(id int) (etype.EType, error) {
+func GetEtype(id int32) (etype.EType, error) {
 	switch id {
 	case etypeID.AES128_CTS_HMAC_SHA1_96:
 		var et Aes128CtsHmacSha96
@@ -38,7 +38,7 @@ func GetEtype(id int) (etype.EType, error) {
 }
 
 // GetChksumEtype returns an instances of the required etype struct for the checksum ID.
-func GetChksumEtype(id int) (etype.EType, error) {
+func GetChksumEtype(id int32) (etype.EType, error) {
 	switch id {
 	case chksumtype.HMAC_SHA1_96_AES128:
 		var et Aes128CtsHmacSha96
@@ -58,16 +58,16 @@ func GetChksumEtype(id int) (etype.EType, error) {
 	case chksumtype.KERB_CHECKSUM_HMAC_MD5:
 		var et RC4HMAC
 		return et, nil
-	case chksumtype.KERB_CHECKSUM_HMAC_MD5_UNSIGNED:
-		var et RC4HMAC
-		return et, nil
+	//case chksumtype.KERB_CHECKSUM_HMAC_MD5_UNSIGNED:
+	//	var et RC4HMAC
+	//	return et, nil
 	default:
 		return nil, fmt.Errorf("Unknown or unsupported checksum type: %d", id)
 	}
 }
 
 // GetKeyFromPassword generates an encryption key from the principal's password.
-func GetKeyFromPassword(passwd string, cname types.PrincipalName, realm string, etypeID int, pas types.PADataSequence) (types.EncryptionKey, etype.EType, error) {
+func GetKeyFromPassword(passwd string, cname types.PrincipalName, realm string, etypeID int32, pas types.PADataSequence) (types.EncryptionKey, etype.EType, error) {
 	var key types.EncryptionKey
 	et, err := GetEtype(etypeID)
 	if err != nil {
@@ -75,7 +75,7 @@ func GetKeyFromPassword(passwd string, cname types.PrincipalName, realm string, 
 	}
 	sk2p := et.GetDefaultStringToKeyParams()
 	var salt string
-	var paID int
+	var paID int32
 	for _, pa := range pas {
 		switch pa.PADataType {
 		case patype.PA_PW_SALT:

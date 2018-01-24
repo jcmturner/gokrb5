@@ -31,7 +31,7 @@ type KRBCred struct {
 // EncKrbCredPart is the encrypted part of KRB_CRED.
 type EncKrbCredPart struct {
 	TicketInfo []KrbCredInfo     `asn1:"explicit,tag:0"`
-	Nouce      int               `asn1:"optional,explicit,tag:1"`
+	Nouce      int64             `asn1:"optional,explicit,tag:1"`
 	Timestamp  time.Time         `asn1:"generalized,optional,explicit,tag:2"`
 	Usec       int               `asn1:"optional,explicit,tag:3"`
 	SAddress   types.HostAddress `asn1:"optional,explicit,tag:4"`

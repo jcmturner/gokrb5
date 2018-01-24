@@ -4,6 +4,9 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/jcmturner/gokrb5.v3/iana/addrtype"
+	"gopkg.in/jcmturner/gokrb5.v3/iana/adtype"
+	"gopkg.in/jcmturner/gokrb5.v3/iana/trtype"
 	"gopkg.in/jcmturner/gokrb5.v3/keytab"
 	"gopkg.in/jcmturner/gokrb5.v3/testdata"
 	"gopkg.in/jcmturner/gokrb5.v3/types"
@@ -48,12 +51,12 @@ func TestUnmarshalEncTicketPart(t *testing.T) {
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
 
 	assert.Equal(t, "fedcba98", hex.EncodeToString(a.Flags.Bytes), "Flags not as expected")
-	assert.Equal(t, 1, a.Key.KeyType, "Key type not as expected")
+	assert.Equal(t, int32(1), a.Key.KeyType, "Key type not as expected")
 	assert.Equal(t, []byte("12345678"), a.Key.KeyValue, "Key value not as expected")
 	assert.Equal(t, testdata.TEST_REALM, a.CRealm, "CRealm not as expected")
 	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMETYPE, a.CName.NameType, "CName type not as expected")
 	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMESTRING, a.CName.NameString, "CName string entries not as expected")
-	assert.Equal(t, 1, a.Transited.TRType, "Transisted type not as expected")
+	assert.Equal(t, trtype.DOMAIN_X500_COMPRESS, a.Transited.TRType, "Transisted type not as expected")
 	assert.Equal(t, []byte("EDU,MIT.,ATHENA.,WASHINGTON.EDU,CS."), a.Transited.Contents, "Transisted content not as expected")
 	assert.Equal(t, tt, a.AuthTime, "Auth time not as expected")
 	assert.Equal(t, tt, a.StartTime, "Start time not as expected")
@@ -61,11 +64,11 @@ func TestUnmarshalEncTicketPart(t *testing.T) {
 	assert.Equal(t, tt, a.RenewTill, "Renew Till time not as expected")
 	assert.Equal(t, 2, len(a.CAddr), "Number of client addresses not as expected")
 	for i, addr := range a.CAddr {
-		assert.Equal(t, 2, addr.AddrType, fmt.Sprintf("Host address type not as expected for address item %d", i+1))
+		assert.Equal(t, addrtype.IPv4, addr.AddrType, fmt.Sprintf("Host address type not as expected for address item %d", i+1))
 		assert.Equal(t, "12d00023", hex.EncodeToString(addr.Address), fmt.Sprintf("Host address not as expected for address item %d", i+1))
 	}
 	for i, ele := range a.AuthorizationData {
-		assert.Equal(t, 1, ele.ADType, fmt.Sprintf("Authorization data type of element %d not as expected", i+1))
+		assert.Equal(t, adtype.ADIfRelevant, ele.ADType, fmt.Sprintf("Authorization data type of element %d not as expected", i+1))
 		assert.Equal(t, []byte(testdata.TEST_AUTHORIZATION_DATA_VALUE), ele.ADData, fmt.Sprintf("Authorization data of element %d not as expected", i+1))
 	}
 }
@@ -85,12 +88,12 @@ func TestUnmarshalEncTicketPart_optionalsNULL(t *testing.T) {
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
 
 	assert.Equal(t, "fedcba98", hex.EncodeToString(a.Flags.Bytes), "Flags not as expected")
-	assert.Equal(t, 1, a.Key.KeyType, "Key type not as expected")
+	assert.Equal(t, int32(1), a.Key.KeyType, "Key type not as expected")
 	assert.Equal(t, []byte("12345678"), a.Key.KeyValue, "Key value not as expected")
 	assert.Equal(t, testdata.TEST_REALM, a.CRealm, "CRealm not as expected")
 	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMETYPE, a.CName.NameType, "CName type not as expected")
 	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMESTRING, a.CName.NameString, "CName string entries not as expected")
-	assert.Equal(t, 1, a.Transited.TRType, "Transisted type not as expected")
+	assert.Equal(t, trtype.DOMAIN_X500_COMPRESS, a.Transited.TRType, "Transisted type not as expected")
 	assert.Equal(t, []byte("EDU,MIT.,ATHENA.,WASHINGTON.EDU,CS."), a.Transited.Contents, "Transisted content not as expected")
 	assert.Equal(t, tt, a.AuthTime, "Auth time not as expected")
 	assert.Equal(t, tt, a.EndTime, "End time not as expected")

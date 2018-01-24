@@ -3,6 +3,7 @@ package messages
 import (
 	"encoding/hex"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/jcmturner/gokrb5.v3/iana/addrtype"
 	"gopkg.in/jcmturner/gokrb5.v3/iana/msgtype"
 	"gopkg.in/jcmturner/gokrb5.v3/testdata"
 	"testing"
@@ -44,10 +45,10 @@ func TestUnmarshalEncPrivPart(t *testing.T) {
 	assert.Equal(t, "krb5data", string(a.UserData), "User data not as expected")
 	assert.Equal(t, tt, a.Timestamp, "Timestamp not as expected")
 	assert.Equal(t, 123456, a.Usec, "Microseconds not as expected")
-	assert.Equal(t, 17, a.SequenceNumber, "Sequence number not as expected")
-	assert.Equal(t, 2, a.SAddress.AddrType, "SAddress type not as expected")
+	assert.Equal(t, int64(17), a.SequenceNumber, "Sequence number not as expected")
+	assert.Equal(t, addrtype.IPv4, a.SAddress.AddrType, "SAddress type not as expected")
 	assert.Equal(t, "12d00023", hex.EncodeToString(a.SAddress.Address), "Address not as expected for SAddress")
-	assert.Equal(t, 2, a.RAddress.AddrType, "RAddress type not as expected")
+	assert.Equal(t, addrtype.IPv4, a.RAddress.AddrType, "RAddress type not as expected")
 	assert.Equal(t, "12d00023", hex.EncodeToString(a.RAddress.Address), "Address not as expected for RAddress")
 }
 
@@ -63,6 +64,6 @@ func TestUnmarshalEncPrivPart_optionalsNULL(t *testing.T) {
 		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
 	}
 	assert.Equal(t, "krb5data", string(a.UserData), "User data not as expected")
-	assert.Equal(t, 2, a.SAddress.AddrType, "SAddress type not as expected")
+	assert.Equal(t, addrtype.IPv4, a.SAddress.AddrType, "SAddress type not as expected")
 	assert.Equal(t, "12d00023", hex.EncodeToString(a.SAddress.Address), "Address not as expected for SAddress")
 }

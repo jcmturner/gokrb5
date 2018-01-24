@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/jcmturner/gofork/encoding/asn1"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/jcmturner/gokrb5.v3/iana/addrtype"
 	"gopkg.in/jcmturner/gokrb5.v3/iana/msgtype"
 	"gopkg.in/jcmturner/gokrb5.v3/testdata"
 	"testing"
@@ -37,10 +38,10 @@ func TestUnmarshalKDCReqBody(t *testing.T) {
 	assert.Equal(t, tt, a.Till, "Request body Till time not as expected")
 	assert.Equal(t, tt, a.RTime, "Request body RTime time not as expected")
 	assert.Equal(t, testdata.TEST_NONCE, a.Nonce, "Request body nounce not as expected")
-	assert.Equal(t, []int{0, 1}, a.EType, "Etype list not as expected")
+	assert.Equal(t, []int32{0, 1}, a.EType, "Etype list not as expected")
 	assert.Equal(t, 2, len(a.Addresses), "Number of client addresses not as expected")
 	for i, addr := range a.Addresses {
-		assert.Equal(t, 2, addr.AddrType, fmt.Sprintf("Host address type not as expected for address item %d", i+1))
+		assert.Equal(t, addrtype.IPv4, addr.AddrType, fmt.Sprintf("Host address type not as expected for address item %d", i+1))
 		assert.Equal(t, "12d00023", hex.EncodeToString(addr.Address), fmt.Sprintf("Host address not as expected for address item %d", i+1))
 	}
 	assert.Equal(t, testdata.TEST_ETYPE, a.EncAuthData.EType, "Etype of request body encrypted authorization data not as expected")
@@ -77,7 +78,7 @@ func TestUnmarshalKDCReqBody_optionalsNULLexceptsecond_ticket(t *testing.T) {
 	assert.Equal(t, testdata.TEST_REALM, a.Realm, "Request body Realm not as expected")
 	assert.Equal(t, tt, a.Till, "Request body Till time not as expected")
 	assert.Equal(t, testdata.TEST_NONCE, a.Nonce, "Request body nounce not as expected")
-	assert.Equal(t, []int{0, 1}, a.EType, "Etype list not as expected")
+	assert.Equal(t, []int32{0, 1}, a.EType, "Etype list not as expected")
 	assert.Equal(t, 0, len(a.Addresses), "Number of client addresses not empty")
 	assert.Equal(t, 0, len(a.EncAuthData.Cipher), "Ciphertext of request body encrypted authorization data not empty")
 	assert.Equal(t, 2, len(a.AdditionalTickets), "Number of additional tickets not as expected")
@@ -114,7 +115,7 @@ func TestUnmarshalKDCReqBody_optionalsNULLexceptserver(t *testing.T) {
 	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMESTRING, a.SName.NameString, "Request body SName entries not as expected")
 	assert.Equal(t, tt, a.Till, "Request body Till time not as expected")
 	assert.Equal(t, testdata.TEST_NONCE, a.Nonce, "Request body nounce not as expected")
-	assert.Equal(t, []int{0, 1}, a.EType, "Etype list not as expected")
+	assert.Equal(t, []int32{0, 1}, a.EType, "Etype list not as expected")
 	assert.Equal(t, 0, len(a.Addresses), "Number of client addresses not empty")
 	assert.Equal(t, 0, len(a.EncAuthData.Cipher), "Ciphertext of request body encrypted authorization data not empty")
 	assert.Equal(t, 0, len(a.AdditionalTickets), "Number of additional tickets not empty")
@@ -153,10 +154,10 @@ func TestUnmarshalASReq(t *testing.T) {
 	assert.Equal(t, tt, a.ReqBody.Till, "Request body Till time not as expected")
 	assert.Equal(t, tt, a.ReqBody.RTime, "Request body RTime time not as expected")
 	assert.Equal(t, testdata.TEST_NONCE, a.ReqBody.Nonce, "Request body nounce not as expected")
-	assert.Equal(t, []int{0, 1}, a.ReqBody.EType, "Etype list not as expected")
+	assert.Equal(t, []int32{0, 1}, a.ReqBody.EType, "Etype list not as expected")
 	assert.Equal(t, 2, len(a.ReqBody.Addresses), "Number of client addresses not as expected")
 	for i, addr := range a.ReqBody.Addresses {
-		assert.Equal(t, 2, addr.AddrType, fmt.Sprintf("Host address type not as expected for address item %d", i+1))
+		assert.Equal(t, addrtype.IPv4, addr.AddrType, fmt.Sprintf("Host address type not as expected for address item %d", i+1))
 		assert.Equal(t, "12d00023", hex.EncodeToString(addr.Address), fmt.Sprintf("Host address not as expected for address item %d", i+1))
 	}
 	assert.Equal(t, testdata.TEST_ETYPE, a.ReqBody.EncAuthData.EType, "Etype of request body encrypted authorization data not as expected")
@@ -196,7 +197,7 @@ func TestUnmarshalASReq_optionalsNULLexceptsecond_ticket(t *testing.T) {
 	assert.Equal(t, testdata.TEST_REALM, a.ReqBody.Realm, "Request body Realm not as expected")
 	assert.Equal(t, tt, a.ReqBody.Till, "Request body Till time not as expected")
 	assert.Equal(t, testdata.TEST_NONCE, a.ReqBody.Nonce, "Request body nounce not as expected")
-	assert.Equal(t, []int{0, 1}, a.ReqBody.EType, "Etype list not as expected")
+	assert.Equal(t, []int32{0, 1}, a.ReqBody.EType, "Etype list not as expected")
 	assert.Equal(t, 0, len(a.ReqBody.Addresses), "Number of client addresses not empty")
 	assert.Equal(t, 0, len(a.ReqBody.EncAuthData.Cipher), "Ciphertext of request body encrypted authorization data not empty")
 	assert.Equal(t, 2, len(a.ReqBody.AdditionalTickets), "Number of additional tickets not as expected")
@@ -236,7 +237,7 @@ func TestUnmarshalASReq_optionalsNULLexceptserver(t *testing.T) {
 	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMESTRING, a.ReqBody.SName.NameString, "Request body SName entries not as expected")
 	assert.Equal(t, tt, a.ReqBody.Till, "Request body Till time not as expected")
 	assert.Equal(t, testdata.TEST_NONCE, a.ReqBody.Nonce, "Request body nounce not as expected")
-	assert.Equal(t, []int{0, 1}, a.ReqBody.EType, "Etype list not as expected")
+	assert.Equal(t, []int32{0, 1}, a.ReqBody.EType, "Etype list not as expected")
 	assert.Equal(t, 0, len(a.ReqBody.Addresses), "Number of client addresses not empty")
 	assert.Equal(t, 0, len(a.ReqBody.EncAuthData.Cipher), "Ciphertext of request body encrypted authorization data not empty")
 	assert.Equal(t, 0, len(a.ReqBody.AdditionalTickets), "Number of additional tickets not empty")
@@ -275,10 +276,10 @@ func TestUnmarshalTGSReq(t *testing.T) {
 	assert.Equal(t, tt, a.ReqBody.Till, "Request body Till time not as expected")
 	assert.Equal(t, tt, a.ReqBody.RTime, "Request body RTime time not as expected")
 	assert.Equal(t, testdata.TEST_NONCE, a.ReqBody.Nonce, "Request body nounce not as expected")
-	assert.Equal(t, []int{0, 1}, a.ReqBody.EType, "Etype list not as expected")
+	assert.Equal(t, []int32{0, 1}, a.ReqBody.EType, "Etype list not as expected")
 	assert.Equal(t, 2, len(a.ReqBody.Addresses), "Number of client addresses not as expected")
 	for i, addr := range a.ReqBody.Addresses {
-		assert.Equal(t, 2, addr.AddrType, fmt.Sprintf("Host address type not as expected for address item %d", i+1))
+		assert.Equal(t, addrtype.IPv4, addr.AddrType, fmt.Sprintf("Host address type not as expected for address item %d", i+1))
 		assert.Equal(t, "12d00023", hex.EncodeToString(addr.Address), fmt.Sprintf("Host address not as expected for address item %d", i+1))
 	}
 	assert.Equal(t, testdata.TEST_ETYPE, a.ReqBody.EncAuthData.EType, "Etype of request body encrypted authorization data not as expected")
@@ -318,7 +319,7 @@ func TestUnmarshalTGSReq_optionalsNULLexceptsecond_ticket(t *testing.T) {
 	assert.Equal(t, testdata.TEST_REALM, a.ReqBody.Realm, "Request body Realm not as expected")
 	assert.Equal(t, tt, a.ReqBody.Till, "Request body Till time not as expected")
 	assert.Equal(t, testdata.TEST_NONCE, a.ReqBody.Nonce, "Request body nounce not as expected")
-	assert.Equal(t, []int{0, 1}, a.ReqBody.EType, "Etype list not as expected")
+	assert.Equal(t, []int32{0, 1}, a.ReqBody.EType, "Etype list not as expected")
 	assert.Equal(t, 0, len(a.ReqBody.Addresses), "Number of client addresses not empty")
 	assert.Equal(t, 0, len(a.ReqBody.EncAuthData.Cipher), "Ciphertext of request body encrypted authorization data not empty")
 	assert.Equal(t, 2, len(a.ReqBody.AdditionalTickets), "Number of additional tickets not as expected")
@@ -358,7 +359,7 @@ func TestUnmarshalTGSReq_optionalsNULLexceptserver(t *testing.T) {
 	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMESTRING, a.ReqBody.SName.NameString, "Request body SName entries not as expected")
 	assert.Equal(t, tt, a.ReqBody.Till, "Request body Till time not as expected")
 	assert.Equal(t, testdata.TEST_NONCE, a.ReqBody.Nonce, "Request body nounce not as expected")
-	assert.Equal(t, []int{0, 1}, a.ReqBody.EType, "Etype list not as expected")
+	assert.Equal(t, []int32{0, 1}, a.ReqBody.EType, "Etype list not as expected")
 	assert.Equal(t, 0, len(a.ReqBody.Addresses), "Number of client addresses not empty")
 	assert.Equal(t, 0, len(a.ReqBody.EncAuthData.Cipher), "Ciphertext of request body encrypted authorization data not empty")
 	assert.Equal(t, 0, len(a.ReqBody.AdditionalTickets), "Number of additional tickets not empty")

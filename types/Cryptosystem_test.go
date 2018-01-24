@@ -66,7 +66,7 @@ func TestUnmarshalEncryptionKey(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
 	}
-	assert.Equal(t, 1, a.KeyType, "Key type not as expected")
+	assert.Equal(t, int32(1), a.KeyType, "Key type not as expected")
 	assert.Equal(t, []byte("12345678"), a.KeyValue, "Key value not as expected")
 }
 

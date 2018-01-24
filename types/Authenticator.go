@@ -43,13 +43,13 @@ type Authenticator struct {
 	Cusec             int               `asn1:"explicit,tag:4"`
 	CTime             time.Time         `asn1:"generalized,explicit,tag:5"`
 	SubKey            EncryptionKey     `asn1:"explicit,optional,tag:6"`
-	SeqNumber         int               `asn1:"explicit,optional,tag:7"`
+	SeqNumber         int64             `asn1:"explicit,optional,tag:7"`
 	AuthorizationData AuthorizationData `asn1:"explicit,optional,tag:8"`
 }
 
 // NewAuthenticator creates a new Authenticator.
 func NewAuthenticator(realm string, cname PrincipalName) (Authenticator, error) {
-	seq, err := rand.Int(rand.Reader, big.NewInt(math.MaxInt32))
+	seq, err := rand.Int(rand.Reader, big.NewInt(math.MaxUint32))
 	if err != nil {
 		return Authenticator{}, err
 	}
@@ -61,17 +61,17 @@ func NewAuthenticator(realm string, cname PrincipalName) (Authenticator, error) 
 		Cksum:     Checksum{},
 		Cusec:     int((t.UnixNano() / int64(time.Microsecond)) - (t.Unix() * 1e6)),
 		CTime:     t,
-		SeqNumber: int(seq.Int64()),
+		SeqNumber: seq.Int64(),
 	}, nil
 }
 
 // GenerateSeqNumberAndSubKey sets the Authenticator's sequence number and subkey.
-func (a *Authenticator) GenerateSeqNumberAndSubKey(keyType, keySize int) error {
+func (a *Authenticator) GenerateSeqNumberAndSubKey(keyType int32, keySize int) error {
 	seq, err := rand.Int(rand.Reader, big.NewInt(math.MaxUint32))
 	if err != nil {
 		return err
 	}
-	a.SeqNumber = int(seq.Int64())
+	a.SeqNumber = seq.Int64()
 	//Generate subkey value
 	sk := make([]byte, keySize, keySize)
 	rand.Read(sk)

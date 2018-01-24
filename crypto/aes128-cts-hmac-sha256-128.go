@@ -18,12 +18,12 @@ type Aes128CtsHmacSha256128 struct {
 }
 
 // GetETypeID returns the EType ID number.
-func (e Aes128CtsHmacSha256128) GetETypeID() int {
+func (e Aes128CtsHmacSha256128) GetETypeID() int32 {
 	return etypeID.AES128_CTS_HMAC_SHA256_128
 }
 
 // GetHashID returns the checksum type ID number.
-func (e Aes128CtsHmacSha256128) GetHashID() int {
+func (e Aes128CtsHmacSha256128) GetHashID() int32 {
 	return chksumtype.HMAC_SHA256_128_AES128
 }
 

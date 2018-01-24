@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/jcmturner/gokrb5.v3/iana/addrtype"
 	"gopkg.in/jcmturner/gokrb5.v3/iana/msgtype"
 	"gopkg.in/jcmturner/gokrb5.v3/testdata"
 	"testing"
@@ -55,7 +56,7 @@ func TestUnmarshalEncCredPart(t *testing.T) {
 
 	assert.Equal(t, 2, len(a.TicketInfo), "Number of ticket info items not as expected")
 	for i, tkt := range a.TicketInfo {
-		assert.Equal(t, 1, tkt.Key.KeyType, fmt.Sprintf("Key type not as expected in ticket info item %d", i+1))
+		assert.Equal(t, int32(1), tkt.Key.KeyType, fmt.Sprintf("Key type not as expected in ticket info item %d", i+1))
 		assert.Equal(t, []byte("12345678"), tkt.Key.KeyValue, fmt.Sprintf("Key value not as expected in ticket info item %d", i+1))
 		assert.Equal(t, testdata.TEST_REALM, tkt.PRealm, fmt.Sprintf("PRealm not as expected on ticket info item %d", i+1))
 		assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMETYPE, tkt.PName.NameType, fmt.Sprintf("Ticket info (%v) PName NameType not as expected", i+1))
@@ -71,16 +72,16 @@ func TestUnmarshalEncCredPart(t *testing.T) {
 		assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMESTRING, tkt.SName.NameString, fmt.Sprintf("Ticket info (%v) PName name string entries not as expected", i+1))
 		assert.Equal(t, 2, len(tkt.CAddr), "Number of client addresses not as expected")
 		for j, addr := range tkt.CAddr {
-			assert.Equal(t, 2, addr.AddrType, fmt.Sprintf("Host address type not as expected for address item %d within ticket info %d", j+1, i+1))
+			assert.Equal(t, addrtype.IPv4, addr.AddrType, fmt.Sprintf("Host address type not as expected for address item %d within ticket info %d", j+1, i+1))
 			assert.Equal(t, "12d00023", hex.EncodeToString(addr.Address), fmt.Sprintf("Host address not as expected for address item %d within ticket info %d", j+1, i+1))
 		}
 	}
 	assert.Equal(t, testdata.TEST_NONCE, a.Nouce, "Nouce not as expected")
 	assert.Equal(t, tt, a.Timestamp, "Timestamp not as expected")
 	assert.Equal(t, 123456, a.Usec, "Microseconds not as expected")
-	assert.Equal(t, 2, a.SAddress.AddrType, "SAddress type not as expected")
+	assert.Equal(t, addrtype.IPv4, a.SAddress.AddrType, "SAddress type not as expected")
 	assert.Equal(t, "12d00023", hex.EncodeToString(a.SAddress.Address), "Address not as expected for SAddress")
-	assert.Equal(t, 2, a.RAddress.AddrType, "RAddress type not as expected")
+	assert.Equal(t, addrtype.IPv4, a.RAddress.AddrType, "RAddress type not as expected")
 	assert.Equal(t, "12d00023", hex.EncodeToString(a.RAddress.Address), "Address not as expected for RAddress")
 }
 
@@ -101,12 +102,12 @@ func TestUnmarshalEncCredPart_optionalsNULL(t *testing.T) {
 	assert.Equal(t, 2, len(a.TicketInfo), "Number of ticket info items not as expected")
 	//1st Ticket
 	i := 0
-	assert.Equal(t, 1, a.TicketInfo[i].Key.KeyType, fmt.Sprintf("Key type not as expected in ticket info item %d", i+1))
+	assert.Equal(t, int32(1), a.TicketInfo[i].Key.KeyType, fmt.Sprintf("Key type not as expected in ticket info item %d", i+1))
 	assert.Equal(t, []byte("12345678"), a.TicketInfo[i].Key.KeyValue, fmt.Sprintf("Key value not as expected in ticket info item %d", i+1))
 
 	//2nd Ticket
 	i = 1
-	assert.Equal(t, 1, a.TicketInfo[i].Key.KeyType, fmt.Sprintf("Key type not as expected in ticket info item %d", i+1))
+	assert.Equal(t, int32(1), a.TicketInfo[i].Key.KeyType, fmt.Sprintf("Key type not as expected in ticket info item %d", i+1))
 	assert.Equal(t, []byte("12345678"), a.TicketInfo[i].Key.KeyValue, fmt.Sprintf("Key value not as expected in ticket info item %d", i+1))
 	assert.Equal(t, testdata.TEST_REALM, a.TicketInfo[i].PRealm, fmt.Sprintf("PRealm not as expected on ticket info item %d", i+1))
 	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMETYPE, a.TicketInfo[i].PName.NameType, fmt.Sprintf("Ticket info (%v) PName NameType not as expected", i+1))
@@ -122,7 +123,7 @@ func TestUnmarshalEncCredPart_optionalsNULL(t *testing.T) {
 	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMESTRING, a.TicketInfo[i].SName.NameString, fmt.Sprintf("Ticket info (%v) PName name string entries not as expected", i+1))
 	assert.Equal(t, 2, len(a.TicketInfo[i].CAddr), "Number of client addresses not as expected")
 	for j, addr := range a.TicketInfo[i].CAddr {
-		assert.Equal(t, 2, addr.AddrType, fmt.Sprintf("Host address type not as expected for address item %d within ticket info %d", j+1, i+1))
+		assert.Equal(t, addrtype.IPv4, addr.AddrType, fmt.Sprintf("Host address type not as expected for address item %d within ticket info %d", j+1, i+1))
 		assert.Equal(t, "12d00023", hex.EncodeToString(addr.Address), fmt.Sprintf("Host address not as expected for address item %d within ticket info %d", j+1, i+1))
 	}
 }

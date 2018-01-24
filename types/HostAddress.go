@@ -51,7 +51,7 @@ type HostAddresses []HostAddress
 
 // HostAddress implements RFC 4120 type: https://tools.ietf.org/html/rfc4120#section-5.2.5
 type HostAddress struct {
-	AddrType int    `asn1:"explicit,tag:0"`
+	AddrType int32  `asn1:"explicit,tag:0"`
 	Address  []byte `asn1:"explicit,tag:1"`
 }
 
@@ -67,7 +67,7 @@ func GetHostAddress(s string) (HostAddress, error) {
 	if err != nil {
 		return h, fmt.Errorf("Could not marshal client's address into bytes: %v", err)
 	}
-	var ht int
+	var ht int32
 	if ip.To4() != nil {
 		ht = addrTypeIPv4
 	} else if ip.To16() != nil {

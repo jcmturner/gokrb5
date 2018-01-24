@@ -38,7 +38,7 @@ type Cache struct {
 // clientEntries holds entries of client details sent to the service.
 type clientEntries struct {
 	ReplayMap map[time.Time]replayCacheEntry
-	SeqNumber int
+	SeqNumber int64
 	SubKey    types.EncryptionKey
 }
 

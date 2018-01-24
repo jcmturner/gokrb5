@@ -3,21 +3,21 @@ package adtype
 
 // Authenticator type IDs.
 const (
-	ADIfRelevant                  = 1
-	ADIntendedForServer           = 2
-	ADIntendedForApplicationClass = 3
-	ADKDCIssued                   = 4
-	ADAndOr                       = 5
-	ADMandatoryTicketExtensions   = 6
-	ADInTicketExtensions          = 7
-	ADMandatoryForKDC             = 8
-	OSFDCE                        = 64
-	SESAME                        = 65
-	ADOSFDCEPKICertID             = 66
-	ADAuthenticationStrength      = 70
-	ADFXFastArmor                 = 71
-	ADFXFastUsed                  = 72
-	ADWin2KPAC                    = 128
-	ADEtypeNegotiation            = 129
+	ADIfRelevant                  int32 = 1
+	ADIntendedForServer           int32 = 2
+	ADIntendedForApplicationClass int32 = 3
+	ADKDCIssued                   int32 = 4
+	ADAndOr                       int32 = 5
+	ADMandatoryTicketExtensions   int32 = 6
+	ADInTicketExtensions          int32 = 7
+	ADMandatoryForKDC             int32 = 8
+	OSFDCE                        int32 = 64
+	SESAME                        int32 = 65
+	ADOSFDCEPKICertID             int32 = 66
+	ADAuthenticationStrength      int32 = 70
+	ADFXFastArmor                 int32 = 71
+	ADFXFastUsed                  int32 = 72
+	ADWin2KPAC                    int32 = 128
+	ADEtypeNegotiation            int32 = 129
 	//Reserved values                   9-63
 )

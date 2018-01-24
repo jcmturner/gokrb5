@@ -30,8 +30,8 @@ func TestMechToken_Unmarshal(t *testing.T) {
 	assert.Equal(t, MechTypeOIDKRB5, mt.OID, "MechToken OID not as expected.")
 	assert.Equal(t, []byte{1, 0}, mt.TokID, "TokID not as expected")
 	assert.Equal(t, msgtype.KRB_AP_REQ, mt.APReq.MsgType, "MechToken AP_REQ does not have the right message type.")
-	assert.Equal(t, 0, mt.KRBError.ErrorCode, "KRBError in MechToken does not indicate no error.")
-	assert.Equal(t, 18, mt.APReq.Authenticator.EType, "Authenticator within AP_REQ does not have the etype expected.")
+	assert.Equal(t, int32(0), mt.KRBError.ErrorCode, "KRBError in MechToken does not indicate no error.")
+	assert.Equal(t, int32(18), mt.APReq.Authenticator.EType, "Authenticator within AP_REQ does not have the etype expected.")
 }
 
 func TestMechToken_newAuthenticatorChksum(t *testing.T) {
@@ -47,14 +47,14 @@ func TestMechToken_newAuthenticatorChksum(t *testing.T) {
 func TestMechToken_newAuthenticatorWithSubkeyGeneration(t *testing.T) {
 	creds := credentials.NewCredentials("hftsai", testdata.TEST_REALM)
 	creds.CName.NameString = testdata.TEST_PRINCIPALNAME_NAMESTRING
-	etypeID := 18
+	var etypeID int32 = 18
 	keyLen := 32 // etypeID 18 refers to AES256 -> 32 bytes key
 	a, err := NewAuthenticator(creds, etypeID, []int{GSS_C_INTEG_FLAG, GSS_C_CONF_FLAG})
 	if err != nil {
 		t.Fatalf("Error creating authenticator: %v", err)
 	}
 	a.GenerateSeqNumberAndSubKey(etypeID, keyLen)
-	assert.Equal(t, 32771, a.Cksum.CksumType, "Checksum type in authenticator for SPNEGO mechtoken not as expected.")
+	assert.Equal(t, int32(32771), a.Cksum.CksumType, "Checksum type in authenticator for SPNEGO mechtoken not as expected.")
 	assert.Equal(t, etypeID, a.SubKey.KeyType, "Subkey not of the expected type.")
 	assert.Equal(t, keyLen, len(a.SubKey.KeyValue), "Subkey value not of the right length")
 	// Test the subkey is initialised to random non-zero values. Not a perfect test but better than nothing.
@@ -73,13 +73,13 @@ func TestMechToken_newAuthenticatorWithSubkeyGeneration(t *testing.T) {
 func TestMechToken_newAuthenticator(t *testing.T) {
 	creds := credentials.NewCredentials("hftsai", testdata.TEST_REALM)
 	creds.CName.NameString = testdata.TEST_PRINCIPALNAME_NAMESTRING
-	etypeID := 18
+	var etypeID int32 = 18
 	a, err := NewAuthenticator(creds, etypeID, []int{GSS_C_INTEG_FLAG, GSS_C_CONF_FLAG})
 	if err != nil {
 		t.Fatalf("Error creating authenticator: %v", err)
 	}
-	assert.Equal(t, 32771, a.Cksum.CksumType, "Checksum type in authenticator for SPNEGO mechtoken not as expected.")
-	assert.Equal(t, 0, a.SubKey.KeyType, "Subkey not of the expected type.")
+	assert.Equal(t, int32(32771), a.Cksum.CksumType, "Checksum type in authenticator for SPNEGO mechtoken not as expected.")
+	assert.Equal(t, int32(0), a.SubKey.KeyType, "Subkey not of the expected type.")
 	assert.Nil(t, a.SubKey.KeyValue, "Subkey should not be set.")
 
 	assert.Condition(t, assert.Comparison(func() bool {
@@ -125,8 +125,8 @@ func TestNewAPREQMechToken_and_Marshal(t *testing.T) {
 	assert.Equal(t, MechTypeOIDKRB5, mt.OID, "MechToken OID not as expected.")
 	assert.Equal(t, []byte{1, 0}, mt.TokID, "TokID not as expected")
 	assert.Equal(t, msgtype.KRB_AP_REQ, mt.APReq.MsgType, "MechToken AP_REQ does not have the right message type.")
-	assert.Equal(t, 0, mt.KRBError.ErrorCode, "KRBError in MechToken does not indicate no error.")
+	assert.Equal(t, int32(0), mt.KRBError.ErrorCode, "KRBError in MechToken does not indicate no error.")
 	assert.Equal(t, testdata.TEST_REALM, mt.APReq.Ticket.Realm, "Realm in ticket within the AP_REQ of the MechToken not as expected.")
 	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMESTRING, mt.APReq.Ticket.SName.NameString, "SName in ticket within the AP_REQ of the MechToken not as expected.")
-	assert.Equal(t, 18, mt.APReq.Authenticator.EType, "Authenticator within AP_REQ does not have the etype expected.")
+	assert.Equal(t, int32(18), mt.APReq.Authenticator.EType, "Authenticator within AP_REQ does not have the etype expected.")
 }
