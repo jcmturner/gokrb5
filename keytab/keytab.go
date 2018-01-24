@@ -45,11 +45,11 @@ func NewKeytab() Keytab {
 }
 
 // GetEncryptionKey returns the EncryptionKey from the Keytab for the newest entry with the required kvno, etype and matching principal.
-func (kt *Keytab) GetEncryptionKey(nameString []string, realm string, kvno, etype int) (types.EncryptionKey, error) {
+func (kt *Keytab) GetEncryptionKey(nameString []string, realm string, kvno int, etype int32) (types.EncryptionKey, error) {
 	var key types.EncryptionKey
 	var t time.Time
 	for _, k := range kt.Entries {
-		if k.Principal.Realm == realm && len(k.Principal.Components) == len(nameString) && int(k.Key.KeyType) == etype && (int(k.KVNO) == kvno || kvno == 0) && k.Timestamp.After(t) {
+		if k.Principal.Realm == realm && len(k.Principal.Components) == len(nameString) && k.Key.KeyType == etype && (k.KVNO == uint32(kvno) || kvno == 0) && k.Timestamp.After(t) {
 			p := true
 			for i, n := range k.Principal.Components {
 				if nameString[i] != n {
@@ -147,7 +147,7 @@ func Parse(b []byte) (kt Keytab, err error) {
 			parsePrincipal(eb, &p, &kt, &ke, &endian)
 			ke.Timestamp = readTimestamp(eb, &p, &endian)
 			ke.KVNO8 = uint8(readInt8(eb, &p, &endian))
-			ke.Key.KeyType = int(readInt16(eb, &p, &endian))
+			ke.Key.KeyType = int32(readInt16(eb, &p, &endian))
 			kl := int(readInt16(eb, &p, &endian))
 			ke.Key.KeyValue = readBytes(eb, &p, kl, &endian)
 			//The 32-bit key version overrides the 8-bit key version.

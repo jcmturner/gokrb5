@@ -11,7 +11,7 @@ import (
 
 // PAData implements RFC 4120 types: https://tools.ietf.org/html/rfc4120#section-5.2.7
 type PAData struct {
-	PADataType  int    `asn1:"explicit,tag:1"`
+	PADataType  int32  `asn1:"explicit,tag:1"`
 	PADataValue []byte `asn1:"explicit,tag:2"`
 }
 
@@ -31,7 +31,7 @@ type PAEncTSEnc struct {
 }
 
 // Contains tests if a PADataSequence contains PA Data of a certain type.
-func (pas *PADataSequence) Contains(patype int) bool {
+func (pas *PADataSequence) Contains(patype int32) bool {
 	for _, pa := range *pas {
 		if pa.PADataType == patype {
 			return true
@@ -56,7 +56,7 @@ func GetPAEncTSEncAsnMarshalled() ([]byte, error) {
 
 // ETypeInfoEntry implements RFC 4120 types: https://tools.ietf.org/html/rfc4120#section-5.2.7.4
 type ETypeInfoEntry struct {
-	EType int    `asn1:"explicit,tag:0"`
+	EType int32  `asn1:"explicit,tag:0"`
 	Salt  []byte `asn1:"explicit,optional,tag:1"`
 }
 
@@ -65,7 +65,7 @@ type ETypeInfo []ETypeInfoEntry
 
 // ETypeInfo2Entry implements RFC 4120 types: https://tools.ietf.org/html/rfc4120#section-5.2.7.5
 type ETypeInfo2Entry struct {
-	EType     int    `asn1:"explicit,tag:0"`
+	EType     int32  `asn1:"explicit,tag:0"`
 	Salt      string `asn1:"explicit,optional,generalstring,tag:1"`
 	S2KParams []byte `asn1:"explicit,optional,tag:2"`
 }
@@ -75,7 +75,7 @@ type ETypeInfo2 []ETypeInfo2Entry
 
 // PAReqEncPARep PA Data Type
 type PAReqEncPARep struct {
-	ChksumType int    `asn1:"explicit,tag:0"`
+	ChksumType int32  `asn1:"explicit,tag:0"`
 	Chksum     []byte `asn1:"explicit,tag:1"`
 }
 

@@ -7,7 +7,7 @@ import "strings"
 
 // PrincipalName implements RFC 4120 type: https://tools.ietf.org/html/rfc4120#section-5.2.2
 type PrincipalName struct {
-	NameType   int      `asn1:"explicit,tag:0"`
+	NameType   int32    `asn1:"explicit,tag:0"`
 	NameString []string `asn1:"generalstring,explicit,tag:1"`
 }
 

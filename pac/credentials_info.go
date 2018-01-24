@@ -44,7 +44,7 @@ func (c *CredentialsInfo) Unmarshal(b []byte, k types.EncryptionKey) error {
 
 // DecryptEncPart decrypts the encrypted part of the CredentialsInfo.
 func (c *CredentialsInfo) DecryptEncPart(k types.EncryptionKey, e *binary.ByteOrder) error {
-	if k.KeyType != int(c.EType) {
+	if k.KeyType != int32(c.EType) {
 		return fmt.Errorf("Key provided is not the correct type. Type needed: %d, type provided: %d", c.EType, k.KeyType)
 	}
 	pt, err := crypto.DecryptMessage(c.PACCredentialDataEncrypted, k, keyusage.KERB_NON_KERB_SALT)

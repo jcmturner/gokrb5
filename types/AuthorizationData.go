@@ -80,7 +80,7 @@ type AuthorizationData []AuthorizationDataEntry
 
 // AuthorizationDataEntry implements RFC 4120 type: https://tools.ietf.org/html/rfc4120#section-5.2.6
 type AuthorizationDataEntry struct {
-	ADType int    `asn1:"explicit,tag:0"`
+	ADType int32  `asn1:"explicit,tag:0"`
 	ADData []byte `asn1:"explicit,tag:1"`
 }
 
@@ -97,7 +97,7 @@ type ADKDCIssued struct {
 
 // ADAndOr implements RFC 4120 type: https://tools.ietf.org/html/rfc4120#section-5.2.6.3
 type ADAndOr struct {
-	ConditionCount int               `asn1:"explicit,tag:0"`
+	ConditionCount int32             `asn1:"explicit,tag:0"`
 	Elements       AuthorizationData `asn1:"explicit,tag:1"`
 }
 

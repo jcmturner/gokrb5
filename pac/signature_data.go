@@ -47,9 +47,9 @@ func (k *SignatureData) Unmarshal(b []byte) ([]byte, error) {
 	switch k.SignatureType {
 	case chksumtype.KERB_CHECKSUM_HMAC_MD5_UNSIGNED:
 		c = 16
-	case chksumtype.HMAC_SHA1_96_AES128:
+	case uint32(chksumtype.HMAC_SHA1_96_AES128):
 		c = 12
-	case chksumtype.HMAC_SHA1_96_AES256:
+	case uint32(chksumtype.HMAC_SHA1_96_AES256):
 		c = 12
 	}
 	sp := p

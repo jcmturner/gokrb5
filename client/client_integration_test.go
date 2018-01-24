@@ -250,7 +250,7 @@ func TestClient_GetServiceTicket(t *testing.T) {
 		t.Fatalf("Error getting service ticket: %v\n", err)
 	}
 	assert.Equal(t, spn, tkt.SName.GetPrincipalNameString())
-	assert.Equal(t, 18, key.KeyType)
+	assert.Equal(t, int32(18), key.KeyType)
 
 	//Check cache use - should get the same values back again
 	tkt2, key2, err := cl.GetServiceTicket(spn)
@@ -305,7 +305,7 @@ func TestClient_GetServiceTicket_OlderKDC(t *testing.T) {
 		t.Fatalf("Error getting service ticket: %v\n", err)
 	}
 	assert.Equal(t, spn, tkt.SName.GetPrincipalNameString())
-	assert.Equal(t, 18, key.KeyType)
+	assert.Equal(t, int32(18), key.KeyType)
 }
 
 func TestClient_SetSPNEGOHeader(t *testing.T) {

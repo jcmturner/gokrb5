@@ -43,9 +43,9 @@ func TestUnmarshalEncAPRepPart(t *testing.T) {
 
 	assert.Equal(t, tt, a.CTime, "CTime not as expected")
 	assert.Equal(t, 123456, a.Cusec, "Client microseconds not as expected")
-	assert.Equal(t, 1, a.Subkey.KeyType, "Subkey type not as expected")
+	assert.Equal(t, int32(1), a.Subkey.KeyType, "Subkey type not as expected")
 	assert.Equal(t, []byte("12345678"), a.Subkey.KeyValue, "Subkey value not as expected")
-	assert.Equal(t, 17, a.SequenceNumber, "Sequence number not as expected")
+	assert.Equal(t, int64(17), a.SequenceNumber, "Sequence number not as expected")
 }
 
 func TestUnmarshalEncAPRepPart_optionalsNULL(t *testing.T) {

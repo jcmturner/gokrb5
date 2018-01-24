@@ -54,12 +54,12 @@ type Des3CbcSha1Kd struct {
 }
 
 // GetETypeID returns the EType ID number.
-func (e Des3CbcSha1Kd) GetETypeID() int {
+func (e Des3CbcSha1Kd) GetETypeID() int32 {
 	return etypeID.DES3_CBC_SHA1_KD
 }
 
 // GetHashID returns the checksum type ID number.
-func (e Des3CbcSha1Kd) GetHashID() int {
+func (e Des3CbcSha1Kd) GetHashID() int32 {
 	return chksumtype.HMAC_SHA1_DES3_KD
 }
 

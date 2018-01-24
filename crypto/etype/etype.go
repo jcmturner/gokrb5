@@ -5,8 +5,8 @@ import "hash"
 
 // EType is the interface defining the Encryption Type.
 type EType interface {
-	GetETypeID() int
-	GetHashID() int
+	GetETypeID() int32
+	GetHashID() int32
 	GetKeyByteSize() int
 	GetKeySeedBitLength() int                                   // key-generation seed length, k
 	GetDefaultStringToKeyParams() string                        // default string-to-key parameters (s2kparams)

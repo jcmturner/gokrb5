@@ -7,6 +7,7 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v3/credentials"
 	"gopkg.in/jcmturner/gokrb5.v3/iana/etypeID"
 	"gopkg.in/jcmturner/gokrb5.v3/iana/msgtype"
+	"gopkg.in/jcmturner/gokrb5.v3/iana/nametype"
 	"gopkg.in/jcmturner/gokrb5.v3/keytab"
 	"gopkg.in/jcmturner/gokrb5.v3/testdata"
 	"testing"
@@ -167,11 +168,11 @@ func TestUnmarshalEncKDCRepPart(t *testing.T) {
 	//Parse the test time value into a time.Time type
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
 
-	assert.Equal(t, 1, a.Key.KeyType, "Key type not as expected")
+	assert.Equal(t, int32(1), a.Key.KeyType, "Key type not as expected")
 	assert.Equal(t, []byte("12345678"), a.Key.KeyValue, "Key value not as expected")
 	assert.Equal(t, 2, len(a.LastReqs), "Number of last request entries not as expected")
 	for i, r := range a.LastReqs {
-		assert.Equal(t, -5, r.LRType, fmt.Sprintf("Last request typ not as expected for last request entry %d", i+1))
+		assert.Equal(t, int32(-5), r.LRType, fmt.Sprintf("Last request typ not as expected for last request entry %d", i+1))
 		assert.Equal(t, tt, r.LRValue, fmt.Sprintf("Last request time value not as expected for last request entry %d", i+1))
 	}
 	assert.Equal(t, testdata.TEST_NONCE, a.Nonce, "Nonce not as expected")
@@ -186,7 +187,7 @@ func TestUnmarshalEncKDCRepPart(t *testing.T) {
 	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMESTRING, a.SName.NameString, "SName string entries not as expected")
 	assert.Equal(t, 2, len(a.CAddr), "Number of client addresses not as expected")
 	for i, addr := range a.CAddr {
-		assert.Equal(t, 2, addr.AddrType, fmt.Sprintf("Host address type not as expected for address item %d", i+1))
+		assert.Equal(t, int32(2), addr.AddrType, fmt.Sprintf("Host address type not as expected for address item %d", i+1))
 		assert.Equal(t, "12d00023", hex.EncodeToString(addr.Address), fmt.Sprintf("Host address not as expected for address item %d", i+1))
 	}
 }
@@ -205,11 +206,11 @@ func TestUnmarshalEncKDCRepPart_optionalsNULL(t *testing.T) {
 	//Parse the test time value into a time.Time type
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
 
-	assert.Equal(t, 1, a.Key.KeyType, "Key type not as expected")
+	assert.Equal(t, int32(1), a.Key.KeyType, "Key type not as expected")
 	assert.Equal(t, []byte("12345678"), a.Key.KeyValue, "Key value not as expected")
 	assert.Equal(t, 2, len(a.LastReqs), "Number of last request entries not as expected")
 	for i, r := range a.LastReqs {
-		assert.Equal(t, -5, r.LRType, fmt.Sprintf("Last request typ not as expected for last request entry %d", i+1))
+		assert.Equal(t, int32(-5), r.LRType, fmt.Sprintf("Last request typ not as expected for last request entry %d", i+1))
 		assert.Equal(t, tt, r.LRValue, fmt.Sprintf("Last request time value not as expected for last request entry %d", i+1))
 	}
 	assert.Equal(t, testdata.TEST_NONCE, a.Nonce, "Nonce not as expected")
@@ -231,12 +232,12 @@ func TestUnmarshalASRepDecodeAndDecrypt(t *testing.T) {
 	assert.Equal(t, 5, asRep.PVNO, "PVNO not as expected")
 	assert.Equal(t, 11, asRep.MsgType, "MsgType not as expected")
 	assert.Equal(t, testRealm, asRep.CRealm, "Client Realm not as expected")
-	assert.Equal(t, 1, asRep.CName.NameType, "CName NameType not as expected")
+	assert.Equal(t, int32(1), asRep.CName.NameType, "CName NameType not as expected")
 	assert.Equal(t, testUser, asRep.CName.NameString[0], "CName NameType not as expected")
-	assert.Equal(t, 19, asRep.PAData[0].PADataType, "PADataType not as expected")
+	assert.Equal(t, int32(19), asRep.PAData[0].PADataType, "PADataType not as expected")
 	assert.Equal(t, 5, asRep.Ticket.TktVNO, "TktVNO not as expected")
 	assert.Equal(t, testRealm, asRep.Ticket.Realm, "Ticket Realm not as expected")
-	assert.Equal(t, 2, asRep.Ticket.SName.NameType, "Ticket service nametype not as expected")
+	assert.Equal(t, int32(2), asRep.Ticket.SName.NameType, "Ticket service nametype not as expected")
 	assert.Equal(t, "krbtgt", asRep.Ticket.SName.NameString[0], "Ticket service name string not as expected")
 	assert.Equal(t, testRealm, asRep.Ticket.SName.NameString[1], "Ticket service name string not as expected")
 	assert.Equal(t, etypeID.ETypesByName["aes256-cts-hmac-sha1-96"], asRep.Ticket.EncPart.EType, "Etype of ticket encrypted part not as expected")
@@ -254,16 +255,16 @@ func TestUnmarshalASRepDecodeAndDecrypt(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Decryption of AS_REP EncPart failed: %v", err)
 	}
-	assert.Equal(t, 18, asRep.DecryptedEncPart.Key.KeyType, "KeyType in decrypted EncPart not as expected")
+	assert.Equal(t, int32(18), asRep.DecryptedEncPart.Key.KeyType, "KeyType in decrypted EncPart not as expected")
 	assert.IsType(t, time.Time{}, asRep.DecryptedEncPart.LastReqs[0].LRValue, "LastReqs did not have a time value")
-	assert.Equal(t, 2069991465, asRep.DecryptedEncPart.Nonce, "Nonce value not as expected")
+	assert.Equal(t, int64(2069991465), asRep.DecryptedEncPart.Nonce, "Nonce value not as expected")
 	assert.IsType(t, time.Time{}, asRep.DecryptedEncPart.KeyExpiration, "Key expiration not a time type")
 	assert.IsType(t, time.Time{}, asRep.DecryptedEncPart.AuthTime, "AuthTime not a time type")
 	assert.IsType(t, time.Time{}, asRep.DecryptedEncPart.StartTime, "StartTime not a time type")
 	assert.IsType(t, time.Time{}, asRep.DecryptedEncPart.EndTime, "StartTime not a time type")
 	assert.IsType(t, time.Time{}, asRep.DecryptedEncPart.RenewTill, "RenewTill not a time type")
 	assert.Equal(t, testRealm, asRep.DecryptedEncPart.SRealm, "Service realm not as expected")
-	assert.Equal(t, 2, asRep.DecryptedEncPart.SName.NameType, "Name type for AS_REP not as expected")
+	assert.Equal(t, int32(2), asRep.DecryptedEncPart.SName.NameType, "Name type for AS_REP not as expected")
 	assert.Equal(t, []string{"krbtgt", testRealm}, asRep.DecryptedEncPart.SName.NameString, "Service name string not as expected")
 }
 
@@ -277,12 +278,12 @@ func TestUnmarshalASRepDecodeAndDecrypt_withPassword(t *testing.T) {
 	assert.Equal(t, 5, asRep.PVNO, "PVNO not as expected")
 	assert.Equal(t, 11, asRep.MsgType, "MsgType not as expected")
 	assert.Equal(t, testRealm, asRep.CRealm, "Client Realm not as expected")
-	assert.Equal(t, 1, asRep.CName.NameType, "CName NameType not as expected")
+	assert.Equal(t, int32(1), asRep.CName.NameType, "CName NameType not as expected")
 	assert.Equal(t, testUser, asRep.CName.NameString[0], "CName NameType not as expected")
-	assert.Equal(t, 19, asRep.PAData[0].PADataType, "PADataType not as expected")
+	assert.Equal(t, int32(19), asRep.PAData[0].PADataType, "PADataType not as expected")
 	assert.Equal(t, 5, asRep.Ticket.TktVNO, "TktVNO not as expected")
 	assert.Equal(t, testRealm, asRep.Ticket.Realm, "Ticket Realm not as expected")
-	assert.Equal(t, 2, asRep.Ticket.SName.NameType, "Ticket service nametype not as expected")
+	assert.Equal(t, int32(2), asRep.Ticket.SName.NameType, "Ticket service nametype not as expected")
 	assert.Equal(t, "krbtgt", asRep.Ticket.SName.NameString[0], "Ticket service name string not as expected")
 	assert.Equal(t, testRealm, asRep.Ticket.SName.NameString[1], "Ticket service name string not as expected")
 	assert.Equal(t, etypeID.AES256_CTS_HMAC_SHA1_96, asRep.Ticket.EncPart.EType, "Etype of ticket encrypted part not as expected")
@@ -294,15 +295,15 @@ func TestUnmarshalASRepDecodeAndDecrypt_withPassword(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Decryption of AS_REP EncPart failed: %v", err)
 	}
-	assert.Equal(t, 18, asRep.DecryptedEncPart.Key.KeyType, "KeyType in decrypted EncPart not as expected")
+	assert.Equal(t, int32(18), asRep.DecryptedEncPart.Key.KeyType, "KeyType in decrypted EncPart not as expected")
 	assert.IsType(t, time.Time{}, asRep.DecryptedEncPart.LastReqs[0].LRValue, "LastReqs did not have a time value")
-	assert.Equal(t, 2069991465, asRep.DecryptedEncPart.Nonce, "Nonce value not as expected")
+	assert.Equal(t, int64(2069991465), asRep.DecryptedEncPart.Nonce, "Nonce value not as expected")
 	assert.IsType(t, time.Time{}, asRep.DecryptedEncPart.KeyExpiration, "Key expiration not a time type")
 	assert.IsType(t, time.Time{}, asRep.DecryptedEncPart.AuthTime, "AuthTime not a time type")
 	assert.IsType(t, time.Time{}, asRep.DecryptedEncPart.StartTime, "StartTime not a time type")
 	assert.IsType(t, time.Time{}, asRep.DecryptedEncPart.EndTime, "StartTime not a time type")
 	assert.IsType(t, time.Time{}, asRep.DecryptedEncPart.RenewTill, "RenewTill not a time type")
 	assert.Equal(t, testRealm, asRep.DecryptedEncPart.SRealm, "Service realm not as expected")
-	assert.Equal(t, 2, asRep.DecryptedEncPart.SName.NameType, "Name type for AS_REP not as expected")
+	assert.Equal(t, nametype.KRB_NT_SRV_INST, asRep.DecryptedEncPart.SName.NameType, "Name type for AS_REP not as expected")
 	assert.Equal(t, []string{"krbtgt", testRealm}, asRep.DecryptedEncPart.SName.NameString, "Service name string not as expected")
 }

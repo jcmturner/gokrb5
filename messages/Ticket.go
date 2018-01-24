@@ -47,12 +47,12 @@ type EncTicketPart struct {
 
 // TransitedEncoding part of the ticket's encrypted part.
 type TransitedEncoding struct {
-	TRType   int    `asn1:"explicit,tag:0"`
+	TRType   int32  `asn1:"explicit,tag:0"`
 	Contents []byte `asn1:"explicit,tag:1"`
 }
 
 // NewTicket creates a new Ticket instance.
-func NewTicket(cname types.PrincipalName, crealm string, sname types.PrincipalName, srealm string, flags asn1.BitString, sktab keytab.Keytab, eTypeID, kvno int, authTime, startTime, endTime, renewTill time.Time) (Ticket, types.EncryptionKey, error) {
+func NewTicket(cname types.PrincipalName, crealm string, sname types.PrincipalName, srealm string, flags asn1.BitString, sktab keytab.Keytab, eTypeID int32, kvno int, authTime, startTime, endTime, renewTill time.Time) (Ticket, types.EncryptionKey, error) {
 	etype, err := crypto.GetEtype(eTypeID)
 	if err != nil {
 		return Ticket{}, types.EncryptionKey{}, krberror.Errorf(err, krberror.EncryptingError, "error getting etype for new ticket")

@@ -9,15 +9,6 @@ import (
 	"time"
 )
 
-//encode_krb5_pa_for_user
-//encode_krb5_pa_s4u_x509_user
-//encode_krb5_pa_fx_fast_reply
-//encode_krb5_pa_otp_challenge(optionalsNULL)
-//encode_krb5_pa_otp_challenge
-//encode_krb5_pa_otp_req(optionalsNULL)
-//encode_krb5_pa_otp_req
-//encode_krb5_pa_otp_enc_req
-
 func TestUnmarshalPADataSequence(t *testing.T) {
 	var a PADataSequence
 	v := "encode_krb5_padata_sequence"
@@ -98,11 +89,11 @@ func TestUnmarshalETypeInfo(t *testing.T) {
 		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
 	}
 	assert.Equal(t, 3, len(a), "Number of EType info entries not as expected")
-	assert.Equal(t, 0, a[0].EType, "Etype of first etype info entry not as expected")
+	assert.Equal(t, int32(0), a[0].EType, "Etype of first etype info entry not as expected")
 	assert.Equal(t, []byte("Morton's #0"), a[0].Salt, "Salt of first etype info entry not as expected")
-	assert.Equal(t, 1, a[1].EType, "Etype of second etype info entry not as expected")
+	assert.Equal(t, int32(1), a[1].EType, "Etype of second etype info entry not as expected")
 	assert.Equal(t, 0, len(a[1].Salt), "Salt of second etype info entry not as expected")
-	assert.Equal(t, 2, a[2].EType, "Etype of third etype info entry not as expected")
+	assert.Equal(t, int32(2), a[2].EType, "Etype of third etype info entry not as expected")
 	assert.Equal(t, []byte("Morton's #2"), a[2].Salt, "Salt of third etype info entry not as expected")
 }
 
@@ -118,7 +109,7 @@ func TestUnmarshalETypeInfo_only1(t *testing.T) {
 		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
 	}
 	assert.Equal(t, 1, len(a), "Number of EType info entries not as expected")
-	assert.Equal(t, 0, a[0].EType, "Etype of first etype info entry not as expected")
+	assert.Equal(t, int32(0), a[0].EType, "Etype of first etype info entry not as expected")
 	assert.Equal(t, []byte("Morton's #0"), a[0].Salt, "Salt of first etype info entry not as expected")
 }
 
@@ -148,13 +139,13 @@ func TestUnmarshalETypeInfo2(t *testing.T) {
 		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
 	}
 	assert.Equal(t, 3, len(a), "Number of EType info2 entries not as expected")
-	assert.Equal(t, 0, a[0].EType, "Etype of first etype info2 entry not as expected")
+	assert.Equal(t, int32(0), a[0].EType, "Etype of first etype info2 entry not as expected")
 	assert.Equal(t, "Morton's #0", a[0].Salt, "Salt of first etype info2 entry not as expected")
 	assert.Equal(t, []byte("s2k: 0"), a[0].S2KParams, "String to key params of first etype info2 entry not as expected")
-	assert.Equal(t, 1, a[1].EType, "Etype of second etype info2 entry not as expected")
+	assert.Equal(t, int32(1), a[1].EType, "Etype of second etype info2 entry not as expected")
 	assert.Equal(t, 0, len(a[1].Salt), "Salt of second etype info2 entry not as expected")
 	assert.Equal(t, []byte("s2k: 1"), a[1].S2KParams, "String to key params of second etype info2 entry not as expected")
-	assert.Equal(t, 2, a[2].EType, "Etype of third etype info2 entry not as expected")
+	assert.Equal(t, int32(2), a[2].EType, "Etype of third etype info2 entry not as expected")
 	assert.Equal(t, "Morton's #2", a[2].Salt, "Salt of third etype info2 entry not as expected")
 	assert.Equal(t, []byte("s2k: 2"), a[2].S2KParams, "String to key params of third etype info2 entry not as expected")
 }
@@ -171,7 +162,7 @@ func TestUnmarshalETypeInfo2_only1(t *testing.T) {
 		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
 	}
 	assert.Equal(t, 1, len(a), "Number of EType info2 entries not as expected")
-	assert.Equal(t, 0, a[0].EType, "Etype of first etype info2 entry not as expected")
+	assert.Equal(t, int32(0), a[0].EType, "Etype of first etype info2 entry not as expected")
 	assert.Equal(t, "Morton's #0", a[0].Salt, "Salt of first etype info2 entry not as expected")
 	assert.Equal(t, []byte("s2k: 0"), a[0].S2KParams, "String to key params of first etype info2 entry not as expected")
 }

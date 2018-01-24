@@ -4,38 +4,38 @@ package etypeID
 // Kerberos encryption type assigned numbers.
 const (
 	//RESERVED : 0
-	DES_CBC_CRC                  = 1
-	DES_CBC_MD4                  = 2
-	DES_CBC_MD5                  = 3
-	DES_CBC_RAW                  = 4
-	DES3_CBC_MD5                 = 5
-	DES3_CBC_RAW                 = 6
-	DES3_CBC_SHA1                = 7
-	DES_HMAC_SHA1                = 8
-	DSAWITHSHA1_CMSOID           = 9
-	MD5WITHRSAENCRYPTION_CMSOID  = 10
-	SHA1WITHRSAENCRYPTION_CMSOID = 11
-	RC2CBC_ENVOID                = 12
-	RSAENCRYPTION_ENVOID         = 13
-	RSAES_OAEP_ENV_OID           = 14
-	DES_EDE3_CBC_ENV_OID         = 15
-	DES3_CBC_SHA1_KD             = 16
-	AES128_CTS_HMAC_SHA1_96      = 17
-	AES256_CTS_HMAC_SHA1_96      = 18
-	AES128_CTS_HMAC_SHA256_128   = 19
-	AES256_CTS_HMAC_SHA384_192   = 20
+	DES_CBC_CRC                  int32 = 1
+	DES_CBC_MD4                  int32 = 2
+	DES_CBC_MD5                  int32 = 3
+	DES_CBC_RAW                  int32 = 4
+	DES3_CBC_MD5                 int32 = 5
+	DES3_CBC_RAW                 int32 = 6
+	DES3_CBC_SHA1                int32 = 7
+	DES_HMAC_SHA1                int32 = 8
+	DSAWITHSHA1_CMSOID           int32 = 9
+	MD5WITHRSAENCRYPTION_CMSOID  int32 = 10
+	SHA1WITHRSAENCRYPTION_CMSOID int32 = 11
+	RC2CBC_ENVOID                int32 = 12
+	RSAENCRYPTION_ENVOID         int32 = 13
+	RSAES_OAEP_ENV_OID           int32 = 14
+	DES_EDE3_CBC_ENV_OID         int32 = 15
+	DES3_CBC_SHA1_KD             int32 = 16
+	AES128_CTS_HMAC_SHA1_96      int32 = 17
+	AES256_CTS_HMAC_SHA1_96      int32 = 18
+	AES128_CTS_HMAC_SHA256_128   int32 = 19
+	AES256_CTS_HMAC_SHA384_192   int32 = 20
 	//UNASSIGNED : 21-22
-	RC4_HMAC             = 23
-	RC4_HMAC_EXP         = 24
-	CAMELLIA128_CTS_CMAC = 25
-	CAMELLIA256_CTS_CMAC = 26
+	RC4_HMAC             int32 = 23
+	RC4_HMAC_EXP         int32 = 24
+	CAMELLIA128_CTS_CMAC int32 = 25
+	CAMELLIA256_CTS_CMAC int32 = 26
 	//UNASSIGNED : 27-64
-	SUBKEY_KEYMATERIAL = 65
+	SUBKEY_KEYMATERIAL int32 = 65
 	//UNASSIGNED : 66-2147483647
 )
 
 // ETypesByName is a map of EncType names to their assigned EncType number.
-var ETypesByName = map[string]int{
+var ETypesByName = map[string]int32{
 	"des-cbc-crc":                  DES_CBC_CRC,
 	"des-cbc-md4":                  DES_CBC_MD4,
 	"des-cbc-md5":                  DES_CBC_MD5,
@@ -78,9 +78,9 @@ var ETypesByName = map[string]int{
 
 // EtypeSupported resolves the etype name string to the etype ID.
 // If zero is returned the etype is not supported by gokrb5.
-func EtypeSupported(etype string) int {
+func EtypeSupported(etype string) int32 {
 	// Slice of supported enctype IDs
-	s := []int{
+	s := []int32{
 		AES128_CTS_HMAC_SHA1_96,
 		AES256_CTS_HMAC_SHA1_96,
 		AES128_CTS_HMAC_SHA256_128,

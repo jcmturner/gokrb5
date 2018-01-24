@@ -146,7 +146,7 @@ func parseHeader(b []byte, p *int, c *CCache, e *binary.ByteOrder) error {
 func parsePrincipal(b []byte, p *int, c *CCache, e *binary.ByteOrder) (princ principal) {
 	if c.Version != 1 {
 		//Name Type is omitted in version 1
-		princ.PrincipalName.NameType = int(readInt32(b, p, e))
+		princ.PrincipalName.NameType = int32(readInt32(b, p, e))
 	}
 	nc := int(readInt32(b, p, e))
 	if c.Version == 1 {
@@ -166,10 +166,10 @@ func parseCredential(b []byte, p *int, c *CCache, e *binary.ByteOrder) (cred cre
 	cred.Client = parsePrincipal(b, p, c, e)
 	cred.Server = parsePrincipal(b, p, c, e)
 	key := types.EncryptionKey{}
-	key.KeyType = int(readInt16(b, p, e))
+	key.KeyType = int32(readInt16(b, p, e))
 	if c.Version == 3 {
 		//repeated twice in version 3
-		key.KeyType = int(readInt16(b, p, e))
+		key.KeyType = int32(readInt16(b, p, e))
 	}
 	key.KeyValue = readData(b, p, e)
 	cred.Key = key
@@ -283,14 +283,14 @@ func readData(b []byte, p *int, e *binary.ByteOrder) []byte {
 
 func readAddress(b []byte, p *int, e *binary.ByteOrder) types.HostAddress {
 	a := types.HostAddress{}
-	a.AddrType = int(readInt16(b, p, e))
+	a.AddrType = int32(readInt16(b, p, e))
 	a.Address = readData(b, p, e)
 	return a
 }
 
 func readAuthDataEntry(b []byte, p *int, e *binary.ByteOrder) types.AuthorizationDataEntry {
 	a := types.AuthorizationDataEntry{}
-	a.ADType = int(readInt16(b, p, e))
+	a.ADType = int32(readInt16(b, p, e))
 	a.ADData = readData(b, p, e)
 	return a
 }

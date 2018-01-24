@@ -32,11 +32,11 @@ func TestUnmarshalAuthenticator(t *testing.T) {
 	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMETYPE, a.CName.NameType, "CName NameType not as expected")
 	assert.Equal(t, len(testdata.TEST_PRINCIPALNAME_NAMESTRING), len(a.CName.NameString), "CName does not have the expected number of NameStrings")
 	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMESTRING, a.CName.NameString, "CName entries not as expected")
-	assert.Equal(t, 1, a.Cksum.CksumType, "Checksum type not as expected")
+	assert.Equal(t, int32(1), a.Cksum.CksumType, "Checksum type not as expected")
 	assert.Equal(t, []byte("1234"), a.Cksum.Checksum, "Checsum not as expected")
 	assert.Equal(t, 123456, a.Cusec, "Client microseconds not as expected")
 	assert.Equal(t, tt, a.CTime, "Client time not as expected")
-	assert.Equal(t, 1, a.SubKey.KeyType, "Subkey type not as expected")
+	assert.Equal(t, int32(1), a.SubKey.KeyType, "Subkey type not as expected")
 	assert.Equal(t, []byte("12345678"), a.SubKey.KeyValue, "Subkey value not as expected")
 	assert.Equal(t, 2, len(a.AuthorizationData), "Number of Authorization data items not as expected")
 	for i, entry := range a.AuthorizationData {
