@@ -104,9 +104,9 @@ func TestClient_ASExchange_TGSExchange_EncTypes_Keytab(t *testing.T) {
 	}
 	for _, test := range tests {
 		c.LibDefaults.DefaultTktEnctypes = []string{test}
-		c.LibDefaults.DefaultTktEnctypeIDs = []int{etypeID.ETypesByName[test]}
+		c.LibDefaults.DefaultTktEnctypeIDs = []int32{etypeID.ETypesByName[test]}
 		c.LibDefaults.DefaultTGSEnctypes = []string{test}
-		c.LibDefaults.DefaultTGSEnctypeIDs = []int{etypeID.ETypesByName[test]}
+		c.LibDefaults.DefaultTGSEnctypeIDs = []int32{etypeID.ETypesByName[test]}
 		cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 		cl.WithConfig(c)
 
@@ -140,9 +140,9 @@ func TestClient_ASExchange_TGSExchange_EncTypes_Password(t *testing.T) {
 	}
 	for _, test := range tests {
 		c.LibDefaults.DefaultTktEnctypes = []string{test}
-		c.LibDefaults.DefaultTktEnctypeIDs = []int{etypeID.ETypesByName[test]}
+		c.LibDefaults.DefaultTktEnctypeIDs = []int32{etypeID.ETypesByName[test]}
 		c.LibDefaults.DefaultTGSEnctypes = []string{test}
-		c.LibDefaults.DefaultTGSEnctypeIDs = []int{etypeID.ETypesByName[test]}
+		c.LibDefaults.DefaultTGSEnctypeIDs = []int32{etypeID.ETypesByName[test]}
 		cl := NewClientWithPassword("testuser1", "TEST.GOKRB5", "passwordvalue")
 		cl.WithConfig(c)
 
@@ -506,9 +506,9 @@ func TestClient_GetServiceTicket_Trusted_Resource_Domain(t *testing.T) {
 	c.LibDefaults.DefaultRealm = "TEST.GOKRB5"
 	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 	c.LibDefaults.DefaultTktEnctypes = []string{"aes256-cts-hmac-sha1-96"}
-	c.LibDefaults.DefaultTktEnctypeIDs = []int{etypeID.ETypesByName["aes256-cts-hmac-sha1-96"]}
+	c.LibDefaults.DefaultTktEnctypeIDs = []int32{etypeID.ETypesByName["aes256-cts-hmac-sha1-96"]}
 	c.LibDefaults.DefaultTGSEnctypes = []string{"aes256-cts-hmac-sha1-96"}
-	c.LibDefaults.DefaultTGSEnctypeIDs = []int{etypeID.ETypesByName["aes256-cts-hmac-sha1-96"]}
+	c.LibDefaults.DefaultTGSEnctypeIDs = []int32{etypeID.ETypesByName["aes256-cts-hmac-sha1-96"]}
 	cl.WithConfig(c)
 
 	err := cl.Login()
