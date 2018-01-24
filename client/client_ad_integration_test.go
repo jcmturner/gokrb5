@@ -73,9 +73,9 @@ func TestClient_GetServiceTicket_AD_TRUST_USER_DOMAIN(t *testing.T) {
 	c.LibDefaults.Canonicalize = true
 	cl := NewClientWithKeytab("testuser1", "USER.GOKRB5", kt)
 	c.LibDefaults.DefaultTktEnctypes = []string{"rc4-hmac"}
-	c.LibDefaults.DefaultTktEnctypeIDs = []int{etypeID.ETypesByName["rc4-hmac"]}
+	c.LibDefaults.DefaultTktEnctypeIDs = []int32{etypeID.ETypesByName["rc4-hmac"]}
 	c.LibDefaults.DefaultTGSEnctypes = []string{"rc4-hmac"}
-	c.LibDefaults.DefaultTGSEnctypeIDs = []int{etypeID.ETypesByName["rc4-hmac"]}
+	c.LibDefaults.DefaultTGSEnctypeIDs = []int32{etypeID.ETypesByName["rc4-hmac"]}
 	cl.WithConfig(c)
 	cl.GoKrb5Conf.DisablePAFXFast = true
 
