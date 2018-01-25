@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/jcmturner/gokrb5.v3/iana/patype"
 	"gopkg.in/jcmturner/gokrb5.v3/testdata"
 	"testing"
 )
@@ -21,7 +22,7 @@ func TestUnmarshalTypedData(t *testing.T) {
 	}
 	assert.Equal(t, 2, len(a), "Number of typed data elements not as expected")
 	for i, d := range a {
-		assert.Equal(t, testdata.TEST_PADATA_TYPE, d.DataType, fmt.Sprintf("Data type of element %d not as expected", i+1))
+		assert.Equal(t, patype.PA_SAM_RESPONSE, d.DataType, fmt.Sprintf("Data type of element %d not as expected", i+1))
 		assert.Equal(t, []byte(testdata.TEST_PADATA_VALUE), d.DataValue, fmt.Sprintf("Data value of element %d not as expected", i+1))
 	}
 }

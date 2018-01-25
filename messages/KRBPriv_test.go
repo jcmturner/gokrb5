@@ -3,6 +3,7 @@ package messages
 import (
 	"encoding/hex"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/jcmturner/gokrb5.v3/iana"
 	"gopkg.in/jcmturner/gokrb5.v3/iana/addrtype"
 	"gopkg.in/jcmturner/gokrb5.v3/iana/msgtype"
 	"gopkg.in/jcmturner/gokrb5.v3/testdata"
@@ -21,9 +22,9 @@ func TestUnmarshalKRBPriv(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
 	}
-	assert.Equal(t, testdata.TEST_KVNO, a.PVNO, "PVNO not as expected")
+	assert.Equal(t, iana.PVNO, a.PVNO, "PVNO not as expected")
 	assert.Equal(t, msgtype.KRB_PRIV, a.MsgType, "Message type not as expected")
-	assert.Equal(t, testdata.TEST_KVNO, a.EncPart.KVNO, "EncPart KVNO not as expected")
+	assert.Equal(t, iana.PVNO, a.EncPart.KVNO, "EncPart KVNO not as expected")
 	assert.Equal(t, testdata.TEST_ETYPE, a.EncPart.EType, "EncPart etype not as expected")
 	assert.Equal(t, []byte(testdata.TEST_CIPHERTEXT), a.EncPart.Cipher, "Cipher text of EncPart not as expected")
 }

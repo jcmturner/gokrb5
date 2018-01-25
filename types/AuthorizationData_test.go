@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/gokrb5.v3/iana/adtype"
+	"gopkg.in/jcmturner/gokrb5.v3/iana/nametype"
 	"gopkg.in/jcmturner/gokrb5.v3/testdata"
 	"testing"
 )
@@ -41,7 +42,7 @@ func TestUnmarshalAuthorizationData_kdcissued(t *testing.T) {
 	assert.Equal(t, int32(1), a.ADChecksum.CksumType, "Checksum type not as expected")
 	assert.Equal(t, []byte("1234"), a.ADChecksum.Checksum, "Checksum not as expected")
 	assert.Equal(t, testdata.TEST_REALM, a.IRealm, "Issuing realm not as expected")
-	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMETYPE, a.Isname.NameType, "Issuing name type not as expected")
+	assert.Equal(t, nametype.KRB_NT_PRINCIPAL, a.Isname.NameType, "Issuing name type not as expected")
 	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMESTRING, a.Isname.NameString, "Issuing name string entries not as expected")
 	assert.Equal(t, 2, len(a.Elements), "Number of authorization data elements not as expected")
 	for i, ele := range a.Elements {
