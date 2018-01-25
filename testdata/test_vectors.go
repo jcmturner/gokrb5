@@ -10,7 +10,7 @@ const (
 	TEST_PRINCIPALNAME_NAMETYPE   int32 = 1
 	TEST_KVNO                           = 5
 	TEST_ETYPE                    int32 = 0
-	TEST_NONCE                    int64 = 42
+	TEST_NONCE                          = 42
 	TEST_AUTHORIZATION_DATA_TYPE  int32 = 1
 	TEST_AUTHORIZATION_DATA_VALUE       = "foobar"
 	TEST_PADATA_TYPE              int32 = 13
