@@ -56,7 +56,7 @@ type TGSRep struct {
 type EncKDCRepPart struct {
 	Key           types.EncryptionKey  `asn1:"explicit,tag:0"`
 	LastReqs      []LastReq            `asn1:"explicit,tag:1"`
-	Nonce         int64                `asn1:"explicit,tag:2"`
+	Nonce         int                  `asn1:"explicit,tag:2"`
 	KeyExpiration time.Time            `asn1:"generalized,explicit,optional,tag:3"`
 	Flags         asn1.BitString       `asn1:"explicit,tag:4"`
 	AuthTime      time.Time            `asn1:"generalized,explicit,tag:5"`
