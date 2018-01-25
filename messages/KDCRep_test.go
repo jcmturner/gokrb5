@@ -257,7 +257,7 @@ func TestUnmarshalASRepDecodeAndDecrypt(t *testing.T) {
 	}
 	assert.Equal(t, int32(18), asRep.DecryptedEncPart.Key.KeyType, "KeyType in decrypted EncPart not as expected")
 	assert.IsType(t, time.Time{}, asRep.DecryptedEncPart.LastReqs[0].LRValue, "LastReqs did not have a time value")
-	assert.Equal(t, int64(2069991465), asRep.DecryptedEncPart.Nonce, "Nonce value not as expected")
+	assert.Equal(t, 2069991465, asRep.DecryptedEncPart.Nonce, "Nonce value not as expected")
 	assert.IsType(t, time.Time{}, asRep.DecryptedEncPart.KeyExpiration, "Key expiration not a time type")
 	assert.IsType(t, time.Time{}, asRep.DecryptedEncPart.AuthTime, "AuthTime not a time type")
 	assert.IsType(t, time.Time{}, asRep.DecryptedEncPart.StartTime, "StartTime not a time type")
@@ -297,7 +297,7 @@ func TestUnmarshalASRepDecodeAndDecrypt_withPassword(t *testing.T) {
 	}
 	assert.Equal(t, int32(18), asRep.DecryptedEncPart.Key.KeyType, "KeyType in decrypted EncPart not as expected")
 	assert.IsType(t, time.Time{}, asRep.DecryptedEncPart.LastReqs[0].LRValue, "LastReqs did not have a time value")
-	assert.Equal(t, int64(2069991465), asRep.DecryptedEncPart.Nonce, "Nonce value not as expected")
+	assert.Equal(t, 2069991465, asRep.DecryptedEncPart.Nonce, "Nonce value not as expected")
 	assert.IsType(t, time.Time{}, asRep.DecryptedEncPart.KeyExpiration, "Key expiration not a time type")
 	assert.IsType(t, time.Time{}, asRep.DecryptedEncPart.AuthTime, "AuthTime not a time type")
 	assert.IsType(t, time.Time{}, asRep.DecryptedEncPart.StartTime, "StartTime not a time type")
