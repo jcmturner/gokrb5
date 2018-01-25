@@ -4,8 +4,10 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/jcmturner/gokrb5.v3/iana"
 	"gopkg.in/jcmturner/gokrb5.v3/iana/addrtype"
 	"gopkg.in/jcmturner/gokrb5.v3/iana/adtype"
+	"gopkg.in/jcmturner/gokrb5.v3/iana/nametype"
 	"gopkg.in/jcmturner/gokrb5.v3/iana/trtype"
 	"gopkg.in/jcmturner/gokrb5.v3/keytab"
 	"gopkg.in/jcmturner/gokrb5.v3/testdata"
@@ -26,13 +28,13 @@ func TestUnmarshalTicket(t *testing.T) {
 		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
 	}
 
-	assert.Equal(t, testdata.TEST_KVNO, a.TktVNO, "Ticket version number not as expected")
+	assert.Equal(t, iana.PVNO, a.TktVNO, "Ticket version number not as expected")
 	assert.Equal(t, testdata.TEST_REALM, a.Realm, "Realm not as expected")
-	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMETYPE, a.SName.NameType, "CName NameType not as expected")
+	assert.Equal(t, nametype.KRB_NT_PRINCIPAL, a.SName.NameType, "CName NameType not as expected")
 	assert.Equal(t, len(testdata.TEST_PRINCIPALNAME_NAMESTRING), len(a.SName.NameString), "SName does not have the expected number of NameStrings")
 	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMESTRING, a.SName.NameString, "SName name strings not as expected")
 	assert.Equal(t, testdata.TEST_ETYPE, a.EncPart.EType, "Etype of Ticket EncPart not as expected")
-	assert.Equal(t, testdata.TEST_KVNO, a.EncPart.KVNO, "KNVO of Ticket EncPart not as expected")
+	assert.Equal(t, iana.PVNO, a.EncPart.KVNO, "KNVO of Ticket EncPart not as expected")
 	assert.Equal(t, []byte(testdata.TEST_CIPHERTEXT), a.EncPart.Cipher, "Cipher of Ticket EncPart not as expected")
 }
 
@@ -54,7 +56,7 @@ func TestUnmarshalEncTicketPart(t *testing.T) {
 	assert.Equal(t, int32(1), a.Key.KeyType, "Key type not as expected")
 	assert.Equal(t, []byte("12345678"), a.Key.KeyValue, "Key value not as expected")
 	assert.Equal(t, testdata.TEST_REALM, a.CRealm, "CRealm not as expected")
-	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMETYPE, a.CName.NameType, "CName type not as expected")
+	assert.Equal(t, nametype.KRB_NT_PRINCIPAL, a.CName.NameType, "CName type not as expected")
 	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMESTRING, a.CName.NameString, "CName string entries not as expected")
 	assert.Equal(t, trtype.DOMAIN_X500_COMPRESS, a.Transited.TRType, "Transisted type not as expected")
 	assert.Equal(t, []byte("EDU,MIT.,ATHENA.,WASHINGTON.EDU,CS."), a.Transited.Contents, "Transisted content not as expected")
@@ -91,7 +93,7 @@ func TestUnmarshalEncTicketPart_optionalsNULL(t *testing.T) {
 	assert.Equal(t, int32(1), a.Key.KeyType, "Key type not as expected")
 	assert.Equal(t, []byte("12345678"), a.Key.KeyValue, "Key value not as expected")
 	assert.Equal(t, testdata.TEST_REALM, a.CRealm, "CRealm not as expected")
-	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMETYPE, a.CName.NameType, "CName type not as expected")
+	assert.Equal(t, nametype.KRB_NT_PRINCIPAL, a.CName.NameType, "CName type not as expected")
 	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMESTRING, a.CName.NameString, "CName string entries not as expected")
 	assert.Equal(t, trtype.DOMAIN_X500_COMPRESS, a.Transited.TRType, "Transisted type not as expected")
 	assert.Equal(t, []byte("EDU,MIT.,ATHENA.,WASHINGTON.EDU,CS."), a.Transited.Contents, "Transisted content not as expected")

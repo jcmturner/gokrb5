@@ -4,8 +4,10 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/jcmturner/gokrb5.v3/iana"
 	"gopkg.in/jcmturner/gokrb5.v3/iana/addrtype"
 	"gopkg.in/jcmturner/gokrb5.v3/iana/msgtype"
+	"gopkg.in/jcmturner/gokrb5.v3/iana/nametype"
 	"gopkg.in/jcmturner/gokrb5.v3/testdata"
 	"testing"
 	"time"
@@ -22,21 +24,21 @@ func TestUnmarshalKRBCred(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
 	}
-	assert.Equal(t, testdata.TEST_KVNO, a.PVNO, "PVNO not as expected")
+	assert.Equal(t, iana.PVNO, a.PVNO, "PVNO not as expected")
 	assert.Equal(t, msgtype.KRB_CRED, a.MsgType, "Message type not as expected")
 	assert.Equal(t, 2, len(a.Tickets), "Number of tickets not as expected")
 	for i, tkt := range a.Tickets {
-		assert.Equal(t, testdata.TEST_KVNO, tkt.TktVNO, fmt.Sprintf("Ticket (%v) ticket-vno not as expected", i+1))
+		assert.Equal(t, iana.PVNO, tkt.TktVNO, fmt.Sprintf("Ticket (%v) ticket-vno not as expected", i+1))
 		assert.Equal(t, testdata.TEST_REALM, tkt.Realm, fmt.Sprintf("Ticket (%v) realm not as expected", i+1))
-		assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMETYPE, tkt.SName.NameType, fmt.Sprintf("Ticket (%v) SName NameType not as expected", i+1))
+		assert.Equal(t, nametype.KRB_NT_PRINCIPAL, tkt.SName.NameType, fmt.Sprintf("Ticket (%v) SName NameType not as expected", i+1))
 		assert.Equal(t, len(testdata.TEST_PRINCIPALNAME_NAMESTRING), len(tkt.SName.NameString), fmt.Sprintf("Ticket (%v) SName does not have the expected number of NameStrings", i+1))
 		assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMESTRING, tkt.SName.NameString, fmt.Sprintf("Ticket (%v) SName name string entries not as expected", i+1))
 		assert.Equal(t, testdata.TEST_ETYPE, tkt.EncPart.EType, fmt.Sprintf("Ticket (%v) encPart etype not as expected", i+1))
-		assert.Equal(t, testdata.TEST_KVNO, tkt.EncPart.KVNO, fmt.Sprintf("Ticket (%v) encPart KVNO not as expected", i+1))
+		assert.Equal(t, iana.PVNO, tkt.EncPart.KVNO, fmt.Sprintf("Ticket (%v) encPart KVNO not as expected", i+1))
 		assert.Equal(t, []byte(testdata.TEST_CIPHERTEXT), tkt.EncPart.Cipher, fmt.Sprintf("Ticket (%v) encPart cipher not as expected", i+1))
 	}
 	assert.Equal(t, testdata.TEST_ETYPE, a.EncPart.EType, "encPart etype not as expected")
-	assert.Equal(t, testdata.TEST_KVNO, a.EncPart.KVNO, "encPart KVNO not as expected")
+	assert.Equal(t, iana.PVNO, a.EncPart.KVNO, "encPart KVNO not as expected")
 	assert.Equal(t, []byte(testdata.TEST_CIPHERTEXT), a.EncPart.Cipher, "encPart cipher not as expected")
 }
 
@@ -59,7 +61,7 @@ func TestUnmarshalEncCredPart(t *testing.T) {
 		assert.Equal(t, int32(1), tkt.Key.KeyType, fmt.Sprintf("Key type not as expected in ticket info item %d", i+1))
 		assert.Equal(t, []byte("12345678"), tkt.Key.KeyValue, fmt.Sprintf("Key value not as expected in ticket info item %d", i+1))
 		assert.Equal(t, testdata.TEST_REALM, tkt.PRealm, fmt.Sprintf("PRealm not as expected on ticket info item %d", i+1))
-		assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMETYPE, tkt.PName.NameType, fmt.Sprintf("Ticket info (%v) PName NameType not as expected", i+1))
+		assert.Equal(t, nametype.KRB_NT_PRINCIPAL, tkt.PName.NameType, fmt.Sprintf("Ticket info (%v) PName NameType not as expected", i+1))
 		assert.Equal(t, len(testdata.TEST_PRINCIPALNAME_NAMESTRING), len(tkt.PName.NameString), fmt.Sprintf("Ticket info (%v) PName does not have the expected number of NameStrings", i+1))
 		assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMESTRING, tkt.PName.NameString, fmt.Sprintf("Ticket info (%v) PName name string entries not as expected", i+1))
 		assert.Equal(t, "fedcba98", hex.EncodeToString(tkt.Flags.Bytes), fmt.Sprintf("Flags not as expected on ticket info %d", i+1))
@@ -67,7 +69,7 @@ func TestUnmarshalEncCredPart(t *testing.T) {
 		assert.Equal(t, tt, tkt.StartTime, fmt.Sprintf("Start time value not as expected for ticket info %d", i+1))
 		assert.Equal(t, tt, tkt.EndTime, fmt.Sprintf("End time value not as expected for ticket info %d", i+1))
 		assert.Equal(t, tt, tkt.RenewTill, fmt.Sprintf("Renew Till time value not as expected for ticket info %d", i+1))
-		assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMETYPE, tkt.SName.NameType, fmt.Sprintf("Ticket info (%v) PName NameType not as expected", i+1))
+		assert.Equal(t, nametype.KRB_NT_PRINCIPAL, tkt.SName.NameType, fmt.Sprintf("Ticket info (%v) PName NameType not as expected", i+1))
 		assert.Equal(t, len(testdata.TEST_PRINCIPALNAME_NAMESTRING), len(tkt.SName.NameString), fmt.Sprintf("Ticket info (%v) PName does not have the expected number of NameStrings", i+1))
 		assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMESTRING, tkt.SName.NameString, fmt.Sprintf("Ticket info (%v) PName name string entries not as expected", i+1))
 		assert.Equal(t, 2, len(tkt.CAddr), "Number of client addresses not as expected")
@@ -110,7 +112,7 @@ func TestUnmarshalEncCredPart_optionalsNULL(t *testing.T) {
 	assert.Equal(t, int32(1), a.TicketInfo[i].Key.KeyType, fmt.Sprintf("Key type not as expected in ticket info item %d", i+1))
 	assert.Equal(t, []byte("12345678"), a.TicketInfo[i].Key.KeyValue, fmt.Sprintf("Key value not as expected in ticket info item %d", i+1))
 	assert.Equal(t, testdata.TEST_REALM, a.TicketInfo[i].PRealm, fmt.Sprintf("PRealm not as expected on ticket info item %d", i+1))
-	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMETYPE, a.TicketInfo[i].PName.NameType, fmt.Sprintf("Ticket info (%v) PName NameType not as expected", i+1))
+	assert.Equal(t, nametype.KRB_NT_PRINCIPAL, a.TicketInfo[i].PName.NameType, fmt.Sprintf("Ticket info (%v) PName NameType not as expected", i+1))
 	assert.Equal(t, len(testdata.TEST_PRINCIPALNAME_NAMESTRING), len(a.TicketInfo[i].PName.NameString), fmt.Sprintf("Ticket info (%v) PName does not have the expected number of NameStrings", i+1))
 	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMESTRING, a.TicketInfo[i].PName.NameString, fmt.Sprintf("Ticket info (%v) PName name string entries not as expected", i+1))
 	assert.Equal(t, "fedcba98", hex.EncodeToString(a.TicketInfo[i].Flags.Bytes), fmt.Sprintf("Flags not as expected on ticket info %d", i+1))
@@ -118,7 +120,7 @@ func TestUnmarshalEncCredPart_optionalsNULL(t *testing.T) {
 	assert.Equal(t, tt, a.TicketInfo[i].StartTime, fmt.Sprintf("Start time value not as expected for ticket info %d", i+1))
 	assert.Equal(t, tt, a.TicketInfo[i].EndTime, fmt.Sprintf("End time value not as expected for ticket info %d", i+1))
 	assert.Equal(t, tt, a.TicketInfo[i].RenewTill, fmt.Sprintf("Renew Till time value not as expected for ticket info %d", i+1))
-	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMETYPE, a.TicketInfo[i].SName.NameType, fmt.Sprintf("Ticket info (%v) PName NameType not as expected", i+1))
+	assert.Equal(t, nametype.KRB_NT_PRINCIPAL, a.TicketInfo[i].SName.NameType, fmt.Sprintf("Ticket info (%v) PName NameType not as expected", i+1))
 	assert.Equal(t, len(testdata.TEST_PRINCIPALNAME_NAMESTRING), len(a.TicketInfo[i].SName.NameString), fmt.Sprintf("Ticket info (%v) PName does not have the expected number of NameStrings", i+1))
 	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMESTRING, a.TicketInfo[i].SName.NameString, fmt.Sprintf("Ticket info (%v) PName name string entries not as expected", i+1))
 	assert.Equal(t, 2, len(a.TicketInfo[i].CAddr), "Number of client addresses not as expected")

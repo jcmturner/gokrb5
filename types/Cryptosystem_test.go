@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/hex"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/jcmturner/gokrb5.v3/iana"
 	"gopkg.in/jcmturner/gokrb5.v3/testdata"
 	"testing"
 )
@@ -19,7 +20,7 @@ func TestUnmarshalEncryptedData(t *testing.T) {
 		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
 	}
 	assert.Equal(t, testdata.TEST_ETYPE, a.EType, "Encrypted data Etype not as expected")
-	assert.Equal(t, testdata.TEST_KVNO, a.KVNO, "Encrypted data KVNO not as expected")
+	assert.Equal(t, iana.PVNO, a.KVNO, "Encrypted data KVNO not as expected")
 	assert.Equal(t, []byte(testdata.TEST_CIPHERTEXT), a.Cipher, "Ecrypted data ciphertext not as expected")
 }
 

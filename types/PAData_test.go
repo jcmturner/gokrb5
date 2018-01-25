@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/jcmturner/gokrb5.v3/iana/patype"
 	"gopkg.in/jcmturner/gokrb5.v3/testdata"
 	"testing"
 	"time"
@@ -22,7 +23,7 @@ func TestUnmarshalPADataSequence(t *testing.T) {
 	}
 	assert.Equal(t, 2, len(a), "Number of PAData items in the sequence not as expected")
 	for i, pa := range a {
-		assert.Equal(t, testdata.TEST_PADATA_TYPE, pa.PADataType, fmt.Sprintf("PAData type for entry %d not as expected", i+1))
+		assert.Equal(t, patype.PA_SAM_RESPONSE, pa.PADataType, fmt.Sprintf("PAData type for entry %d not as expected", i+1))
 		assert.Equal(t, []byte(testdata.TEST_PADATA_VALUE), pa.PADataValue, fmt.Sprintf("PAData valye for entry %d not as expected", i+1))
 	}
 }

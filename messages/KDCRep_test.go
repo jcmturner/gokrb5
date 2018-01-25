@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/gokrb5.v3/credentials"
+	"gopkg.in/jcmturner/gokrb5.v3/iana"
 	"gopkg.in/jcmturner/gokrb5.v3/iana/etypeID"
 	"gopkg.in/jcmturner/gokrb5.v3/iana/msgtype"
 	"gopkg.in/jcmturner/gokrb5.v3/iana/nametype"
+	"gopkg.in/jcmturner/gokrb5.v3/iana/patype"
 	"gopkg.in/jcmturner/gokrb5.v3/keytab"
 	"gopkg.in/jcmturner/gokrb5.v3/testdata"
 	"testing"
@@ -33,27 +35,27 @@ func TestUnmarshalASRep(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
 	}
-	assert.Equal(t, testdata.TEST_KVNO, a.PVNO, "PVNO not as expected")
+	assert.Equal(t, iana.PVNO, a.PVNO, "PVNO not as expected")
 	assert.Equal(t, msgtype.KRB_AS_REP, a.MsgType, "MsgType not as expected")
 	assert.Equal(t, 2, len(a.PAData), "Number of PAData items in the sequence not as expected")
 	for i, pa := range a.PAData {
-		assert.Equal(t, testdata.TEST_PADATA_TYPE, pa.PADataType, fmt.Sprintf("PAData type for entry %d not as expected", i+1))
+		assert.Equal(t, patype.PA_SAM_RESPONSE, pa.PADataType, fmt.Sprintf("PAData type for entry %d not as expected", i+1))
 		assert.Equal(t, []byte(testdata.TEST_PADATA_VALUE), pa.PADataValue, fmt.Sprintf("PAData valye for entry %d not as expected", i+1))
 	}
 	assert.Equal(t, testdata.TEST_REALM, a.CRealm, "Client Realm not as expected")
-	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMETYPE, a.CName.NameType, "CName NameType not as expected")
+	assert.Equal(t, nametype.KRB_NT_PRINCIPAL, a.CName.NameType, "CName NameType not as expected")
 	assert.Equal(t, len(testdata.TEST_PRINCIPALNAME_NAMESTRING), len(a.CName.NameString), "CName does not have the expected number of NameStrings")
 	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMESTRING, a.CName.NameString, "CName entries not as expected")
-	assert.Equal(t, testdata.TEST_KVNO, a.Ticket.TktVNO, "TktVNO not as expected")
+	assert.Equal(t, iana.PVNO, a.Ticket.TktVNO, "TktVNO not as expected")
 	assert.Equal(t, testdata.TEST_REALM, a.Ticket.Realm, "Ticket Realm not as expected")
-	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMETYPE, a.Ticket.SName.NameType, "Ticket service nametype not as expected")
+	assert.Equal(t, nametype.KRB_NT_PRINCIPAL, a.Ticket.SName.NameType, "Ticket service nametype not as expected")
 	assert.Equal(t, len(testdata.TEST_PRINCIPALNAME_NAMESTRING), len(a.Ticket.SName.NameString), "SName in ticket does not have the expected number of NameStrings")
 	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMESTRING, a.Ticket.SName.NameString, "Ticket SName entries not as expected")
 	assert.Equal(t, testdata.TEST_ETYPE, a.Ticket.EncPart.EType, "Etype of ticket encrypted part not as expected")
-	assert.Equal(t, testdata.TEST_KVNO, a.Ticket.EncPart.KVNO, "Ticket encrypted part KVNO not as expected")
+	assert.Equal(t, iana.PVNO, a.Ticket.EncPart.KVNO, "Ticket encrypted part KVNO not as expected")
 	assert.Equal(t, testdata.TEST_CIPHERTEXT, string(a.Ticket.EncPart.Cipher), "Ticket encrypted part cipher not as expected")
 	assert.Equal(t, testdata.TEST_ETYPE, a.EncPart.EType, "Etype of encrypted part not as expected")
-	assert.Equal(t, testdata.TEST_KVNO, a.EncPart.KVNO, "Encrypted part KVNO not as expected")
+	assert.Equal(t, iana.PVNO, a.EncPart.KVNO, "Encrypted part KVNO not as expected")
 	assert.Equal(t, testdata.TEST_CIPHERTEXT, string(a.EncPart.Cipher), "Ticket encrypted part cipher not as expected")
 }
 
@@ -68,23 +70,23 @@ func TestUnmarshalASRep_optionalsNULL(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
 	}
-	assert.Equal(t, testdata.TEST_KVNO, a.PVNO, "PVNO not as expected")
+	assert.Equal(t, iana.PVNO, a.PVNO, "PVNO not as expected")
 	assert.Equal(t, msgtype.KRB_AS_REP, a.MsgType, "MsgType not as expected")
 	assert.Equal(t, 0, len(a.PAData), "Number of PAData items in the sequence not as expected")
 	assert.Equal(t, testdata.TEST_REALM, a.CRealm, "Client Realm not as expected")
-	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMETYPE, a.CName.NameType, "CName NameType not as expected")
+	assert.Equal(t, nametype.KRB_NT_PRINCIPAL, a.CName.NameType, "CName NameType not as expected")
 	assert.Equal(t, len(testdata.TEST_PRINCIPALNAME_NAMESTRING), len(a.CName.NameString), "CName does not have the expected number of NameStrings")
 	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMESTRING, a.CName.NameString, "CName entries not as expected")
-	assert.Equal(t, testdata.TEST_KVNO, a.Ticket.TktVNO, "TktVNO not as expected")
+	assert.Equal(t, iana.PVNO, a.Ticket.TktVNO, "TktVNO not as expected")
 	assert.Equal(t, testdata.TEST_REALM, a.Ticket.Realm, "Ticket Realm not as expected")
-	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMETYPE, a.Ticket.SName.NameType, "Ticket service nametype not as expected")
+	assert.Equal(t, nametype.KRB_NT_PRINCIPAL, a.Ticket.SName.NameType, "Ticket service nametype not as expected")
 	assert.Equal(t, len(testdata.TEST_PRINCIPALNAME_NAMESTRING), len(a.Ticket.SName.NameString), "SName in ticket does not have the expected number of NameStrings")
 	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMESTRING, a.Ticket.SName.NameString, "Ticket SName entries not as expected")
 	assert.Equal(t, testdata.TEST_ETYPE, a.Ticket.EncPart.EType, "Etype of ticket encrypted part not as expected")
-	assert.Equal(t, testdata.TEST_KVNO, a.Ticket.EncPart.KVNO, "Ticket encrypted part KVNO not as expected")
+	assert.Equal(t, iana.PVNO, a.Ticket.EncPart.KVNO, "Ticket encrypted part KVNO not as expected")
 	assert.Equal(t, testdata.TEST_CIPHERTEXT, string(a.Ticket.EncPart.Cipher), "Ticket encrypted part cipher not as expected")
 	assert.Equal(t, testdata.TEST_ETYPE, a.EncPart.EType, "Etype of encrypted part not as expected")
-	assert.Equal(t, testdata.TEST_KVNO, a.EncPart.KVNO, "Encrypted part KVNO not as expected")
+	assert.Equal(t, iana.PVNO, a.EncPart.KVNO, "Encrypted part KVNO not as expected")
 	assert.Equal(t, testdata.TEST_CIPHERTEXT, string(a.EncPart.Cipher), "Ticket encrypted part cipher not as expected")
 }
 
@@ -99,27 +101,27 @@ func TestUnmarshalTGSRep(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
 	}
-	assert.Equal(t, testdata.TEST_KVNO, a.PVNO, "PVNO not as expected")
+	assert.Equal(t, iana.PVNO, a.PVNO, "PVNO not as expected")
 	assert.Equal(t, msgtype.KRB_TGS_REP, a.MsgType, "MsgType not as expected")
 	assert.Equal(t, 2, len(a.PAData), "Number of PAData items in the sequence not as expected")
 	for i, pa := range a.PAData {
-		assert.Equal(t, testdata.TEST_PADATA_TYPE, pa.PADataType, fmt.Sprintf("PAData type for entry %d not as expected", i+1))
+		assert.Equal(t, patype.PA_SAM_RESPONSE, pa.PADataType, fmt.Sprintf("PAData type for entry %d not as expected", i+1))
 		assert.Equal(t, []byte(testdata.TEST_PADATA_VALUE), pa.PADataValue, fmt.Sprintf("PAData valye for entry %d not as expected", i+1))
 	}
 	assert.Equal(t, testdata.TEST_REALM, a.CRealm, "Client Realm not as expected")
-	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMETYPE, a.CName.NameType, "CName NameType not as expected")
+	assert.Equal(t, nametype.KRB_NT_PRINCIPAL, a.CName.NameType, "CName NameType not as expected")
 	assert.Equal(t, len(testdata.TEST_PRINCIPALNAME_NAMESTRING), len(a.CName.NameString), "CName does not have the expected number of NameStrings")
 	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMESTRING, a.CName.NameString, "CName entries not as expected")
-	assert.Equal(t, testdata.TEST_KVNO, a.Ticket.TktVNO, "TktVNO not as expected")
+	assert.Equal(t, iana.PVNO, a.Ticket.TktVNO, "TktVNO not as expected")
 	assert.Equal(t, testdata.TEST_REALM, a.Ticket.Realm, "Ticket Realm not as expected")
-	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMETYPE, a.Ticket.SName.NameType, "Ticket service nametype not as expected")
+	assert.Equal(t, nametype.KRB_NT_PRINCIPAL, a.Ticket.SName.NameType, "Ticket service nametype not as expected")
 	assert.Equal(t, len(testdata.TEST_PRINCIPALNAME_NAMESTRING), len(a.Ticket.SName.NameString), "SName in ticket does not have the expected number of NameStrings")
 	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMESTRING, a.Ticket.SName.NameString, "Ticket SName entries not as expected")
 	assert.Equal(t, testdata.TEST_ETYPE, a.Ticket.EncPart.EType, "Etype of ticket encrypted part not as expected")
-	assert.Equal(t, testdata.TEST_KVNO, a.Ticket.EncPart.KVNO, "Ticket encrypted part KVNO not as expected")
+	assert.Equal(t, iana.PVNO, a.Ticket.EncPart.KVNO, "Ticket encrypted part KVNO not as expected")
 	assert.Equal(t, testdata.TEST_CIPHERTEXT, string(a.Ticket.EncPart.Cipher), "Ticket encrypted part cipher not as expected")
 	assert.Equal(t, testdata.TEST_ETYPE, a.EncPart.EType, "Etype of encrypted part not as expected")
-	assert.Equal(t, testdata.TEST_KVNO, a.EncPart.KVNO, "Encrypted part KVNO not as expected")
+	assert.Equal(t, iana.PVNO, a.EncPart.KVNO, "Encrypted part KVNO not as expected")
 	assert.Equal(t, testdata.TEST_CIPHERTEXT, string(a.EncPart.Cipher), "Ticket encrypted part cipher not as expected")
 }
 
@@ -134,23 +136,23 @@ func TestUnmarshalTGSRep_optionalsNULL(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
 	}
-	assert.Equal(t, testdata.TEST_KVNO, a.PVNO, "PVNO not as expected")
+	assert.Equal(t, iana.PVNO, a.PVNO, "PVNO not as expected")
 	assert.Equal(t, msgtype.KRB_TGS_REP, a.MsgType, "MsgType not as expected")
 	assert.Equal(t, 0, len(a.PAData), "Number of PAData items in the sequence not as expected")
 	assert.Equal(t, testdata.TEST_REALM, a.CRealm, "Client Realm not as expected")
-	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMETYPE, a.CName.NameType, "CName NameType not as expected")
+	assert.Equal(t, nametype.KRB_NT_PRINCIPAL, a.CName.NameType, "CName NameType not as expected")
 	assert.Equal(t, len(testdata.TEST_PRINCIPALNAME_NAMESTRING), len(a.CName.NameString), "CName does not have the expected number of NameStrings")
 	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMESTRING, a.CName.NameString, "CName entries not as expected")
-	assert.Equal(t, testdata.TEST_KVNO, a.Ticket.TktVNO, "TktVNO not as expected")
+	assert.Equal(t, iana.PVNO, a.Ticket.TktVNO, "TktVNO not as expected")
 	assert.Equal(t, testdata.TEST_REALM, a.Ticket.Realm, "Ticket Realm not as expected")
-	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMETYPE, a.Ticket.SName.NameType, "Ticket service nametype not as expected")
+	assert.Equal(t, nametype.KRB_NT_PRINCIPAL, a.Ticket.SName.NameType, "Ticket service nametype not as expected")
 	assert.Equal(t, len(testdata.TEST_PRINCIPALNAME_NAMESTRING), len(a.Ticket.SName.NameString), "SName in ticket does not have the expected number of NameStrings")
 	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMESTRING, a.Ticket.SName.NameString, "Ticket SName entries not as expected")
 	assert.Equal(t, testdata.TEST_ETYPE, a.Ticket.EncPart.EType, "Etype of ticket encrypted part not as expected")
-	assert.Equal(t, testdata.TEST_KVNO, a.Ticket.EncPart.KVNO, "Ticket encrypted part KVNO not as expected")
+	assert.Equal(t, iana.PVNO, a.Ticket.EncPart.KVNO, "Ticket encrypted part KVNO not as expected")
 	assert.Equal(t, testdata.TEST_CIPHERTEXT, string(a.Ticket.EncPart.Cipher), "Ticket encrypted part cipher not as expected")
 	assert.Equal(t, testdata.TEST_ETYPE, a.EncPart.EType, "Etype of encrypted part not as expected")
-	assert.Equal(t, testdata.TEST_KVNO, a.EncPart.KVNO, "Encrypted part KVNO not as expected")
+	assert.Equal(t, iana.PVNO, a.EncPart.KVNO, "Encrypted part KVNO not as expected")
 	assert.Equal(t, testdata.TEST_CIPHERTEXT, string(a.EncPart.Cipher), "Ticket encrypted part cipher not as expected")
 }
 
@@ -183,7 +185,7 @@ func TestUnmarshalEncKDCRepPart(t *testing.T) {
 	assert.Equal(t, tt, a.EndTime, "End time not as expected")
 	assert.Equal(t, tt, a.RenewTill, "Renew Till time not as expected")
 	assert.Equal(t, testdata.TEST_REALM, a.SRealm, "SRealm not as expected")
-	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMETYPE, a.SName.NameType, "SName type not as expected")
+	assert.Equal(t, nametype.KRB_NT_PRINCIPAL, a.SName.NameType, "SName type not as expected")
 	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMESTRING, a.SName.NameString, "SName string entries not as expected")
 	assert.Equal(t, 2, len(a.CAddr), "Number of client addresses not as expected")
 	for i, addr := range a.CAddr {
@@ -218,7 +220,7 @@ func TestUnmarshalEncKDCRepPart_optionalsNULL(t *testing.T) {
 	assert.Equal(t, tt, a.AuthTime, "Auth time not as expected")
 	assert.Equal(t, tt, a.EndTime, "End time not as expected")
 	assert.Equal(t, testdata.TEST_REALM, a.SRealm, "SRealm not as expected")
-	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMETYPE, a.SName.NameType, "SName type not as expected")
+	assert.Equal(t, nametype.KRB_NT_PRINCIPAL, a.SName.NameType, "SName type not as expected")
 	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMESTRING, a.SName.NameString, "SName string entries not as expected")
 }
 
