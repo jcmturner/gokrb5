@@ -59,7 +59,7 @@ type marshalKDCReqBody struct {
 	From        time.Time           `asn1:"generalized,explicit,optional,tag:4"`
 	Till        time.Time           `asn1:"generalized,explicit,tag:5"`
 	RTime       time.Time           `asn1:"generalized,explicit,optional,tag:6"`
-	Nonce       int64               `asn1:"explicit,tag:7"`
+	Nonce       int                 `asn1:"explicit,tag:7"`
 	EType       []int32             `asn1:"explicit,tag:8"`
 	Addresses   []types.HostAddress `asn1:"explicit,optional,tag:9"`
 	EncAuthData types.EncryptedData `asn1:"explicit,optional,tag:10"`
@@ -76,7 +76,7 @@ type KDCReqBody struct {
 	From              time.Time           `asn1:"generalized,explicit,optional,tag:4"`
 	Till              time.Time           `asn1:"generalized,explicit,tag:5"`
 	RTime             time.Time           `asn1:"generalized,explicit,optional,tag:6"`
-	Nonce             int64               `asn1:"explicit,tag:7"`
+	Nonce             int                 `asn1:"explicit,tag:7"`
 	EType             []int32             `asn1:"explicit,tag:8"`
 	Addresses         []types.HostAddress `asn1:"explicit,optional,tag:9"`
 	EncAuthData       types.EncryptedData `asn1:"explicit,optional,tag:10"`
@@ -85,7 +85,7 @@ type KDCReqBody struct {
 
 // NewASReq generates a new KRB_AS_REQ struct.
 func NewASReq(realm string, c *config.Config, cname types.PrincipalName) (ASReq, error) {
-	nonce, err := rand.Int(rand.Reader, big.NewInt(math.MaxUint32))
+	nonce, err := rand.Int(rand.Reader, big.NewInt(math.MaxInt32))
 	if err != nil {
 		return ASReq{}, err
 	}
@@ -108,7 +108,7 @@ func NewASReq(realm string, c *config.Config, cname types.PrincipalName) (ASReq,
 					NameString: []string{"krbtgt", realm},
 				},
 				Till:  t.Add(c.LibDefaults.TicketLifetime),
-				Nonce: nonce.Int64(),
+				Nonce: int(nonce.Int64()),
 				EType: c.LibDefaults.DefaultTktEnctypeIDs,
 			},
 		},
@@ -133,7 +133,7 @@ func NewASReq(realm string, c *config.Config, cname types.PrincipalName) (ASReq,
 
 // NewTGSReq generates a new KRB_TGS_REQ struct.
 func NewTGSReq(cname types.PrincipalName, kdcRealm string, c *config.Config, tkt Ticket, sessionKey types.EncryptionKey, spn types.PrincipalName, renewal bool) (TGSReq, error) {
-	nonce, err := rand.Int(rand.Reader, big.NewInt(math.MaxUint32))
+	nonce, err := rand.Int(rand.Reader, big.NewInt(math.MaxInt32))
 	if err != nil {
 		return TGSReq{}, err
 	}
@@ -147,7 +147,7 @@ func NewTGSReq(cname types.PrincipalName, kdcRealm string, c *config.Config, tkt
 				Realm:      kdcRealm,
 				SName:      spn,
 				Till:       t.Add(c.LibDefaults.TicketLifetime),
-				Nonce:      nonce.Int64(),
+				Nonce:      int(nonce.Int64()),
 				EType:      c.LibDefaults.DefaultTGSEnctypeIDs,
 			},
 			Renewal: renewal,
