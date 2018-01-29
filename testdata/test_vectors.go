@@ -139,6 +139,7 @@ const (
   forwardable = yes
   default_tkt_enctypes = aes256-cts-hmac-sha1-96
   default_tgs_enctypes = aes256-cts-hmac-sha1-96
+  noaddresses = false
 
 [realms]
  TEST.GOKRB5 = {

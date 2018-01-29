@@ -55,8 +55,7 @@ incorporated faster this way.
 ```
 <short summary starting with a verb in lowercase and less than 50 characters>
 
-More detailed explanatory text, if necessary.  Wrap it to about 72 
-characters or so.
+More detailed explanatory text. This should reference the related issue.
 ```
 This to adhere to the [git best practice](https://git-scm.com/book/en/v2/Distributed-Git-Contributing-to-a-Project) and 
 mirror the [contribution guidelines for the Go standard libarary](https://golang.org/doc/contribute.html).

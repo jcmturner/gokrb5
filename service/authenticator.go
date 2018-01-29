@@ -20,6 +20,7 @@ type SPNEGOAuthenticator struct {
 	Keytab            *keytab.Keytab
 	ServiceAccount    string
 	ClientAddr        string
+	RequireHostAddr   bool
 }
 
 // Authenticate and retrieve a goidentity.Identity. In this case it is a pointer to a credentials.Credentials
@@ -50,7 +51,7 @@ func (a SPNEGOAuthenticator) Authenticate() (i goidentity.Identity, ok bool, err
 		return
 	}
 
-	ok, c, err := ValidateAPREQ(mt.APReq, *a.Keytab, a.ServiceAccount, a.ClientAddr)
+	ok, c, err := ValidateAPREQ(mt.APReq, *a.Keytab, a.ServiceAccount, a.ClientAddr, a.RequireHostAddr)
 	if err != nil {
 		err = fmt.Errorf("SPNEGO validation error: %v", err)
 		return

@@ -126,7 +126,14 @@ func NewASReq(realm string, c *config.Config, cname types.PrincipalName) (ASReq,
 		types.SetFlag(&a.ReqBody.KDCOptions, flags.Renewable)
 		a.ReqBody.RTime = t.Add(c.LibDefaults.RenewLifetime)
 		a.ReqBody.RTime = t.Add(time.Duration(48) * time.Hour)
-
+	}
+	if !c.LibDefaults.NoAddresses {
+		ha, err := types.LocalHostAddresses()
+		if err != nil {
+			return a, fmt.Errorf("could not get local addresses: %v", err)
+		}
+		ha = append(ha, types.HostAddressesFromNetIPs(c.LibDefaults.ExtraAddresses)...)
+		a.ReqBody.Addresses = ha
 	}
 	return a, nil
 }
@@ -165,6 +172,14 @@ func NewTGSReq(cname types.PrincipalName, kdcRealm string, c *config.Config, tkt
 	if c.LibDefaults.RenewLifetime > time.Duration(0) {
 		types.SetFlag(&a.ReqBody.KDCOptions, flags.Renewable)
 		a.ReqBody.RTime = t.Add(c.LibDefaults.RenewLifetime)
+	}
+	if !c.LibDefaults.NoAddresses {
+		ha, err := types.LocalHostAddresses()
+		if err != nil {
+			return a, fmt.Errorf("could not get local addresses: %v", err)
+		}
+		ha = append(ha, types.HostAddressesFromNetIPs(c.LibDefaults.ExtraAddresses)...)
+		a.ReqBody.Addresses = ha
 	}
 	if renewal {
 		types.SetFlag(&a.ReqBody.KDCOptions, flags.Renew)

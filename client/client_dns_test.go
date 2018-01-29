@@ -26,7 +26,6 @@ func TestResolveKDC(t *testing.T) {
 	}
 	assert.Equal(t, 5, count, "Number of SRV records not as expected: %v", res)
 	assert.Equal(t, count, len(res), "Map size does not match: %v", res)
-	t.Logf("res: %v", res)
 	expected := []string{
 		"kdc.test.gokrb5:88",
 		"kdc1a.test.gokrb5:88",

@@ -15,7 +15,7 @@ import (
 )
 
 // ValidateAPREQ validates an AP_REQ sent to the service. Returns a boolean for if the AP_REQ is valid and the client's principal name and realm.
-func ValidateAPREQ(APReq messages.APReq, kt keytab.Keytab, sa string, cAddr string) (bool, credentials.Credentials, error) {
+func ValidateAPREQ(APReq messages.APReq, kt keytab.Keytab, sa string, cAddr string, requireHostAddr bool) (bool, credentials.Credentials, error) {
 	var creds credentials.Credentials
 	err := APReq.Ticket.DecryptEncPart(kt, sa)
 	if err != nil {
@@ -50,6 +50,9 @@ func ValidateAPREQ(APReq messages.APReq, kt keytab.Keytab, sa string, cAddr stri
 			err := messages.NewKRBError(APReq.Ticket.SName, APReq.Ticket.Realm, errorcode.KRB_AP_ERR_BADADDR, "Client address not within the list contained in the service ticket")
 			return false, creds, err
 		}
+	} else if requireHostAddr {
+		err := messages.NewKRBError(APReq.Ticket.SName, APReq.Ticket.Realm, errorcode.KRB_AP_ERR_BADADDR, "ticket does not contain HostAddress values required")
+		return false, creds, err
 	}
 
 	// Check the clock skew between the client and the service server
