@@ -6,9 +6,9 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"gopkg.in/jcmturner/gokrb5.v3/crypto"
-	"gopkg.in/jcmturner/gokrb5.v3/iana/keyusage"
-	"gopkg.in/jcmturner/gokrb5.v3/types"
+	"gopkg.in/jcmturner/gokrb5.v4/crypto"
+	"gopkg.in/jcmturner/gokrb5.v4/iana/keyusage"
+	"gopkg.in/jcmturner/gokrb5.v4/types"
 )
 
 /*

@@ -5,10 +5,10 @@ import (
 	"crypto/hmac"
 	"crypto/sha1"
 	"errors"
-	"gopkg.in/jcmturner/gokrb5.v3/crypto/common"
-	"gopkg.in/jcmturner/gokrb5.v3/crypto/rfc3961"
-	"gopkg.in/jcmturner/gokrb5.v3/iana/chksumtype"
-	"gopkg.in/jcmturner/gokrb5.v3/iana/etypeID"
+	"gopkg.in/jcmturner/gokrb5.v4/crypto/common"
+	"gopkg.in/jcmturner/gokrb5.v4/crypto/rfc3961"
+	"gopkg.in/jcmturner/gokrb5.v4/iana/chksumtype"
+	"gopkg.in/jcmturner/gokrb5.v4/iana/etypeID"
 	"hash"
 )
 

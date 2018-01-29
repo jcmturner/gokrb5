@@ -2,8 +2,8 @@ package pac
 
 import (
 	"fmt"
-	"gopkg.in/jcmturner/gokrb5.v3/mstypes"
-	"gopkg.in/jcmturner/gokrb5.v3/ndr"
+	"gopkg.in/jcmturner/gokrb5.v4/mstypes"
+	"gopkg.in/jcmturner/gokrb5.v4/ndr"
 )
 
 // ClientClaimsInfo implements https://msdn.microsoft.com/en-us/library/hh536365.aspx

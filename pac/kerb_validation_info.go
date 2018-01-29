@@ -4,8 +4,8 @@ package pac
 import (
 	"errors"
 	"fmt"
-	"gopkg.in/jcmturner/gokrb5.v3/mstypes"
-	"gopkg.in/jcmturner/gokrb5.v3/ndr"
+	"gopkg.in/jcmturner/gokrb5.v4/mstypes"
+	"gopkg.in/jcmturner/gokrb5.v4/ndr"
 )
 
 // KERB_VALIDATION_INFO flags.

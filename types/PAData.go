@@ -5,7 +5,7 @@ package types
 import (
 	"fmt"
 	"github.com/jcmturner/gofork/encoding/asn1"
-	"gopkg.in/jcmturner/gokrb5.v3/iana/patype"
+	"gopkg.in/jcmturner/gokrb5.v4/iana/patype"
 	"time"
 )
 
