@@ -4,11 +4,11 @@ package crypto
 import (
 	"encoding/hex"
 	"fmt"
-	"gopkg.in/jcmturner/gokrb5.v3/crypto/etype"
-	"gopkg.in/jcmturner/gokrb5.v3/iana/chksumtype"
-	"gopkg.in/jcmturner/gokrb5.v3/iana/etypeID"
-	"gopkg.in/jcmturner/gokrb5.v3/iana/patype"
-	"gopkg.in/jcmturner/gokrb5.v3/types"
+	"gopkg.in/jcmturner/gokrb5.v4/crypto/etype"
+	"gopkg.in/jcmturner/gokrb5.v4/iana/chksumtype"
+	"gopkg.in/jcmturner/gokrb5.v4/iana/etypeID"
+	"gopkg.in/jcmturner/gokrb5.v4/iana/patype"
+	"gopkg.in/jcmturner/gokrb5.v4/types"
 )
 
 // GetEtype returns an instances of the required etype struct for the etype ID.

@@ -6,7 +6,7 @@ go:
   - 1.9.x
   - master
 
-go_import_path: gopkg.in/jcmturner/gokrb5.v3
+go_import_path: gopkg.in/jcmturner/gokrb5.v4
 
 sudo: required
 

@@ -7,7 +7,7 @@ import (
 	"crypto/rc4"
 	"errors"
 	"fmt"
-	"gopkg.in/jcmturner/gokrb5.v3/crypto/etype"
+	"gopkg.in/jcmturner/gokrb5.v4/crypto/etype"
 )
 
 // EncryptData encrypts the data provided using methods specific to the etype provided as defined in RFC 4757.

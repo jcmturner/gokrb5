@@ -6,12 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jcmturner/gofork/encoding/asn1"
-	"gopkg.in/jcmturner/gokrb5.v3/asn1tools"
-	"gopkg.in/jcmturner/gokrb5.v3/credentials"
-	"gopkg.in/jcmturner/gokrb5.v3/iana/chksumtype"
-	"gopkg.in/jcmturner/gokrb5.v3/krberror"
-	"gopkg.in/jcmturner/gokrb5.v3/messages"
-	"gopkg.in/jcmturner/gokrb5.v3/types"
+	"gopkg.in/jcmturner/gokrb5.v4/asn1tools"
+	"gopkg.in/jcmturner/gokrb5.v4/credentials"
+	"gopkg.in/jcmturner/gokrb5.v4/iana/chksumtype"
+	"gopkg.in/jcmturner/gokrb5.v4/krberror"
+	"gopkg.in/jcmturner/gokrb5.v4/messages"
+	"gopkg.in/jcmturner/gokrb5.v4/types"
 )
 
 // GSSAPI MechToken IDs and flags.

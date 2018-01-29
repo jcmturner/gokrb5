@@ -3,12 +3,12 @@ package messages
 import (
 	"fmt"
 	"github.com/jcmturner/gofork/encoding/asn1"
-	"gopkg.in/jcmturner/gokrb5.v3/crypto"
-	"gopkg.in/jcmturner/gokrb5.v3/iana/asnAppTag"
-	"gopkg.in/jcmturner/gokrb5.v3/iana/keyusage"
-	"gopkg.in/jcmturner/gokrb5.v3/iana/msgtype"
-	"gopkg.in/jcmturner/gokrb5.v3/krberror"
-	"gopkg.in/jcmturner/gokrb5.v3/types"
+	"gopkg.in/jcmturner/gokrb5.v4/crypto"
+	"gopkg.in/jcmturner/gokrb5.v4/iana/asnAppTag"
+	"gopkg.in/jcmturner/gokrb5.v4/iana/keyusage"
+	"gopkg.in/jcmturner/gokrb5.v4/iana/msgtype"
+	"gopkg.in/jcmturner/gokrb5.v4/krberror"
+	"gopkg.in/jcmturner/gokrb5.v4/types"
 	"time"
 )
 

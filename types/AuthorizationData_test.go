@@ -4,9 +4,9 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v3/iana/adtype"
-	"gopkg.in/jcmturner/gokrb5.v3/iana/nametype"
-	"gopkg.in/jcmturner/gokrb5.v3/testdata"
+	"gopkg.in/jcmturner/gokrb5.v4/iana/adtype"
+	"gopkg.in/jcmturner/gokrb5.v4/iana/nametype"
+	"gopkg.in/jcmturner/gokrb5.v4/testdata"
 	"testing"
 )
 

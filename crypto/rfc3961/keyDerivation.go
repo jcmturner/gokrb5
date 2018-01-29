@@ -1,7 +1,7 @@
 package rfc3961
 
 import (
-	"gopkg.in/jcmturner/gokrb5.v3/crypto/etype"
+	"gopkg.in/jcmturner/gokrb5.v4/crypto/etype"
 )
 
 const (

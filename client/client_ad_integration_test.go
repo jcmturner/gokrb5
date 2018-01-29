@@ -6,10 +6,10 @@ package client
 import (
 	"encoding/hex"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v3/config"
-	"gopkg.in/jcmturner/gokrb5.v3/iana/etypeID"
-	"gopkg.in/jcmturner/gokrb5.v3/keytab"
-	"gopkg.in/jcmturner/gokrb5.v3/testdata"
+	"gopkg.in/jcmturner/gokrb5.v4/config"
+	"gopkg.in/jcmturner/gokrb5.v4/iana/etypeID"
+	"gopkg.in/jcmturner/gokrb5.v4/keytab"
+	"gopkg.in/jcmturner/gokrb5.v4/testdata"
 	"testing"
 )
 

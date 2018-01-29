@@ -2,15 +2,15 @@ package service
 
 import (
 	"fmt"
-	"gopkg.in/jcmturner/gokrb5.v3/credentials"
-	"gopkg.in/jcmturner/gokrb5.v3/crypto"
-	"gopkg.in/jcmturner/gokrb5.v3/iana/errorcode"
-	"gopkg.in/jcmturner/gokrb5.v3/iana/flags"
-	"gopkg.in/jcmturner/gokrb5.v3/iana/keyusage"
-	"gopkg.in/jcmturner/gokrb5.v3/keytab"
-	"gopkg.in/jcmturner/gokrb5.v3/krberror"
-	"gopkg.in/jcmturner/gokrb5.v3/messages"
-	"gopkg.in/jcmturner/gokrb5.v3/types"
+	"gopkg.in/jcmturner/gokrb5.v4/credentials"
+	"gopkg.in/jcmturner/gokrb5.v4/crypto"
+	"gopkg.in/jcmturner/gokrb5.v4/iana/errorcode"
+	"gopkg.in/jcmturner/gokrb5.v4/iana/flags"
+	"gopkg.in/jcmturner/gokrb5.v4/iana/keyusage"
+	"gopkg.in/jcmturner/gokrb5.v4/keytab"
+	"gopkg.in/jcmturner/gokrb5.v4/krberror"
+	"gopkg.in/jcmturner/gokrb5.v4/messages"
+	"gopkg.in/jcmturner/gokrb5.v4/types"
 	"time"
 )
 

@@ -5,12 +5,12 @@ package main
 import (
 	"encoding/hex"
 	"fmt"
-	"gopkg.in/jcmturner/gokrb5.v3/client"
-	"gopkg.in/jcmturner/gokrb5.v3/config"
-	"gopkg.in/jcmturner/gokrb5.v3/credentials"
-	"gopkg.in/jcmturner/gokrb5.v3/keytab"
-	"gopkg.in/jcmturner/gokrb5.v3/service"
-	"gopkg.in/jcmturner/gokrb5.v3/testdata"
+	"gopkg.in/jcmturner/gokrb5.v4/client"
+	"gopkg.in/jcmturner/gokrb5.v4/config"
+	"gopkg.in/jcmturner/gokrb5.v4/credentials"
+	"gopkg.in/jcmturner/gokrb5.v4/keytab"
+	"gopkg.in/jcmturner/gokrb5.v4/service"
+	"gopkg.in/jcmturner/gokrb5.v4/testdata"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -28,8 +28,8 @@ If this does not suit your setup then you will need to set the IP addresses for 
 You will also need to update the IPs referenced in the testdata/test_vectors.go file in the TEST_KRB5CONF constant.
 
 Before running execute the following commands (note that the KDC can take a long time to start up):
-cd $GOPATH/src/gopkg.in/jcmturner/gokrb5.v3/testenv/krb5kdc-vagrant && vagrant up
-cd $GOPATH/src/gopkg.in/jcmturner/gokrb5.v3/testenv/krbhttp-vagrant && vagrant up
+cd $GOPATH/src/gopkg.in/jcmturner/gokrb5.v4/testenv/krb5kdc-vagrant && vagrant up
+cd $GOPATH/src/gopkg.in/jcmturner/gokrb5.v4/testenv/krbhttp-vagrant && vagrant up
 */
 func main() {
 	s := httpServer()
