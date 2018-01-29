@@ -81,6 +81,7 @@ const (
  admin_server = FILE:/var/log/kerberos/kadmind.log
 
 [libdefaults]
+ noaddresses = true
  default_realm = TEST.GOKRB5
  dns_lookup_realm = false
 
@@ -228,7 +229,7 @@ func TestLoad2(t *testing.T) {
 
 	assert.Equal(t, "TEST.GOKRB5", c.DomainRealm[".test.gokrb5"], "Domain to realm mapping not as expected")
 	assert.Equal(t, "TEST.GOKRB5", c.DomainRealm["test.gokrb5"], "Domain to realm mapping not as expected")
-
+	assert.True(t, c.LibDefaults.NoAddresses, "No address not set as true")
 }
 
 func TestLoadNoBlankLines(t *testing.T) {

@@ -62,7 +62,7 @@ func Errorf(err error, et, format string, a ...interface{}) Krberror {
 func NewErrorf(et, format string, a ...interface{}) Krberror {
 	var s string
 	if len(a) > 0 {
-		s = fmt.Sprintf("%s: %s", et, fmt.Sprintf(format, a))
+		s = fmt.Sprintf("%s: %s", et, fmt.Sprintf(format, a...))
 	} else {
 		s = fmt.Sprintf("%s: %s", et, format)
 	}

@@ -16,6 +16,7 @@ import (
 
 	"github.com/jcmturner/gofork/encoding/asn1"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/etypeID"
+	"net"
 )
 
 // Config represents the KRB5 configuration.
@@ -58,13 +59,13 @@ type LibDefaults struct {
 	DNSCanonicalizeHostname bool     //default true
 	DNSLookupKDC            bool     //default false
 	DNSLookupRealm          bool
-	//extra_addresses []net.IPAddr //Not implementing yet
-	Forwardable            bool           //default false
-	IgnoreAcceptorHostname bool           //default false
-	K5LoginAuthoritative   bool           //default false
-	K5LoginDirectory       string         //default user's home directory. Must be owned by the user or root
-	KDCDefaultOptions      asn1.BitString //default 0x00000010 (KDC_OPT_RENEWABLE_OK)
-	KDCTimeSync            int            //default 1
+	ExtraAddresses          []net.IP       //Not implementing yet
+	Forwardable             bool           //default false
+	IgnoreAcceptorHostname  bool           //default false
+	K5LoginAuthoritative    bool           //default false
+	K5LoginDirectory        string         //default user's home directory. Must be owned by the user or root
+	KDCDefaultOptions       asn1.BitString //default 0x00000010 (KDC_OPT_RENEWABLE_OK)
+	KDCTimeSync             int            //default 1
 	//kdc_req_checksum_type int //unlikely to implement as for very old KDCs
 	NoAddresses         bool     //default true
 	PermittedEnctypes   []string //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
@@ -178,6 +179,13 @@ func (l *LibDefaults) parseLines(lines []string) error {
 				return fmt.Errorf("libdefaults configuration line invalid. %v: %s", err, line)
 			}
 			l.DNSLookupRealm = v
+		case "extra_addresses":
+			ipStr := strings.Replace(p[1], " ", "", -1)
+			for _, ip := range strings.Split(ipStr, ",") {
+				if eip := net.ParseIP(ip); eip != nil {
+					l.ExtraAddresses = append(l.ExtraAddresses, eip)
+				}
+			}
 		case "forwardable":
 			v, err := parseBoolean(p[1])
 			if err != nil {

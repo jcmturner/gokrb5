@@ -31,7 +31,7 @@ const (
 // sa - service account name.
 // If Active Directory is used for the KDC this is the account name you have set the SPN against (setspn.exe -a "HTTP/<fqdn>" <account name>)
 // If the SPN was added to the KDC without associating it with an account pass and empty string "". This is the case if you create the SPN in MIT KDC with: /usr/sbin/kadmin.local -q "add_principal HTTP/<fqdn>"
-func SPNEGOKRB5Authenticate(f http.Handler, kt keytab.Keytab, sa string, l *log.Logger) http.Handler {
+func SPNEGOKRB5Authenticate(f http.Handler, kt keytab.Keytab, sa string, requireHostAddr bool, l *log.Logger) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		s := strings.SplitN(r.Header.Get("Authorization"), " ", 2)
 		if len(s) != 2 || s[0] != "Negotiate" {
@@ -66,7 +66,7 @@ func SPNEGOKRB5Authenticate(f http.Handler, kt keytab.Keytab, sa string, l *log.
 			return
 		}
 
-		if ok, creds, err := ValidateAPREQ(mt.APReq, kt, sa, r.RemoteAddr); ok {
+		if ok, creds, err := ValidateAPREQ(mt.APReq, kt, sa, r.RemoteAddr, requireHostAddr); ok {
 			ctx := r.Context()
 			ctx = context.WithValue(ctx, CTXKeyCredentials, creds)
 			ctx = context.WithValue(ctx, CTXKeyAuthenticated, true)

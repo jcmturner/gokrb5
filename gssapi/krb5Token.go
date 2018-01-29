@@ -128,7 +128,7 @@ func NewAPREQMechToken(creds credentials.Credentials, tkt messages.Ticket, sessi
 	tb, _ := hex.DecodeString(TOK_ID_KRB_AP_REQ)
 	m.TokID = tb
 
-	auth, err := NewAuthenticator(creds, sessionKey.KeyType, GSSAPIFlags)
+	auth, err := NewAuthenticator(creds, GSSAPIFlags)
 	if err != nil {
 		return m, err
 	}
@@ -147,10 +147,8 @@ func NewAPREQMechToken(creds credentials.Credentials, tkt messages.Ticket, sessi
 	return m, nil
 }
 
-// NewAuthenticator (DEPRECATED - this method will be updated in future versions to remove
-// the obsolete keyType argument and may be made private to the gssapi package)
-// creates a new kerberos authenticator for kerberos MechToken
-func NewAuthenticator(creds credentials.Credentials, keyType int32, flags []int) (types.Authenticator, error) {
+// NewAuthenticator creates a new kerberos authenticator for kerberos MechToken
+func NewAuthenticator(creds credentials.Credentials, flags []int) (types.Authenticator, error) {
 	//RFC 4121 Section 4.1.1
 	auth, err := types.NewAuthenticator(creds.Realm, creds.CName)
 	if err != nil {

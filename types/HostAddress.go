@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/jcmturner/gofork/encoding/asn1"
+	"gopkg.in/jcmturner/gokrb5.v4/iana/addrtype"
 	"net"
 )
 
@@ -34,18 +35,6 @@ address
 	This field encodes a single address of type addr-type.
 */
 
-const (
-	addrTypeIPv4          = 2
-	addrTypeDirectional   = 3
-	addrTypeChaosNet      = 5
-	addrTypeXNS           = 6
-	addrTypeISO           = 7
-	addrTypeDECNETPhaseIV = 12
-	addrTypeAppleTalkDDP  = 16
-	addrTypeNetBios       = 20
-	addrTypeIPv6          = 24
-)
-
 // HostAddresses implements RFC 4120 type: https://tools.ietf.org/html/rfc4120#section-5.2.5
 type HostAddresses []HostAddress
 
@@ -60,20 +49,20 @@ func GetHostAddress(s string) (HostAddress, error) {
 	var h HostAddress
 	cAddr, _, err := net.SplitHostPort(s)
 	if err != nil {
-		return h, fmt.Errorf("Invalid format of client address: %v", err)
+		return h, fmt.Errorf("invalid format of client address: %v", err)
 	}
 	ip := net.ParseIP(cAddr)
 	hb, err := ip.MarshalText()
 	if err != nil {
-		return h, fmt.Errorf("Could not marshal client's address into bytes: %v", err)
+		return h, fmt.Errorf("could not marshal client's address into bytes: %v", err)
 	}
 	var ht int32
 	if ip.To4() != nil {
-		ht = addrTypeIPv4
+		ht = addrtype.IPv4
 	} else if ip.To16() != nil {
-		ht = addrTypeIPv6
+		ht = addrtype.IPv6
 	} else {
-		return h, fmt.Errorf("Could not determine client's address types: %v", err)
+		return h, fmt.Errorf("could not determine client's address types: %v", err)
 	}
 	h = HostAddress{
 		AddrType: ht,
@@ -89,6 +78,70 @@ func (h *HostAddress) GetAddress() (string, error) {
 	return string(b), err
 }
 
+// LocalHostAddresses returns a HostAddresses struct for the local machines interface IP addresses.
+func LocalHostAddresses() (ha HostAddresses, err error) {
+	ifs, err := net.Interfaces()
+	if err != nil {
+		return
+	}
+	for _, iface := range ifs {
+		if iface.Flags&net.FlagLoopback != 0 || iface.Flags&net.FlagUp == 0 {
+			// Interface is either loopback of not up
+			continue
+		}
+		addrs, err := iface.Addrs()
+		if err != nil {
+			continue
+		}
+		for _, addr := range addrs {
+			var ip net.IP
+			switch v := addr.(type) {
+			case *net.IPNet:
+				ip = v.IP
+			case *net.IPAddr:
+				ip = v.IP
+			}
+			var a HostAddress
+			if ip.To16() == nil {
+				//neither IPv4 or IPv6
+				continue
+			}
+			if ip.To4() != nil {
+				//Is IPv4
+				a.AddrType = addrtype.IPv4
+				a.Address = ip.To4()
+			} else {
+				a.AddrType = addrtype.IPv6
+				a.Address = ip.To16()
+			}
+			ha = append(ha, a)
+		}
+	}
+	return ha, nil
+}
+
+func HostAddressesFromNetIPs(ips []net.IP) (ha HostAddresses) {
+	for _, ip := range ips {
+		ha = append(ha, HostAddressFromNetIP(ip))
+	}
+	return ha
+}
+
+func HostAddressFromNetIP(ip net.IP) HostAddress {
+	if ip.To4() != nil {
+		//Is IPv4
+		return HostAddress{
+			AddrType: addrtype.IPv4,
+			Address:  ip.To4(),
+		}
+	} else {
+		return HostAddress{
+			AddrType: addrtype.IPv6,
+			Address:  ip.To16(),
+		}
+	}
+}
+
 // HostAddressesEqual tests if two HostAddress slices are equal.
 func HostAddressesEqual(h, a []HostAddress) bool {
 	if len(h) != len(a) {
@@ -96,7 +149,6 @@ func HostAddressesEqual(h, a []HostAddress) bool {
 	}
 	for _, e := range a {
 		var found bool
-		found = false
 		for _, i := range h {
 			if e.Equal(i) {
 				found = true

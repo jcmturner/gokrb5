@@ -297,7 +297,7 @@ func (k *TGSRep) IsValid(cfg *config.Config, tgsReq TGSReq) (bool, error) {
 	if k.DecryptedEncPart.SRealm != tgsReq.ReqBody.Realm {
 		return false, krberror.NewErrorf(krberror.KRBMsgError, "SRealm in response does not match what was requested. Requested: %s; Reply: %s", tgsReq.ReqBody.Realm, k.DecryptedEncPart.SRealm)
 	}
-	if len(tgsReq.ReqBody.Addresses) > 0 {
+	if len(k.DecryptedEncPart.CAddr) > 0 {
 		if !types.HostAddressesEqual(k.DecryptedEncPart.CAddr, tgsReq.ReqBody.Addresses) {
 			return false, krberror.NewErrorf(krberror.KRBMsgError, "Addresses listed in the TGS_REP does not match those listed in the TGS_REQ")
 		}
