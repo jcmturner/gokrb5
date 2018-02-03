@@ -7,14 +7,19 @@ import (
 	"errors"
 	"fmt"
 	"gopkg.in/jcmturner/gokrb5.v4/types"
+	"io"
 	"io/ioutil"
 	"time"
 	"unsafe"
 )
 
+const (
+	keytabFirstByte byte = 05
+)
+
 // Keytab struct.
 type Keytab struct {
-	Version uint16
+	Version uint8
 	Entries []entry
 }
 
@@ -103,6 +108,26 @@ func Load(ktPath string) (kt Keytab, err error) {
 	return Parse(k)
 }
 
+func (kt Keytab) marshal() ([]byte, error) {
+	b := []byte{keytabFirstByte, kt.Version}
+	for _, e := range kt.Entries {
+		eb, err := e.marshal(int(kt.Version))
+		if err != nil {
+			return b, err
+		}
+		b = append(b, eb...)
+	}
+	return b, nil
+}
+
+func (kt Keytab) Write(w io.Writer) (int, error) {
+	b, err := kt.marshal()
+	if err != nil {
+		return 0, fmt.Errorf("error marshaling keytab: %v", err)
+	}
+	return w.Write(b)
+}
+
 // Parse byte slice of Keytab data into Keytab type.
 func Parse(b []byte) (kt Keytab, err error) {
 	//The first byte of the file always has the value 5
@@ -111,8 +136,8 @@ func Parse(b []byte) (kt Keytab, err error) {
 		return
 	}
 	//Get keytab version
-	//The second byte contains the version number (1 or 2)
-	kt.Version = uint16(b[1])
+	//The 2nd byte contains the version number (1 or 2)
+	kt.Version = uint8(b[1])
 	if kt.Version != 1 && kt.Version != 2 {
 		err = errors.New("Invalid keytab data. Keytab version is neither 1 nor 2")
 		return
@@ -174,6 +199,45 @@ func Parse(b []byte) (kt Keytab, err error) {
 	return
 }
 
+func (e entry) marshal(v int) ([]byte, error) {
+	var b []byte
+	pb, err := e.Principal.marshal(v)
+	if err != nil {
+		return b, err
+	}
+	b = append(b, pb...)
+
+	var endian binary.ByteOrder
+	endian = binary.BigEndian
+	if v == 1 && isNativeEndianLittle() {
+		endian = binary.LittleEndian
+	}
+
+	t := make([]byte, 9)
+	endian.PutUint32(t[0:4], uint32(e.Timestamp.Unix()))
+	t[4] = byte(e.KVNO8)
+	endian.PutUint16(t[5:7], uint16(e.Key.KeyType))
+	endian.PutUint16(t[7:9], uint16(len(e.Key.KeyValue)))
+	b = append(b, t...)
+
+	buf := new(bytes.Buffer)
+	err = binary.Write(buf, endian, e.Key.KeyValue)
+	if err != nil {
+		return b, err
+	}
+	b = append(b, buf.Bytes()...)
+
+	t = make([]byte, 4)
+	endian.PutUint32(t, e.KVNO)
+	b = append(b, t...)
+
+	// Add the length header
+	t = make([]byte, 4)
+	endian.PutUint32(t, uint32(len(b)))
+	b = append(t, b...)
+	return b, nil
+}
+
 // Parse the Keytab bytes of a principal into a Keytab entry's principal.
 func parsePrincipal(b []byte, p *int, kt *Keytab, ke *entry, e *binary.ByteOrder) (err error) {
 	ke.Principal.NumComponents = readInt16(b, p, e)
@@ -192,6 +256,53 @@ func parsePrincipal(b []byte, p *int, kt *Keytab, ke *entry, e *binary.ByteOrder
 		ke.Principal.NameType = readInt32(b, p, e)
 	}
 	return
+}
+
+func (p principal) marshal(v int) ([]byte, error) {
+	//var b []byte
+	b := make([]byte, 2)
+	var endian binary.ByteOrder
+	endian = binary.BigEndian
+	if v == 1 && isNativeEndianLittle() {
+		endian = binary.LittleEndian
+	}
+	endian.PutUint16(b[0:], uint16(p.NumComponents))
+	realm, err := marshalString(p.Realm, v)
+	if err != nil {
+		return b, err
+	}
+	b = append(b, realm...)
+	for _, c := range p.Components {
+		cb, err := marshalString(c, v)
+		if err != nil {
+			return b, err
+		}
+		b = append(b, cb...)
+	}
+	if v != 1 {
+		t := make([]byte, 4)
+		endian.PutUint32(t, uint32(p.NameType))
+		b = append(b, t...)
+	}
+	return b, nil
+}
+
+func marshalString(s string, v int) ([]byte, error) {
+	sb := []byte(s)
+	b := make([]byte, 2)
+	var endian binary.ByteOrder
+	endian = binary.BigEndian
+	if v == 1 && isNativeEndianLittle() {
+		endian = binary.LittleEndian
+	}
+	endian.PutUint16(b[0:], uint16(len(sb)))
+	buf := new(bytes.Buffer)
+	err := binary.Write(buf, endian, sb)
+	if err != nil {
+		return b, err
+	}
+	b = append(b, buf.Bytes()...)
+	return b, err
 }
 
 // Read bytes representing a timestamp.
