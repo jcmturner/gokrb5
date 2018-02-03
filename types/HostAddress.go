@@ -120,6 +120,7 @@ func LocalHostAddresses() (ha HostAddresses, err error) {
 	return ha, nil
 }
 
+// HostAddressFromNetIPs returns a HostAddresses type from a slice of net.IP
 func HostAddressesFromNetIPs(ips []net.IP) (ha HostAddresses) {
 	for _, ip := range ips {
 		ha = append(ha, HostAddressFromNetIP(ip))
@@ -127,6 +128,7 @@ func HostAddressesFromNetIPs(ips []net.IP) (ha HostAddresses) {
 	return ha
 }
 
+// HostAddressFromNetIP returns a HostAddress type from a net.IP
 func HostAddressFromNetIP(ip net.IP) HostAddress {
 	if ip.To4() != nil {
 		//Is IPv4
@@ -134,11 +136,10 @@ func HostAddressFromNetIP(ip net.IP) HostAddress {
 			AddrType: addrtype.IPv4,
 			Address:  ip.To4(),
 		}
-	} else {
-		return HostAddress{
-			AddrType: addrtype.IPv6,
-			Address:  ip.To16(),
-		}
+	}
+	return HostAddress{
+		AddrType: addrtype.IPv6,
+		Address:  ip.To16(),
 	}
 }
 
