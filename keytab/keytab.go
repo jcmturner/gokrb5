@@ -134,7 +134,7 @@ func (kt Keytab) Write(w io.Writer) (int, error) {
 // Parse byte slice of Keytab data into Keytab type.
 func Parse(b []byte) (kt Keytab, err error) {
 	//The first byte of the file always has the value 5
-	if int8(b[0]) != 5 {
+	if b[0] != keytabFirstByte {
 		err = errors.New("Invalid keytab data. First byte does not equal 5")
 		return
 	}
