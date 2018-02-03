@@ -9,6 +9,8 @@ import (
 	"os"
 	"testing"
 
+	"errors"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/gokrb5.v4/config"
 	"gopkg.in/jcmturner/gokrb5.v4/credentials"
@@ -363,7 +365,10 @@ func TestMultiThreadedClientUse(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		go func() {
 			defer wg.Done()
-			login(t, &cl)
+			err := cl.Login()
+			if err != nil {
+				panic(err)
+			}
 		}()
 	}
 	wg.Wait()
@@ -372,21 +377,17 @@ func TestMultiThreadedClientUse(t *testing.T) {
 	wg2.Add(5)
 	for i := 0; i < 5; i++ {
 		go func() {
-			defer wg.Done()
-			spnegoGet(t, &cl)
+			defer wg2.Done()
+			err := spnegoGet(&cl)
+			if err != nil {
+				panic(err)
+			}
 		}()
 	}
 	wg2.Wait()
 }
 
-func login(t *testing.T, cl *Client) {
-	err := cl.Login()
-	if err != nil {
-		t.Fatalf("Error on AS_REQ: %v\n", err)
-	}
-}
-
-func spnegoGet(t *testing.T, cl *Client) {
+func spnegoGet(cl *Client) error {
 	url := os.Getenv("TEST_HTTP_URL")
 	if url == "" {
 		url = testdata.TEST_HTTP_URL
@@ -394,18 +395,23 @@ func spnegoGet(t *testing.T, cl *Client) {
 	r, _ := http.NewRequest("GET", url, nil)
 	httpResp, err := http.DefaultClient.Do(r)
 	if err != nil {
-		t.Fatalf("Request error: %v\n", err)
+		return fmt.Errorf("Request error: %v\n", err)
 	}
-	assert.Equal(t, http.StatusUnauthorized, httpResp.StatusCode, "Status code in response to client with no SPNEGO not as expected")
+	if httpResp.StatusCode != http.StatusUnauthorized {
+		return errors.New("did not get unauthorized code when no SPNEGO header set")
+	}
 	err = cl.SetSPNEGOHeader(r, "HTTP/host.test.gokrb5")
 	if err != nil {
-		t.Fatalf("Error setting client SPNEGO header: %v", err)
+		return fmt.Errorf("Error setting client SPNEGO header: %v", err)
 	}
 	httpResp, err = http.DefaultClient.Do(r)
 	if err != nil {
-		t.Fatalf("Request error: %v\n", err)
+		return fmt.Errorf("Request error: %v\n", err)
 	}
-	assert.Equal(t, http.StatusOK, httpResp.StatusCode, "Status code in response to client SPNEGO request not as expected")
+	if httpResp.StatusCode != http.StatusOK {
+		return errors.New("did not get OK code when SPNEGO header set")
+	}
+	return nil
 }
 
 func TestNewClientFromCCache(t *testing.T) {
