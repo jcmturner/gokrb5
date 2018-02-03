@@ -364,17 +364,17 @@ func TestMultiThreadedClientUse(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			login(t, &cl)
-		}
+		}()
 	}
 	wg.Wait()
 
 	var wg2 sync.WaitGroup
 	wg2.Add(5)
 	for i := 0; i < 5; i++ {
-		go func(){
+		go func() {
 			defer wg.Done()
 			spnegoGet(t, &cl)
-		}
+		}()
 	}
 	wg2.Wait()
 }
