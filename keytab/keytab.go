@@ -258,7 +258,7 @@ func parsePrincipal(b []byte, p *int, kt *Keytab, ke *entry, e *binary.ByteOrder
 		//Name Type is omitted in version 1
 		ke.Principal.NameType = readInt32(b, p, e)
 	}
-	return
+	return nil
 }
 
 func (p principal) marshal(v int) ([]byte, error) {

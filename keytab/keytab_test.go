@@ -32,7 +32,7 @@ func TestMarshal(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error parsing keytab data: %v\n", err)
 	}
-	b, err := kt.marshal()
+	b, err := kt.Marshal()
 	if err != nil {
 		t.Fatalf("Error marshaling: %v", err)
 	}
