@@ -16,6 +16,7 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v4/keytab"
 	"gopkg.in/jcmturner/gokrb5.v4/testdata"
 	"strings"
+	"sync"
 )
 
 func TestClient_SuccessfulLogin_Keytab(t *testing.T) {
@@ -357,13 +358,25 @@ func TestMultiThreadedClientUse(t *testing.T) {
 	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 
+	var wg sync.WaitGroup
+	wg.Add(5)
 	for i := 0; i < 5; i++ {
-		go login(t, &cl)
+		go func() {
+			defer wg.Done()
+			login(t, &cl)
+		}
 	}
+	wg.Wait()
 
+	var wg2 sync.WaitGroup
+	wg2.Add(5)
 	for i := 0; i < 5; i++ {
-		go spnegoGet(t, &cl)
+		go func(){
+			defer wg.Done()
+			spnegoGet(t, &cl)
+		}
 	}
+	wg2.Wait()
 }
 
 func login(t *testing.T, cl *Client) {
