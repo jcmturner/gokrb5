@@ -108,7 +108,8 @@ func Load(ktPath string) (kt Keytab, err error) {
 	return Parse(k)
 }
 
-func (kt Keytab) marshal() ([]byte, error) {
+// Marshal keytab into byte slice
+func (kt Keytab) Marshal() ([]byte, error) {
 	b := []byte{keytabFirstByte, kt.Version}
 	for _, e := range kt.Entries {
 		eb, err := e.marshal(int(kt.Version))
@@ -120,8 +121,10 @@ func (kt Keytab) marshal() ([]byte, error) {
 	return b, nil
 }
 
+// Write the keytab bytes to io.Writer.
+// Returns the number of bytes written
 func (kt Keytab) Write(w io.Writer) (int, error) {
-	b, err := kt.marshal()
+	b, err := kt.Marshal()
 	if err != nil {
 		return 0, fmt.Errorf("error marshaling keytab: %v", err)
 	}
@@ -239,7 +242,7 @@ func (e entry) marshal(v int) ([]byte, error) {
 }
 
 // Parse the Keytab bytes of a principal into a Keytab entry's principal.
-func parsePrincipal(b []byte, p *int, kt *Keytab, ke *entry, e *binary.ByteOrder) (err error) {
+func parsePrincipal(b []byte, p *int, kt *Keytab, ke *entry, e *binary.ByteOrder) error {
 	ke.Principal.NumComponents = readInt16(b, p, e)
 	if kt.Version == 1 {
 		//In version 1 the number of components includes the realm. Minus 1 to make consistent with version 2
