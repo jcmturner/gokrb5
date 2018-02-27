@@ -113,7 +113,8 @@ func newLibDefaults() *LibDefaults {
 // Parse the lines of the [libdefaults] section of the configuration into the LibDefaults struct.
 func (l *LibDefaults) parseLines(lines []string) error {
 	for _, line := range lines {
-		if strings.TrimSpace(line) == "" {
+		line = strings.TrimSpace(line)
+		if line == "" {
 			continue
 		}
 		if strings.Contains(line, "v4_") {
@@ -124,7 +125,7 @@ func (l *LibDefaults) parseLines(lines []string) error {
 		}
 
 		p := strings.Split(line, "=")
-		key := strings.Replace(strings.ToLower(p[0]), " ", "", -1)
+		key := strings.TrimSpace(strings.ToLower(p[0]))
 		switch key {
 		case "allow_weak_crypto":
 			v, err := parseBoolean(p[1])
@@ -139,7 +140,7 @@ func (l *LibDefaults) parseLines(lines []string) error {
 			}
 			l.Canonicalize = v
 		case "ccache_type":
-			p[1] = strings.Replace(p[1], " ", "", -1)
+			p[1] = strings.TrimSpace(p[1])
 			v, err := strconv.ParseUint(p[1], 10, 32)
 			if err != nil || v < 0 || v > 4 {
 				return fmt.Errorf("libdefaults configuration line invalid: %s", line)
@@ -152,11 +153,11 @@ func (l *LibDefaults) parseLines(lines []string) error {
 			}
 			l.Clockskew = d
 		case "default_client_keytab_name":
-			l.DefaultClientKeytabName = strings.Replace(p[1], " ", "", -1)
+			l.DefaultClientKeytabName = strings.TrimSpace(p[1])
 		case "default_keytab_name":
-			l.DefaultKeytabName = strings.Replace(p[1], " ", "", -1)
+			l.DefaultKeytabName = strings.TrimSpace(p[1])
 		case "default_realm":
-			l.DefaultRealm = strings.Replace(p[1], " ", "", -1)
+			l.DefaultRealm = strings.TrimSpace(p[1])
 		case "default_tgs_enctypes":
 			l.DefaultTGSEnctypes = strings.Fields(p[1])
 		case "default_tkt_enctypes":
@@ -180,7 +181,7 @@ func (l *LibDefaults) parseLines(lines []string) error {
 			}
 			l.DNSLookupRealm = v
 		case "extra_addresses":
-			ipStr := strings.Replace(p[1], " ", "", -1)
+			ipStr := strings.TrimSpace(p[1])
 			for _, ip := range strings.Split(ipStr, ",") {
 				if eip := net.ParseIP(ip); eip != nil {
 					l.ExtraAddresses = append(l.ExtraAddresses, eip)
@@ -205,9 +206,9 @@ func (l *LibDefaults) parseLines(lines []string) error {
 			}
 			l.K5LoginAuthoritative = v
 		case "k5login_directory":
-			l.K5LoginDirectory = strings.Replace(p[1], " ", "", -1)
+			l.K5LoginDirectory = strings.TrimSpace(p[1])
 		case "kdc_default_options":
-			v := strings.Replace(p[1], " ", "", -1)
+			v := strings.TrimSpace(p[1])
 			v = strings.Replace(v, "0x", "", -1)
 			b, err := hex.DecodeString(v)
 			if err != nil {
@@ -216,7 +217,7 @@ func (l *LibDefaults) parseLines(lines []string) error {
 			l.KDCDefaultOptions.Bytes = b
 			l.KDCDefaultOptions.BitLength = len(b) * 8
 		case "kdc_timesync":
-			p[1] = strings.Replace(p[1], " ", "", -1)
+			p[1] = strings.TrimSpace(p[1])
 			v, err := strconv.ParseInt(p[1], 10, 32)
 			if err != nil || v < 0 {
 				return fmt.Errorf("libdefaults configuration line invalid: %s", line)
@@ -231,7 +232,7 @@ func (l *LibDefaults) parseLines(lines []string) error {
 		case "permitted_enctypes":
 			l.PermittedEnctypes = strings.Fields(p[1])
 		case "preferred_preauth_types":
-			p[1] = strings.Replace(p[1], " ", "", -1)
+			p[1] = strings.TrimSpace(p[1])
 			t := strings.Split(p[1], ",")
 			var v []int
 			for _, s := range t {
@@ -255,7 +256,7 @@ func (l *LibDefaults) parseLines(lines []string) error {
 			}
 			l.RDNS = v
 		case "realm_try_domains":
-			p[1] = strings.Replace(p[1], " ", "", -1)
+			p[1] = strings.TrimSpace(p[1])
 			v, err := strconv.ParseInt(p[1], 10, 32)
 			if err != nil || v < -1 {
 				return fmt.Errorf("libdefaults configuration line invalid: %s", line)
@@ -268,7 +269,7 @@ func (l *LibDefaults) parseLines(lines []string) error {
 			}
 			l.RenewLifetime = d
 		case "safe_checksum_type":
-			p[1] = strings.Replace(p[1], " ", "", -1)
+			p[1] = strings.TrimSpace(p[1])
 			v, err := strconv.ParseInt(p[1], 10, 32)
 			if err != nil || v < 0 {
 				return fmt.Errorf("libdefaults configuration line invalid: %s", line)
@@ -281,7 +282,7 @@ func (l *LibDefaults) parseLines(lines []string) error {
 			}
 			l.TicketLifetime = d
 		case "udp_preference_limit":
-			p[1] = strings.Replace(p[1], " ", "", -1)
+			p[1] = strings.TrimSpace(p[1])
 			v, err := strconv.ParseUint(p[1], 10, 32)
 			if err != nil || v > 32700 {
 				return fmt.Errorf("libdefaults configuration line invalid: %s", line)
@@ -332,8 +333,8 @@ func (r *Realm) parseLines(name string, lines []string) error {
 		}
 
 		p := strings.Split(line, "=")
-		key := strings.Replace(strings.ToLower(p[0]), " ", "", -1)
-		v := strings.Replace(p[1], " ", "", -1)
+		key := strings.TrimSpace(strings.ToLower(p[0]))
+		v := strings.TrimSpace(p[1])
 		switch key {
 		case "admin_server":
 			appendUntilFinal(&r.AdminServer, v, &adminServerFinal)
@@ -390,7 +391,7 @@ func parseRealms(lines []string) ([]Realm, error) {
 				return nil, fmt.Errorf("Realm configuration line invalid: %s", l)
 			}
 			p := strings.Split(l, "=")
-			name = strings.Replace(p[0], " ", "", -1)
+			name = strings.TrimSpace(p[0])
 		}
 		if strings.Contains(l, "}") {
 			if start < 0 {
@@ -419,8 +420,8 @@ func (d *DomainRealm) parseLines(lines []string) error {
 			return fmt.Errorf("Realm configuration line invalid: %s", line)
 		}
 		p := strings.Split(line, "=")
-		domain := strings.Replace(strings.ToLower(p[0]), " ", "", -1)
-		realm := strings.Replace(strings.ToUpper(p[1]), " ", "", -1)
+		domain := strings.TrimSpace(strings.ToLower(p[0]))
+		realm := strings.TrimSpace(strings.ToUpper(p[1]))
 		d.addMapping(domain, realm)
 	}
 	return nil
@@ -570,7 +571,7 @@ func parseETypes(s []string, w bool) []int32 {
 
 // Parse a time duration string in the configuration to a golang time.Duration.
 func parseDuration(s string) (time.Duration, error) {
-	s = strings.Replace(s, " ", "", -1)
+	s = strings.Replace(strings.TrimSpace(s), " ", "", -1)
 
 	// handle Nd[NmNs]
 	if strings.Contains(s, "d") {
@@ -627,7 +628,7 @@ func parseDuration(s string) (time.Duration, error) {
 
 // Parse possible boolean values to golang bool.
 func parseBoolean(s string) (bool, error) {
-	s = strings.Replace(s, " ", "", -1)
+	s = strings.TrimSpace(s)
 	v, err := strconv.ParseBool(s)
 	if err == nil {
 		return v, nil

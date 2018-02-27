@@ -230,8 +230,7 @@ const (
 	renew_lifetime = 36000
 	forwardable = true
 	krb4_convert = false
-}
-`
+}`
 )
 
 func TestLoad(t *testing.T) {
