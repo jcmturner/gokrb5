@@ -4,11 +4,12 @@ import (
 	"crypto/aes"
 	"crypto/hmac"
 	"crypto/sha256"
+	"hash"
+
 	"gopkg.in/jcmturner/gokrb5.v4/crypto/common"
 	"gopkg.in/jcmturner/gokrb5.v4/crypto/rfc8009"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/chksumtype"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/etypeID"
-	"hash"
 )
 
 // RFC https://tools.ietf.org/html/rfc8009

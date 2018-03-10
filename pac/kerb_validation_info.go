@@ -4,6 +4,7 @@ package pac
 import (
 	"errors"
 	"fmt"
+
 	"gopkg.in/jcmturner/gokrb5.v4/mstypes"
 	"gopkg.in/jcmturner/gokrb5.v4/ndr"
 )

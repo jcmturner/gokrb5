@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"gopkg.in/jcmturner/gokrb5.v4/gssapi"
-	"gopkg.in/jcmturner/gokrb5.v4/keytab"
 	"log"
 	"net/http"
 	"strings"
+
+	"gopkg.in/jcmturner/gokrb5.v4/gssapi"
+	"gopkg.in/jcmturner/gokrb5.v4/keytab"
 )
 
 type ctxKey int

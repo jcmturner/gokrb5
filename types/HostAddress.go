@@ -6,9 +6,10 @@ package types
 import (
 	"bytes"
 	"fmt"
+	"net"
+
 	"github.com/jcmturner/gofork/encoding/asn1"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/addrtype"
-	"net"
 )
 
 /*

@@ -5,15 +5,16 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"gopkg.in/jcmturner/dnsutils.v1"
-	"gopkg.in/jcmturner/gokrb5.v4/iana/errorcode"
-	"gopkg.in/jcmturner/gokrb5.v4/messages"
 	"io"
 	"math/rand"
 	"net"
 	"strconv"
 	"strings"
 	"time"
+
+	"gopkg.in/jcmturner/dnsutils.v1"
+	"gopkg.in/jcmturner/gokrb5.v4/iana/errorcode"
+	"gopkg.in/jcmturner/gokrb5.v4/messages"
 )
 
 func (cl *Client) resolveKDC(realm string, tcp bool) (int, map[int]string, error) {

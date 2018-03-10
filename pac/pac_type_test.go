@@ -3,10 +3,11 @@ package pac
 import (
 	"encoding/hex"
 	"fmt"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/gokrb5.v4/keytab"
 	"gopkg.in/jcmturner/gokrb5.v4/testdata"
-	"testing"
 )
 
 func TestPACTypeValidate(t *testing.T) {

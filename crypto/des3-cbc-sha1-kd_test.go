@@ -3,8 +3,9 @@ package crypto
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestDes3CbcSha1Kd_DR_DK(t *testing.T) {

@@ -2,14 +2,15 @@ package gssapi
 
 import (
 	"encoding/hex"
+	"math"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/gokrb5.v4/credentials"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/msgtype"
 	"gopkg.in/jcmturner/gokrb5.v4/messages"
 	"gopkg.in/jcmturner/gokrb5.v4/testdata"
 	"gopkg.in/jcmturner/gokrb5.v4/types"
-	"math"
-	"testing"
 )
 
 const (

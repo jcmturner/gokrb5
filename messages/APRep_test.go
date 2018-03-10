@@ -2,12 +2,13 @@ package messages
 
 import (
 	"encoding/hex"
+	"testing"
+	"time"
+
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/gokrb5.v4/iana"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/msgtype"
 	"gopkg.in/jcmturner/gokrb5.v4/testdata"
-	"testing"
-	"time"
 )
 
 func TestUnmarshalAPRep(t *testing.T) {

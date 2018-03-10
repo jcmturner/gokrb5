@@ -3,13 +3,14 @@ package crypto
 import (
 	"bytes"
 	"crypto/md5"
+	"hash"
+	"io"
+
 	"golang.org/x/crypto/md4"
 	"gopkg.in/jcmturner/gokrb5.v4/crypto/rfc3961"
 	"gopkg.in/jcmturner/gokrb5.v4/crypto/rfc4757"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/chksumtype"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/etypeID"
-	"hash"
-	"io"
 )
 
 //http://grepcode.com/file/repository.grepcode.com/java/root/jdk/openjdk/8u40-b25/sun/security/krb5/internal/crypto/dk/ArcFourCrypto.java#ArcFourCrypto.encrypt%28byte%5B%5D%2Cint%2Cbyte%5B%5D%2Cbyte%5B%5D%2Cbyte%5B%5D%2Cint%2Cint%29

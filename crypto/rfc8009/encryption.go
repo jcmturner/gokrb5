@@ -7,7 +7,8 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
-	aescts "gopkg.in/jcmturner/aescts.v1"
+
+	"gopkg.in/jcmturner/aescts.v1"
 	"gopkg.in/jcmturner/gokrb5.v4/crypto/common"
 	"gopkg.in/jcmturner/gokrb5.v4/crypto/etype"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/etypeID"

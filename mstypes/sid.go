@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+
 	"gopkg.in/jcmturner/gokrb5.v4/ndr"
 )
 

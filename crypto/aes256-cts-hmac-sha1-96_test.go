@@ -2,10 +2,11 @@ package crypto
 
 import (
 	"encoding/hex"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/gokrb5.v4/crypto/common"
 	"gopkg.in/jcmturner/gokrb5.v4/crypto/rfc3962"
-	"testing"
 )
 
 func TestAes256CtsHmacSha196_StringToKey(t *testing.T) {

@@ -3,6 +3,8 @@ package messages
 import (
 	"crypto/rand"
 	"fmt"
+	"time"
+
 	"github.com/jcmturner/gofork/encoding/asn1"
 	"gopkg.in/jcmturner/gokrb5.v4/asn1tools"
 	"gopkg.in/jcmturner/gokrb5.v4/crypto"
@@ -15,7 +17,6 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v4/krberror"
 	"gopkg.in/jcmturner/gokrb5.v4/pac"
 	"gopkg.in/jcmturner/gokrb5.v4/types"
-	"time"
 )
 
 // Reference: https://www.ietf.org/rfc/rfc4120.txt

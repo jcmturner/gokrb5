@@ -6,11 +6,12 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"gopkg.in/jcmturner/gokrb5.v4/types"
 	"io"
 	"io/ioutil"
 	"time"
 	"unsafe"
+
+	"gopkg.in/jcmturner/gokrb5.v4/types"
 )
 
 const (

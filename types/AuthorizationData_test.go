@@ -3,11 +3,12 @@ package types
 import (
 	"encoding/hex"
 	"fmt"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/adtype"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/nametype"
 	"gopkg.in/jcmturner/gokrb5.v4/testdata"
-	"testing"
 )
 
 func TestUnmarshalAuthorizationData(t *testing.T) {

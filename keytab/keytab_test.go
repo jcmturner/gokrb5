@@ -2,10 +2,11 @@ package keytab
 
 import (
 	"encoding/hex"
-	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v4/testdata"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"gopkg.in/jcmturner/gokrb5.v4/testdata"
 )
 
 func TestParse(t *testing.T) {

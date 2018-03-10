@@ -2,11 +2,12 @@ package pac
 
 import (
 	"encoding/hex"
+	"testing"
+	"time"
+
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/gokrb5.v4/mstypes"
 	"gopkg.in/jcmturner/gokrb5.v4/testdata"
-	"testing"
-	"time"
 )
 
 func TestKerbValidationInfo_Unmarshal(t *testing.T) {

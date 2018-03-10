@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"os/user"
 	"regexp"
@@ -16,7 +17,6 @@ import (
 
 	"github.com/jcmturner/gofork/encoding/asn1"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/etypeID"
-	"net"
 )
 
 // Config represents the KRB5 configuration.

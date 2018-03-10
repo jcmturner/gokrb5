@@ -2,8 +2,9 @@ package pac
 
 import (
 	"encoding/binary"
-	"gopkg.in/jcmturner/gokrb5.v4/ndr"
 	"sort"
+
+	"gopkg.in/jcmturner/gokrb5.v4/ndr"
 )
 
 // UPNDNSInfo implements https://msdn.microsoft.com/en-us/library/dd240468.aspx

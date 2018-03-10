@@ -5,6 +5,8 @@ package messages
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/jcmturner/gofork/encoding/asn1"
 	"gopkg.in/jcmturner/gokrb5.v4/config"
 	"gopkg.in/jcmturner/gokrb5.v4/credentials"
@@ -16,7 +18,6 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v4/iana/patype"
 	"gopkg.in/jcmturner/gokrb5.v4/krberror"
 	"gopkg.in/jcmturner/gokrb5.v4/types"
-	"time"
 )
 
 type marshalKDCRep struct {

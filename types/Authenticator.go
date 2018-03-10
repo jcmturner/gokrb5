@@ -4,13 +4,14 @@ package types
 import (
 	"crypto/rand"
 	"fmt"
+	"math"
+	"math/big"
+	"time"
+
 	"github.com/jcmturner/gofork/encoding/asn1"
 	"gopkg.in/jcmturner/gokrb5.v4/asn1tools"
 	"gopkg.in/jcmturner/gokrb5.v4/iana"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/asnAppTag"
-	"math"
-	"math/big"
-	"time"
 )
 
 /*Authenticator   ::= [APPLICATION 2] SEQUENCE  {
