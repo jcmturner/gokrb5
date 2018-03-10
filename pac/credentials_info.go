@@ -3,6 +3,7 @@ package pac
 import (
 	"encoding/binary"
 	"fmt"
+
 	"gopkg.in/jcmturner/gokrb5.v4/crypto"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/keyusage"
 	"gopkg.in/jcmturner/gokrb5.v4/mstypes"

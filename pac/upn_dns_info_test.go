@@ -2,9 +2,10 @@ package pac
 
 import (
 	"encoding/hex"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/gokrb5.v4/testdata"
-	"testing"
 )
 
 func TestUPN_DNSInfo_Unmarshal(t *testing.T) {

@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"github.com/jcmturner/gofork/encoding/asn1"
-	"gopkg.in/jcmturner/gokrb5.v4/types"
 	"io/ioutil"
 	"strings"
 	"time"
 	"unsafe"
+
+	"github.com/jcmturner/gofork/encoding/asn1"
+	"gopkg.in/jcmturner/gokrb5.v4/types"
 )
 
 const (

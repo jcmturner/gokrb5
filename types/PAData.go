@@ -4,9 +4,10 @@ package types
 // Section: 5.2.7
 import (
 	"fmt"
+	"time"
+
 	"github.com/jcmturner/gofork/encoding/asn1"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/patype"
-	"time"
 )
 
 // PAData implements RFC 4120 types: https://tools.ietf.org/html/rfc4120#section-5.2.7

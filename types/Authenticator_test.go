@@ -3,13 +3,14 @@ package types
 import (
 	"encoding/hex"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/gokrb5.v4/iana"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/adtype"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/nametype"
 	"gopkg.in/jcmturner/gokrb5.v4/testdata"
-	"testing"
-	"time"
 )
 
 func unmarshalAuthenticatorTest(t *testing.T, v string) Authenticator {

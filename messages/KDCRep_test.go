@@ -3,6 +3,9 @@ package messages
 import (
 	"encoding/hex"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/gokrb5.v4/credentials"
 	"gopkg.in/jcmturner/gokrb5.v4/iana"
@@ -12,8 +15,6 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v4/iana/patype"
 	"gopkg.in/jcmturner/gokrb5.v4/keytab"
 	"gopkg.in/jcmturner/gokrb5.v4/testdata"
-	"testing"
-	"time"
 )
 
 const (

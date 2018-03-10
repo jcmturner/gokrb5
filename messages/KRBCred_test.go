@@ -3,14 +3,15 @@ package messages
 import (
 	"encoding/hex"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/gokrb5.v4/iana"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/addrtype"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/msgtype"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/nametype"
 	"gopkg.in/jcmturner/gokrb5.v4/testdata"
-	"testing"
-	"time"
 )
 
 func TestUnmarshalKRBCred(t *testing.T) {

@@ -3,13 +3,14 @@ package client
 import (
 	"encoding/base64"
 	"fmt"
+	"net/http"
+	"strings"
+
 	"gopkg.in/jcmturner/gokrb5.v4/credentials"
 	"gopkg.in/jcmturner/gokrb5.v4/gssapi"
 	"gopkg.in/jcmturner/gokrb5.v4/krberror"
 	"gopkg.in/jcmturner/gokrb5.v4/messages"
 	"gopkg.in/jcmturner/gokrb5.v4/types"
-	"net/http"
-	"strings"
 )
 
 // SetSPNEGOHeader gets the service ticket and sets it as the SPNEGO authorization header on HTTP request object.

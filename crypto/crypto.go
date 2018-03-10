@@ -4,6 +4,7 @@ package crypto
 import (
 	"encoding/hex"
 	"fmt"
+
 	"gopkg.in/jcmturner/gokrb5.v4/crypto/etype"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/chksumtype"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/etypeID"

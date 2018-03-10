@@ -5,8 +5,9 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"golang.org/x/crypto/md4"
 	"io"
+
+	"golang.org/x/crypto/md4"
 )
 
 // StringToKey returns a key derived from the string provided according to the definition in RFC 4757.

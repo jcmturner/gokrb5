@@ -2,10 +2,11 @@ package crypto
 
 import (
 	"encoding/hex"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/gokrb5.v4/crypto/common"
 	"gopkg.in/jcmturner/gokrb5.v4/crypto/rfc8009"
-	"testing"
 )
 
 func TestAes128CtsHmacSha256128_StringToKey(t *testing.T) {
@@ -25,7 +26,7 @@ func TestAes128CtsHmacSha256128_StringToKey(t *testing.T) {
 	var e Aes128CtsHmacSha256128
 	for _, test := range tests {
 		saltp := rfc8009.GetSaltP(test.salt, "aes128-cts-hmac-sha256-128")
-		assert.Equal(t, test.saltp, hex.EncodeToString(([]byte(saltp))), "SaltP not as expected")
+		assert.Equal(t, test.saltp, hex.EncodeToString([]byte(saltp)), "SaltP not as expected")
 
 		k, _ := e.StringToKey(test.phrase, test.salt, common.IterationsToS2Kparams(test.iterations))
 		assert.Equal(t, test.key, hex.EncodeToString(k), "String to Key not as expected")

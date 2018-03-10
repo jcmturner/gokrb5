@@ -2,11 +2,12 @@ package credentials
 
 import (
 	"encoding/hex"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/nametype"
 	"gopkg.in/jcmturner/gokrb5.v4/testdata"
 	"gopkg.in/jcmturner/gokrb5.v4/types"
-	"testing"
 )
 
 func TestParse(t *testing.T) {

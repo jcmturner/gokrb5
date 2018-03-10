@@ -4,12 +4,13 @@ import (
 	"crypto/aes"
 	"crypto/hmac"
 	"crypto/sha1"
+	"hash"
+
 	"gopkg.in/jcmturner/gokrb5.v4/crypto/common"
 	"gopkg.in/jcmturner/gokrb5.v4/crypto/rfc3961"
 	"gopkg.in/jcmturner/gokrb5.v4/crypto/rfc3962"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/chksumtype"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/etypeID"
-	"hash"
 )
 
 // RFC 3962

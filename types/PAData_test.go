@@ -3,11 +3,12 @@ package types
 import (
 	"encoding/hex"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/patype"
 	"gopkg.in/jcmturner/gokrb5.v4/testdata"
-	"testing"
-	"time"
 )
 
 func TestUnmarshalPADataSequence(t *testing.T) {

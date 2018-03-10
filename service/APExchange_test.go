@@ -2,6 +2,9 @@ package service
 
 import (
 	"encoding/hex"
+	"testing"
+	"time"
+
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/gokrb5.v4/client"
 	"gopkg.in/jcmturner/gokrb5.v4/config"
@@ -13,8 +16,6 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v4/messages"
 	"gopkg.in/jcmturner/gokrb5.v4/testdata"
 	"gopkg.in/jcmturner/gokrb5.v4/types"
-	"testing"
-	"time"
 )
 
 func TestValidateAPREQ(t *testing.T) {

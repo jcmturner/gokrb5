@@ -3,6 +3,9 @@ package messages
 import (
 	"encoding/hex"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/gokrb5.v4/iana"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/addrtype"
@@ -12,8 +15,6 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v4/keytab"
 	"gopkg.in/jcmturner/gokrb5.v4/testdata"
 	"gopkg.in/jcmturner/gokrb5.v4/types"
-	"testing"
-	"time"
 )
 
 func TestUnmarshalTicket(t *testing.T) {

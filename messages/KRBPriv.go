@@ -2,12 +2,13 @@ package messages
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/jcmturner/gofork/encoding/asn1"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/asnAppTag"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/msgtype"
 	"gopkg.in/jcmturner/gokrb5.v4/krberror"
 	"gopkg.in/jcmturner/gokrb5.v4/types"
-	"time"
 )
 
 // KRBPriv implements RFC 4120 type: https://tools.ietf.org/html/rfc4120#section-5.7.1.

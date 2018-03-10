@@ -3,6 +3,9 @@ package messages
 import (
 	"encoding/hex"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/jcmturner/gofork/encoding/asn1"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/gokrb5.v4/iana"
@@ -11,8 +14,6 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v4/iana/nametype"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/patype"
 	"gopkg.in/jcmturner/gokrb5.v4/testdata"
-	"testing"
-	"time"
 )
 
 func TestUnmarshalKDCReqBody(t *testing.T) {

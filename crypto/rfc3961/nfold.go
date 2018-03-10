@@ -123,6 +123,6 @@ func setBit(b *[]byte, p, v int) {
 	pBit := uint(p % 8)
 	oldByte := (*b)[pByte]
 	var newByte byte
-	newByte = (byte((v << (8 - (pBit + 1)))) | oldByte)
+	newByte = byte(v<<(8-(pBit+1))) | oldByte
 	(*b)[pByte] = newByte
 }

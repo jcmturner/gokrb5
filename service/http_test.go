@@ -3,6 +3,14 @@ package service
 import (
 	"encoding/hex"
 	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"net/http/httptest"
+	"sync"
+	"testing"
+	"time"
+
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/gokrb5.v4/client"
 	"gopkg.in/jcmturner/gokrb5.v4/credentials"
@@ -11,13 +19,6 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v4/messages"
 	"gopkg.in/jcmturner/gokrb5.v4/testdata"
 	"gopkg.in/jcmturner/gokrb5.v4/types"
-	"io/ioutil"
-	"log"
-	"net/http"
-	"net/http/httptest"
-	"sync"
-	"testing"
-	"time"
 )
 
 func TestService_SPNEGOKRB_NoAuthHeader(t *testing.T) {

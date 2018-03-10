@@ -3,10 +3,11 @@ package gssapi
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/keyusage"
 	"gopkg.in/jcmturner/gokrb5.v4/types"
-	"testing"
 )
 
 const (
