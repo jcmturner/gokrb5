@@ -3,6 +3,7 @@ package messages
 import (
 	"crypto/rand"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/jcmturner/gofork/encoding/asn1"
@@ -188,7 +189,7 @@ func MarshalTicketSequence(tkts []Ticket) (asn1.RawValue, error) {
 func (t *Ticket) DecryptEncPart(keytab keytab.Keytab, sa string) error {
 	var upn []string
 	if sa != "" {
-		upn = []string{sa}
+		upn = strings.Split(sa, "/")
 	} else {
 		upn = t.SName.NameString
 	}
