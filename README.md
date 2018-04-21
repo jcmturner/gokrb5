@@ -43,6 +43,9 @@ Currently the following is working/tested:
 * Tested against users that have pre-authentication required using PA-ENC-TIMESTAMP.
 * Microsoft PAC Authorization Data is processed and exposed in the HTTP request context. Available if Microsoft Active Directory is used as the KDC.
 
+## Contributing
+If you are interested in contributing to gokrb5, great! Please read the [contribution guidelines](https://github.com/jcmturner/gokrb5/blob/master/CONTRIBUTING.md).
+
 ## Usage
 
 ---
