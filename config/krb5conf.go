@@ -84,19 +84,27 @@ type LibDefaults struct {
 
 // Create a new LibDefaults struct.
 func newLibDefaults() *LibDefaults {
-	usr, _ := user.Current()
+	var uid string
+	var hdir string
+	usr, err := user.Current()
+	if err != nil || usr == nil {
+		uid = "0"
+	} else {
+		uid = usr.Uid
+		hdir = usr.HomeDir
+	}
 	opts := asn1.BitString{}
 	opts.Bytes, _ = hex.DecodeString("00000010")
 	opts.BitLength = len(opts.Bytes) * 8
 	return &LibDefaults{
 		CCacheType:              4,
 		Clockskew:               time.Duration(300) * time.Second,
-		DefaultClientKeytabName: fmt.Sprintf("/usr/local/var/krb5/user/%v/client.keytab", usr.Uid),
+		DefaultClientKeytabName: fmt.Sprintf("/usr/local/var/krb5/user/%s/client.keytab", uid),
 		DefaultKeytabName:       "/etc/krb5.keytab",
 		DefaultTGSEnctypes:      []string{"aes256-cts-hmac-sha1-96", "aes128-cts-hmac-sha1-96", "des3-cbc-sha1", "arcfour-hmac-md5", "camellia256-cts-cmac", "camellia128-cts-cmac", "des-cbc-crc", "des-cbc-md5", "des-cbc-md4"},
 		DefaultTktEnctypes:      []string{"aes256-cts-hmac-sha1-96", "aes128-cts-hmac-sha1-96", "des3-cbc-sha1", "arcfour-hmac-md5", "camellia256-cts-cmac", "camellia128-cts-cmac", "des-cbc-crc", "des-cbc-md5", "des-cbc-md4"},
 		DNSCanonicalizeHostname: true,
-		K5LoginDirectory:        usr.HomeDir,
+		K5LoginDirectory:        hdir,
 		KDCDefaultOptions:       opts,
 		KDCTimeSync:             1,
 		NoAddresses:             true,
