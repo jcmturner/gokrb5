@@ -101,12 +101,12 @@ func newLibDefaults() *LibDefaults {
 		KDCTimeSync:             1,
 		NoAddresses:             true,
 		PermittedEnctypes:       []string{"aes256-cts-hmac-sha1-96", "aes128-cts-hmac-sha1-96", "des3-cbc-sha1", "arcfour-hmac-md5", "camellia256-cts-cmac", "camellia128-cts-cmac", "des-cbc-crc", "des-cbc-md5", "des-cbc-md4"},
+		RDNS:                    true,
+		RealmTryDomains:         -1,
+		SafeChecksumType:        8,
+		TicketLifetime:          time.Duration(24) * time.Hour,
+		UDPPreferenceLimit:      1465,
 		PreferredPreauthTypes:   []int{17, 16, 15, 14},
-		RDNS:               true,
-		RealmTryDomains:    -1,
-		SafeChecksumType:   8,
-		TicketLifetime:     time.Duration(24) * time.Hour,
-		UDPPreferenceLimit: 1465,
 	}
 }
 
