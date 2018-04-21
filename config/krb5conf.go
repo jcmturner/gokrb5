@@ -84,12 +84,10 @@ type LibDefaults struct {
 
 // Create a new LibDefaults struct.
 func newLibDefaults() *LibDefaults {
-	var uid string
+	uid := "0"
 	var hdir string
-	usr, err := user.Current()
-	if err != nil || usr == nil {
-		uid = "0"
-	} else {
+	usr, _ := user.Current()
+	if usr != nil {
 		uid = usr.Uid
 		hdir = usr.HomeDir
 	}
