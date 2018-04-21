@@ -59,7 +59,7 @@ func TestDes3CbcSha1Kd_StringToKey(t *testing.T) {
 	for _, test := range tests {
 		key, err := e.StringToKey(test.secret, test.salt, "")
 		if err != nil {
-			t.Errorf("Error in StringToKey: %v", err)
+			t.Errorf("error in StringToKey: %v", err)
 		}
 		assert.Equal(t, test.key, hex.EncodeToString(key), "StringToKey not as expected")
 	}

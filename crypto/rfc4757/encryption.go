@@ -14,11 +14,11 @@ import (
 // EncryptData encrypts the data provided using methods specific to the etype provided as defined in RFC 4757.
 func EncryptData(key, data []byte, e etype.EType) ([]byte, error) {
 	if len(key) != e.GetKeyByteSize() {
-		return []byte{}, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeyByteSize(), len(key))
+		return []byte{}, fmt.Errorf("incorrect keysize: expected: %v actual: %v", e.GetKeyByteSize(), len(key))
 	}
 	rc4Cipher, err := rc4.NewCipher(key)
 	if err != nil {
-		return []byte{}, fmt.Errorf("Error creating RC4 cipher: %v", err)
+		return []byte{}, fmt.Errorf("error creating RC4 cipher: %v", err)
 	}
 	ed := make([]byte, len(data))
 	copy(ed, data)
@@ -38,7 +38,7 @@ func EncryptMessage(key, data []byte, usage uint32, export bool, e etype.EType) 
 	confounder := make([]byte, e.GetConfounderByteSize()) // size = 8
 	_, err := rand.Read(confounder)
 	if err != nil {
-		return []byte{}, fmt.Errorf("Error generating confounder: %v", err)
+		return []byte{}, fmt.Errorf("error generating confounder: %v", err)
 	}
 	k1 := key
 	k2 := HMAC(k1, UsageToMSMsgType(usage))
@@ -48,7 +48,7 @@ func EncryptMessage(key, data []byte, usage uint32, export bool, e etype.EType) 
 
 	ed, err := EncryptData(k3, toenc, e)
 	if err != nil {
-		return []byte{}, fmt.Errorf("Error encrypting data: %v", err)
+		return []byte{}, fmt.Errorf("error encrypting data: %v", err)
 	}
 
 	msg := append(chksum, ed...)
@@ -64,11 +64,11 @@ func DecryptMessage(key, data []byte, usage uint32, export bool, e etype.EType) 
 
 	pt, err := DecryptData(k3, ct, e)
 	if err != nil {
-		return []byte{}, fmt.Errorf("Error decrypting data: %v", err)
+		return []byte{}, fmt.Errorf("error decrypting data: %v", err)
 	}
 
 	if !VerifyIntegrity(k2, pt, data, e) {
-		return []byte{}, errors.New("Integrity checksum incorrect")
+		return []byte{}, errors.New("integrity checksum incorrect")
 	}
 	return pt[e.GetConfounderByteSize():], nil
 }

@@ -68,7 +68,7 @@ func (m *MechToken) Unmarshal(b []byte) error {
 	var oid asn1.ObjectIdentifier
 	r, err := asn1.UnmarshalWithParams(b, &oid, fmt.Sprintf("application,explicit,tag:%v", 0))
 	if err != nil {
-		return fmt.Errorf("Error unmarshalling MechToken OID: %v", err)
+		return fmt.Errorf("error unmarshalling MechToken OID: %v", err)
 	}
 	m.OID = oid
 	m.TokID = r[0:2]
@@ -77,21 +77,21 @@ func (m *MechToken) Unmarshal(b []byte) error {
 		var a messages.APReq
 		err = a.Unmarshal(r[2:])
 		if err != nil {
-			return fmt.Errorf("Error unmarshalling MechToken AP_REQ: %v", err)
+			return fmt.Errorf("error unmarshalling MechToken AP_REQ: %v", err)
 		}
 		m.APReq = a
 	case TOK_ID_KRB_AP_REP:
 		var a messages.APRep
 		err = a.Unmarshal(r[2:])
 		if err != nil {
-			return fmt.Errorf("Error unmarshalling MechToken AP_REP: %v", err)
+			return fmt.Errorf("error unmarshalling MechToken AP_REP: %v", err)
 		}
 		m.APRep = a
 	case TOK_ID_KRB_ERROR:
 		var a messages.KRBError
 		err = a.Unmarshal(r[2:])
 		if err != nil {
-			return fmt.Errorf("Error unmarshalling MechToken KRBError: %v", err)
+			return fmt.Errorf("error unmarshalling MechToken KRBError: %v", err)
 		}
 		m.KRBError = a
 	}

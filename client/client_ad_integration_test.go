@@ -96,11 +96,11 @@ func TestClient_GetServiceTicket_AD_TRUST_USER_DOMAIN(t *testing.T) {
 	skt, _ := keytab.Parse(b)
 	err = tkt.DecryptEncPart(skt, "sysHTTP")
 	if err != nil {
-		t.Errorf("Error decrypting ticket with service keytab: %v", err)
+		t.Errorf("error decrypting ticket with service keytab: %v", err)
 	}
 	isPAC, pac, err := tkt.GetPACType(skt, "sysHTTP")
 	if err != nil {
-		t.Errorf("Error getting PAC: %v", err)
+		t.Errorf("error getting PAC: %v", err)
 	}
 	assert.True(t, isPAC, "Did not find PAC in service ticket")
 	assert.Equal(t, "testuser1", pac.KerbValidationInfo.EffectiveName.Value, "PAC value not parsed")

@@ -69,7 +69,7 @@ func (kt *Keytab) GetEncryptionKey(nameString []string, realm string, kvno int, 
 		}
 	}
 	if len(key.KeyValue) < 1 {
-		return key, fmt.Errorf("Matching key not found in keytab. Looking for %v realm: %v kvno: %v etype: %v", nameString, realm, kvno, etype)
+		return key, fmt.Errorf("matching key not found in keytab. Looking for %v realm: %v kvno: %v etype: %v", nameString, realm, kvno, etype)
 	}
 	return key, nil
 }
@@ -136,14 +136,14 @@ func (kt Keytab) Write(w io.Writer) (int, error) {
 func Parse(b []byte) (kt Keytab, err error) {
 	//The first byte of the file always has the value 5
 	if b[0] != keytabFirstByte {
-		err = errors.New("Invalid keytab data. First byte does not equal 5")
+		err = errors.New("invalid keytab data. First byte does not equal 5")
 		return
 	}
 	//Get keytab version
 	//The 2nd byte contains the version number (1 or 2)
 	kt.Version = uint8(b[1])
 	if kt.Version != 1 && kt.Version != 2 {
-		err = errors.New("Invalid keytab data. Keytab version is neither 1 nor 2")
+		err = errors.New("invalid keytab data. Keytab version is neither 1 nor 2")
 		return
 	}
 	//Version 1 of the file format uses native byte order for integer representations. Version 2 always uses big-endian byte order

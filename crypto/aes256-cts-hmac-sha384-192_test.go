@@ -85,7 +85,7 @@ func TestAes256CtsHmacSha384192_Cypto(t *testing.T) {
 		// Test encryption to raw encrypted bytes
 		_, c, err := e.EncryptData(ke, cfm)
 		if err != nil {
-			t.Errorf("Encryption failed for test %v: %v", i+1, err)
+			t.Errorf("encryption failed for test %v: %v", i+1, err)
 		}
 		assert.Equal(t, test.encrypted, hex.EncodeToString(c), "Encrypted result not as expected - test %v", i)
 
@@ -94,7 +94,7 @@ func TestAes256CtsHmacSha384192_Cypto(t *testing.T) {
 		//Remove the confounder bytes
 		p = p[e.GetConfounderByteSize():]
 		if err != nil {
-			t.Errorf("Decryption failed for test %v: %v", i+1, err)
+			t.Errorf("decryption failed for test %v: %v", i+1, err)
 		}
 		assert.Equal(t, test.plain, hex.EncodeToString(p), "Decrypted result not as expected - test %v", i)
 
@@ -104,11 +104,11 @@ func TestAes256CtsHmacSha384192_Cypto(t *testing.T) {
 		// Test encrypting and decrypting a complete cipertext message (with confounder, integrity hash)
 		_, cm, err := e.EncryptMessage(protocolBaseKey, m, testUsage)
 		if err != nil {
-			t.Errorf("Encryption to message failed for test %v: %v", i+1, err)
+			t.Errorf("encryption to message failed for test %v: %v", i+1, err)
 		}
 		dm, err := e.DecryptMessage(protocolBaseKey, cm, testUsage)
 		if err != nil {
-			t.Errorf("Decrypting complete encrypted message failed for test %v: %v", i+1, err)
+			t.Errorf("decrypting complete encrypted message failed for test %v: %v", i+1, err)
 		}
 		assert.Equal(t, m, dm, "Message not as expected after encrypting and decrypting for test %v: %v", i+1, err)
 
@@ -136,7 +136,7 @@ func TestAes256CtsHmacSha384192_VerifyIntegrity(t *testing.T) {
 		p, _ := hex.DecodeString(test.pt)
 		b, err := e.GetChecksumHash(protocolBaseKey, p, testUsage)
 		if err != nil {
-			t.Errorf("Error generating checksum: %v", err)
+			t.Errorf("error generating checksum: %v", err)
 		}
 		assert.Equal(t, test.chksum, hex.EncodeToString(b), "Checksum not as expected")
 	}

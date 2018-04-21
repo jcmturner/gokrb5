@@ -63,7 +63,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			var k KerbValidationInfo
 			err := k.Unmarshal(p)
 			if err != nil {
-				return fmt.Errorf("Error processing KerbValidationInfo: %v", err)
+				return fmt.Errorf("error processing KerbValidationInfo: %v", err)
 			}
 			pac.KerbValidationInfo = &k
 		case ulTypeCredentials:
@@ -74,7 +74,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			var k CredentialsInfo
 			err := k.Unmarshal(p, key)
 			if err != nil {
-				return fmt.Errorf("Error processing CredentialsInfo: %v", err)
+				return fmt.Errorf("error processing CredentialsInfo: %v", err)
 			}
 			pac.CredentialsInfo = &k
 		case ulTypePACServerSignatureData:
@@ -86,7 +86,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			zb, err := k.Unmarshal(p)
 			copy(pac.ZeroSigData[int(buf.Offset):int(buf.Offset)+int(buf.CBBufferSize)], zb)
 			if err != nil {
-				return fmt.Errorf("Error processing ServerChecksum: %v", err)
+				return fmt.Errorf("error processing ServerChecksum: %v", err)
 			}
 			pac.ServerChecksum = &k
 		case ulTypePACKDCSignatureData:
@@ -98,7 +98,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			zb, err := k.Unmarshal(p)
 			copy(pac.ZeroSigData[int(buf.Offset):int(buf.Offset)+int(buf.CBBufferSize)], zb)
 			if err != nil {
-				return fmt.Errorf("Error processing KDCChecksum: %v", err)
+				return fmt.Errorf("error processing KDCChecksum: %v", err)
 			}
 			pac.KDCChecksum = &k
 		case ulTypePACClientInfo:
@@ -109,7 +109,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			var k ClientInfo
 			err := k.Unmarshal(p)
 			if err != nil {
-				return fmt.Errorf("Error processing ClientInfo: %v", err)
+				return fmt.Errorf("error processing ClientInfo: %v", err)
 			}
 			pac.ClientInfo = &k
 		case ulTypeS4UDelegationInfo:
@@ -120,7 +120,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			var k S4UDelegationInfo
 			err := k.Unmarshal(p)
 			if err != nil {
-				return fmt.Errorf("Error processing S4U_DelegationInfo: %v", err)
+				return fmt.Errorf("error processing S4U_DelegationInfo: %v", err)
 			}
 			pac.S4UDelegationInfo = &k
 		case ulTypeUPNDNSInfo:
@@ -131,7 +131,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			var k UPNDNSInfo
 			err := k.Unmarshal(p)
 			if err != nil {
-				return fmt.Errorf("Error processing UPN_DNSInfo: %v", err)
+				return fmt.Errorf("error processing UPN_DNSInfo: %v", err)
 			}
 			pac.UPNDNSInfo = &k
 		case ulTypePACClientClaimsInfo:
@@ -142,7 +142,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			var k ClientClaimsInfo
 			err := k.Unmarshal(p)
 			if err != nil {
-				return fmt.Errorf("Error processing ClientClaimsInfo: %v", err)
+				return fmt.Errorf("error processing ClientClaimsInfo: %v", err)
 			}
 			pac.ClientClaimsInfo = &k
 		case ulTypePACDeviceInfo:
@@ -153,7 +153,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			var k DeviceInfo
 			err := k.Unmarshal(p)
 			if err != nil {
-				return fmt.Errorf("Error processing DeviceInfo: %v", err)
+				return fmt.Errorf("error processing DeviceInfo: %v", err)
 			}
 			pac.DeviceInfo = &k
 		case ulTypePACDeviceClaimsInfo:
@@ -164,7 +164,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			var k DeviceClaimsInfo
 			err := k.Unmarshal(p)
 			if err != nil {
-				return fmt.Errorf("Error processing DeviceClaimsInfo: %v", err)
+				return fmt.Errorf("error processing DeviceClaimsInfo: %v", err)
 			}
 			pac.DeviceClaimsInfo = &k
 		}

@@ -50,7 +50,7 @@ func GetPAEncTSEncAsnMarshalled() ([]byte, error) {
 	}
 	b, err := asn1.Marshal(p)
 	if err != nil {
-		return b, fmt.Errorf("Error mashaling PAEncTSEnc: %v", err)
+		return b, fmt.Errorf("error mashaling PAEncTSEnc: %v", err)
 	}
 	return b, nil
 }
