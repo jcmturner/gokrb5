@@ -21,7 +21,7 @@ func EncryptData(key, data []byte, e etype.EType) ([]byte, []byte, error) {
 		kl = 32
 	}
 	if len(key) != kl {
-		return []byte{}, []byte{}, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", e.GetKeyByteSize(), len(key))
+		return []byte{}, []byte{}, fmt.Errorf("incorrect keysize: expected: %v actual: %v", e.GetKeyByteSize(), len(key))
 	}
 	ivz := make([]byte, aes.BlockSize)
 	return aescts.Encrypt(key, ivz, data)
@@ -35,7 +35,7 @@ func EncryptMessage(key, message []byte, usage uint32, e etype.EType) ([]byte, [
 		kl = 32
 	}
 	if len(key) != kl {
-		return []byte{}, []byte{}, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", kl, len(key))
+		return []byte{}, []byte{}, fmt.Errorf("incorrect keysize: expected: %v actual: %v", kl, len(key))
 	}
 	if len(key) != e.GetKeyByteSize() {
 	}
@@ -43,7 +43,7 @@ func EncryptMessage(key, message []byte, usage uint32, e etype.EType) ([]byte, [
 	c := make([]byte, e.GetConfounderByteSize())
 	_, err := rand.Read(c)
 	if err != nil {
-		return []byte{}, []byte{}, fmt.Errorf("Could not generate random confounder: %v", err)
+		return []byte{}, []byte{}, fmt.Errorf("could not generate random confounder: %v", err)
 	}
 	plainBytes := append(c, message...)
 
@@ -52,20 +52,20 @@ func EncryptMessage(key, message []byte, usage uint32, e etype.EType) ([]byte, [
 	if usage != 0 {
 		k, err = e.DeriveKey(key, common.GetUsageKe(usage))
 		if err != nil {
-			return []byte{}, []byte{}, fmt.Errorf("Error deriving key for encryption: %v", err)
+			return []byte{}, []byte{}, fmt.Errorf("error deriving key for encryption: %v", err)
 		}
 	}
 
 	// Encrypt the data
 	iv, b, err := e.EncryptData(k, plainBytes)
 	if err != nil {
-		return iv, b, fmt.Errorf("Error encrypting data: %v", err)
+		return iv, b, fmt.Errorf("error encrypting data: %v", err)
 	}
 
 	ivz := make([]byte, e.GetConfounderByteSize())
 	ih, err := GetIntegityHash(ivz, b, key, usage, e)
 	if err != nil {
-		return iv, b, fmt.Errorf("Error encrypting data: %v", err)
+		return iv, b, fmt.Errorf("error encrypting data: %v", err)
 	}
 	b = append(b, ih...)
 	return iv, b, nil
@@ -78,7 +78,7 @@ func DecryptData(key, data []byte, e etype.EType) ([]byte, error) {
 		kl = 32
 	}
 	if len(key) != kl {
-		return []byte{}, fmt.Errorf("Incorrect keysize: expected: %v actual: %v", kl, len(key))
+		return []byte{}, fmt.Errorf("incorrect keysize: expected: %v actual: %v", kl, len(key))
 	}
 	ivz := make([]byte, aes.BlockSize)
 	return aescts.Decrypt(key, ivz, data)
@@ -90,7 +90,7 @@ func DecryptMessage(key, ciphertext []byte, usage uint32, e etype.EType) ([]byte
 	//Derive the key
 	k, err := e.DeriveKey(key, common.GetUsageKe(usage))
 	if err != nil {
-		return nil, fmt.Errorf("Error deriving key: %v", err)
+		return nil, fmt.Errorf("error deriving key: %v", err)
 	}
 	// Strip off the checksum from the end
 	b, err := e.DecryptData(k, ciphertext[:len(ciphertext)-e.GetHMACBitLength()/8])
@@ -99,7 +99,7 @@ func DecryptMessage(key, ciphertext []byte, usage uint32, e etype.EType) ([]byte
 	}
 	//Verify checksum
 	if !e.VerifyIntegrity(key, ciphertext, b, usage) {
-		return nil, errors.New("Integrity verification failed")
+		return nil, errors.New("integrity verification failed")
 	}
 	//Remove the confounder bytes
 	return b[e.GetConfounderByteSize():], nil

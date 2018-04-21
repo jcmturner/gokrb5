@@ -24,7 +24,7 @@ type DeviceInfo struct {
 func (k *DeviceInfo) Unmarshal(b []byte) error {
 	ch, _, p, err := ndr.ReadHeaders(&b)
 	if err != nil {
-		return fmt.Errorf("Error parsing byte stream headers: %v", err)
+		return fmt.Errorf("error parsing byte stream headers: %v", err)
 	}
 	e := &ch.Endianness
 
@@ -50,7 +50,7 @@ func (k *DeviceInfo) Unmarshal(b []byte) error {
 	if k.SIDCount > 0 {
 		ac := ndr.ReadUniDimensionalConformantArrayHeader(&b, &p, e)
 		if ac != int(k.SIDCount) {
-			return fmt.Errorf("Error with size of ExtraSIDs list. Expected: %d, Actual: %d", k.SIDCount, ac)
+			return fmt.Errorf("error with size of ExtraSIDs list. expected: %d, Actual: %d", k.SIDCount, ac)
 		}
 		es := make([]mstypes.KerbSidAndAttributes, k.SIDCount, k.SIDCount)
 		attr := make([]uint32, k.SIDCount, k.SIDCount)
@@ -64,7 +64,7 @@ func (k *DeviceInfo) Unmarshal(b []byte) error {
 				s, err := mstypes.ReadRPCSID(&b, &p, e)
 				es[i] = mstypes.KerbSidAndAttributes{SID: s, Attributes: attr[i]}
 				if err != nil {
-					return ndr.Malformed{EText: fmt.Sprintf("Could not read ExtraSIDs: %v", err)}
+					return ndr.Malformed{EText: fmt.Sprintf("could not read ExtraSIDs: %v", err)}
 				}
 			}
 		}
@@ -84,7 +84,7 @@ func (k *DeviceInfo) Unmarshal(b []byte) error {
 	if len(b) >= p {
 		for _, v := range b[p:] {
 			if v != 0 {
-				return ndr.Malformed{EText: "Non-zero padding left over at end of data stream"}
+				return ndr.Malformed{EText: "non-zero padding left over at end of data stream"}
 			}
 		}
 	}

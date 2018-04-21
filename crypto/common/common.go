@@ -46,22 +46,22 @@ func PKCS7Pad(b []byte, m int) ([]byte, error) {
 // PKCS7Unpad removes RFC 2315 padding from byes where message size is m.
 func PKCS7Unpad(b []byte, m int) ([]byte, error) {
 	if m <= 0 {
-		return nil, errors.New("Invalid message block size when unpadding")
+		return nil, errors.New("invalid message block size when unpadding")
 	}
 	if b == nil || len(b) == 0 {
-		return nil, errors.New("Padded data not valid: Zero size")
+		return nil, errors.New("padded data not valid: Zero size")
 	}
 	if len(b)%m != 0 {
-		return nil, errors.New("Padded data not valid: Not multiple of message block size")
+		return nil, errors.New("padded data not valid: Not multiple of message block size")
 	}
 	c := b[len(b)-1]
 	n := int(c)
 	if n == 0 || n > len(b) {
-		return nil, errors.New("Padded data not valid: Data may not have been padded")
+		return nil, errors.New("padded data not valid: Data may not have been padded")
 	}
 	for i := 0; i < n; i++ {
 		if b[len(b)-n+i] != c {
-			return nil, errors.New("Padded data not valid")
+			return nil, errors.New("padded data not valid")
 		}
 	}
 	return b[:len(b)-n], nil
@@ -71,7 +71,7 @@ func PKCS7Unpad(b []byte, m int) ([]byte, error) {
 func GetHash(pt, key []byte, usage []byte, etype etype.EType) ([]byte, error) {
 	k, err := etype.DeriveKey(key, usage)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to derive key for checksum: %v", err)
+		return nil, fmt.Errorf("unable to derive key for checksum: %v", err)
 	}
 	mac := hmac.New(etype.GetHashFunc(), k)
 	p := make([]byte, len(pt))

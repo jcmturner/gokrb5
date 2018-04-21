@@ -36,7 +36,7 @@ func TestAes128CtsHmacSha196_StringToKey(t *testing.T) {
 		assert.Equal(t, test.pbkdf2, hex.EncodeToString(rfc3962.StringToPBKDF2(test.phrase, test.salt, test.iterations, e)), "PBKDF2 not as expected")
 		k, err := e.StringToKey(test.phrase, test.salt, common.IterationsToS2Kparams(uint32(test.iterations)))
 		if err != nil {
-			t.Errorf("Error in processing string to key for test %d: %v", i, err)
+			t.Errorf("error in processing string to key for test %d: %v", i, err)
 		}
 		assert.Equal(t, test.key, hex.EncodeToString(k), "String to Key not as expected")
 

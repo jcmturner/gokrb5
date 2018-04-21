@@ -41,7 +41,7 @@ func TestClient_SuccessfulLogin_Keytab(t *testing.T) {
 
 		err = cl.Login()
 		if err != nil {
-			t.Errorf("Error on logging in with KDC %s: %v\n", test, err)
+			t.Errorf("error on logging in with KDC %s: %v\n", test, err)
 		}
 	}
 }
@@ -64,7 +64,7 @@ func TestClient_SuccessfulLogin_Password(t *testing.T) {
 
 		err := cl.Login()
 		if err != nil {
-			t.Errorf("Error on logging in with KDC %s: %v\n", test, err)
+			t.Errorf("error on logging in with KDC %s: %v\n", test, err)
 		}
 	}
 }
@@ -84,7 +84,7 @@ func TestClient_SuccessfulLogin_TCPOnly(t *testing.T) {
 
 	err = cl.Login()
 	if err != nil {
-		t.Fatalf("Error on login: %v\n", err)
+		t.Fatalf("error on login: %v\n", err)
 	}
 }
 
@@ -115,11 +115,11 @@ func TestClient_ASExchange_TGSExchange_EncTypes_Keytab(t *testing.T) {
 
 		err = cl.Login()
 		if err != nil {
-			t.Errorf("Error on login using enctype %s: %v\n", test, err)
+			t.Errorf("error on login using enctype %s: %v\n", test, err)
 		}
 		tkt, key, err := cl.GetServiceTicket("HTTP/host.test.gokrb5")
 		if err != nil {
-			t.Errorf("Error in TGS exchange using enctype %s: %v", test, err)
+			t.Errorf("error in TGS exchange using enctype %s: %v", test, err)
 		}
 		assert.Equal(t, "TEST.GOKRB5", tkt.Realm, "Realm in ticket not as expected for %s test", test)
 		assert.Equal(t, etypeID.ETypesByName[test], key.KeyType, "Key is not for enctype %s", test)
@@ -151,11 +151,11 @@ func TestClient_ASExchange_TGSExchange_EncTypes_Password(t *testing.T) {
 
 		err := cl.Login()
 		if err != nil {
-			t.Errorf("Error on login using enctype %s: %v\n", test, err)
+			t.Errorf("error on login using enctype %s: %v\n", test, err)
 		}
 		tkt, key, err := cl.GetServiceTicket("HTTP/host.test.gokrb5")
 		if err != nil {
-			t.Errorf("Error in TGS exchange using enctype %s: %v", test, err)
+			t.Errorf("error in TGS exchange using enctype %s: %v", test, err)
 		}
 		assert.Equal(t, "TEST.GOKRB5", tkt.Realm, "Realm in ticket not as expected for %s test", test)
 		assert.Equal(t, etypeID.ETypesByName[test], key.KeyType, "Key is not for enctype %s", test)
@@ -176,7 +176,7 @@ func TestClient_FailedLogin(t *testing.T) {
 
 	err = cl.Login()
 	if err == nil {
-		t.Fatal("Login with incorrect password did not error")
+		t.Fatal("login with incorrect password did not error")
 	}
 }
 
@@ -194,7 +194,7 @@ func TestClient_SuccessfulLogin_UserRequiringPreAuth(t *testing.T) {
 
 	err = cl.Login()
 	if err != nil {
-		t.Fatalf("Error on login: %v\n", err)
+		t.Fatalf("error on login: %v\n", err)
 	}
 }
 
@@ -213,7 +213,7 @@ func TestClient_SuccessfulLogin_UserRequiringPreAuth_TCPOnly(t *testing.T) {
 
 	err = cl.Login()
 	if err != nil {
-		t.Fatalf("Error on login: %v\n", err)
+		t.Fatalf("error on login: %v\n", err)
 	}
 }
 
@@ -227,7 +227,7 @@ func TestClient_NetworkTimeout(t *testing.T) {
 
 	err = cl.Login()
 	if err == nil {
-		t.Fatal("Login with incorrect KDC address did not error")
+		t.Fatal("login with incorrect KDC address did not error")
 	}
 }
 
@@ -245,12 +245,12 @@ func TestClient_GetServiceTicket(t *testing.T) {
 
 	err = cl.Login()
 	if err != nil {
-		t.Fatalf("Error on login: %v\n", err)
+		t.Fatalf("error on login: %v\n", err)
 	}
 	spn := "HTTP/host.test.gokrb5"
 	tkt, key, err := cl.GetServiceTicket(spn)
 	if err != nil {
-		t.Fatalf("Error getting service ticket: %v\n", err)
+		t.Fatalf("error getting service ticket: %v\n", err)
 	}
 	assert.Equal(t, spn, tkt.SName.GetPrincipalNameString())
 	assert.Equal(t, int32(18), key.KeyType)
@@ -258,7 +258,7 @@ func TestClient_GetServiceTicket(t *testing.T) {
 	//Check cache use - should get the same values back again
 	tkt2, key2, err := cl.GetServiceTicket(spn)
 	if err != nil {
-		t.Fatalf("Error getting service ticket: %v\n", err)
+		t.Fatalf("error getting service ticket: %v\n", err)
 	}
 	assert.Equal(t, tkt.EncPart.Cipher, tkt2.EncPart.Cipher)
 	assert.Equal(t, key.KeyValue, key2.KeyValue)
@@ -278,7 +278,7 @@ func TestClient_GetServiceTicket_InvalidSPN(t *testing.T) {
 
 	err = cl.Login()
 	if err != nil {
-		t.Fatalf("Error on login: %v\n", err)
+		t.Fatalf("error on login: %v\n", err)
 	}
 	spn := "host.test.gokrb5"
 	_, _, err = cl.GetServiceTicket(spn)
@@ -300,12 +300,12 @@ func TestClient_GetServiceTicket_OlderKDC(t *testing.T) {
 
 	err = cl.Login()
 	if err != nil {
-		t.Fatalf("Error on login: %v\n", err)
+		t.Fatalf("error on login: %v\n", err)
 	}
 	spn := "HTTP/host.test.gokrb5"
 	tkt, key, err := cl.GetServiceTicket(spn)
 	if err != nil {
-		t.Fatalf("Error getting service ticket: %v\n", err)
+		t.Fatalf("error getting service ticket: %v\n", err)
 	}
 	assert.Equal(t, spn, tkt.SName.GetPrincipalNameString())
 	assert.Equal(t, int32(18), key.KeyType)
@@ -325,7 +325,7 @@ func TestClient_SetSPNEGOHeader(t *testing.T) {
 
 	err := cl.Login()
 	if err != nil {
-		t.Fatalf("Error on AS_REQ: %v\n", err)
+		t.Fatalf("error on AS_REQ: %v\n", err)
 	}
 	url := os.Getenv("TEST_HTTP_URL")
 	if url == "" {
@@ -334,16 +334,16 @@ func TestClient_SetSPNEGOHeader(t *testing.T) {
 	r, _ := http.NewRequest("GET", url, nil)
 	httpResp, err := http.DefaultClient.Do(r)
 	if err != nil {
-		t.Fatalf("Request error: %v\n", err)
+		t.Fatalf("request error: %v\n", err)
 	}
 	assert.Equal(t, http.StatusUnauthorized, httpResp.StatusCode, "Status code in response to client with no SPNEGO not as expected")
 	err = cl.SetSPNEGOHeader(r, "HTTP/host.test.gokrb5")
 	if err != nil {
-		t.Fatalf("Error setting client SPNEGO header: %v", err)
+		t.Fatalf("error setting client SPNEGO header: %v", err)
 	}
 	httpResp, err = http.DefaultClient.Do(r)
 	if err != nil {
-		t.Fatalf("Request error: %v\n", err)
+		t.Fatalf("request error: %v\n", err)
 	}
 	assert.Equal(t, http.StatusOK, httpResp.StatusCode, "Status code in response to client SPNEGO request not as expected")
 }
@@ -395,18 +395,18 @@ func spnegoGet(cl *Client) error {
 	r, _ := http.NewRequest("GET", url, nil)
 	httpResp, err := http.DefaultClient.Do(r)
 	if err != nil {
-		return fmt.Errorf("Request error: %v\n", err)
+		return fmt.Errorf("request error: %v\n", err)
 	}
 	if httpResp.StatusCode != http.StatusUnauthorized {
 		return errors.New("did not get unauthorized code when no SPNEGO header set")
 	}
 	err = cl.SetSPNEGOHeader(r, "HTTP/host.test.gokrb5")
 	if err != nil {
-		return fmt.Errorf("Error setting client SPNEGO header: %v", err)
+		return fmt.Errorf("error setting client SPNEGO header: %v", err)
 	}
 	httpResp, err = http.DefaultClient.Do(r)
 	if err != nil {
-		return fmt.Errorf("Request error: %v\n", err)
+		return fmt.Errorf("request error: %v\n", err)
 	}
 	if httpResp.StatusCode != http.StatusOK {
 		return errors.New("did not get OK code when SPNEGO header set")
@@ -417,15 +417,15 @@ func spnegoGet(cl *Client) error {
 func TestNewClientFromCCache(t *testing.T) {
 	b, err := hex.DecodeString(testdata.CCACHE_TEST)
 	if err != nil {
-		t.Fatalf("Error decoding test data")
+		t.Fatalf("error decoding test data")
 	}
 	cc, err := credentials.ParseCCache(b)
 	if err != nil {
-		t.Fatal("Error getting test CCache")
+		t.Fatal("error getting test CCache")
 	}
 	cl, err := NewClientFromCCache(cc)
 	if err != nil {
-		t.Fatalf("Error creating client from CCache: %v", err)
+		t.Fatalf("error creating client from CCache: %v", err)
 	}
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	addr := os.Getenv("TEST_KDC_ADDR")
@@ -435,7 +435,7 @@ func TestNewClientFromCCache(t *testing.T) {
 	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
 	cl.WithConfig(c)
 	if ok, err := cl.IsConfigured(); !ok {
-		t.Fatalf("Client was not configured from CCache: %v", err)
+		t.Fatalf("client was not configured from CCache: %v", err)
 	}
 }
 
@@ -470,12 +470,12 @@ func TestClient_GetServiceTicket_Trusted_Resource_Domain(t *testing.T) {
 	err := cl.Login()
 
 	if err != nil {
-		t.Fatalf("Error on login: %v\n", err)
+		t.Fatalf("error on login: %v\n", err)
 	}
 	spn := "HTTP/host.resdom.gokrb5"
 	tkt, key, err := cl.GetServiceTicket(spn)
 	if err != nil {
-		t.Fatalf("Error getting service ticket: %v\n", err)
+		t.Fatalf("error getting service ticket: %v\n", err)
 	}
 	assert.Equal(t, spn, tkt.SName.GetPrincipalNameString())
 	assert.Equal(t, etypeID.ETypesByName["aes256-cts-hmac-sha1-96"], key.KeyType)
@@ -484,6 +484,6 @@ func TestClient_GetServiceTicket_Trusted_Resource_Domain(t *testing.T) {
 	skt, _ := keytab.Parse(b)
 	err = tkt.DecryptEncPart(skt, "")
 	if err != nil {
-		t.Errorf("Error decrypting ticket with service keytab: %v", err)
+		t.Errorf("error decrypting ticket with service keytab: %v", err)
 	}
 }

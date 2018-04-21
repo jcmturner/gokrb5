@@ -78,7 +78,7 @@ type KerbValidationInfo struct {
 func (k *KerbValidationInfo) Unmarshal(b []byte) (err error) {
 	ch, _, p, err := ndr.ReadHeaders(&b)
 	if err != nil {
-		return fmt.Errorf("Error parsing byte stream headers: %v", err)
+		return fmt.Errorf("error parsing byte stream headers: %v", err)
 	}
 	e := &ch.Endianness
 
@@ -172,7 +172,7 @@ func (k *KerbValidationInfo) Unmarshal(b []byte) (err error) {
 	if k.GroupCount > 0 {
 		ac := ndr.ReadUniDimensionalConformantArrayHeader(&b, &p, e)
 		if ac != int(k.GroupCount) {
-			return errors.New("Error with size of group list")
+			return errors.New("error with size of group list")
 		}
 		g := make([]mstypes.GroupMembership, k.GroupCount, k.GroupCount)
 		for i := range g {
@@ -191,14 +191,14 @@ func (k *KerbValidationInfo) Unmarshal(b []byte) (err error) {
 	if k.pLogonDomainID != 0 {
 		k.LogonDomainID, err = mstypes.ReadRPCSID(&b, &p, e)
 		if err != nil {
-			return fmt.Errorf("Error reading LogonDomainID: %v", err)
+			return fmt.Errorf("error reading LogonDomainID: %v", err)
 		}
 	}
 
 	if k.SIDCount > 0 {
 		ac := ndr.ReadUniDimensionalConformantArrayHeader(&b, &p, e)
 		if ac != int(k.SIDCount) {
-			return fmt.Errorf("Error with size of ExtraSIDs list. Expected: %d, Actual: %d", k.SIDCount, ac)
+			return fmt.Errorf("error with size of ExtraSIDs list. Expected: %d, Actual: %d", k.SIDCount, ac)
 		}
 		es := make([]mstypes.KerbSidAndAttributes, k.SIDCount, k.SIDCount)
 		attr := make([]uint32, k.SIDCount, k.SIDCount)
@@ -212,7 +212,7 @@ func (k *KerbValidationInfo) Unmarshal(b []byte) (err error) {
 				s, err := mstypes.ReadRPCSID(&b, &p, e)
 				es[i] = mstypes.KerbSidAndAttributes{SID: s, Attributes: attr[i]}
 				if err != nil {
-					return ndr.Malformed{EText: fmt.Sprintf("Could not read ExtraSIDs: %v", err)}
+					return ndr.Malformed{EText: fmt.Sprintf("could not read ExtraSIDs: %v", err)}
 				}
 			}
 		}
@@ -229,7 +229,7 @@ func (k *KerbValidationInfo) Unmarshal(b []byte) (err error) {
 	if k.ResourceGroupCount > 0 {
 		ac := ndr.ReadUniDimensionalConformantArrayHeader(&b, &p, e)
 		if ac != int(k.ResourceGroupCount) {
-			return fmt.Errorf("Error with size of ResourceGroup list. Expected: %d, Actual: %d", k.ResourceGroupCount, ac)
+			return fmt.Errorf("error with size of ResourceGroup list. Expected: %d, Actual: %d", k.ResourceGroupCount, ac)
 		}
 		g := make([]mstypes.GroupMembership, ac, ac)
 		for i := range g {
@@ -242,7 +242,7 @@ func (k *KerbValidationInfo) Unmarshal(b []byte) (err error) {
 	if len(b) >= p {
 		for _, v := range b[p:] {
 			if v != 0 {
-				return ndr.Malformed{EText: "Non-zero padding left over at end of data stream"}
+				return ndr.Malformed{EText: "non-zero padding left over at end of data stream"}
 			}
 		}
 	}

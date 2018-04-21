@@ -100,7 +100,7 @@ func NewClientFromCCache(c credentials.CCache) (Client, error) {
 		var tkt messages.Ticket
 		err = tkt.Unmarshal(cred.Ticket)
 		if err != nil {
-			return cl, fmt.Errorf("Cache entry ticket bytes are not valid: %v", err)
+			return cl, fmt.Errorf("cache entry ticket bytes are not valid: %v", err)
 		}
 		cl.Cache.addEntry(
 			tkt,
@@ -143,7 +143,7 @@ func (cl *Client) Key(etype etype.EType, krberr messages.KRBError) (types.Encryp
 			var pas types.PADataSequence
 			err := pas.Unmarshal(krberr.EData)
 			if err != nil {
-				return types.EncryptionKey{}, fmt.Errorf("Could not get PAData from KRBError to generate key from password: %v", err)
+				return types.EncryptionKey{}, fmt.Errorf("could not get PAData from KRBError to generate key from password: %v", err)
 			}
 			key, _, err := crypto.GetKeyFromPassword(cl.Credentials.Password, krberr.CName, krberr.CRealm, etype.GetETypeID(), pas)
 			return key, err
@@ -151,7 +151,7 @@ func (cl *Client) Key(etype etype.EType, krberr messages.KRBError) (types.Encryp
 		key, _, err := crypto.GetKeyFromPassword(cl.Credentials.Password, cl.Credentials.CName, cl.Credentials.Realm, etype.GetETypeID(), types.PADataSequence{})
 		return key, err
 	}
-	return types.EncryptionKey{}, errors.New("Credential has neither keytab or password to generate key.")
+	return types.EncryptionKey{}, errors.New("credential has neither keytab or password to generate key.")
 }
 
 // LoadConfig loads the Kerberos configuration for the client from file path specified.

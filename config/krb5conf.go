@@ -329,7 +329,7 @@ func (r *Realm) parseLines(name string, lines []string) error {
 			continue
 		}
 		if !strings.Contains(line, "=") {
-			return fmt.Errorf("Realm configuration line invalid: %s", line)
+			return fmt.Errorf("realm configuration line invalid: %s", line)
 		}
 
 		p := strings.Split(line, "=")
@@ -384,11 +384,11 @@ func parseRealms(lines []string) ([]Realm, error) {
 		if strings.Contains(l, "{") {
 			if start >= 0 {
 				// already started a block!!!
-				return nil, errors.New("Invalid Realms section in configuration")
+				return nil, errors.New("invalid Realms section in configuration")
 			}
 			start = i
 			if !strings.Contains(l, "=") {
-				return nil, fmt.Errorf("Realm configuration line invalid: %s", l)
+				return nil, fmt.Errorf("realm configuration line invalid: %s", l)
 			}
 			p := strings.Split(l, "=")
 			name = strings.TrimSpace(p[0])
@@ -396,7 +396,7 @@ func parseRealms(lines []string) ([]Realm, error) {
 		if strings.Contains(l, "}") {
 			if start < 0 {
 				// but not started a block!!!
-				return nil, errors.New("Invalid Realms section in configuration")
+				return nil, errors.New("invalid Realms section in configuration")
 			}
 			var r Realm
 			r.parseLines(name, lines[start+1:i])
@@ -417,7 +417,7 @@ func (d *DomainRealm) parseLines(lines []string) error {
 			continue
 		}
 		if !strings.Contains(line, "=") {
-			return fmt.Errorf("Realm configuration line invalid: %s", line)
+			return fmt.Errorf("realm configuration line invalid: %s", line)
 		}
 		p := strings.Split(line, "=")
 		domain := strings.TrimSpace(strings.ToLower(p[0]))
@@ -462,7 +462,7 @@ func (c *Config) ResolveRealm(domainName string) string {
 func Load(cfgPath string) (*Config, error) {
 	fh, err := os.Open(cfgPath)
 	if err != nil {
-		return nil, errors.New("Configuration file could not be openned: " + cfgPath + " " + err.Error())
+		return nil, errors.New("configuration file could not be openned: " + cfgPath + " " + err.Error())
 	}
 	defer fh.Close()
 	scanner := bufio.NewScanner(fh)
@@ -525,18 +525,18 @@ func NewConfigFromScanner(scanner *bufio.Scanner) (*Config, error) {
 		case "libdefaults":
 			err := c.LibDefaults.parseLines(lines[start:end])
 			if err != nil {
-				return nil, fmt.Errorf("Error processing libdefaults section: %v", err)
+				return nil, fmt.Errorf("error processing libdefaults section: %v", err)
 			}
 		case "realms":
 			realms, err := parseRealms(lines[start:end])
 			if err != nil {
-				return nil, fmt.Errorf("Error processing realms section: %v", err)
+				return nil, fmt.Errorf("error processing realms section: %v", err)
 			}
 			c.Realms = realms
 		case "domain_realm":
 			err := c.DomainRealm.parseLines(lines[start:end])
 			if err != nil {
-				return nil, fmt.Errorf("Error processing domaain_realm section: %v", err)
+				return nil, fmt.Errorf("error processing domaain_realm section: %v", err)
 			}
 		default:
 			continue
@@ -578,13 +578,13 @@ func parseDuration(s string) (time.Duration, error) {
 		ds := strings.SplitN(s, "d", 2)
 		dn, err := strconv.ParseUint(ds[0], 10, 32)
 		if err != nil {
-			return time.Duration(0), errors.New("invalid time duration.")
+			return time.Duration(0), errors.New("invalid time duration")
 		}
 		d := time.Duration(dn*24) * time.Hour
 		if ds[1] != "" {
 			dp, err := time.ParseDuration(ds[1])
 			if err != nil {
-				return time.Duration(0), errors.New("invalid time duration.")
+				return time.Duration(0), errors.New("invalid time duration")
 			}
 			d = d + dp
 		}
@@ -607,13 +607,13 @@ func parseDuration(s string) (time.Duration, error) {
 	if strings.Contains(s, ":") {
 		t := strings.Split(s, ":")
 		if 2 > len(t) || len(t) > 3 {
-			return time.Duration(0), errors.New("Invalid time duration value")
+			return time.Duration(0), errors.New("invalid time duration value")
 		}
 		var i []int
 		for _, n := range t {
 			j, err := strconv.ParseInt(n, 10, 16)
 			if err != nil {
-				return time.Duration(0), errors.New("Invalid time duration value")
+				return time.Duration(0), errors.New("invalid time duration value")
 			}
 			i = append(i, int(j))
 		}
@@ -623,7 +623,7 @@ func parseDuration(s string) (time.Duration, error) {
 		}
 		return d, nil
 	}
-	return time.Duration(0), errors.New("Invalid time duration value")
+	return time.Duration(0), errors.New("invalid time duration value")
 }
 
 // Parse possible boolean values to golang bool.
@@ -643,7 +643,7 @@ func parseBoolean(s string) (bool, error) {
 	case "n":
 		return false, nil
 	}
-	return false, errors.New("Invalid boolean value")
+	return false, errors.New("invalid boolean value")
 }
 
 // Parse array of strings but stop if an asterisk is placed at the end of a line.

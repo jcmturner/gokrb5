@@ -69,6 +69,6 @@ func TestClient_Login_DNSKDCs(t *testing.T) {
 
 	err = cl.Login()
 	if err != nil {
-		t.Errorf("Error on logging in using DNS lookup of KDCs: %v\n", err)
+		t.Errorf("error on logging in using DNS lookup of KDCs: %v\n", err)
 	}
 }

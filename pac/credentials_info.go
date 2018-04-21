@@ -25,7 +25,7 @@ type CredentialsInfo struct {
 func (c *CredentialsInfo) Unmarshal(b []byte, k types.EncryptionKey) error {
 	ch, _, p, err := ndr.ReadHeaders(&b)
 	if err != nil {
-		return fmt.Errorf("Error parsing byte stream headers: %v", err)
+		return fmt.Errorf("error parsing byte stream headers: %v", err)
 	}
 	e := &ch.Endianness
 
@@ -38,7 +38,7 @@ func (c *CredentialsInfo) Unmarshal(b []byte, k types.EncryptionKey) error {
 
 	err = c.DecryptEncPart(k, e)
 	if err != nil {
-		return fmt.Errorf("Error decrypting PAC Credentials Data: %v", err)
+		return fmt.Errorf("error decrypting PAC Credentials Data: %v", err)
 	}
 	return nil
 }
@@ -46,7 +46,7 @@ func (c *CredentialsInfo) Unmarshal(b []byte, k types.EncryptionKey) error {
 // DecryptEncPart decrypts the encrypted part of the CredentialsInfo.
 func (c *CredentialsInfo) DecryptEncPart(k types.EncryptionKey, e *binary.ByteOrder) error {
 	if k.KeyType != int32(c.EType) {
-		return fmt.Errorf("Key provided is not the correct type. Type needed: %d, type provided: %d", c.EType, k.KeyType)
+		return fmt.Errorf("key provided is not the correct type. Type needed: %d, type provided: %d", c.EType, k.KeyType)
 	}
 	pt, err := crypto.DecryptMessage(c.PACCredentialDataEncrypted, k, keyusage.KERB_NON_KERB_SALT)
 	if err != nil {

@@ -71,25 +71,25 @@ func UnmarshalNegToken(b []byte) (bool, interface{}, error) {
 	var a asn1.RawValue
 	_, err := asn1.Unmarshal(b, &a)
 	if err != nil {
-		return false, nil, fmt.Errorf("Error unmarshalling NegotiationToken: %v", err)
+		return false, nil, fmt.Errorf("error unmarshalling NegotiationToken: %v", err)
 	}
 	switch a.Tag {
 	case 0:
 		var negToken NegTokenInit
 		_, err = asn1.Unmarshal(a.Bytes, &negToken)
 		if err != nil {
-			return false, nil, fmt.Errorf("Error unmarshalling NegotiationToken type %d (Init): %v", a.Tag, err)
+			return false, nil, fmt.Errorf("error unmarshalling NegotiationToken type %d (Init): %v", a.Tag, err)
 		}
 		return true, negToken, nil
 	case 1:
 		var negToken NegTokenResp
 		_, err = asn1.Unmarshal(a.Bytes, &negToken)
 		if err != nil {
-			return false, nil, fmt.Errorf("Error unmarshalling NegotiationToken type %d (Resp/Targ): %v", a.Tag, err)
+			return false, nil, fmt.Errorf("error unmarshalling NegotiationToken type %d (Resp/Targ): %v", a.Tag, err)
 		}
 		return false, negToken, nil
 	default:
-		return false, nil, errors.New("Unknown choice type for NegotiationToken")
+		return false, nil, errors.New("unknown choice type for NegotiationToken")
 	}
 
 }

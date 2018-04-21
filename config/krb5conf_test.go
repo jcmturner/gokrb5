@@ -377,7 +377,7 @@ func TestParseDuration(t *testing.T) {
 	for _, test := range tests {
 		d, err := parseDuration(test.timeStr)
 		if err != nil {
-			t.Errorf("Error parsing %s: %v", test.timeStr, err)
+			t.Errorf("error parsing %s: %v", test.timeStr, err)
 		}
 		assert.Equal(t, test.duration, d, "Duration not as expected for: "+test.timeStr)
 

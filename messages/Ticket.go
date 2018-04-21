@@ -139,11 +139,11 @@ func UnmarshalTicketsSequence(in asn1.RawValue) ([]Ticket, error) {
 	for p < (len(b)) {
 		_, err := asn1.UnmarshalWithParams(b[p:], &raw, fmt.Sprintf("application,tag:%d", asnAppTag.Ticket))
 		if err != nil {
-			return nil, fmt.Errorf("Unmarshaling sequence of tickets failed geting length of ticket: %v", err)
+			return nil, fmt.Errorf("unmarshaling sequence of tickets failed geting length of ticket: %v", err)
 		}
 		t, err := UnmarshalTicket(b[p:])
 		if err != nil {
-			return nil, fmt.Errorf("Unmarshaling sequence of tickets failed: %v", err)
+			return nil, fmt.Errorf("unmarshaling sequence of tickets failed: %v", err)
 		}
 		p += len(raw.FullBytes)
 		tkts = append(tkts, t)
@@ -166,7 +166,7 @@ func MarshalTicketSequence(tkts []Ticket) (asn1.RawValue, error) {
 	for i, t := range tkts {
 		b, err := t.Marshal()
 		if err != nil {
-			return raw, fmt.Errorf("Error marshaling ticket number %d in seqence of tickets", i+1)
+			return raw, fmt.Errorf("error marshaling ticket number %d in seqence of tickets", i+1)
 		}
 		btkts = append(btkts, b...)
 	}
@@ -199,12 +199,12 @@ func (t *Ticket) DecryptEncPart(keytab keytab.Keytab, sa string) error {
 	}
 	b, err := crypto.DecryptEncPart(t.EncPart, key, keyusage.KDC_REP_TICKET)
 	if err != nil {
-		return fmt.Errorf("Error decrypting Ticket EncPart: %v", err)
+		return fmt.Errorf("error decrypting Ticket EncPart: %v", err)
 	}
 	var denc EncTicketPart
 	err = denc.Unmarshal(b)
 	if err != nil {
-		return fmt.Errorf("Error unmarshaling encrypted part: %v", err)
+		return fmt.Errorf("error unmarshaling encrypted part: %v", err)
 	}
 	t.DecryptedEncPart = denc
 	return nil
@@ -225,11 +225,11 @@ func (t *Ticket) GetPACType(keytab keytab.Keytab, sa string) (bool, pac.PACType,
 				var p pac.PACType
 				err = p.Unmarshal(ad2[0].ADData)
 				if err != nil {
-					return isPAC, p, fmt.Errorf("Error unmarshaling PAC: %v", err)
+					return isPAC, p, fmt.Errorf("error unmarshaling PAC: %v", err)
 				}
 				var upn []string
 				if sa != "" {
-					upn = []string{sa}
+					upn = strings.Split(sa, "/")
 				} else {
 					upn = t.SName.NameString
 				}
