@@ -171,7 +171,7 @@ func (wt *WrapToken) VerifyCheckSum(key types.EncryptionKey, keyUsage uint32) (b
 func (wt *WrapToken) Unmarshal(b []byte, expectFromAcceptor bool) error {
 	// Check if we can read a whole header
 	if len(b) < 16 {
-		return errors.New("bytes shorter than header length.")
+		return errors.New("bytes shorter than header length")
 	}
 	// Is the Token ID correct?
 	if !bytes.Equal(getGssWrapTokenId()[:], b[0:2]) {

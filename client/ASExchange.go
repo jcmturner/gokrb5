@@ -55,7 +55,7 @@ func (cl *Client) ASExchange(realm string, referral int) error {
 				if referral > 5 {
 					return krberror.Errorf(err, krberror.KRBMsgError, "maximum number of client referrals exceeded")
 				}
-				referral += 1
+				referral++
 				return cl.ASExchange(e.CRealm, referral)
 			}
 		} else {
