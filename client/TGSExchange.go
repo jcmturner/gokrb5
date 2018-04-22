@@ -50,7 +50,7 @@ func (cl *Client) TGSExchange(spn types.PrincipalName, kdcRealm string, tkt mess
 		}
 		cl.AddSession(tgsRep.Ticket, tgsRep.DecryptedEncPart)
 		realm := tgsRep.Ticket.SName.NameString[1]
-		referral += 1
+		referral++
 		return cl.TGSExchange(spn, realm, tgsRep.Ticket, tgsRep.DecryptedEncPart.Key, false, referral)
 	}
 	if ok, err := tgsRep.IsValid(cl.Config, tgsReq); !ok {

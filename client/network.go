@@ -65,7 +65,7 @@ func (cl *Client) resolveKDC(realm string, tcp bool) (int, map[int]string, error
 				} else {
 					l = 0
 				}
-				i += 1
+				i++
 			}
 		} else {
 			kdcs[i] = ks[0]
@@ -142,7 +142,7 @@ func dialKDCUDP(count int, kdcs map[int]string) (conn *net.UDPConn, err error) {
 			conn.SetDeadline(time.Now().Add(time.Duration(5 * time.Second)))
 			return
 		}
-		i += 1
+		i++
 	}
 	err = errors.New("error in getting a UDP connection to any of the KDCs")
 	return
@@ -161,7 +161,7 @@ func dialKDCTCP(count int, kdcs map[int]string) (conn *net.TCPConn, err error) {
 			conn.SetDeadline(time.Now().Add(time.Duration(5 * time.Second)))
 			return
 		}
-		i += 1
+		i++
 	}
 	err = errors.New("error in getting a TCP connection to any of the KDCs")
 	return

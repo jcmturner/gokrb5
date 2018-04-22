@@ -151,7 +151,7 @@ func (cl *Client) Key(etype etype.EType, krberr messages.KRBError) (types.Encryp
 		key, _, err := crypto.GetKeyFromPassword(cl.Credentials.Password, cl.Credentials.CName, cl.Credentials.Realm, etype.GetETypeID(), types.PADataSequence{})
 		return key, err
 	}
-	return types.EncryptionKey{}, errors.New("credential has neither keytab or password to generate key.")
+	return types.EncryptionKey{}, errors.New("credential has neither keytab or password to generate key")
 }
 
 // LoadConfig loads the Kerberos configuration for the client from file path specified.
