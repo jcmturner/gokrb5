@@ -84,6 +84,29 @@ func encryptAuthenticator(a types.Authenticator, sessionKey types.EncryptionKey,
 	return ed, nil
 }
 
+// Decrypt the Authenticator within the AP_REQ.
+// sessionKey may simply be the key within the decrypted EncPart of the ticket within the AP_REQ.
+func (a *APReq) DecryptAuthenticator(sessionKey types.EncryptionKey) (auth types.Authenticator, err error) {
+	var usage uint32
+	switch a.Ticket.SName.NameType {
+	case nametype.KRB_NT_PRINCIPAL:
+		usage = keyusage.AP_REQ_AUTHENTICATOR
+	case nametype.KRB_NT_SRV_INST:
+		usage = keyusage.TGS_REQ_PA_TGS_REQ_AP_REQ_AUTHENTICATOR
+	}
+	ab, e := crypto.DecryptEncPart(a.Authenticator, sessionKey, usage)
+	if e != nil {
+		err = fmt.Errorf("error decrypting authenticator: %v", err)
+		return
+	}
+	e = auth.Unmarshal(ab)
+	if e != nil {
+		err = fmt.Errorf("error unmarshaling authenticator")
+		return
+	}
+	return
+}
+
 // Unmarshal bytes b into the APReq struct.
 func (a *APReq) Unmarshal(b []byte) error {
 	var m marshalAPReq
