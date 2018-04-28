@@ -15,6 +15,7 @@ services:
   - docker
 
 before_install:
+  - apt-get install -yq krb5-user
   - go get github.com/golang/lint/golint
   - docker pull jcmturner/gokrb5:http
   - docker pull jcmturner/gokrb5:dns
@@ -34,7 +35,7 @@ before_script:
   - sudo sed -i 's/nameserver .*/nameserver 127.0.0.1/g' /etc/resolv.conf
 
 env:
-  - TEST_KDC_ADDR=127.0.0.1 TEST_HTTP_URL="http://host.test.gokrb5/index.html" DNSUTILS_OVERRIDE_NS="127.0.0.1:53"
+  - TEST_KDC_ADDR=127.0.0.1 TEST_HTTP_URL="http://host.test.gokrb5/index.html" DNSUTILS_OVERRIDE_NS="127.0.0.1:53" DEBIAN_FRONTEND=noninteractive
 
 script:
   - test -z $(gofmt -s -d -l -e $GO_FILES | tee /dev/fd/2 | xargs | sed 's/\s//g') # Fail if a .go file hasn't been formatted with gofmt
