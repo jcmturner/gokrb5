@@ -7,9 +7,11 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
+	"os/user"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/jcmturner/gokrb5.v4/testdata"
 )
 
 const (
@@ -18,6 +20,13 @@ const (
 )
 
 func login() error {
+	file, err := os.Create("/etc/krb5.conf")
+	if err != nil {
+		log.Fatal("cannot open krb5.conf", err)
+	}
+	defer file.Close()
+	fmt.Fprintf(file, testdata.TEST_KRB5CONF)
+
 	cmd := exec.Command(kinitCmd, "testuser1@TEST.GOKRB5")
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
@@ -52,6 +61,10 @@ func getServiceTkt() error {
 }
 
 func TestLoadCCache(t *testing.T) {
+	err := login()
+	if err != nil {
+		t.Fatalf("error logging in with kinit: %v", err)
+	}
 	usr, _ := user.Current()
 	cpath := "/tmp/krb5cc_" + usr.Uid
 	c, err := LoadCCache(cpath)
