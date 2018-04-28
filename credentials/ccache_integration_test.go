@@ -4,7 +4,6 @@
 package credentials
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -30,6 +29,7 @@ func login() error {
 	fmt.Fprintf(file, testdata.TEST_KRB5CONF)
 
 	cmd := exec.Command(kinitCmd, "testuser1@TEST.GOKRB5")
+	stderr, _ := cmd.StderrPipe()
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		return fmt.Errorf("could not open stdin to %s command: %v", kinitCmd, err)
@@ -42,12 +42,12 @@ func login() error {
 		defer stdin.Close()
 		io.WriteString(stdin, "passwordvalue")
 	}()
-	stderr, _ := cmd.StderrPipe()
 	errBuf := new(bytes.Buffer)
 	go func() {
 		defer stderr.Close()
 		io.Copy(errBuf, stderr)
 	}()
+
 	err = cmd.Wait()
 	if err != nil {
 		return fmt.Errorf("%s did not run successfully: %v stderr: %s", kinitCmd, err, string(errBuf.Bytes()))
