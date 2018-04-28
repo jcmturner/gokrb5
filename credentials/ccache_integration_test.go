@@ -23,7 +23,7 @@ const (
 func login() error {
 	file, err := os.Create("/etc/krb5.conf")
 	if err != nil {
-		return fmt.Errorf("cannot open krb5.conf", err)
+		return fmt.Errorf("cannot open krb5.conf: %v", err)
 	}
 	defer file.Close()
 	fmt.Fprintf(file, testdata.TEST_KRB5CONF)
