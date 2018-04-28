@@ -69,5 +69,6 @@ func TestLoadCCache(t *testing.T) {
 	usr, _ := user.Current()
 	cpath := "/tmp/krb5cc_" + usr.Uid
 	c, err := LoadCCache(cpath)
-	assert.Equal(t, "testuser1@TEST.GOKRB5", (&c).GetClientPrincipalName().GetPrincipalNameString(), "principal not as expected")
+	pn := c.GetClientPrincipalName()
+	assert.Equal(t, "testuser1@TEST.GOKRB5", pn.GetPrincipalNameString(), "principal not as expected")
 }
