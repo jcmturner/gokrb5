@@ -16,6 +16,7 @@ services:
 
 before_install:
   - sudo apt-get install -yq krb5-user
+  - sudo chmod 666 /etc/krb5.conf
   - go get github.com/golang/lint/golint
   - docker pull jcmturner/gokrb5:http
   - docker pull jcmturner/gokrb5:dns
