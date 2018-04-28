@@ -6,6 +6,7 @@ package credentials
 import (
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"os/user"
 	"testing"
@@ -22,7 +23,7 @@ const (
 func login() error {
 	file, err := os.Create("/etc/krb5.conf")
 	if err != nil {
-		log.Fatal("cannot open krb5.conf", err)
+		return fmt.Errorf("cannot open krb5.conf", err)
 	}
 	defer file.Close()
 	fmt.Fprintf(file, testdata.TEST_KRB5CONF)
