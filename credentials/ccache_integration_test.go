@@ -4,6 +4,7 @@
 package credentials
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -41,9 +42,15 @@ func login() error {
 		defer stdin.Close()
 		io.WriteString(stdin, "passwordvalue")
 	}()
+	stderr, _ := cmd.StderrPipe()
+	errBuf := new(bytes.Buffer)
+	go func() {
+		defer stderr.Close()
+		io.Copy(errBuf, stderr)
+	}()
 	err = cmd.Wait()
 	if err != nil {
-		return fmt.Errorf("%s did not run successfully: %v", kinitCmd, err)
+		return fmt.Errorf("%s did not run successfully: %v stderr: %s", kinitCmd, err, string(errBuf.Bytes()))
 	}
 	return nil
 }
