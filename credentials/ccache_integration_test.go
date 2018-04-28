@@ -4,6 +4,7 @@
 package credentials
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"os"
