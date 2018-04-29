@@ -4,9 +4,13 @@
 package client
 
 import (
+	"bytes"
 	"encoding/hex"
+	"io"
 	"net/http"
 	"os"
+	"os/exec"
+	"os/user"
 	"testing"
 
 	"errors"
@@ -544,10 +548,10 @@ func getServiceTkt() error {
 	return nil
 }
 
-func loadCCache() (CCache, error) {
+func loadCCache() (credentials.CCache, error) {
 	usr, _ := user.Current()
 	cpath := "/tmp/krb5cc_" + usr.Uid
-	return LoadCCache(cpath)
+	return credentials.LoadCCache(cpath)
 }
 
 func TestGetServiceTicketFromCCacheTGT(t *testing.T) {
@@ -565,7 +569,7 @@ func TestGetServiceTicketFromCCacheTGT(t *testing.T) {
 		addr = testdata.TEST_KDC_ADDR
 	}
 	cfg.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
-	cl, err := client.NewClientFromCCache(c)
+	cl, err := NewClientFromCCache(c)
 	if err != nil {
 		t.Fatalf("error generating client from ccache: %v", err)
 	}
@@ -600,7 +604,7 @@ func TestGetServiceTicketFromCCacheWithoutKDC(t *testing.T) {
 		t.Fatalf("error getting service ticket: %v", err)
 	}
 	cfg, _ := config.NewConfigFromString("...")
-	cl, err := client.NewClientFromCCache(c)
+	cl, err := NewClientFromCCache(c)
 	if err != nil {
 		t.Fatalf("error generating client from ccache: %v", err)
 	}
