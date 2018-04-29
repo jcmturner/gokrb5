@@ -88,7 +88,6 @@ func klist() (string, error) {
 	outBuf := new(bytes.Buffer)
 	go func() {
 		io.Copy(outBuf, stdoutR)
-		stdoutR.Close()
 	}()
 
 	err = cmd.Wait()
