@@ -608,6 +608,7 @@ func TestGetServiceTicketFromCCacheWithoutKDC(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error generating client from ccache: %v", err)
 	}
+	t.Logf("TEST cl cache: %+v", *cl.Cache)
 	cl.WithConfig(cfg)
 	url := os.Getenv("TEST_HTTP_URL")
 	if url == "" {
