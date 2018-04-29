@@ -4,13 +4,14 @@
 package credentials
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"os/user"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -25,6 +26,36 @@ const (
 	klistCmd = "klist"
 	spn      = "HTTP/host.test.gokrb5"
 )
+
+type output struct {
+	buf   *bytes.Buffer
+	lines []string
+	*sync.Mutex
+}
+
+func newOutput() *output {
+	return &output{
+		buf:   &bytes.Buffer{},
+		lines: []string{},
+		Mutex: &sync.Mutex{},
+	}
+}
+
+func (rw *output) Write(p []byte) (int, error) {
+	rw.Lock()
+	defer rw.Unlock()
+	return rw.buf.Write(p)
+}
+
+func (rw *output) Lines() []string {
+	rw.Lock()
+	defer rw.Unlock()
+	s := bufio.NewScanner(rw.buf)
+	for s.Scan() {
+		rw.lines = append(rw.lines, s.Text())
+	}
+	return rw.lines
+}
 
 func login() error {
 	file, err := os.Create("/etc/krb5.conf")
@@ -76,31 +107,23 @@ func getServiceTkt() error {
 	return nil
 }
 
-func klist() (string, error) {
+func klist() ([]string, error) {
 	cmd := exec.Command(klistCmd, "-Aef")
 
-	stdoutR, stdoutW := io.Pipe()
-	cmd.Stdout = stdoutW
+	stdout := newOutput()
+	cmd.Stdout = stdout
 
 	err := cmd.Start()
 	if err != nil {
-		return "", fmt.Errorf("could not start %s command: %v", klistCmd, err)
+		return []string{}, fmt.Errorf("could not start %s command: %v", klistCmd, err)
 	}
-	outBuf := new(bytes.Buffer)
-	go func() {
-		io.Copy(outBuf, stdoutR)
-	}()
 
 	err = cmd.Wait()
 	if err != nil {
-		return "", fmt.Errorf("%s did not run successfully: %v", klistCmd, err)
-	}
-	sb, err := ioutil.ReadAll(outBuf)
-	if err != nil {
-		return "", fmt.Errorf("error reading stdout buffer: %v", err)
+		return []string{}, fmt.Errorf("%s did not run successfully: %v", klistCmd, err)
 	}
 
-	return string(sb), nil
+	return stdout.Lines(), nil
 }
 
 func loadCCache() (CCache, error) {
@@ -133,7 +156,10 @@ func TestCCacheEntries(t *testing.T) {
 		t.Fatalf("error getting service ticket: %v", err)
 	}
 	clist, _ := klist()
-	t.Logf("OS Creds Cache contents:\n%s", clist)
+	t.Log("OS Creds Cache contents:")
+	for _, l := range clist {
+		t.Log(l)
+	}
 	c, err := loadCCache()
 	if err != nil {
 		t.Errorf("error loading CCache: %v", err)
