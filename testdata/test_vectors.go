@@ -143,7 +143,7 @@ const (
 
 [realms]
  TEST.GOKRB5 = {
-  kdc = 10.80.88.88:88
+  kdc = 127.0.0.1:88
   admin_server = 127.0.0.1:749
   default_domain = test.gokrb5
  }
