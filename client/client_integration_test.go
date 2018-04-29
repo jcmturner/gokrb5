@@ -418,30 +418,30 @@ func spnegoGet(cl *Client) error {
 	return nil
 }
 
-func TestNewClientFromCCache(t *testing.T) {
-	b, err := hex.DecodeString(testdata.CCACHE_TEST)
-	if err != nil {
-		t.Fatalf("error decoding test data")
-	}
-	cc, err := credentials.ParseCCache(b)
-	if err != nil {
-		t.Fatal("error getting test CCache")
-	}
-	cl, err := NewClientFromCCache(cc)
-	if err != nil {
-		t.Fatalf("error creating client from CCache: %v", err)
-	}
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
-	addr := os.Getenv("TEST_KDC_ADDR")
-	if addr == "" {
-		addr = testdata.TEST_KDC_ADDR
-	}
-	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
-	cl.WithConfig(c)
-	if ok, err := cl.IsConfigured(); !ok {
-		t.Fatalf("client was not configured from CCache: %v", err)
-	}
-}
+//func TestNewClientFromCCache(t *testing.T) {
+//	b, err := hex.DecodeString(testdata.CCACHE_TEST)
+//	if err != nil {
+//		t.Fatalf("error decoding test data")
+//	}
+//	cc, err := credentials.ParseCCache(b)
+//	if err != nil {
+//		t.Fatal("error getting test CCache")
+//	}
+//	cl, err := NewClientFromCCache(cc)
+//	if err != nil {
+//		t.Fatalf("error creating client from CCache: %v", err)
+//	}
+//	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+//	addr := os.Getenv("TEST_KDC_ADDR")
+//	if addr == "" {
+//		addr = testdata.TEST_KDC_ADDR
+//	}
+//	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
+//	cl.WithConfig(c)
+//	if ok, err := cl.IsConfigured(); !ok {
+//		t.Fatalf("client was not configured from CCache: %v", err)
+//	}
+//}
 
 // Login to the TEST.GOKRB5 domain and request service ticket for resource in the RESDOM.GOKRB5 domain.
 // There is a trust between the two domains.
@@ -554,41 +554,41 @@ func loadCCache() (credentials.CCache, error) {
 	return credentials.LoadCCache(cpath)
 }
 
-func TestGetServiceTicketFromCCacheTGT(t *testing.T) {
-	err := login()
-	if err != nil {
-		t.Fatalf("error logging in with kinit: %v", err)
-	}
-	c, err := loadCCache()
-	if err != nil {
-		t.Errorf("error loading CCache: %v", err)
-	}
-	cfg, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
-	addr := os.Getenv("TEST_KDC_ADDR")
-	if addr == "" {
-		addr = testdata.TEST_KDC_ADDR
-	}
-	cfg.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
-	cl, err := NewClientFromCCache(c)
-	if err != nil {
-		t.Fatalf("error generating client from ccache: %v", err)
-	}
-	cl.WithConfig(cfg)
-	url := os.Getenv("TEST_HTTP_URL")
-	if url == "" {
-		url = testdata.TEST_HTTP_URL
-	}
-	r, _ := http.NewRequest("GET", url, nil)
-	err = cl.SetSPNEGOHeader(r, "HTTP/host.test.gokrb5")
-	if err != nil {
-		t.Fatalf("error setting client SPNEGO header: %v", err)
-	}
-	httpResp, err := http.DefaultClient.Do(r)
-	if err != nil {
-		t.Fatalf("request error: %v\n", err)
-	}
-	assert.Equal(t, http.StatusOK, httpResp.StatusCode, "status code in response to client SPNEGO request not as expected")
-}
+//func TestGetServiceTicketFromCCacheTGT(t *testing.T) {
+//	err := login()
+//	if err != nil {
+//		t.Fatalf("error logging in with kinit: %v", err)
+//	}
+//	c, err := loadCCache()
+//	if err != nil {
+//		t.Errorf("error loading CCache: %v", err)
+//	}
+//	cfg, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+//	addr := os.Getenv("TEST_KDC_ADDR")
+//	if addr == "" {
+//		addr = testdata.TEST_KDC_ADDR
+//	}
+//	cfg.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
+//	cl, err := NewClientFromCCache(c)
+//	if err != nil {
+//		t.Fatalf("error generating client from ccache: %v", err)
+//	}
+//	cl.WithConfig(cfg)
+//	url := os.Getenv("TEST_HTTP_URL")
+//	if url == "" {
+//		url = testdata.TEST_HTTP_URL
+//	}
+//	r, _ := http.NewRequest("GET", url, nil)
+//	err = cl.SetSPNEGOHeader(r, "HTTP/host.test.gokrb5")
+//	if err != nil {
+//		t.Fatalf("error setting client SPNEGO header: %v", err)
+//	}
+//	httpResp, err := http.DefaultClient.Do(r)
+//	if err != nil {
+//		t.Fatalf("request error: %v\n", err)
+//	}
+//	assert.Equal(t, http.StatusOK, httpResp.StatusCode, "status code in response to client SPNEGO request not as expected")
+//}
 
 func TestGetServiceTicketFromCCacheWithoutKDC(t *testing.T) {
 	err := login()
