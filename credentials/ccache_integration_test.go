@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"os/user"
@@ -94,7 +95,12 @@ func klist() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("%s did not run successfully: %v", klistCmd, err)
 	}
-	return string(outBuf.Bytes()), nil
+	sb, err := ioutil.ReadAll(outBuf)
+	if err != nil {
+		return "", fmt.Errorf("error reading stdout buffer: %v", err)
+	}
+
+	return string(sb), nil
 }
 
 func loadCCache() (CCache, error) {
