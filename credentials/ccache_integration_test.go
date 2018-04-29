@@ -13,12 +13,15 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/jcmturner/gokrb5.v4/iana/nametype"
 	"gopkg.in/jcmturner/gokrb5.v4/testdata"
+	"gopkg.in/jcmturner/gokrb5.v4/types"
 )
 
 const (
 	kinitCmd = "kinit"
 	kvnoCmd  = "kvno"
+	spn      = "HTTP/host.test.gokrb5"
 )
 
 func login() error {
@@ -59,7 +62,7 @@ func login() error {
 }
 
 func getServiceTkt() error {
-	cmd := exec.Command(kvnoCmd, "HTTP/host.test.gokrb5")
+	cmd := exec.Command(kvnoCmd, spn)
 	err := cmd.Start()
 	if err != nil {
 		return fmt.Errorf("could not start %s command: %v", kvnoCmd, err)
@@ -98,5 +101,16 @@ func TestCCacheEntries(t *testing.T) {
 		t.Fatalf("error getting service ticket: %v", err)
 	}
 	c, err := loadCCache()
-	t.Logf("ccache: %+v", c)
+	creds := c.GetEntries()
+	var found bool
+	n := types.NewPrincipalName(nametype.KRB_NT_PRINCIPAL, spn)
+	for _, cred := range creds {
+		if cred.Server.PrincipalName.Equal(n) {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("Entry for %s not found in CCache", spn)
+	}
 }
