@@ -595,13 +595,13 @@ func TestGetServiceTicketFromCCacheWithoutKDC(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error logging in with kinit: %v", err)
 	}
-	c, err := loadCCache()
-	if err != nil {
-		t.Errorf("error loading CCache: %v", err)
-	}
 	err = getServiceTkt()
 	if err != nil {
 		t.Fatalf("error getting service ticket: %v", err)
+	}
+	c, err := loadCCache()
+	if err != nil {
+		t.Errorf("error loading CCache: %v", err)
 	}
 	cfg, _ := config.NewConfigFromString("...")
 	cl, err := NewClientFromCCache(c)

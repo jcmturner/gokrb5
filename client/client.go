@@ -103,7 +103,7 @@ func NewClientFromCCache(c credentials.CCache) (Client, error) {
 		if err != nil {
 			return cl, fmt.Errorf("cache entry ticket bytes are not valid: %v", err)
 		}
-		fmt.Fprintf(os.Stderr, "CCache entry %v", tkt.SName)
+		fmt.Fprintf(os.Stderr, "CCache entry %+v", tkt.SName)
 		cl.Cache.addEntry(
 			tkt,
 			cred.AuthTime,
