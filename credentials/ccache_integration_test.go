@@ -30,23 +30,30 @@ func login() error {
 	fmt.Fprintf(file, testdata.TEST_KRB5CONF)
 
 	cmd := exec.Command(kinitCmd, "testuser1@TEST.GOKRB5")
-	stderr, _ := cmd.StderrPipe()
-	stdin, err := cmd.StdinPipe()
-	if err != nil {
-		return fmt.Errorf("could not open stdin to %s command: %v", kinitCmd, err)
-	}
+
+	stdinR, stdinW := io.Pipe()
+	stderrR, stderrW := io.Pipe()
+
+	cmd.Stdin = stdinR
+	cmd.Stderr = stderrW
+
+	//stderr, _ := cmd.StderrPipe()
+	//stdin, err := cmd.StdinPipe()
+	//if err != nil {
+	//	return fmt.Errorf("could not open stdin to %s command: %v", kinitCmd, err)
+	//}
 	err = cmd.Start()
 	if err != nil {
 		return fmt.Errorf("could not start %s command: %v", kinitCmd, err)
 	}
 	go func() {
-		defer stdin.Close()
-		io.WriteString(stdin, "passwordvalue")
+		io.WriteString(stdinW, "passwordvalue")
+		stdinW.Close()
 	}()
 	errBuf := new(bytes.Buffer)
 	go func() {
-		defer stderr.Close()
-		io.Copy(errBuf, stderr)
+		io.Copy(errBuf, stderrR)
+		stderrR.Close()
 	}()
 
 	err = cmd.Wait()
