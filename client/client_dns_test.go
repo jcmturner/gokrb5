@@ -48,7 +48,7 @@ func TestResolveKDC(t *testing.T) {
 	if err != nil {
 		t.Errorf("error resolving KDCs from config: %v", err)
 	}
-	assert.Equal(t, "10.80.88.88:88", res[1], "KDC not read from config as expected")
+	assert.Equal(t, "127.0.0.1:88", res[1], "KDC not read from config as expected")
 }
 
 func TestClient_Login_DNSKDCs(t *testing.T) {
