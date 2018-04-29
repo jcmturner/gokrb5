@@ -33,19 +33,14 @@ func login() error {
 
 	stdinR, stdinW := io.Pipe()
 	stderrR, stderrW := io.Pipe()
-
 	cmd.Stdin = stdinR
 	cmd.Stderr = stderrW
 
-	//stderr, _ := cmd.StderrPipe()
-	//stdin, err := cmd.StdinPipe()
-	//if err != nil {
-	//	return fmt.Errorf("could not open stdin to %s command: %v", kinitCmd, err)
-	//}
 	err = cmd.Start()
 	if err != nil {
 		return fmt.Errorf("could not start %s command: %v", kinitCmd, err)
 	}
+
 	go func() {
 		io.WriteString(stdinW, "passwordvalue")
 		stdinW.Close()
