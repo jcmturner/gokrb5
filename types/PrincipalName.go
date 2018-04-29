@@ -11,6 +11,14 @@ type PrincipalName struct {
 	NameString []string `asn1:"generalstring,explicit,tag:1"`
 }
 
+// NewPrincipalName creates a new PrincipalName from the name type int32 and name string provided.
+func NewPrincipalName(ntype int32, spn string) PrincipalName {
+	return PrincipalName{
+		NameType:   ntype,
+		NameString: strings.Split(spn, "/"),
+	}
+}
+
 // GetSalt returns a salt derived from the PrincipalName.
 func (pn *PrincipalName) GetSalt(realm string) string {
 	var sb []byte
