@@ -83,7 +83,7 @@ func TestLoadCCache(t *testing.T) {
 	c, err := loadCCache()
 	pn := c.GetClientPrincipalName()
 	assert.Equal(t, "testuser1", pn.GetPrincipalNameString(), "principal not as expected")
-	assert.Equal(t, "TEST@GOKRB5", c.GetClientRealm(), "realm not as expected")
+	assert.Equal(t, "TEST.GOKRB5", c.GetClientRealm(), "realm not as expected")
 }
 
 func TestCCacheEntries(t *testing.T) {
