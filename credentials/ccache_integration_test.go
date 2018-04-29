@@ -1,4 +1,4 @@
-// +build integration
+/////// +build integration
 // To turn on this test use -tags=integration in go test command
 
 package credentials
@@ -21,6 +21,7 @@ import (
 const (
 	kinitCmd = "kinit"
 	kvnoCmd  = "kvno"
+	klistCmd = "klist"
 	spn      = "HTTP/host.test.gokrb5"
 )
 
@@ -74,6 +75,29 @@ func getServiceTkt() error {
 	return nil
 }
 
+func klist() (string, error) {
+	cmd := exec.Command(klistCmd, "-Aef")
+
+	stdoutR, stdoutW := io.Pipe()
+	cmd.Stdout = stdoutW
+
+	err := cmd.Start()
+	if err != nil {
+		return "", fmt.Errorf("could not start %s command: %v", klistCmd, err)
+	}
+	outBuf := new(bytes.Buffer)
+	go func() {
+		io.Copy(outBuf, stdoutR)
+		stdoutR.Close()
+	}()
+
+	err = cmd.Wait()
+	if err != nil {
+		return "", fmt.Errorf("%s did not run successfully: %v", klistCmd, err)
+	}
+	return string(outBuf.Bytes()), nil
+}
+
 func loadCCache() (CCache, error) {
 	usr, _ := user.Current()
 	cpath := "/tmp/krb5cc_" + usr.Uid
@@ -103,6 +127,8 @@ func TestCCacheEntries(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error getting service ticket: %v", err)
 	}
+	clist, _ := klist()
+	t.Logf("OS Creds Cache contents:\n%s", clist)
 	c, err := loadCCache()
 	if err != nil {
 		t.Errorf("error loading CCache: %v", err)
