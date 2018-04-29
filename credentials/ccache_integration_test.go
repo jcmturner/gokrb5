@@ -69,14 +69,32 @@ func getServiceTkt() error {
 	return nil
 }
 
+func loadCCache() (CCache, error) {
+	usr, _ := user.Current()
+	cpath := "/tmp/krb5cc_" + usr.Uid
+	return LoadCCache(cpath)
+}
+
 func TestLoadCCache(t *testing.T) {
 	err := login()
 	if err != nil {
 		t.Fatalf("error logging in with kinit: %v", err)
 	}
-	usr, _ := user.Current()
-	cpath := "/tmp/krb5cc_" + usr.Uid
-	c, err := LoadCCache(cpath)
+	c, err := loadCCache()
 	pn := c.GetClientPrincipalName()
-	assert.Equal(t, "testuser1@TEST.GOKRB5", pn.GetPrincipalNameString(), "principal not as expected")
+	assert.Equal(t, "testuser1", pn.GetPrincipalNameString(), "principal not as expected")
+	assert.Equal(t, "TEST@GOKRB5", c.GetClientRealm(), "realm not as expected")
+}
+
+func TestCCacheEntries(t *testing.T) {
+	err := login()
+	if err != nil {
+		t.Fatalf("error logging in with kinit: %v", err)
+	}
+	err = getServiceTkt()
+	if err != nil {
+		t.Fatalf("error getting service ticket: %v", err)
+	}
+	c, err := loadCCache()
+	t.Logf("ccache: %+v", c)
 }
