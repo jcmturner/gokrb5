@@ -7,15 +7,12 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"os/exec"
 	"os/user"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v4/client"
-	"gopkg.in/jcmturner/gokrb5.v4/config"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/nametype"
 	"gopkg.in/jcmturner/gokrb5.v4/testdata"
 	"gopkg.in/jcmturner/gokrb5.v4/types"
@@ -122,35 +119,4 @@ func TestCCacheEntries(t *testing.T) {
 	if !found {
 		t.Errorf("Entry for %s not found in CCache", spn)
 	}
-}
-
-func TestGetServiceTicketFromCCacheTGT(t *testing.T) {
-	err := login()
-	if err != nil {
-		t.Fatalf("error logging in with kinit: %v", err)
-	}
-	c, err := loadCCache()
-	if err != nil {
-		t.Errorf("error loading CCache: %v", err)
-	}
-	cfg, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
-	cl, err := client.NewClientFromCCache(c)
-	if err != nil {
-		t.Fatalf("error generating client from ccache: %v", err)
-	}
-	cl.WithConfig(cfg)
-	url := os.Getenv("TEST_HTTP_URL")
-	if url == "" {
-		url = testdata.TEST_HTTP_URL
-	}
-	r, _ := http.NewRequest("GET", url, nil)
-	err = cl.SetSPNEGOHeader(r, "HTTP/host.test.gokrb5")
-	if err != nil {
-		t.Fatalf("error setting client SPNEGO header: %v", err)
-	}
-	httpResp, err := http.DefaultClient.Do(r)
-	if err != nil {
-		t.Fatalf("request error: %v\n", err)
-	}
-	assert.Equal(t, http.StatusOK, httpResp.StatusCode, "status code in response to client SPNEGO request not as expected")
 }
