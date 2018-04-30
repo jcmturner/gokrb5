@@ -154,12 +154,12 @@ const (
  }
   USER.GOKRB5 = {
   kdc = 10.80.88.48:88
-  admin_server = 10.80.88.48:749
+  admin_server = 10.80.88.48:464
   default_domain = user.gokrb5
  }
   RES.GOKRB5 = {
   kdc = 10.80.88.49:88
-  admin_server = 10.80.88.49:749
+  admin_server = 10.80.88.49:464
   default_domain = res.gokrb5
  }
 
