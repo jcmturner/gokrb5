@@ -10,6 +10,7 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v4/iana/addrtype"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/msgtype"
 	"gopkg.in/jcmturner/gokrb5.v4/testdata"
+	"gopkg.in/jcmturner/gokrb5.v4/types"
 )
 
 func TestUnmarshalKRBPriv(t *testing.T) {
@@ -68,4 +69,67 @@ func TestUnmarshalEncPrivPart_optionalsNULL(t *testing.T) {
 	assert.Equal(t, "krb5data", string(a.UserData), "User data not as expected")
 	assert.Equal(t, addrtype.IPv4, a.SAddress.AddrType, "SAddress type not as expected")
 	assert.Equal(t, "12d00023", hex.EncodeToString(a.SAddress.Address), "Address not as expected for SAddress")
+}
+
+func TestMarshalKRBPriv(t *testing.T) {
+	var a KRBPriv
+	v := "encode_krb5_priv"
+	b, err := hex.DecodeString(testdata.TestVectors[v])
+	if err != nil {
+		t.Fatalf("Test vector read error of %s: %v", v, err)
+	}
+	err = a.Unmarshal(b)
+	if err != nil {
+		t.Fatalf("Unmarshal error of %s: %v", v, err)
+	}
+	mb, err := a.Marshal()
+	if err != nil {
+		t.Fatalf("error marshaling KRBPriv: %v", err)
+	}
+	assert.Equal(t, b, mb, "marshaled bytes not as expected")
+
+	v = "encode_krb5_enc_priv_part"
+	be, err := hex.DecodeString(testdata.TestVectors[v])
+	if err != nil {
+		t.Fatalf("Test vector read error of %s: %v", v, err)
+	}
+	err = a.DecryptedEncPart.Unmarshal(be)
+	if err != nil {
+		t.Fatalf("Unmarshal error of %s: %v", v, err)
+	}
+	mb, err = a.Marshal()
+	if err != nil {
+		t.Fatalf("error marshaling KRBPriv: %v", err)
+	}
+	assert.Equal(t, b, mb, "marshaled bytes not as expected when it has decrypted encpart")
+}
+
+func TestKRBPriv_EncryptEncPart(t *testing.T) {
+	var a KRBPriv
+	v := "encode_krb5_priv"
+	b, err := hex.DecodeString(testdata.TestVectors[v])
+	if err != nil {
+		t.Fatalf("Test vector read error of %s: %v", v, err)
+	}
+	err = a.Unmarshal(b)
+	if err != nil {
+		t.Fatalf("Unmarshal error of %s: %v", v, err)
+	}
+	v = "encode_krb5_enc_priv_part"
+	b, err = hex.DecodeString(testdata.TestVectors[v])
+	if err != nil {
+		t.Fatalf("Test vector read error of %s: %v", v, err)
+	}
+	err = a.DecryptedEncPart.Unmarshal(b)
+	if err != nil {
+		t.Fatalf("Unmarshal error of %s: %v", v, err)
+	}
+	key := types.EncryptionKey{
+		KeyType:  int32(18),
+		KeyValue: []byte("12345678901234567890123456789012"),
+	}
+	err = a.EncryptEncPart(key)
+	if err != nil {
+		t.Fatalf("error encrypting encpart: %v", err)
+	}
 }

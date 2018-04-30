@@ -5,7 +5,11 @@ import (
 	"time"
 
 	"github.com/jcmturner/gofork/encoding/asn1"
+	"gopkg.in/jcmturner/gokrb5.v4/asn1tools"
+	"gopkg.in/jcmturner/gokrb5.v4/crypto"
+	"gopkg.in/jcmturner/gokrb5.v4/iana"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/asnAppTag"
+	"gopkg.in/jcmturner/gokrb5.v4/iana/keyusage"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/msgtype"
 	"gopkg.in/jcmturner/gokrb5.v4/krberror"
 	"gopkg.in/jcmturner/gokrb5.v4/types"
@@ -13,9 +17,10 @@ import (
 
 // KRBPriv implements RFC 4120 type: https://tools.ietf.org/html/rfc4120#section-5.7.1.
 type KRBPriv struct {
-	PVNO    int                 `asn1:"explicit,tag:0"`
-	MsgType int                 `asn1:"explicit,tag:1"`
-	EncPart types.EncryptedData `asn1:"explicit,tag:3"`
+	PVNO             int                 `asn1:"explicit,tag:0"`
+	MsgType          int                 `asn1:"explicit,tag:1"`
+	EncPart          types.EncryptedData `asn1:"explicit,tag:3"`
+	DecryptedEncPart EncKrbPrivPart      `asn1:"optional,omitempty"` // Not part of ASN1 bytes so marked as optional so unmarshalling works
 }
 
 // EncKrbPrivPart is the encrypted part of KRB_PRIV.
@@ -26,6 +31,15 @@ type EncKrbPrivPart struct {
 	SequenceNumber int64             `asn1:"optional,explicit,tag:3"`
 	SAddress       types.HostAddress `asn1:"explicit,tag:4"`
 	RAddress       types.HostAddress `asn1:"optional,explicit,tag:5"`
+}
+
+// NewKRBPriv returns a new KRBPriv type.
+func NewKRBPriv(part EncKrbPrivPart) KRBPriv {
+	return KRBPriv{
+		PVNO:             iana.PVNO,
+		MsgType:          msgtype.KRB_PRIV,
+		DecryptedEncPart: part,
+	}
 }
 
 // Unmarshal bytes b into the KRBPriv struct.
@@ -46,6 +60,36 @@ func (k *EncKrbPrivPart) Unmarshal(b []byte) error {
 	_, err := asn1.UnmarshalWithParams(b, k, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.EncKrbPrivPart))
 	if err != nil {
 		return krberror.Errorf(err, krberror.EncodingError, "KRB_PRIV unmarshal error")
+	}
+	return nil
+}
+
+// Marshal the KRBPriv.
+func (k *KRBPriv) Marshal() ([]byte, error) {
+	tk := KRBPriv{
+		PVNO:    k.PVNO,
+		MsgType: k.MsgType,
+		EncPart: k.EncPart,
+	}
+	b, err := asn1.Marshal(tk)
+	if err != nil {
+		return []byte{}, err
+	}
+	b = asn1tools.AddASNAppTag(b, asnAppTag.KRBPriv)
+	return b, nil
+}
+
+// EncryptEncPart encrypts the DecryptedEncPart within the KRBPriv.
+// Use to prepare for marshaling.
+func (k *KRBPriv) EncryptEncPart(key types.EncryptionKey) error {
+	b, err := asn1.Marshal(k.DecryptedEncPart)
+	if err != nil {
+		return err
+	}
+	b = asn1tools.AddASNAppTag(b, asnAppTag.EncKrbPrivPart)
+	k.EncPart, err = crypto.GetEncryptedData(b, key, keyusage.KRB_PRIV_ENCPART, 1)
+	if err != nil {
+		return err
 	}
 	return nil
 }
