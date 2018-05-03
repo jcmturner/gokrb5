@@ -20,7 +20,7 @@ func TestResolveKDC(t *testing.T) {
 	c.LibDefaults.DNSLookupKDC = true
 	var cl Client
 	cl.WithConfig(c)
-	count, res, err := cl.resolveKDC(c.LibDefaults.DefaultRealm, true)
+	count, res, err := cl.Config.GetKDCs(c.LibDefaults.DefaultRealm, true)
 	if err != nil {
 		t.Errorf("error resolving KDC via DNS TCP: %v", err)
 	}
@@ -44,7 +44,7 @@ func TestResolveKDC(t *testing.T) {
 		assert.True(t, found, "Record %s not found in results", s)
 	}
 	c.LibDefaults.DNSLookupKDC = false
-	_, res, err = cl.resolveKDC(c.LibDefaults.DefaultRealm, true)
+	_, res, err = cl.Config.GetKDCs(c.LibDefaults.DefaultRealm, true)
 	if err != nil {
 		t.Errorf("error resolving KDCs from config: %v", err)
 	}

@@ -60,4 +60,5 @@ create_entropy &
 
 
 systemctl restart krb5kdc
-systemctl enable krb5kdc
+systemctl start kadmin
+systemctl enable krb5kdc kadmin
