@@ -83,8 +83,17 @@ type KDCReqBody struct {
 	AdditionalTickets []Ticket            `asn1:"explicit,optional,tag:11"`
 }
 
-// NewASReq generates a new KRB_AS_REQ struct.
+// NewASReq generates a new KRB_AS_REQ struct for a TGT request.
 func NewASReq(realm string, c *config.Config, cname types.PrincipalName) (ASReq, error) {
+	sname := types.PrincipalName{
+		NameType:   nametype.KRB_NT_SRV_INST,
+		NameString: []string{"krbtgt", realm},
+	}
+	return NewASReqForSName(realm, c, cname, sname)
+}
+
+// NewASReqSNAME generates a new KRB_AS_REQ struct for a given SNAME.
+func NewASReqForSName(realm string, c *config.Config, cname, sname types.PrincipalName) (ASReq, error) {
 	nonce, err := rand.Int(rand.Reader, big.NewInt(math.MaxInt32))
 	if err != nil {
 		return ASReq{}, err
@@ -103,13 +112,10 @@ func NewASReq(realm string, c *config.Config, cname types.PrincipalName) (ASReq,
 				KDCOptions: kopts,
 				Realm:      realm,
 				CName:      cname,
-				SName: types.PrincipalName{
-					NameType:   nametype.KRB_NT_SRV_INST,
-					NameString: []string{"krbtgt", realm},
-				},
-				Till:  t.Add(c.LibDefaults.TicketLifetime),
-				Nonce: int(nonce.Int64()),
-				EType: c.LibDefaults.DefaultTktEnctypeIDs,
+				SName:      sname,
+				Till:       t.Add(c.LibDefaults.TicketLifetime),
+				Nonce:      int(nonce.Int64()),
+				EType:      c.LibDefaults.DefaultTktEnctypeIDs,
 			},
 		},
 	}

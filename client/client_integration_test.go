@@ -624,3 +624,34 @@ func TestGetServiceTicketFromCCacheWithoutKDC(t *testing.T) {
 	}
 	assert.Equal(t, http.StatusOK, httpResp.StatusCode, "status code in response to client SPNEGO request not as expected")
 }
+
+func TestClient_ChangePasswd(t *testing.T) {
+	b, err := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	kt, _ := keytab.Parse(b)
+	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	addr := os.Getenv("TEST_KDC_ADDR")
+	if addr == "" {
+		addr = testdata.TEST_KDC_ADDR
+	}
+	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
+	c.Realms[0].KPasswdServer = []string{addr + ":464"}
+	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
+	cl.WithConfig(c)
+
+	err = cl.Login()
+	if err != nil {
+		t.Fatalf("error on login: %v", err)
+	}
+	ok, err := cl.ChangePasswd("newpassword")
+	if err != nil {
+		t.Fatalf("error changing password: %v", err)
+	}
+	assert.True(t, ok, "password was not changed")
+
+	cl = NewClientWithPassword("testuser1", "TEST.GOKRB5", "newpassword")
+	cl.WithConfig(c)
+	err = cl.Login()
+	if err != nil {
+		t.Fatalf("error on login with new password: %v", err)
+	}
+}

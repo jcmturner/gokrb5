@@ -93,3 +93,16 @@ func (k *KRBPriv) EncryptEncPart(key types.EncryptionKey) error {
 	}
 	return nil
 }
+
+// DecryptEncPart decrypts the encrypted part of the KRBPriv message.
+func (k *KRBPriv) DecryptEncPart(key types.EncryptionKey) error {
+	b, err := crypto.DecryptEncPart(k.EncPart, key, keyusage.KRB_PRIV_ENCPART)
+	if err != nil {
+		return fmt.Errorf("error decrypting KRBPriv EncPart: %v", err)
+	}
+	err = k.DecryptedEncPart.Unmarshal(b)
+	if err != nil {
+		return fmt.Errorf("error unmarshaling encrypted part: %v", err)
+	}
+	return nil
+}
