@@ -1,3 +1,4 @@
+// Package kadmin provides Kerberos administration capabilities.
 package kadmin
 
 import (
