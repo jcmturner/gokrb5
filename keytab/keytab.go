@@ -55,7 +55,11 @@ func (kt *Keytab) GetEncryptionKey(nameString []string, realm string, kvno int, 
 	var key types.EncryptionKey
 	var t time.Time
 	for _, k := range kt.Entries {
-		if k.Principal.Realm == realm && len(k.Principal.Components) == len(nameString) && k.Key.KeyType == etype && (k.KVNO == uint32(kvno) || kvno == 0) && k.Timestamp.After(t) {
+		if k.Principal.Realm == realm && len(k.Principal.Components) == len(nameString) &&
+			k.Key.KeyType == etype &&
+			(k.KVNO == uint32(kvno) || kvno == 0) &&
+			k.Timestamp.After(t) {
+
 			p := true
 			for i, n := range k.Principal.Components {
 				if nameString[i] != n {
@@ -65,6 +69,7 @@ func (kt *Keytab) GetEncryptionKey(nameString []string, realm string, kvno int, 
 			}
 			if p {
 				key = k.Key
+				t = k.Timestamp
 			}
 		}
 	}

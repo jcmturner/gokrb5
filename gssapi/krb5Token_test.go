@@ -58,10 +58,13 @@ func TestMechToken_newAuthenticatorWithSubkeyGeneration(t *testing.T) {
 	assert.Equal(t, int32(32771), a.Cksum.CksumType, "Checksum type in authenticator for SPNEGO mechtoken not as expected.")
 	assert.Equal(t, etypeID, a.SubKey.KeyType, "Subkey not of the expected type.")
 	assert.Equal(t, keyLen, len(a.SubKey.KeyValue), "Subkey value not of the right length")
-	// Test the subkey is initialised to random non-zero values. Not a perfect test but better than nothing.
-	assert.Condition(t, assert.Comparison(func() bool {
-		return a.SubKey.KeyValue[0] != 0 && a.SubKey.KeyValue[1] != 0 && a.SubKey.KeyValue[0] != a.SubKey.KeyValue[1]
-	}))
+	var nz bool
+	for _, b := range a.SubKey.KeyValue {
+		if b != byte(0) {
+			nz = true
+		}
+	}
+	assert.True(t, nz, "subkey not initialised")
 	assert.Condition(t, assert.Comparison(func() bool {
 		return a.SeqNumber > 0
 	}), "Sequence number is not greater than zero")
