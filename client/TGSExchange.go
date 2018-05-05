@@ -1,7 +1,6 @@
 package client
 
 import (
-	"strings"
 	"time"
 
 	"gopkg.in/jcmturner/gokrb5.v4/iana/nametype"
@@ -69,11 +68,7 @@ func (cl *Client) GetServiceTicket(spn string) (messages.Ticket, types.Encryptio
 		// Already a valid ticket in the cache
 		return tkt, skey, nil
 	}
-	s := strings.Split(spn, "/")
-	princ := types.PrincipalName{
-		NameType:   nametype.KRB_NT_PRINCIPAL,
-		NameString: s,
-	}
+	princ := types.NewPrincipalName(nametype.KRB_NT_PRINCIPAL, spn)
 	sess, err := cl.GetSessionFromPrincipalName(princ)
 	if err != nil {
 		return tkt, skey, err
