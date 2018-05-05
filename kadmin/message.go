@@ -34,7 +34,7 @@ type Reply struct {
 	Result        string
 }
 
-// Mashal a Request into a byte slice.
+// Marshal a Request into a byte slice.
 func (m *Request) Marshal() (b []byte, err error) {
 	b = []byte{255, 128} // protocol version number: contains the hex constant 0xff80 (big-endian integer).
 	ab, e := m.APREQ.Marshal()

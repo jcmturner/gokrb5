@@ -12,7 +12,7 @@ type ChangePasswdData struct {
 	TargRealm string              `asn1:"generalstring,optional,explicit,tag:2"`
 }
 
-// Mashal ChangePasswdData into a byte slice.
+// Marshal ChangePasswdData into a byte slice.
 func (c *ChangePasswdData) Marshal() ([]byte, error) {
 	b, err := asn1.Marshal(*c)
 	if err != nil {
