@@ -83,17 +83,26 @@ type KDCReqBody struct {
 	AdditionalTickets []Ticket            `asn1:"explicit,optional,tag:11"`
 }
 
-// NewASReq generates a new KRB_AS_REQ struct for a TGT request.
-func NewASReq(realm string, c *config.Config, cname types.PrincipalName) (ASReq, error) {
+// NewASReqForTGT generates a new KRB_AS_REQ struct for a TGT request.
+func NewASReqForTGT(realm string, c *config.Config, cname types.PrincipalName) (ASReq, error) {
 	sname := types.PrincipalName{
 		NameType:   nametype.KRB_NT_SRV_INST,
 		NameString: []string{"krbtgt", realm},
 	}
-	return NewASReqForSName(realm, c, cname, sname)
+	return NewASReq(realm, c, cname, sname)
+}
+
+// NewASReq generates a new KRB_AS_REQ struct for a TGT request.
+func NewASReqForChgPasswd(realm string, c *config.Config, cname types.PrincipalName) (ASReq, error) {
+	sname := types.PrincipalName{
+		NameType:   nametype.KRB_NT_PRINCIPAL,
+		NameString: []string{"kadmin", "changepw"},
+	}
+	return NewASReq(realm, c, cname, sname)
 }
 
 // NewASReqSNAME generates a new KRB_AS_REQ struct for a given SNAME.
-func NewASReqForSName(realm string, c *config.Config, cname, sname types.PrincipalName) (ASReq, error) {
+func NewASReq(realm string, c *config.Config, cname, sname types.PrincipalName) (ASReq, error) {
 	nonce, err := rand.Int(rand.Reader, big.NewInt(math.MaxInt32))
 	if err != nil {
 		return ASReq{}, err

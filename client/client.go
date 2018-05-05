@@ -12,6 +12,7 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v4/iana/errorcode"
 	"gopkg.in/jcmturner/gokrb5.v4/iana/nametype"
 	"gopkg.in/jcmturner/gokrb5.v4/keytab"
+	"gopkg.in/jcmturner/gokrb5.v4/krberror"
 	"gopkg.in/jcmturner/gokrb5.v4/messages"
 	"gopkg.in/jcmturner/gokrb5.v4/types"
 )
@@ -197,5 +198,18 @@ func (cl *Client) Login() error {
 	if cl.Credentials.Realm == "" {
 		cl.Credentials.Realm = cl.Config.LibDefaults.DefaultRealm
 	}
-	return cl.ASExchange(cl.Credentials.Realm, 0)
+	ASReq, err := messages.NewASReqForTGT(cl.Credentials.Realm, cl.Config, cl.Credentials.CName)
+	if err != nil {
+		return krberror.Errorf(err, krberror.KRBMsgError, "error generating new AS_REQ")
+	}
+	err = setPAData(cl, messages.KRBError{}, &ASReq)
+	if err != nil {
+		return krberror.Errorf(err, krberror.KRBMsgError, "failed setting AS_REQ PAData")
+	}
+	ASRep, err := cl.ASExchange(cl.Credentials.Realm, ASReq, 0)
+	if err != nil {
+		return err
+	}
+	cl.AddSession(ASRep.Ticket, ASRep.DecryptedEncPart)
+	return nil
 }

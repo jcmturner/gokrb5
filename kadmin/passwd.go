@@ -31,7 +31,7 @@ func ChangePasswdMsg(cname types.PrincipalName, realm, password string, tkt mess
 		err = krberror.Errorf(err, krberror.KRBMsgError, "error generating subkey etype")
 		return
 	}
-	err = auth.GenerateSeqNumberAndSubKey(sessionKey.KeyType, etype.GetKeyByteSize())
+	err = auth.GenerateSeqNumberAndSubKey(etype.GetETypeID(), etype.GetKeyByteSize())
 	if err != nil {
 		err = krberror.Errorf(err, krberror.KRBMsgError, "error generating subkey")
 		return
@@ -45,7 +45,6 @@ func ChangePasswdMsg(cname types.PrincipalName, realm, password string, tkt mess
 	}
 
 	// Form the KRBPriv encpart data
-	//TODO set the SAddress field???
 	kp := messages.EncKrbPrivPart{
 		UserData:       chpwdb,
 		Timestamp:      auth.CTime,
@@ -54,7 +53,6 @@ func ChangePasswdMsg(cname types.PrincipalName, realm, password string, tkt mess
 	}
 	kpriv := messages.NewKRBPriv(kp)
 	err = kpriv.EncryptEncPart(k)
-	//_, kp.UserData, err = etype.EncryptData(auth.SubKey.KeyValue, chpwdb)
 	if err != nil {
 		err = krberror.Errorf(err, krberror.EncryptingError, "error encrypting change passwd data")
 		return

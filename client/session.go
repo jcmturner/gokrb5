@@ -89,7 +89,7 @@ func (cl *Client) updateSession(s *session) error {
 			return err
 		}
 	} else {
-		err := cl.ASExchange(s.Realm, 0)
+		err := cl.Login()
 		if err != nil {
 			return err
 		}

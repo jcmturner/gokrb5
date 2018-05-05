@@ -12,23 +12,15 @@ import (
 )
 
 // ASExchange performs an AS exchange for the client to retrieve a TGT.
-func (cl *Client) ASExchange(realm string, referral int) error {
+func (cl *Client) ASExchange(realm string, ASReq messages.ASReq, referral int) (messages.ASRep, error) {
 	if ok, err := cl.IsConfigured(); !ok {
-		return krberror.Errorf(err, krberror.ConfigError, "AS Exchange cannot be preformed")
-	}
-	ASReq, err := messages.NewASReq(realm, cl.Config, cl.Credentials.CName)
-	if err != nil {
-		return krberror.Errorf(err, krberror.KRBMsgError, "Error generating new AS_REQ")
-	}
-	err = setPAData(cl, messages.KRBError{}, &ASReq)
-	if err != nil {
-		return krberror.Errorf(err, krberror.KRBMsgError, "AS Exchange Error: failed setting AS_REQ PAData")
-	}
-	b, err := ASReq.Marshal()
-	if err != nil {
-		return krberror.Errorf(err, krberror.EncodingError, "AS Exchange Error: failed marshaling AS_REQ")
+		return messages.ASRep{}, krberror.Errorf(err, krberror.ConfigError, "AS Exchange cannot be preformed")
 	}
 
+	b, err := ASReq.Marshal()
+	if err != nil {
+		return messages.ASRep{}, krberror.Errorf(err, krberror.EncodingError, "AS Exchange Error: failed marshaling AS_REQ")
+	}
 	var ASRep messages.ASRep
 
 	rb, err := cl.SendToKDC(b, realm)
@@ -40,37 +32,36 @@ func (cl *Client) ASExchange(realm string, referral int) error {
 				cl.GoKrb5Conf.AssumePAEncTimestampRequired = true
 				err = setPAData(cl, e, &ASReq)
 				if err != nil {
-					return krberror.Errorf(err, krberror.KRBMsgError, "AS Exchange Error: failed setting AS_REQ PAData for pre-authentication required")
+					return messages.ASRep{}, krberror.Errorf(err, krberror.KRBMsgError, "AS Exchange Error: failed setting AS_REQ PAData for pre-authentication required")
 				}
 				b, err := ASReq.Marshal()
 				if err != nil {
-					return krberror.Errorf(err, krberror.EncodingError, "AS Exchange Error: failed marshaling AS_REQ with PAData")
+					return messages.ASRep{}, krberror.Errorf(err, krberror.EncodingError, "AS Exchange Error: failed marshaling AS_REQ with PAData")
 				}
 				rb, err = cl.SendToKDC(b, realm)
 				if err != nil {
-					return krberror.Errorf(err, krberror.NetworkingError, "AS Exchange Error: failed sending AS_REQ to KDC")
+					return messages.ASRep{}, krberror.Errorf(err, krberror.NetworkingError, "AS Exchange Error: failed sending AS_REQ to KDC")
 				}
 			case errorcode.KDC_ERR_WRONG_REALM:
 				// Client referral https://tools.ietf.org/html/rfc6806.html#section-7
 				if referral > 5 {
-					return krberror.Errorf(err, krberror.KRBMsgError, "maximum number of client referrals exceeded")
+					return messages.ASRep{}, krberror.Errorf(err, krberror.KRBMsgError, "maximum number of client referrals exceeded")
 				}
 				referral++
-				return cl.ASExchange(e.CRealm, referral)
+				return cl.ASExchange(e.CRealm, ASReq, referral)
 			}
 		} else {
-			return krberror.Errorf(err, krberror.NetworkingError, "AS Exchange Error: failed sending AS_REQ to KDC")
+			return messages.ASRep{}, krberror.Errorf(err, krberror.NetworkingError, "AS Exchange Error: failed sending AS_REQ to KDC")
 		}
 	}
 	err = ASRep.Unmarshal(rb)
 	if err != nil {
-		return krberror.Errorf(err, krberror.EncodingError, "AS Exchange Error: failed to process the AS_REP")
+		return messages.ASRep{}, krberror.Errorf(err, krberror.EncodingError, "AS Exchange Error: failed to process the AS_REP")
 	}
 	if ok, err := ASRep.IsValid(cl.Config, cl.Credentials, ASReq); !ok {
-		return krberror.Errorf(err, krberror.KRBMsgError, "AS Exchange Error: AS_REP is not valid")
+		return messages.ASRep{}, krberror.Errorf(err, krberror.KRBMsgError, "AS Exchange Error: AS_REP is not valid")
 	}
-	cl.AddSession(ASRep.Ticket, ASRep.DecryptedEncPart)
-	return nil
+	return ASRep, nil
 }
 
 func setPAData(cl *Client, krberr messages.KRBError, ASReq *messages.ASReq) error {
