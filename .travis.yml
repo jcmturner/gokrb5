@@ -25,7 +25,7 @@ before_install:
   - docker pull jcmturner/gokrb5:kdc-older
   - docker pull jcmturner/gokrb5:kdc-latest
   - docker run -d -h kdc.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -e "TEST_KDC_ADDR=127.0.0.1" -p 53:53 -p 53:53/udp --name dns jcmturner/gokrb5:dns
-  - docker run -d -h kdc.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -p 88:88 -p 88:88/udp --name krb5kdc jcmturner/gokrb5:kdc-centos-default
+  - docker run -d -h kdc.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -p 88:88 -p 88:88/udp -p 464:464 -p 464:464/udp --name krb5kdc jcmturner/gokrb5:kdc-centos-default
   - docker run -d -h kdc.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -p 78:88 -p 78:88/udp --name krb5kdc-old jcmturner/gokrb5:kdc-older
   - docker run -d -h kdc.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -p 98:88 -p 98:88/udp --name krb5kdc-latest jcmturner/gokrb5:kdc-latest
   - docker run -d -h kdc.resdom.gokrb5 -v /etc/localtime:/etc/localtime:ro -p 188:88 -p 188:88/udp --name krb5kdc-resdom jcmturner/gokrb5:kdc-resdom

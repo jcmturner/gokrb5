@@ -65,7 +65,7 @@ func NewClientWithKeytab(username, realm string, kt keytab.Keytab) Client {
 
 // NewClientFromCCache create a client from a populated client cache.
 //
-// WARNING: If you do not add a keytab or password to the client then the TGT cannot be renewed and a failure will occur after the TGT expires.
+// WARNING: A client created from CCache does not automatically renew TGTs and a failure will occur after the TGT expires.
 func NewClientFromCCache(c credentials.CCache) (Client, error) {
 	cl := Client{
 		Credentials: c.GetClientCredentials(),
