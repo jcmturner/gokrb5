@@ -2,7 +2,7 @@ package kadmin
 
 import (
 	"github.com/jcmturner/gofork/encoding/asn1"
-	"gopkg.in/jcmturner/gokrb5.v4/types"
+	"gopkg.in/jcmturner/gokrb5.v5/types"
 )
 
 type ChangePasswdData struct {

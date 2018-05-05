@@ -4,11 +4,11 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"gopkg.in/jcmturner/gokrb5.v4/crypto"
-	"gopkg.in/jcmturner/gokrb5.v4/iana/keyusage"
-	"gopkg.in/jcmturner/gokrb5.v4/mstypes"
-	"gopkg.in/jcmturner/gokrb5.v4/ndr"
-	"gopkg.in/jcmturner/gokrb5.v4/types"
+	"gopkg.in/jcmturner/gokrb5.v5/crypto"
+	"gopkg.in/jcmturner/gokrb5.v5/iana/keyusage"
+	"gopkg.in/jcmturner/gokrb5.v5/mstypes"
+	"gopkg.in/jcmturner/gokrb5.v5/ndr"
+	"gopkg.in/jcmturner/gokrb5.v5/types"
 )
 
 // https://msdn.microsoft.com/en-us/library/cc237931.aspx
