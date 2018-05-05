@@ -11,8 +11,10 @@ RUN yum install -y \
  && yum groupinstall "Development Tools" -y \
  && yum update -y && yum clean all
 
-ADD krb5-1.16.1.tar.gz /tmp
-RUN cd /tmp/krb5-1.15.1/src && \
+ENV KRB5_VER 1.16.1
+
+ADD krb5-${KRB5_VER}.tar.gz /tmp
+RUN cd /tmp/krb5-${KRB5_VER}/src && \
   ./configure && make && make install
 
 ADD krb5.conf /etc/krb5.conf
@@ -23,5 +25,3 @@ RUN mkdir -p /opt/krb5/log && \
   mkdir -p /var/log/kerberos && \
   /bin/bash /opt/krb5/bin/krb5kdc-init.sh && \
   ln -sf /dev/stdout /var/log/krb5kdc.log
-
-
