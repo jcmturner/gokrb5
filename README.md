@@ -19,6 +19,7 @@ import "gopkg.in/jcmturner/gokrb5.v4/<sub package>"
   * HTTP handler wrapper decodes Microsoft AD PAC authorization data
 * Client Side
   * Client that can authenticate to an SPNEGO Kerberos authenticated web service
+  * Ability to change client's password
 * General
   * Kerberos libraries for custom integration
   * Parsing Keytab files
@@ -144,6 +145,43 @@ APReq, err := messages.NewAPReq(tkt, key, auth)
 
 Now send the AP_REQ to the service. How this is done will be specific to the application use case.
 
+#### Changing a Client Password
+This feature uses the Microsoft Kerberos Password Change protocol (RFC 3244). 
+This is implemented in Microsoft Active Directory and in MIT krb5kdc as of version 1.7.
+Typically the kpasswd server listens on port 464.
+
+Below is example code for how to use this feature:
+```go
+cfg, err := config.Load("/path/to/config/file")
+if err != nil {
+	panic(err.Error())
+}
+kt, err := keytab.Load("/path/to/file.keytab")
+if err != nil {
+	panic(err.Error())
+}
+cl := client.NewClientWithKeytab("username", "REALM.COM", kt)
+cl.WithConfig(cfg)
+
+ok, err := cl.ChangePasswd("newpassword")
+if err != nil {
+	panic(err.Error())
+}
+if !ok {
+	panic("failed to change password")
+}
+```
+
+The client kerberos config (krb5.conf) will need to have either the kpassd_server or admin_server defined in the relevant [realms] section.
+For example:
+```
+REALM.COM = {
+  kdc = 127.0.0.1:88
+  kpasswd_server = 127.0.0.1:464
+  default_domain = realm.com
+ }
+```
+See https://web.mit.edu/kerberos/krb5-latest/doc/admin/conf_files/krb5_conf.html#realms for more information.
 
 ---
 

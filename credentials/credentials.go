@@ -6,7 +6,6 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v4/iana/nametype"
 	"gopkg.in/jcmturner/gokrb5.v4/keytab"
 	"gopkg.in/jcmturner/gokrb5.v4/types"
-	"strings"
 	"time"
 )
 
@@ -58,13 +57,10 @@ func NewCredentials(username string, realm string) Credentials {
 		Username:    username,
 		displayName: username,
 		Realm:       realm,
-		CName: types.PrincipalName{
-			NameType:   nametype.KRB_NT_PRINCIPAL,
-			NameString: strings.Split(username, "/"),
-		},
-		Keytab:     keytab.NewKeytab(),
-		Attributes: make(map[int]interface{}),
-		sessionID:  uid,
+		CName:       types.NewPrincipalName(nametype.KRB_NT_PRINCIPAL, username),
+		Keytab:      keytab.NewKeytab(),
+		Attributes:  make(map[int]interface{}),
+		sessionID:   uid,
 	}
 }
 
