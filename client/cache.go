@@ -70,7 +70,7 @@ func (cl *Client) GetCachedTicket(spn string) (messages.Ticket, types.Encryption
 		if time.Now().UTC().After(e.StartTime) && time.Now().UTC().Before(e.EndTime) {
 			return e.Ticket, e.SessionKey, true
 		} else if time.Now().UTC().Before(e.RenewTill) {
-			e, err := cl.RenewTicket(e)
+			e, err := cl.renewTicket(e)
 			if err != nil {
 				return e.Ticket, e.SessionKey, false
 			}
@@ -82,8 +82,9 @@ func (cl *Client) GetCachedTicket(spn string) (messages.Ticket, types.Encryption
 	return tkt, key, false
 }
 
-// RenewTicket renews a cache entry ticket
-func (cl *Client) RenewTicket(e CacheEntry) (CacheEntry, error) {
+// renewTicket renews a cache entry ticket.
+// To renew from outside the client package use GetCachedTicket
+func (cl *Client) renewTicket(e CacheEntry) (CacheEntry, error) {
 	spn := e.Ticket.SName
 	_, tgsRep, err := cl.TGSExchange(spn, e.Ticket.Realm, e.Ticket, e.SessionKey, true, 0)
 	if err != nil {

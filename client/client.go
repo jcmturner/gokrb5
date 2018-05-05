@@ -135,7 +135,7 @@ func (cl *Client) WithPassword(password string) *Client {
 
 // Key returns a key for the client. Preferably from a keytab and then generated from the password.
 // The KRBError would have been returned from the KDC and must be of type KDC_ERR_PREAUTH_REQUIRED.
-// If a KRBError is not available pass nil and a key will be returned from the credentials keytab.
+// If a KRBError is not available pass messages.KRBError{} and a key will be returned from the credentials keytab.
 func (cl *Client) Key(etype etype.EType, krberr messages.KRBError) (types.EncryptionKey, error) {
 	if cl.Credentials.HasKeytab() && etype != nil {
 		return cl.Credentials.Keytab.GetEncryptionKey(cl.Credentials.CName.NameString, cl.Credentials.Realm, 0, etype.GetETypeID())
