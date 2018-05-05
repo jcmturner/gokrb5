@@ -7,6 +7,7 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v5/types"
 )
 
+// ChangePasswdMsg forms the password change request and also returns the key needed to decrypt the reply.
 func ChangePasswdMsg(cname types.PrincipalName, realm, password string, tkt messages.Ticket, sessionKey types.EncryptionKey) (r Request, k types.EncryptionKey, err error) {
 	// Create change password data struct and marshal to bytes
 	chgpasswd := ChangePasswdData{
