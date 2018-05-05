@@ -84,7 +84,7 @@ func encryptAuthenticator(a types.Authenticator, sessionKey types.EncryptionKey,
 	return ed, nil
 }
 
-// Decrypt the Authenticator within the AP_REQ.
+// DecryptAuthenticator decrypts the Authenticator within the AP_REQ.
 // sessionKey may simply be the key within the decrypted EncPart of the ticket within the AP_REQ.
 func (a *APReq) DecryptAuthenticator(sessionKey types.EncryptionKey) (auth types.Authenticator, err error) {
 	var usage uint32

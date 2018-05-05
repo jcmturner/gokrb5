@@ -15,11 +15,13 @@ const (
 	verisonHex = "ff80"
 )
 
+// Request struct for a password change request.
 type Request struct {
 	APREQ   messages.APReq
 	KRBPriv messages.KRBPriv
 }
 
+// Reply struct representation of the password change response.
 type Reply struct {
 	MessageLength int
 	Version       int
@@ -32,6 +34,7 @@ type Reply struct {
 	Result        string
 }
 
+// Marshal a Request into byte slice.
 func (m *Request) Marshal() (b []byte, err error) {
 	b = []byte{255, 128} // protocol version number: contains the hex constant 0xff80 (big-endian integer).
 	ab, e := m.APREQ.Marshal()
@@ -63,6 +66,7 @@ func (m *Request) Marshal() (b []byte, err error) {
 	return
 }
 
+// Unmarshal a byte slice into a Reply type.
 func (m *Reply) Unmarshal(b []byte) error {
 	m.MessageLength = int(binary.BigEndian.Uint16(b[0:2]))
 	m.Version = int(binary.BigEndian.Uint16(b[2:4]))
@@ -96,6 +100,7 @@ func parseResponse(b []byte) (c uint16, s string) {
 	return
 }
 
+// Decrypt the encrypted part of the KRBPriv within the Reply.
 func (m *Reply) Decrypt(key types.EncryptionKey) error {
 	if m.IsKRBError {
 		return m.KRBError
