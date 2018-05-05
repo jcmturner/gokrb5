@@ -68,6 +68,9 @@ func (c *Config) GetKpasswdServers(realm string, tcp bool) (int, map[int]string,
 		}
 		if c < 1 {
 			c, addrs, err = dnsutils.OrderedSRV("kerberos-adm", proto, realm)
+			if err != nil {
+				return count, kdcs, err
+			}
 		}
 		if len(addrs) < 1 {
 			return count, kdcs, fmt.Errorf("no kpasswd or kadmin SRV records found for realm %s", realm)
