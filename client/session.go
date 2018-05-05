@@ -5,10 +5,10 @@ import (
 	"sync"
 	"time"
 
-	"gopkg.in/jcmturner/gokrb5.v4/iana/nametype"
-	"gopkg.in/jcmturner/gokrb5.v4/krberror"
-	"gopkg.in/jcmturner/gokrb5.v4/messages"
-	"gopkg.in/jcmturner/gokrb5.v4/types"
+	"gopkg.in/jcmturner/gokrb5.v5/iana/nametype"
+	"gopkg.in/jcmturner/gokrb5.v5/krberror"
+	"gopkg.in/jcmturner/gokrb5.v5/messages"
+	"gopkg.in/jcmturner/gokrb5.v5/types"
 )
 
 // Sessions keyed on the realm name

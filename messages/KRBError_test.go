@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v4/iana"
-	"gopkg.in/jcmturner/gokrb5.v4/iana/errorcode"
-	"gopkg.in/jcmturner/gokrb5.v4/iana/msgtype"
-	"gopkg.in/jcmturner/gokrb5.v4/iana/nametype"
-	"gopkg.in/jcmturner/gokrb5.v4/testdata"
+	"gopkg.in/jcmturner/gokrb5.v5/iana"
+	"gopkg.in/jcmturner/gokrb5.v5/iana/errorcode"
+	"gopkg.in/jcmturner/gokrb5.v5/iana/msgtype"
+	"gopkg.in/jcmturner/gokrb5.v5/iana/nametype"
+	"gopkg.in/jcmturner/gokrb5.v5/testdata"
 )
 
 func TestUnmarshalKRBError(t *testing.T) {

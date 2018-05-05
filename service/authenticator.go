@@ -8,11 +8,11 @@ import (
 	"time"
 
 	goidentity "gopkg.in/jcmturner/goidentity.v1"
-	"gopkg.in/jcmturner/gokrb5.v4/client"
-	"gopkg.in/jcmturner/gokrb5.v4/config"
-	"gopkg.in/jcmturner/gokrb5.v4/credentials"
-	"gopkg.in/jcmturner/gokrb5.v4/gssapi"
-	"gopkg.in/jcmturner/gokrb5.v4/keytab"
+	"gopkg.in/jcmturner/gokrb5.v5/client"
+	"gopkg.in/jcmturner/gokrb5.v5/config"
+	"gopkg.in/jcmturner/gokrb5.v5/credentials"
+	"gopkg.in/jcmturner/gokrb5.v5/gssapi"
+	"gopkg.in/jcmturner/gokrb5.v5/keytab"
 )
 
 // SPNEGOAuthenticator implements gopkg.in/jcmturner/goidentity.v1.Authenticator interface

@@ -7,17 +7,17 @@ import (
 	"time"
 
 	"github.com/jcmturner/gofork/encoding/asn1"
-	"gopkg.in/jcmturner/gokrb5.v4/asn1tools"
-	"gopkg.in/jcmturner/gokrb5.v4/crypto"
-	"gopkg.in/jcmturner/gokrb5.v4/iana"
-	"gopkg.in/jcmturner/gokrb5.v4/iana/adtype"
-	"gopkg.in/jcmturner/gokrb5.v4/iana/asnAppTag"
-	"gopkg.in/jcmturner/gokrb5.v4/iana/errorcode"
-	"gopkg.in/jcmturner/gokrb5.v4/iana/keyusage"
-	"gopkg.in/jcmturner/gokrb5.v4/keytab"
-	"gopkg.in/jcmturner/gokrb5.v4/krberror"
-	"gopkg.in/jcmturner/gokrb5.v4/pac"
-	"gopkg.in/jcmturner/gokrb5.v4/types"
+	"gopkg.in/jcmturner/gokrb5.v5/asn1tools"
+	"gopkg.in/jcmturner/gokrb5.v5/crypto"
+	"gopkg.in/jcmturner/gokrb5.v5/iana"
+	"gopkg.in/jcmturner/gokrb5.v5/iana/adtype"
+	"gopkg.in/jcmturner/gokrb5.v5/iana/asnAppTag"
+	"gopkg.in/jcmturner/gokrb5.v5/iana/errorcode"
+	"gopkg.in/jcmturner/gokrb5.v5/iana/keyusage"
+	"gopkg.in/jcmturner/gokrb5.v5/keytab"
+	"gopkg.in/jcmturner/gokrb5.v5/krberror"
+	"gopkg.in/jcmturner/gokrb5.v5/pac"
+	"gopkg.in/jcmturner/gokrb5.v5/types"
 )
 
 // Reference: https://www.ietf.org/rfc/rfc4120.txt

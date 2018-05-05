@@ -3,8 +3,8 @@ package pac
 import (
 	"encoding/binary"
 
-	"gopkg.in/jcmturner/gokrb5.v4/iana/chksumtype"
-	"gopkg.in/jcmturner/gokrb5.v4/ndr"
+	"gopkg.in/jcmturner/gokrb5.v5/iana/chksumtype"
+	"gopkg.in/jcmturner/gokrb5.v5/ndr"
 )
 
 /*

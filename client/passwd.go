@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net"
 
-	"gopkg.in/jcmturner/gokrb5.v4/kadmin"
-	"gopkg.in/jcmturner/gokrb5.v4/messages"
+	"gopkg.in/jcmturner/gokrb5.v5/kadmin"
+	"gopkg.in/jcmturner/gokrb5.v5/messages"
 )
 
 const (

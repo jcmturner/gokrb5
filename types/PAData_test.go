@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v4/iana/patype"
-	"gopkg.in/jcmturner/gokrb5.v4/testdata"
+	"gopkg.in/jcmturner/gokrb5.v5/iana/patype"
+	"gopkg.in/jcmturner/gokrb5.v5/testdata"
 )
 
 func TestUnmarshalPADataSequence(t *testing.T) {

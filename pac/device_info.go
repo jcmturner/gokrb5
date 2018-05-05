@@ -3,8 +3,8 @@ package pac
 import (
 	"fmt"
 
-	"gopkg.in/jcmturner/gokrb5.v4/mstypes"
-	"gopkg.in/jcmturner/gokrb5.v4/ndr"
+	"gopkg.in/jcmturner/gokrb5.v5/mstypes"
+	"gopkg.in/jcmturner/gokrb5.v5/ndr"
 )
 
 // DeviceInfo implements https://msdn.microsoft.com/en-us/library/hh536402.aspx

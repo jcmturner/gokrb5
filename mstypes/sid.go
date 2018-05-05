@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"gopkg.in/jcmturner/gokrb5.v4/ndr"
+	"gopkg.in/jcmturner/gokrb5.v5/ndr"
 )
 
 // RPCSID implements https://msdn.microsoft.com/en-us/library/cc230364.aspx

@@ -7,10 +7,10 @@ import (
 	"errors"
 	"hash"
 
-	"gopkg.in/jcmturner/gokrb5.v4/crypto/common"
-	"gopkg.in/jcmturner/gokrb5.v4/crypto/rfc3961"
-	"gopkg.in/jcmturner/gokrb5.v4/iana/chksumtype"
-	"gopkg.in/jcmturner/gokrb5.v4/iana/etypeID"
+	"gopkg.in/jcmturner/gokrb5.v5/crypto/common"
+	"gopkg.in/jcmturner/gokrb5.v5/crypto/rfc3961"
+	"gopkg.in/jcmturner/gokrb5.v5/iana/chksumtype"
+	"gopkg.in/jcmturner/gokrb5.v5/iana/etypeID"
 )
 
 //RFC: 3961 Section 6.3
