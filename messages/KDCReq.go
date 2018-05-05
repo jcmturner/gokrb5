@@ -92,7 +92,7 @@ func NewASReqForTGT(realm string, c *config.Config, cname types.PrincipalName) (
 	return NewASReq(realm, c, cname, sname)
 }
 
-// NewASReq generates a new KRB_AS_REQ struct for a TGT request.
+// NewASReqForChgPasswd generates a new KRB_AS_REQ struct for a change password request.
 func NewASReqForChgPasswd(realm string, c *config.Config, cname types.PrincipalName) (ASReq, error) {
 	sname := types.PrincipalName{
 		NameType:   nametype.KRB_NT_PRINCIPAL,
@@ -101,7 +101,7 @@ func NewASReqForChgPasswd(realm string, c *config.Config, cname types.PrincipalN
 	return NewASReq(realm, c, cname, sname)
 }
 
-// NewASReqSNAME generates a new KRB_AS_REQ struct for a given SNAME.
+// NewASReq generates a new KRB_AS_REQ struct for a given SNAME.
 func NewASReq(realm string, c *config.Config, cname, sname types.PrincipalName) (ASReq, error) {
 	nonce, err := rand.Int(rand.Reader, big.NewInt(math.MaxInt32))
 	if err != nil {

@@ -118,6 +118,9 @@ func (cl *Client) sendKDCUDP(realm string, b []byte) ([]byte, error) {
 		return r, err
 	}
 	r, err = cl.sendUDP(conn, b)
+	if err != nil {
+		return r, err
+	}
 	return checkForKRBError(r)
 }
 

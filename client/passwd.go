@@ -8,6 +8,7 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v5/messages"
 )
 
+// Kpasswd server response codes.
 const (
 	KRB5_KPASSWD_SUCCESS             = 0
 	KRB5_KPASSWD_MALFORMED           = 1
@@ -19,6 +20,7 @@ const (
 	KRB5_KPASSWD_INITIAL_FLAG_NEEDED = 7
 )
 
+// ChangePasswd changes the password of the client to the value provided.
 func (cl *Client) ChangePasswd(newPasswd string) (bool, error) {
 	ASReq, err := messages.NewASReqForChgPasswd(cl.Credentials.Realm, cl.Config, cl.Credentials.CName)
 	if err != nil {
