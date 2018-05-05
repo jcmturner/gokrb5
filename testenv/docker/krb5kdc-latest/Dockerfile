@@ -11,7 +11,7 @@ RUN yum install -y \
  && yum groupinstall "Development Tools" -y \
  && yum update -y && yum clean all
 
-ADD krb5-1.15.1.tar.gz /tmp
+ADD krb5-1.16.1.tar.gz /tmp
 RUN cd /tmp/krb5-1.15.1/src && \
   ./configure && make && make install
 

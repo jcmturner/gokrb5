@@ -4,7 +4,7 @@ DO NOT USE THIS CONTAINER FOR ANY PRODUCTION USE!!!
 
 To run:
 ```bash
-docker run -v /etc/localtime:/etc/localtime:ro -p 88:88 -p 88:88/udp --rm --name gokrb5-kdc-centos-default jcmturner/gokrb5:kdc-centos-default &
+docker run -v /etc/localtime:/etc/localtime:ro -p 88:88 -p 88:88/udp -p 464:464 -p 464:464/udp --rm --name gokrb5-kdc-centos-default jcmturner/gokrb5:kdc-centos-default &
 ```
 
 To build:
