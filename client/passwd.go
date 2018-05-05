@@ -5,11 +5,10 @@ import (
 	"net"
 
 	"gopkg.in/jcmturner/gokrb5.v4/kadmin"
+	"gopkg.in/jcmturner/gokrb5.v4/messages"
 )
 
 const (
-	passwdChangeSPN = "kadmin/changepw"
-
 	KRB5_KPASSWD_SUCCESS             = 0
 	KRB5_KPASSWD_MALFORMED           = 1
 	KRB5_KPASSWD_HARDERROR           = 2
@@ -21,12 +20,13 @@ const (
 )
 
 func (cl *Client) ChangePasswd(newPasswd string) (bool, error) {
-	tkt, skey, err := cl.GetServiceTicket(passwdChangeSPN)
+	ASReq, err := messages.NewASReqForChgPasswd(cl.Credentials.Realm, cl.Config, cl.Credentials.CName)
 	if err != nil {
-		return false, fmt.Errorf("could not get service ticket: %v", err)
+		return false, err
 	}
+	ASRep, err := cl.ASExchange(cl.Credentials.Realm, ASReq, 0)
 
-	msg, key, err := kadmin.ChangePasswdMsg(cl.Credentials.CName, cl.Credentials.Realm, newPasswd, tkt, skey)
+	msg, key, err := kadmin.ChangePasswdMsg(cl.Credentials.CName, cl.Credentials.Realm, newPasswd, ASRep.Ticket, ASRep.DecryptedEncPart.Key)
 	r, err := cl.sendToKPasswd(msg)
 	err = r.Decrypt(key)
 	if err != nil {
