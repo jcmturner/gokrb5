@@ -96,7 +96,7 @@ func (a *APReq) DecryptAuthenticator(sessionKey types.EncryptionKey) (auth types
 	}
 	ab, e := crypto.DecryptEncPart(a.Authenticator, sessionKey, usage)
 	if e != nil {
-		err = fmt.Errorf("error decrypting authenticator: %v", err)
+		err = fmt.Errorf("error decrypting authenticator: %v", e)
 		return
 	}
 	e = auth.Unmarshal(ab)
