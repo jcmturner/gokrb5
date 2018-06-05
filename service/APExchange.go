@@ -80,6 +80,7 @@ func ValidateAPREQ(APReq messages.APReq, kt keytab.Keytab, sa string, cAddr stri
 	creds = credentials.NewCredentialsFromPrincipal(a.CName, a.CRealm)
 	creds.SetAuthTime(t)
 	creds.SetAuthenticated(true)
+	creds.SetValidUntil(APReq.Ticket.DecryptedEncPart.EndTime)
 	isPAC, pac, err := APReq.Ticket.GetPACType(kt, sa)
 	if isPAC && err != nil {
 		return false, creds, err
