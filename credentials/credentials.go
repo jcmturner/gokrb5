@@ -2,11 +2,12 @@
 package credentials
 
 import (
+	"time"
+
 	"github.com/hashicorp/go-uuid"
 	"gopkg.in/jcmturner/gokrb5.v5/iana/nametype"
 	"gopkg.in/jcmturner/gokrb5.v5/keytab"
 	"gopkg.in/jcmturner/gokrb5.v5/types"
-	"time"
 )
 
 const (
@@ -18,13 +19,15 @@ const (
 // Contains either a keytab, password or both.
 // Keytabs are used over passwords if both are defined.
 type Credentials struct {
-	Username        string
-	displayName     string
-	Realm           string
-	CName           types.PrincipalName
-	Keytab          keytab.Keytab
-	Password        string
-	Attributes      map[int]interface{}
+	Username    string
+	displayName string
+	Realm       string
+	CName       types.PrincipalName
+	Keytab      keytab.Keytab
+	Password    string
+	Attributes  map[int]interface{}
+	ValidUntil  time.Time
+
 	authenticated   bool
 	human           bool
 	authTime        time.Time
@@ -100,6 +103,11 @@ func (c *Credentials) HasKeytab() bool {
 		return true
 	}
 	return false
+}
+
+// SetValidUntil sets the TTL of the credentials
+func (c *Credentials) SetValidUntil(validUntil time.Time) {
+	c.ValidUntil = validUntil
 }
 
 // HasPassword queries if the Credentials has a password defined.
