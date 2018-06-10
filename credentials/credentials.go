@@ -248,6 +248,7 @@ func (c *Credentials) SessionID() string {
 	return c.sessionID
 }
 
+// Expired indicates if the credential has expired.
 func (c *Credentials) Expired() bool {
 	if !c.ValidUntil.IsZero() && time.Now().UTC().After(c.ValidUntil) {
 		return true
