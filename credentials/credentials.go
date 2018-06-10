@@ -105,9 +105,9 @@ func (c *Credentials) HasKeytab() bool {
 	return false
 }
 
-// SetValidUntil sets the TTL of the credentials
-func (c *Credentials) SetValidUntil(validUntil time.Time) {
-	c.ValidUntil = validUntil
+// SetValidUntil sets the expiry time of the credentials
+func (c *Credentials) SetValidUntil(t time.Time) {
+	c.ValidUntil = t
 }
 
 // HasPassword queries if the Credentials has a password defined.
@@ -246,4 +246,11 @@ func (c *Credentials) Authorized(a string) bool {
 // SessionID returns the credential's session ID.
 func (c *Credentials) SessionID() string {
 	return c.sessionID
+}
+
+func (c *Credentials) Expired() bool {
+	if !c.ValidUntil.IsZero() && time.Now().UTC().After(c.ValidUntil) {
+		return true
+	}
+	return false
 }
