@@ -1,2 +1,2 @@
-// Package gokrb5 provides a Go file to avoid the error "no Go files in" when performing "go get" of gokrb5
+// Package gokrb5 provides a Kerberos 5 implementation for Go
 package gokrb5
