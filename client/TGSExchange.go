@@ -75,7 +75,12 @@ func (cl *Client) GetServiceTicket(spn string) (messages.Ticket, types.Encryptio
 	}
 	// Ensure TGT still valid
 	if time.Now().UTC().After(sess.EndTime) {
-		err := cl.updateSession(sess)
+		_, err := cl.updateSession(sess)
+		if err != nil {
+			return tkt, skey, err
+		}
+		// Get the session again as it could have been replaced by the update
+		sess, err = cl.GetSessionFromPrincipalName(princ)
 		if err != nil {
 			return tkt, skey, err
 		}
