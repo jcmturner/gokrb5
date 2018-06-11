@@ -42,6 +42,7 @@ func (cl *Client) AddSession(tkt messages.Ticket, dep messages.EncKDCRepPart) {
 		TGT:                  tkt,
 		SessionKey:           dep.Key,
 		SessionKeyExpiration: dep.KeyExpiration,
+		cancel:               make(chan bool),
 	}
 	cl.cancelAutoSessionRenewal(tkt.SName.NameString[1])
 	cl.sessions.Entries[tkt.SName.NameString[1]] = s
@@ -51,9 +52,7 @@ func (cl *Client) AddSession(tkt messages.Ticket, dep messages.EncKDCRepPart) {
 // enableAutoSessionRenewal turns on the automatic renewal for the client's TGT session.
 func (cl *Client) enableAutoSessionRenewal(s *session) {
 	var timer *time.Timer
-	cancel := make(chan bool)
 	go func(s *session) {
-		s.cancel = cancel
 		for {
 			w := (s.EndTime.Sub(time.Now().UTC()) * 5) / 6
 			timer = time.NewTimer(w)
