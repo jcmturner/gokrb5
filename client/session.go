@@ -44,7 +44,10 @@ func (cl *Client) AddSession(tkt messages.Ticket, dep messages.EncKDCRepPart) {
 		SessionKeyExpiration: dep.KeyExpiration,
 		cancel:               make(chan bool),
 	}
-	cl.cancelAutoSessionRenewal(tkt.SName.NameString[1])
+	// if a session already exists for this, cancel its auto renew.
+	if i, ok := cl.sessions.Entries[tkt.SName.NameString[1]]; ok {
+		i.cancel <- true
+	}
 	cl.sessions.Entries[tkt.SName.NameString[1]] = s
 	cl.enableAutoSessionRenewal(s)
 }
@@ -70,14 +73,6 @@ func (cl *Client) enableAutoSessionRenewal(s *session) {
 			}
 		}
 	}(s)
-}
-
-// cancelAutoSessionRenewal can be called to cancel any existing session renewals.
-// It can be called even if there is no pre-exiting session.
-func (cl *Client) cancelAutoSessionRenewal(sname string) {
-	if s, ok := cl.sessions.Entries[sname]; ok {
-		s.cancel <- true
-	}
 }
 
 // RenewTGT renews the client's TGT session.
