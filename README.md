@@ -3,17 +3,11 @@
 
 To get the package, execute:
 ```
-go get gopkg.in/jcmturner/gokrb5.v5
-go get gopkg.in/jcmturner/goidentity.v2
-go get gopkg.in/jcmturner/dnsutils.v1
-go get gopkg.in/jcmturner/aescts.v1
-go get github.com/hashicorp/go-uuid
-go get github.com/jcmturner/gofork
+go get -d gopkg.in/jcmturner/gokrb5.v5/...
 ```
 To import this package, add the following line to your code:
 ```go
 import "gopkg.in/jcmturner/gokrb5.v5/<sub package>"
-
 ```
 
 ## Features

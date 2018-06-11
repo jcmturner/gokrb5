@@ -48,16 +48,19 @@ func (cl *Client) AddSession(tkt messages.Ticket, dep messages.EncKDCRepPart) {
 
 // EnableAutoSessionRenewal turns on the automatic renewal for the client's TGT session.
 func (cl *Client) enableAutoSessionRenewal(s *session) {
-	// TODO look into using a context here
 	go func(s *session) {
 		for {
-			//Wait until one minute before endtime
+			// wait for a fraction of time between now and end time. The fraction enables a faster period before a retry in case of a failure.
 			w := (s.EndTime.Sub(time.Now().UTC()) * 5) / 6
 			if w < 0 {
 				return
 			}
 			time.Sleep(w)
-			cl.updateSession(s)
+			renewal, err := cl.updateSession(s)
+			if !renewal && err == nil {
+				// end this goroutine as there will have been a new login and new auto renewal goroutine created.
+				return
+			}
 		}
 	}(s)
 }
@@ -82,19 +85,15 @@ func (cl *Client) renewTGT(s *session) error {
 	return nil
 }
 
-func (cl *Client) updateSession(s *session) error {
+// updateSession updates either through renewal or creating a new login.
+// The boolean indicates if the update was a renewal.
+func (cl *Client) updateSession(s *session) (bool, error) {
 	if time.Now().UTC().Before(s.RenewTill) {
 		err := cl.renewTGT(s)
-		if err != nil {
-			return err
-		}
-	} else {
-		err := cl.Login()
-		if err != nil {
-			return err
-		}
+		return true, err
 	}
-	return nil
+	err := cl.Login()
+	return false, err
 }
 
 func (cl *Client) getSessionFromRemoteRealm(realm string) (*session, error) {
