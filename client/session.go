@@ -58,6 +58,9 @@ func (cl *Client) enableAutoSessionRenewal(s *session) {
 	go func(s *session) {
 		for {
 			w := (s.EndTime.Sub(time.Now().UTC()) * 5) / 6
+			if w < 0 {
+				return
+			}
 			timer = time.NewTimer(w)
 			select {
 			case <-timer.C:
