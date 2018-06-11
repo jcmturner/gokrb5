@@ -26,6 +26,7 @@ type session struct {
 	TGT                  messages.Ticket
 	SessionKey           types.EncryptionKey
 	SessionKeyExpiration time.Time
+	cancel               chan bool
 }
 
 // AddSession adds a session for a realm with a TGT to the client's session cache.
@@ -42,27 +43,42 @@ func (cl *Client) AddSession(tkt messages.Ticket, dep messages.EncKDCRepPart) {
 		SessionKey:           dep.Key,
 		SessionKeyExpiration: dep.KeyExpiration,
 	}
+	cl.cancelAutoSessionRenewal(tkt.SName.NameString[1])
 	cl.sessions.Entries[tkt.SName.NameString[1]] = s
 	cl.enableAutoSessionRenewal(s)
 }
 
-// EnableAutoSessionRenewal turns on the automatic renewal for the client's TGT session.
+// enableAutoSessionRenewal turns on the automatic renewal for the client's TGT session.
 func (cl *Client) enableAutoSessionRenewal(s *session) {
+	var timer *time.Timer
+	cancel := make(chan bool)
 	go func(s *session) {
+		s.cancel = cancel
 		for {
-			// wait for a fraction of time between now and end time. The fraction enables a faster period before a retry in case of a failure.
 			w := (s.EndTime.Sub(time.Now().UTC()) * 5) / 6
-			if w < 0 {
-				return
-			}
-			time.Sleep(w)
-			renewal, err := cl.updateSession(s)
-			if !renewal && err == nil {
-				// end this goroutine as there will have been a new login and new auto renewal goroutine created.
+			timer = time.NewTimer(w)
+			select {
+			case <-timer.C:
+				renewal, err := cl.updateSession(s)
+				if !renewal && err == nil {
+					// end this goroutine as there will have been a new login and new auto renewal goroutine created.
+					return
+				}
+			case <-s.cancel:
+				// cancel has been called. Stop the timer and exit.
+				timer.Stop()
 				return
 			}
 		}
 	}(s)
+}
+
+// cancelAutoSessionRenewal can be called to cancel any existing session renewals.
+// It can be called even if there is no pre-exiting session.
+func (cl *Client) cancelAutoSessionRenewal(sname string) {
+	if s, ok := cl.sessions.Entries[sname]; ok {
+		s.cancel <- true
+	}
 }
 
 // RenewTGT renews the client's TGT session.
