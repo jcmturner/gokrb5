@@ -11,7 +11,9 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
+	"runtime"
 	"testing"
+	"time"
 
 	"errors"
 	"fmt"
@@ -651,4 +653,30 @@ func TestClient_ChangePasswd(t *testing.T) {
 		t.Fatalf("error changing password: %v", err)
 	}
 	assert.True(t, ok, "password was not changed back")
+}
+
+func TestClient_AutoRenew_Goroutine_Count(t *testing.T) {
+	// Tests that the auto renew of client credentials is not spawning goroutines out of control.
+	addr := os.Getenv("TEST_KDC_ADDR")
+	if addr == "" {
+		addr = testdata.TEST_KDC_ADDR
+	}
+	b, err := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	kt, _ := keytab.Parse(b)
+	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
+	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
+	cl.WithConfig(c)
+
+	err = cl.Login()
+	if err != nil {
+		t.Errorf("error on logging in: %v\n", err)
+	}
+	n := runtime.NumGoroutine()
+	for i := 0; i < 6; i++ {
+		time.Sleep(time.Second * 20)
+		if runtime.NumGoroutine() > n {
+			t.Fatalf("number of goroutines is increasing: should not be more than %d, is %d", n, runtime.NumGoroutine())
+		}
+	}
 }
