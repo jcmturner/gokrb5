@@ -27,6 +27,19 @@ type session struct {
 	SessionKey           types.EncryptionKey
 	SessionKeyExpiration time.Time
 	cancel               chan bool
+	mux                  sync.RWMutex
+}
+
+func (s *session) update(tkt messages.Ticket, dep messages.EncKDCRepPart) {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	s.AuthTime = dep.AuthTime
+	s.AuthTime = dep.AuthTime
+	s.EndTime = dep.EndTime
+	s.RenewTill = dep.RenewTill
+	s.TGT = tkt
+	s.SessionKey = dep.Key
+	s.SessionKeyExpiration = dep.KeyExpiration
 }
 
 // AddSession adds a session for a realm with a TGT to the client's session cache.
@@ -88,13 +101,7 @@ func (cl *Client) renewTGT(s *session) error {
 	if err != nil {
 		return krberror.Errorf(err, krberror.KRBMsgError, "Error renewing TGT")
 	}
-	s.AuthTime = tgsRep.DecryptedEncPart.AuthTime
-	s.AuthTime = tgsRep.DecryptedEncPart.AuthTime
-	s.EndTime = tgsRep.DecryptedEncPart.EndTime
-	s.RenewTill = tgsRep.DecryptedEncPart.RenewTill
-	s.TGT = tgsRep.Ticket
-	s.SessionKey = tgsRep.DecryptedEncPart.Key
-	s.SessionKeyExpiration = tgsRep.DecryptedEncPart.KeyExpiration
+	s.update(tgsRep.Ticket, tgsRep.DecryptedEncPart)
 	return nil
 }
 
@@ -136,7 +143,17 @@ func (cl *Client) getSessionFromRemoteRealm(realm string) (*session, error) {
 // GetSessionFromRealm returns the session for the realm provided.
 func (cl *Client) GetSessionFromRealm(realm string) (*session, error) {
 	cl.sessions.mux.RLock()
-	sess, ok := cl.sessions.Entries[realm]
+	s, ok := cl.sessions.Entries[realm]
+	// Create another session to return to prevent race condition.
+	sess := &session{
+		Realm:                s.Realm,
+		AuthTime:             s.AuthTime,
+		EndTime:              s.EndTime,
+		RenewTill:            s.RenewTill,
+		TGT:                  s.TGT,
+		SessionKey:           s.SessionKey,
+		SessionKeyExpiration: s.SessionKeyExpiration,
+	}
 	cl.sessions.mux.RUnlock()
 	if !ok {
 		// Try to request TGT from trusted remote Realm

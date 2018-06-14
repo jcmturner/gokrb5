@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
@@ -391,6 +392,52 @@ func TestMultiThreadedClientUse(t *testing.T) {
 		}()
 	}
 	wg2.Wait()
+}
+
+func TestMultiThreadedClientSession(t *testing.T) {
+	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	kt, _ := keytab.Parse(b)
+	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	addr := os.Getenv("TEST_KDC_ADDR")
+	if addr == "" {
+		addr = testdata.TEST_KDC_ADDR
+	}
+	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
+	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
+	cl.WithConfig(c)
+	err := cl.Login()
+	if err != nil {
+		t.Fatalf("failed to log in: %v", err)
+	}
+
+	s, err := cl.GetSessionFromRealm("TEST.GOKRB5")
+	if err != nil {
+		t.Fatalf("error initially getting session: %v", err)
+	}
+	go func() {
+		for {
+			err := cl.renewTGT(s)
+			if err != nil {
+				t.Logf("error renewing TGT: %v", err)
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
+	}()
+
+	var wg sync.WaitGroup
+	wg.Add(10)
+	for i := 0; i < 10; i++ {
+		go func() {
+			defer wg.Done()
+			s, err := cl.GetSessionFromRealm("TEST.GOKRB5")
+			if err != nil {
+				t.Logf("error getting session: %v", err)
+			}
+			fmt.Fprintf(ioutil.Discard, "%v", s.RenewTill)
+		}()
+		time.Sleep(time.Second)
+	}
+	wg.Wait()
 }
 
 func spnegoGet(cl *Client) error {

@@ -109,7 +109,7 @@ func NewASReq(realm string, c *config.Config, cname, sname types.PrincipalName) 
 	}
 	t := time.Now().UTC()
 	// Copy the default options to make this thread safe
-	var kopts asn1.BitString
+	kopts := types.NewKrbFlags()
 	copy(kopts.Bytes, c.LibDefaults.KDCDefaultOptions.Bytes)
 	kopts.BitLength = c.LibDefaults.KDCDefaultOptions.BitLength
 	a := ASReq{
