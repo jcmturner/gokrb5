@@ -24,15 +24,15 @@ func main() {
 
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF_AD)
-	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
+	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	cl := client.NewClientWithKeytab("testuser1", "USER.GOKRB5", kt)
 	cl.WithConfig(c)
 	httpRequest(s.URL, cl)
 
 	b, _ = hex.DecodeString(testdata.TESTUSER2_KEYTAB)
 	kt, _ = keytab.Parse(b)
-	c, _ = config.NewConfigFromString(testdata.TEST_KRB5CONF_AD)
-	cl = client.NewClientWithKeytab("testuser2", "TEST.GOKRB5", kt)
+	c, _ = config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	cl = client.NewClientWithKeytab("testuser2", "USER.GOKRB5", kt)
 	cl.WithConfig(c)
 	httpRequest(s.URL, cl)
 
@@ -47,7 +47,7 @@ func httpRequest(url string, cl client.Client) {
 		l.Printf("Error on AS_REQ: %v\n", err)
 	}
 	r, _ := http.NewRequest("GET", url, nil)
-	err = cl.SetSPNEGOHeader(r, "HTTP/host.test.gokrb5")
+	err = cl.SetSPNEGOHeader(r, "HTTP/host.res.gokrb5")
 	if err != nil {
 		l.Printf("Error setting client SPNEGO header: %v", err)
 	}
@@ -65,7 +65,7 @@ func httpServer() *httptest.Server {
 	b, _ := hex.DecodeString(testdata.SYSHTTP_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	th := http.HandlerFunc(testAppHandler)
-	s := httptest.NewServer(service.SPNEGOKRB5Authenticate(th, kt, "sysHTTP", l))
+	s := httptest.NewServer(service.SPNEGOKRB5Authenticate(th, kt, "sysHTTP", false, l))
 	return s
 }
 

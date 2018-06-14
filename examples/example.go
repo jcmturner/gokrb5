@@ -18,19 +18,6 @@ import (
 	"os"
 )
 
-/*
-These examples have the following prerequisites:
-* Hashicorp Vagrant
-* VirtualBox
-
-The test environment relies upon a host only network configured within VirtualBox with a CIDR range of 10.80.0.0/16
-If this does not suit your setup then you will need to set the IP addresses for the private_network in the Vagrantfiles to something that suits you.
-You will also need to update the IPs referenced in the testdata/test_vectors.go file in the TEST_KRB5CONF constant.
-
-Before running execute the following commands (note that the KDC can take a long time to start up):
-cd $GOPATH/src/gopkg.in/jcmturner/gokrb5.v5/testenv/krb5kdc-vagrant && vagrant up
-cd $GOPATH/src/gopkg.in/jcmturner/gokrb5.v5/testenv/krbhttp-vagrant && vagrant up
-*/
 func main() {
 	s := httpServer()
 	defer s.Close()
@@ -78,15 +65,15 @@ func httpServer() *httptest.Server {
 	b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	th := http.HandlerFunc(testAppHandler)
-	s := httptest.NewServer(service.SPNEGOKRB5Authenticate(th, kt, "", l))
+	s := httptest.NewServer(service.SPNEGOKRB5Authenticate(th, kt, "", false, l))
 	return s
 }
 
 func testAppHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	fmt.Fprint(w, "<html>\n<p><h1>TEST.GOKRB5 Handler</h1></p>\n")
-	if validuser, ok := ctx.Value(service.CTXKey_Authenticated).(bool); ok && validuser {
-		if creds, ok := ctx.Value(service.CTXKey_Credentials).(credentials.Credentials); ok {
+	if validuser, ok := ctx.Value(service.CTXKeyAuthenticated).(bool); ok && validuser {
+		if creds, ok := ctx.Value(service.CTXKeyCredentials).(credentials.Credentials); ok {
 			fmt.Fprintf(w, "<ul><li>Authenticed user: %s</li>\n", creds.Username)
 			fmt.Fprintf(w, "<li>User's realm: %s</li></ul>\n", creds.Realm)
 		}
