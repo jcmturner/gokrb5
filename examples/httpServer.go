@@ -1,4 +1,4 @@
-//// +build examples
+// +build examples
 
 package main
 
