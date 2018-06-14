@@ -12,6 +12,7 @@ import (
 )
 
 func TestUnmarshalPADataSequence(t *testing.T) {
+	t.Parallel()
 	var a PADataSequence
 	v := "encode_krb5_padata_sequence"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -30,6 +31,7 @@ func TestUnmarshalPADataSequence(t *testing.T) {
 }
 
 func TestUnmarshalPADataSequence_empty(t *testing.T) {
+	t.Parallel()
 	var a PADataSequence
 	v := "encode_krb5_padata_sequence(empty)"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -44,6 +46,7 @@ func TestUnmarshalPADataSequence_empty(t *testing.T) {
 }
 
 func TestUnmarshalPAEncTSEnc(t *testing.T) {
+	t.Parallel()
 	//Parse the test time value into a time.Time type
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
 
@@ -62,6 +65,7 @@ func TestUnmarshalPAEncTSEnc(t *testing.T) {
 }
 
 func TestUnmarshalPAEncTSEnc_nousec(t *testing.T) {
+	t.Parallel()
 	//Parse the test time value into a time.Time type
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
 
@@ -80,6 +84,7 @@ func TestUnmarshalPAEncTSEnc_nousec(t *testing.T) {
 }
 
 func TestUnmarshalETypeInfo(t *testing.T) {
+	t.Parallel()
 	var a ETypeInfo
 	v := "encode_krb5_etype_info"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -100,6 +105,7 @@ func TestUnmarshalETypeInfo(t *testing.T) {
 }
 
 func TestUnmarshalETypeInfo_only1(t *testing.T) {
+	t.Parallel()
 	var a ETypeInfo
 	v := "encode_krb5_etype_info(only1)"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -116,6 +122,7 @@ func TestUnmarshalETypeInfo_only1(t *testing.T) {
 }
 
 func TestUnmarshalETypeInfo_noinfo(t *testing.T) {
+	t.Parallel()
 	var a ETypeInfo
 	v := "encode_krb5_etype_info(noinfo)"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -130,6 +137,7 @@ func TestUnmarshalETypeInfo_noinfo(t *testing.T) {
 }
 
 func TestUnmarshalETypeInfo2(t *testing.T) {
+	t.Parallel()
 	var a ETypeInfo2
 	v := "encode_krb5_etype_info2"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -153,6 +161,7 @@ func TestUnmarshalETypeInfo2(t *testing.T) {
 }
 
 func TestUnmarshalETypeInfo2_only1(t *testing.T) {
+	t.Parallel()
 	var a ETypeInfo2
 	v := "encode_krb5_etype_info2(only1)"
 	b, err := hex.DecodeString(testdata.TestVectors[v])

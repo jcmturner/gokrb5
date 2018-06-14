@@ -27,6 +27,7 @@ func unmarshalAuthenticatorTest(t *testing.T, v string) Authenticator {
 	return a
 }
 func TestUnmarshalAuthenticator(t *testing.T) {
+	t.Parallel()
 	a := unmarshalAuthenticatorTest(t, "encode_krb5_authenticator")
 	//Parse the test time value into a time.Time type
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
@@ -50,6 +51,7 @@ func TestUnmarshalAuthenticator(t *testing.T) {
 }
 
 func TestUnmarshalAuthenticator_optionalsempty(t *testing.T) {
+	t.Parallel()
 	a := unmarshalAuthenticatorTest(t, "encode_krb5_authenticator(optionalsempty)")
 	//Parse the test time value into a time.Time type
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
@@ -64,6 +66,7 @@ func TestUnmarshalAuthenticator_optionalsempty(t *testing.T) {
 }
 
 func TestUnmarshalAuthenticator_optionalsNULL(t *testing.T) {
+	t.Parallel()
 	a := unmarshalAuthenticatorTest(t, "encode_krb5_authenticator(optionalsNULL)")
 	//Parse the test time value into a time.Time type
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
@@ -78,6 +81,7 @@ func TestUnmarshalAuthenticator_optionalsNULL(t *testing.T) {
 }
 
 func TestMarshalAuthenticator(t *testing.T) {
+	t.Parallel()
 	var a Authenticator
 	v := "encode_krb5_authenticator"
 	b, err := hex.DecodeString(testdata.TestVectors[v])

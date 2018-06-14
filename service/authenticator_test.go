@@ -8,6 +8,7 @@ import (
 )
 
 func TestImplementsInterface(t *testing.T) {
+	t.Parallel()
 	//s := new(SPNEGOAuthenticator)
 	var s SPNEGOAuthenticator
 	a := new(goidentity.Authenticator)

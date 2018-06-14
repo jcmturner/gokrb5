@@ -9,6 +9,7 @@ import (
 )
 
 func TestUPN_DNSInfo_Unmarshal(t *testing.T) {
+	t.Parallel()
 	b, err := hex.DecodeString(testdata.TestVectors["PAC_UPN_DNS_Info"])
 	if err != nil {
 		t.Fatal("Could not decode test data hex string")

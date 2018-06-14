@@ -10,6 +10,7 @@ import (
 )
 
 func TestPAC_ClientInfo_Unmarshal(t *testing.T) {
+	t.Parallel()
 	b, err := hex.DecodeString(testdata.TestVectors["PAC_Client_Info"])
 	if err != nil {
 		t.Fatal("Could not decode test data hex string")

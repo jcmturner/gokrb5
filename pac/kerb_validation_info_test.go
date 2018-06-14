@@ -11,6 +11,7 @@ import (
 )
 
 func TestKerbValidationInfo_Unmarshal(t *testing.T) {
+	t.Parallel()
 	b, err := hex.DecodeString(testdata.TestVectors["PAC_Kerb_Validation_Info_MS"])
 	if err != nil {
 		t.Fatal("Could not decode test data hex string")

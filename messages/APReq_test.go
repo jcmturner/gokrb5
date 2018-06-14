@@ -12,6 +12,7 @@ import (
 )
 
 func TestUnmarshalAPReq(t *testing.T) {
+	t.Parallel()
 	var a APReq
 	v := "encode_krb5_ap_req"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -36,6 +37,7 @@ func TestUnmarshalAPReq(t *testing.T) {
 }
 
 func TestMarshalAPReq(t *testing.T) {
+	t.Parallel()
 	var a APReq
 	v := "encode_krb5_ap_req"
 	b, err := hex.DecodeString(testdata.TestVectors[v])

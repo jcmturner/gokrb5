@@ -12,6 +12,7 @@ import (
 )
 
 func TestUnmarshalAPRep(t *testing.T) {
+	t.Parallel()
 	var a APRep
 	v := "encode_krb5_ap_rep"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -30,6 +31,7 @@ func TestUnmarshalAPRep(t *testing.T) {
 }
 
 func TestUnmarshalEncAPRepPart(t *testing.T) {
+	t.Parallel()
 	var a EncAPRepPart
 	v := "encode_krb5_ap_rep_enc_part"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -51,6 +53,7 @@ func TestUnmarshalEncAPRepPart(t *testing.T) {
 }
 
 func TestUnmarshalEncAPRepPart_optionalsNULL(t *testing.T) {
+	t.Parallel()
 	var a EncAPRepPart
 	v := "encode_krb5_ap_rep_enc_part(optionalsNULL)"
 	b, err := hex.DecodeString(testdata.TestVectors[v])

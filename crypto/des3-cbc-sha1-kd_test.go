@@ -9,6 +9,7 @@ import (
 )
 
 func TestDes3CbcSha1Kd_DR_DK(t *testing.T) {
+	t.Parallel()
 	// Test vectors from RFC 3961 Appendix A3
 	var tests = []struct {
 		key   string
@@ -44,6 +45,7 @@ func TestDes3CbcSha1Kd_DR_DK(t *testing.T) {
 }
 
 func TestDes3CbcSha1Kd_StringToKey(t *testing.T) {
+	t.Parallel()
 	var tests = []struct {
 		salt   string
 		secret string

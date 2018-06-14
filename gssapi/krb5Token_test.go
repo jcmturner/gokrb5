@@ -19,6 +19,7 @@ const (
 )
 
 func TestMechToken_Unmarshal(t *testing.T) {
+	t.Parallel()
 	b, err := hex.DecodeString(MechTokenHex)
 	if err != nil {
 		t.Fatalf("Error decoding MechToken hex: %v", err)
@@ -36,6 +37,7 @@ func TestMechToken_Unmarshal(t *testing.T) {
 }
 
 func TestMechToken_newAuthenticatorChksum(t *testing.T) {
+	t.Parallel()
 	b, err := hex.DecodeString(AuthChksum)
 	if err != nil {
 		t.Fatalf("Error decoding MechToken hex: %v", err)
@@ -46,6 +48,7 @@ func TestMechToken_newAuthenticatorChksum(t *testing.T) {
 
 // Test with explicit subkey generation.
 func TestMechToken_newAuthenticatorWithSubkeyGeneration(t *testing.T) {
+	t.Parallel()
 	creds := credentials.NewCredentials("hftsai", testdata.TEST_REALM)
 	creds.CName.NameString = testdata.TEST_PRINCIPALNAME_NAMESTRING
 	var etypeID int32 = 18
@@ -75,6 +78,7 @@ func TestMechToken_newAuthenticatorWithSubkeyGeneration(t *testing.T) {
 
 // Test without subkey generation.
 func TestMechToken_newAuthenticator(t *testing.T) {
+	t.Parallel()
 	creds := credentials.NewCredentials("hftsai", testdata.TEST_REALM)
 	creds.CName.NameString = testdata.TEST_PRINCIPALNAME_NAMESTRING
 	a, err := NewAuthenticator(creds, []int{GSS_C_INTEG_FLAG, GSS_C_CONF_FLAG})
@@ -94,6 +98,7 @@ func TestMechToken_newAuthenticator(t *testing.T) {
 }
 
 func TestNewAPREQMechToken_and_Marshal(t *testing.T) {
+	t.Parallel()
 	creds := credentials.NewCredentials("hftsai", testdata.TEST_REALM)
 	creds.CName.NameString = testdata.TEST_PRINCIPALNAME_NAMESTRING
 

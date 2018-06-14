@@ -10,6 +10,7 @@ import (
 )
 
 func TestAes128CtsHmacSha196_StringToKey(t *testing.T) {
+	t.Parallel()
 	// Test vectors from RFC 3962 Appendix B
 	b, _ := hex.DecodeString("1234567878563412")
 	s := string(b)

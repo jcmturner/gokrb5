@@ -11,6 +11,7 @@ import (
 )
 
 func TestPACTypeValidate(t *testing.T) {
+	t.Parallel()
 	v := "PAC_AD_WIN2K_PAC"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
 	if err != nil {

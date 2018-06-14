@@ -18,6 +18,7 @@ import (
 )
 
 func TestUnmarshalTicket(t *testing.T) {
+	t.Parallel()
 	var a Ticket
 	v := "encode_krb5_ticket"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -40,6 +41,7 @@ func TestUnmarshalTicket(t *testing.T) {
 }
 
 func TestUnmarshalEncTicketPart(t *testing.T) {
+	t.Parallel()
 	var a EncTicketPart
 	v := "encode_krb5_enc_tkt_part"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -77,6 +79,7 @@ func TestUnmarshalEncTicketPart(t *testing.T) {
 }
 
 func TestUnmarshalEncTicketPart_optionalsNULL(t *testing.T) {
+	t.Parallel()
 	var a EncTicketPart
 	v := "encode_krb5_enc_tkt_part(optionalsNULL)"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -103,6 +106,7 @@ func TestUnmarshalEncTicketPart_optionalsNULL(t *testing.T) {
 }
 
 func TestMarshalTicket(t *testing.T) {
+	t.Parallel()
 	var a Ticket
 	v := "encode_krb5_ticket"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -121,6 +125,7 @@ func TestMarshalTicket(t *testing.T) {
 }
 
 func TestAuthorizationData_GetPACType_GOKRB5TestData(t *testing.T) {
+	t.Parallel()
 	v := "PAC_AuthorizationData_GOKRB5"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
 	if err != nil {

@@ -19,6 +19,7 @@ import (
 )
 
 func TestValidateAPREQ(t *testing.T) {
+	t.Parallel()
 	cl := getClient()
 	sname := types.PrincipalName{
 		NameType:   nametype.KRB_NT_PRINCIPAL,
@@ -57,6 +58,7 @@ func TestValidateAPREQ(t *testing.T) {
 }
 
 func TestValidateAPREQ_KRB_AP_ERR_BADMATCH(t *testing.T) {
+	t.Parallel()
 	cl := getClient()
 	sname := types.PrincipalName{
 		NameType:   nametype.KRB_NT_PRINCIPAL,
@@ -105,6 +107,7 @@ func TestValidateAPREQ_KRB_AP_ERR_BADMATCH(t *testing.T) {
 }
 
 func TestValidateAPREQ_LargeClockSkew(t *testing.T) {
+	t.Parallel()
 	cl := getClient()
 	sname := types.PrincipalName{
 		NameType:   nametype.KRB_NT_PRINCIPAL,
@@ -150,6 +153,7 @@ func TestValidateAPREQ_LargeClockSkew(t *testing.T) {
 }
 
 func TestValidateAPREQ_Replay(t *testing.T) {
+	t.Parallel()
 	cl := getClient()
 	sname := types.PrincipalName{
 		NameType:   nametype.KRB_NT_PRINCIPAL,
@@ -195,6 +199,7 @@ func TestValidateAPREQ_Replay(t *testing.T) {
 }
 
 func TestValidateAPREQ_FutureTicket(t *testing.T) {
+	t.Parallel()
 	cl := getClient()
 	sname := types.PrincipalName{
 		NameType:   nametype.KRB_NT_PRINCIPAL,
@@ -239,6 +244,7 @@ func TestValidateAPREQ_FutureTicket(t *testing.T) {
 }
 
 func TestValidateAPREQ_InvalidTicket(t *testing.T) {
+	t.Parallel()
 	cl := getClient()
 	sname := types.PrincipalName{
 		NameType:   nametype.KRB_NT_PRINCIPAL,
@@ -284,6 +290,7 @@ func TestValidateAPREQ_InvalidTicket(t *testing.T) {
 }
 
 func TestValidateAPREQ_ExpiredTicket(t *testing.T) {
+	t.Parallel()
 	cl := getClient()
 	sname := types.PrincipalName{
 		NameType:   nametype.KRB_NT_PRINCIPAL,

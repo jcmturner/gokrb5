@@ -13,6 +13,7 @@ const (
 )
 
 func TestStringToKey(t *testing.T) {
+	t.Parallel()
 	kb, err := StringToKey(testPassword)
 	if err != nil {
 		t.Fatalf("Error deriving key from string: %v", err)

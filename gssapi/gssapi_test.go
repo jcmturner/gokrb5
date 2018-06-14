@@ -14,6 +14,7 @@ const (
 )
 
 func TestUnmarshal_SPNEGO_Init(t *testing.T) {
+	t.Parallel()
 	b, err := hex.DecodeString(testGSSAPIInit)
 	if err != nil {
 		t.Fatalf("Error converting hex string test data to bytes: %v", err)
@@ -37,6 +38,7 @@ func TestUnmarshal_SPNEGO_Init(t *testing.T) {
 }
 
 func TestUnmarshal_SPNEGO_RespTarg(t *testing.T) {
+	t.Parallel()
 	b, err := hex.DecodeString(testGSSAPIResp)
 	if err != nil {
 		t.Fatalf("Error converting hex string test data to bytes: %v", err)
@@ -53,6 +55,7 @@ func TestUnmarshal_SPNEGO_RespTarg(t *testing.T) {
 }
 
 func TestMarshal_SPNEGO_Init(t *testing.T) {
+	t.Parallel()
 	b, err := hex.DecodeString(testGSSAPIInit)
 	if err != nil {
 		t.Fatalf("Error converting hex string test data to bytes: %v", err)
@@ -70,6 +73,7 @@ func TestMarshal_SPNEGO_Init(t *testing.T) {
 }
 
 func TestMarshal_SPNEGO_RespTarg(t *testing.T) {
+	t.Parallel()
 	b, err := hex.DecodeString(testGSSAPIResp)
 	if err != nil {
 		t.Fatalf("Error converting hex string test data to bytes: %v", err)

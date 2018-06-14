@@ -26,6 +26,7 @@ const (
 )
 
 func TestUnmarshalASRep(t *testing.T) {
+	t.Parallel()
 	var a ASRep
 	v := "encode_krb5_as_rep"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -61,6 +62,7 @@ func TestUnmarshalASRep(t *testing.T) {
 }
 
 func TestUnmarshalASRep_optionalsNULL(t *testing.T) {
+	t.Parallel()
 	var a ASRep
 	v := "encode_krb5_as_rep(optionalsNULL)"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -92,6 +94,7 @@ func TestUnmarshalASRep_optionalsNULL(t *testing.T) {
 }
 
 func TestUnmarshalTGSRep(t *testing.T) {
+	t.Parallel()
 	var a TGSRep
 	v := "encode_krb5_tgs_rep"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -127,6 +130,7 @@ func TestUnmarshalTGSRep(t *testing.T) {
 }
 
 func TestUnmarshalTGSRep_optionalsNULL(t *testing.T) {
+	t.Parallel()
 	var a TGSRep
 	v := "encode_krb5_tgs_rep(optionalsNULL)"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -158,6 +162,7 @@ func TestUnmarshalTGSRep_optionalsNULL(t *testing.T) {
 }
 
 func TestUnmarshalEncKDCRepPart(t *testing.T) {
+	t.Parallel()
 	var a EncKDCRepPart
 	v := "encode_krb5_enc_kdc_rep_part"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -196,6 +201,7 @@ func TestUnmarshalEncKDCRepPart(t *testing.T) {
 }
 
 func TestUnmarshalEncKDCRepPart_optionalsNULL(t *testing.T) {
+	t.Parallel()
 	var a EncKDCRepPart
 	v := "encode_krb5_enc_kdc_rep_part(optionalsNULL)"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -226,6 +232,7 @@ func TestUnmarshalEncKDCRepPart_optionalsNULL(t *testing.T) {
 }
 
 func TestUnmarshalASRepDecodeAndDecrypt(t *testing.T) {
+	t.Parallel()
 	var asRep ASRep
 	b, _ := hex.DecodeString(testuser1EType18ASREP)
 	err := asRep.Unmarshal(b)
@@ -272,6 +279,7 @@ func TestUnmarshalASRepDecodeAndDecrypt(t *testing.T) {
 }
 
 func TestUnmarshalASRepDecodeAndDecrypt_withPassword(t *testing.T) {
+	t.Parallel()
 	var asRep ASRep
 	b, _ := hex.DecodeString(testuser1EType18ASREP)
 	err := asRep.Unmarshal(b)
