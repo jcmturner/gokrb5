@@ -15,6 +15,7 @@ import (
 )
 
 func TestUnmarshalKRBCred(t *testing.T) {
+	t.Parallel()
 	var a KRBCred
 	v := "encode_krb5_cred"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -44,6 +45,7 @@ func TestUnmarshalKRBCred(t *testing.T) {
 }
 
 func TestUnmarshalEncCredPart(t *testing.T) {
+	t.Parallel()
 	var a EncKrbCredPart
 	v := "encode_krb5_enc_cred_part"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -89,6 +91,7 @@ func TestUnmarshalEncCredPart(t *testing.T) {
 }
 
 func TestUnmarshalEncCredPart_optionalsNULL(t *testing.T) {
+	t.Parallel()
 	var a EncKrbCredPart
 	v := "encode_krb5_enc_cred_part(optionalsNULL)"
 	b, err := hex.DecodeString(testdata.TestVectors[v])

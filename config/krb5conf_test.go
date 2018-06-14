@@ -234,6 +234,7 @@ const (
 )
 
 func TestLoad(t *testing.T) {
+	t.Parallel()
 	cf, _ := ioutil.TempFile(os.TempDir(), "TEST-gokrb5-krb5.conf")
 	defer os.Remove(cf.Name())
 	cf.WriteString(krb5Conf)
@@ -267,6 +268,7 @@ func TestLoad(t *testing.T) {
 }
 
 func TestLoad2(t *testing.T) {
+	t.Parallel()
 	c, err := NewConfigFromString(krb5Conf2)
 	if err != nil {
 		t.Fatalf("Error loading config: %v", err)
@@ -296,6 +298,7 @@ func TestLoad2(t *testing.T) {
 }
 
 func TestLoadNoBlankLines(t *testing.T) {
+	t.Parallel()
 	c, err := NewConfigFromString(krb5ConfNoBlankLines)
 	if err != nil {
 		t.Fatalf("Error loading config: %v", err)
@@ -325,6 +328,7 @@ func TestLoadNoBlankLines(t *testing.T) {
 }
 
 func TestLoadTabs(t *testing.T) {
+	t.Parallel()
 	cf, _ := ioutil.TempFile(os.TempDir(), "TEST-gokrb5-krb5.conf")
 	defer os.Remove(cf.Name())
 	cf.WriteString(krb5ConfTabs)
@@ -358,6 +362,7 @@ func TestLoadTabs(t *testing.T) {
 }
 
 func TestParseDuration(t *testing.T) {
+	t.Parallel()
 	// https://web.mit.edu/kerberos/krb5-1.12/doc/basic/date_format.html#duration
 	hms, _ := time.ParseDuration("12h30m15s")
 	hm, _ := time.ParseDuration("12h30m")
@@ -386,6 +391,7 @@ func TestParseDuration(t *testing.T) {
 }
 
 func TestResolveRealm(t *testing.T) {
+	t.Parallel()
 	c, err := NewConfigFromString(krb5Conf)
 	if err != nil {
 		t.Fatalf("Error loading config: %v", err)

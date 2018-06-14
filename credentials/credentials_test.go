@@ -7,6 +7,7 @@ import (
 )
 
 func TestImplementsInterface(t *testing.T) {
+	t.Parallel()
 	u := new(Credentials)
 	i := new(goidentity.Identity)
 	assert.Implements(t, i, u, "Credentials type does not implement the Identity interface")

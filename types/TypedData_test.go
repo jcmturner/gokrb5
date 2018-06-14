@@ -11,6 +11,7 @@ import (
 )
 
 func TestUnmarshalTypedData(t *testing.T) {
+	t.Parallel()
 	var a TypedDataSequence
 	v := "encode_krb5_typed_data"
 	b, err := hex.DecodeString(testdata.TestVectors[v])

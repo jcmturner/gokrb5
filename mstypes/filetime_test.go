@@ -7,6 +7,7 @@ import (
 )
 
 func TestFileTime(t *testing.T) {
+	t.Parallel()
 	//2007-02-22 17:00:01.6382155
 	tt := time.Date(2007, 2, 22, 17, 0, 1, 638215500, time.UTC)
 	ft := GetFileTime(tt)

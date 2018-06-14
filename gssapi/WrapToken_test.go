@@ -68,6 +68,7 @@ func getResponseReferenceNoChkSum() *WrapToken {
 }
 
 func TestUnmarshal_Challenge(t *testing.T) {
+	t.Parallel()
 	challenge, _ := hex.DecodeString(testChallengeFromAcceptor)
 	var wt WrapToken
 	err := wt.Unmarshal(challenge, true)
@@ -76,6 +77,7 @@ func TestUnmarshal_Challenge(t *testing.T) {
 }
 
 func TestUnmarshalFailure_Challenge(t *testing.T) {
+	t.Parallel()
 	challenge, _ := hex.DecodeString(testChallengeFromAcceptor)
 	var wt WrapToken
 	err := wt.Unmarshal(challenge, false)
@@ -89,6 +91,7 @@ func TestUnmarshalFailure_Challenge(t *testing.T) {
 }
 
 func TestUnmarshal_ChallengeReply(t *testing.T) {
+	t.Parallel()
 	response, _ := hex.DecodeString(testChallengeReplyFromInitiator)
 	var wt WrapToken
 	err := wt.Unmarshal(response, false)
@@ -97,6 +100,7 @@ func TestUnmarshal_ChallengeReply(t *testing.T) {
 }
 
 func TestUnmarshalFailure_ChallengeReply(t *testing.T) {
+	t.Parallel()
 	response, _ := hex.DecodeString(testChallengeReplyFromInitiator)
 	var wt WrapToken
 	err := wt.Unmarshal(response, true)
@@ -110,6 +114,7 @@ func TestUnmarshalFailure_ChallengeReply(t *testing.T) {
 }
 
 func TestChallengeChecksumVerification(t *testing.T) {
+	t.Parallel()
 	challenge, _ := hex.DecodeString(testChallengeFromAcceptor)
 	var wt WrapToken
 	wt.Unmarshal(challenge, true)
@@ -119,6 +124,7 @@ func TestChallengeChecksumVerification(t *testing.T) {
 }
 
 func TestResponseChecksumVerification(t *testing.T) {
+	t.Parallel()
 	reply, _ := hex.DecodeString(testChallengeReplyFromInitiator)
 	var wt WrapToken
 	wt.Unmarshal(reply, false)
@@ -128,6 +134,7 @@ func TestResponseChecksumVerification(t *testing.T) {
 }
 
 func TestChecksumVerificationFailure(t *testing.T) {
+	t.Parallel()
 	challenge, _ := hex.DecodeString(testChallengeFromAcceptor)
 	var wt WrapToken
 	wt.Unmarshal(challenge, true)
@@ -149,18 +156,21 @@ func TestChecksumVerificationFailure(t *testing.T) {
 }
 
 func TestMarshal_Challenge(t *testing.T) {
+	t.Parallel()
 	bytes, _ := getChallengeReference().Marshal()
 	assert.Equal(t, testChallengeFromAcceptor, hex.EncodeToString(bytes),
 		"Marshalling did not yield the expected result.")
 }
 
 func TestMarshal_ChallengeReply(t *testing.T) {
+	t.Parallel()
 	bytes, _ := getResponseReference().Marshal()
 	assert.Equal(t, testChallengeReplyFromInitiator, hex.EncodeToString(bytes),
 		"Marshalling did not yield the expected result.")
 }
 
 func TestMarshal_Failures(t *testing.T) {
+	t.Parallel()
 	noChkSum := getResponseReferenceNoChkSum()
 	chkBytes, chkErr := noChkSum.Marshal()
 	assert.Nil(t, chkBytes, "No bytes should be returned.")
@@ -174,6 +184,7 @@ func TestMarshal_Failures(t *testing.T) {
 }
 
 func TestNewInitiatorTokenSignatureAndMarshalling(t *testing.T) {
+	t.Parallel()
 	token, tErr := NewInitiatorToken([]byte{0x01, 0x01, 0x00, 0x00}, getSessionKey())
 	assert.Nil(t, tErr, "Unexepected error.")
 	assert.Equal(t, getResponseReference(), token, "Token failed to be marshalled to the expected bytes.")

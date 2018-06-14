@@ -11,6 +11,7 @@ import (
 )
 
 func TestChangePasswdData_Marshal(t *testing.T) {
+	t.Parallel()
 	chgpasswd := ChangePasswdData{
 		NewPasswd: []byte("newpassword"),
 		TargName:  types.NewPrincipalName(nametype.KRB_NT_PRINCIPAL, "testuser1"),

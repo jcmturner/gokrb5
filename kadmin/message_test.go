@@ -11,6 +11,7 @@ import (
 )
 
 func TestUnmarshalReply(t *testing.T) {
+	t.Parallel()
 	var a Reply
 	v := "Kpasswd_Rep"
 	b, err := hex.DecodeString(testdata.TestVectors[v])

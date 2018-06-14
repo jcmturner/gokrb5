@@ -14,6 +14,7 @@ const (
 )
 
 func TestUnmarshal_negTokenInit(t *testing.T) {
+	t.Parallel()
 	b, err := hex.DecodeString(testNegTokenInit)
 	if err != nil {
 		t.Fatalf("Error converting hex string test data to bytes: %v", err)
@@ -36,6 +37,7 @@ func TestUnmarshal_negTokenInit(t *testing.T) {
 }
 
 func TestMarshal_negTokenInit(t *testing.T) {
+	t.Parallel()
 	b, err := hex.DecodeString(testNegTokenInit)
 	if err != nil {
 		t.Fatalf("Error converting hex string test data to bytes: %v", err)
@@ -53,6 +55,7 @@ func TestMarshal_negTokenInit(t *testing.T) {
 }
 
 func TestUnmarshal_negTokenResp(t *testing.T) {
+	t.Parallel()
 	b, err := hex.DecodeString(testNegTokenResp)
 	if err != nil {
 		t.Fatalf("Error converting hex string test data to bytes: %v", err)
@@ -69,6 +72,7 @@ func TestUnmarshal_negTokenResp(t *testing.T) {
 }
 
 func TestMarshal_negTokenResp(t *testing.T) {
+	t.Parallel()
 	b, err := hex.DecodeString(testNegTokenResp)
 	if err != nil {
 		t.Fatalf("Error converting hex string test data to bytes: %v", err)

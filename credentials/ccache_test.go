@@ -11,6 +11,7 @@ import (
 )
 
 func TestParse(t *testing.T) {
+	t.Parallel()
 	b, err := hex.DecodeString(testdata.CCACHE_TEST)
 	if err != nil {
 		t.Fatal("Error decoding test data")
@@ -39,6 +40,7 @@ func TestParse(t *testing.T) {
 }
 
 func TestCCache_GetClientPrincipalName(t *testing.T) {
+	t.Parallel()
 	b, err := hex.DecodeString(testdata.CCACHE_TEST)
 	if err != nil {
 		t.Fatal("Error decoding test data")
@@ -55,6 +57,7 @@ func TestCCache_GetClientPrincipalName(t *testing.T) {
 }
 
 func TestCCache_GetClientCredentials(t *testing.T) {
+	t.Parallel()
 	b, err := hex.DecodeString(testdata.CCACHE_TEST)
 	if err != nil {
 		t.Fatal("Error decoding test data")
@@ -74,6 +77,7 @@ func TestCCache_GetClientCredentials(t *testing.T) {
 }
 
 func TestCCache_GetClientRealm(t *testing.T) {
+	t.Parallel()
 	b, err := hex.DecodeString(testdata.CCACHE_TEST)
 	if err != nil {
 		t.Fatal("Error decoding test data")
@@ -86,6 +90,7 @@ func TestCCache_GetClientRealm(t *testing.T) {
 }
 
 func TestCCache_GetEntry(t *testing.T) {
+	t.Parallel()
 	b, err := hex.DecodeString(testdata.CCACHE_TEST)
 	if err != nil {
 		t.Fatal("Error decoding test data")
@@ -106,6 +111,7 @@ func TestCCache_GetEntry(t *testing.T) {
 }
 
 func TestCCache_GetEntries(t *testing.T) {
+	t.Parallel()
 	b, err := hex.DecodeString(testdata.CCACHE_TEST)
 	if err != nil {
 		t.Fatal("Error decoding test data")

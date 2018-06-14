@@ -10,6 +10,7 @@ import (
 )
 
 func TestUnmarshalEncryptedData(t *testing.T) {
+	t.Parallel()
 	var a EncryptedData
 	v := "encode_krb5_enc_data"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -26,6 +27,7 @@ func TestUnmarshalEncryptedData(t *testing.T) {
 }
 
 func TestUnmarshalEncryptedData_MSBsetkvno(t *testing.T) {
+	t.Parallel()
 	var a EncryptedData
 	v := "encode_krb5_enc_data(MSB-setkvno)"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -42,6 +44,7 @@ func TestUnmarshalEncryptedData_MSBsetkvno(t *testing.T) {
 }
 
 func TestUnmarshalEncryptedData_kvno_neg1(t *testing.T) {
+	t.Parallel()
 	var a EncryptedData
 	v := "encode_krb5_enc_data(kvno= -1)"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -58,6 +61,7 @@ func TestUnmarshalEncryptedData_kvno_neg1(t *testing.T) {
 }
 
 func TestUnmarshalEncryptionKey(t *testing.T) {
+	t.Parallel()
 	var a EncryptionKey
 	v := "encode_krb5_keyblock"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -73,6 +77,7 @@ func TestUnmarshalEncryptionKey(t *testing.T) {
 }
 
 func TestMarshalEncryptedData(t *testing.T) {
+	t.Parallel()
 	var a EncryptedData
 	v := "encode_krb5_enc_data"
 	b, err := hex.DecodeString(testdata.TestVectors[v])

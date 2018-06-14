@@ -13,6 +13,7 @@ import (
 )
 
 func TestUnmarshalKRBSafe(t *testing.T) {
+	t.Parallel()
 	var a KRBSafe
 	v := "encode_krb5_safe"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -41,6 +42,7 @@ func TestUnmarshalKRBSafe(t *testing.T) {
 }
 
 func TestUnmarshalKRBSafe_optionalsNULL(t *testing.T) {
+	t.Parallel()
 	var a KRBSafe
 	v := "encode_krb5_safe(optionalsNULL)"
 	b, err := hex.DecodeString(testdata.TestVectors[v])

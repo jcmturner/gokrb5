@@ -10,6 +10,7 @@ import (
 )
 
 func TestAes128CtsHmacSha256128_StringToKey(t *testing.T) {
+	t.Parallel()
 	// Test vectors from RFC 8009 Appendix A
 	// Random 16bytes in test vector as string
 	r, _ := hex.DecodeString("10DF9DD783E5BC8ACEA1730E74355F61")
@@ -35,6 +36,7 @@ func TestAes128CtsHmacSha256128_StringToKey(t *testing.T) {
 }
 
 func TestAes128CtsHmacSha256128_DeriveKey(t *testing.T) {
+	t.Parallel()
 	// Test vectors from RFC 8009 Appendix A
 	protocolBaseKey, _ := hex.DecodeString("3705d96080c17728a0e800eab6e0d23c")
 	testUsage := uint32(2)
@@ -57,6 +59,7 @@ func TestAes128CtsHmacSha256128_DeriveKey(t *testing.T) {
 }
 
 func TestAes128CtsHmacSha256128_VerifyIntegrity(t *testing.T) {
+	t.Parallel()
 	// Test vectors from RFC 8009
 	protocolBaseKey, _ := hex.DecodeString("3705d96080c17728a0e800eab6e0d23c")
 	testUsage := uint32(2)
@@ -79,6 +82,7 @@ func TestAes128CtsHmacSha256128_VerifyIntegrity(t *testing.T) {
 }
 
 func TestAes128CtsHmacSha256128_Cypto(t *testing.T) {
+	t.Parallel()
 	protocolBaseKey, _ := hex.DecodeString("3705d96080c17728a0e800eab6e0d23c")
 	testUsage := uint32(2)
 	var tests = []struct {

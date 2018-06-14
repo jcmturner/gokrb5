@@ -10,6 +10,7 @@ import (
 )
 
 func TestParse(t *testing.T) {
+	t.Parallel()
 	dat, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, err := Parse(dat)
 	if err != nil {
@@ -28,6 +29,7 @@ func TestParse(t *testing.T) {
 }
 
 func TestMarshal(t *testing.T) {
+	t.Parallel()
 	dat, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, err := Parse(dat)
 	if err != nil {

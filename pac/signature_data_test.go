@@ -10,6 +10,7 @@ import (
 )
 
 func TestPAC_SignatureData_Unmarshal_Server_Signature(t *testing.T) {
+	t.Parallel()
 	b, err := hex.DecodeString(testdata.TestVectors["PAC_Server_Signature"])
 	if err != nil {
 		t.Fatal("Could not decode test data hex string")
@@ -28,6 +29,7 @@ func TestPAC_SignatureData_Unmarshal_Server_Signature(t *testing.T) {
 }
 
 func TestPAC_SignatureData_Unmarshal_KDC_Signature(t *testing.T) {
+	t.Parallel()
 	b, err := hex.DecodeString(testdata.TestVectors["PAC_KDC_Signature"])
 	if err != nil {
 		t.Fatal("Could not decode test data hex string")

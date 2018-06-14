@@ -6,6 +6,7 @@ import (
 )
 
 func TestPrincipalName_GetSalt(t *testing.T) {
+	t.Parallel()
 	pn := PrincipalName{
 		NameType:   1,
 		NameString: []string{"firststring", "secondstring"},

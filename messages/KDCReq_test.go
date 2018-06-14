@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jcmturner/gofork/encoding/asn1"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/gokrb5.v5/iana"
 	"gopkg.in/jcmturner/gokrb5.v5/iana/addrtype"
@@ -17,6 +16,7 @@ import (
 )
 
 func TestUnmarshalKDCReqBody(t *testing.T) {
+	t.Parallel()
 	var a KDCReqBody
 	v := "encode_krb5_kdc_req_body"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -65,6 +65,7 @@ func TestUnmarshalKDCReqBody(t *testing.T) {
 }
 
 func TestUnmarshalKDCReqBody_optionalsNULLexceptsecond_ticket(t *testing.T) {
+	t.Parallel()
 	var a KDCReqBody
 	v := "encode_krb5_kdc_req_body(optionalsNULLexceptsecond_ticket)"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -99,6 +100,7 @@ func TestUnmarshalKDCReqBody_optionalsNULLexceptsecond_ticket(t *testing.T) {
 }
 
 func TestUnmarshalKDCReqBody_optionalsNULLexceptserver(t *testing.T) {
+	t.Parallel()
 	var a KDCReqBody
 	v := "encode_krb5_kdc_req_body(optionalsNULLexceptserver)"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -126,6 +128,7 @@ func TestUnmarshalKDCReqBody_optionalsNULLexceptserver(t *testing.T) {
 }
 
 func TestUnmarshalASReq(t *testing.T) {
+	t.Parallel()
 	var a ASReq
 	v := "encode_krb5_as_req"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -181,6 +184,7 @@ func TestUnmarshalASReq(t *testing.T) {
 }
 
 func TestUnmarshalASReq_optionalsNULLexceptsecond_ticket(t *testing.T) {
+	t.Parallel()
 	var a ASReq
 	v := "encode_krb5_as_req(optionalsNULLexceptsecond_ticket)"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -218,6 +222,7 @@ func TestUnmarshalASReq_optionalsNULLexceptsecond_ticket(t *testing.T) {
 }
 
 func TestUnmarshalASReq_optionalsNULLexceptserver(t *testing.T) {
+	t.Parallel()
 	var a ASReq
 	v := "encode_krb5_as_req(optionalsNULLexceptserver)"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -248,6 +253,7 @@ func TestUnmarshalASReq_optionalsNULLexceptserver(t *testing.T) {
 }
 
 func TestUnmarshalTGSReq(t *testing.T) {
+	t.Parallel()
 	var a TGSReq
 	v := "encode_krb5_tgs_req"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -303,6 +309,7 @@ func TestUnmarshalTGSReq(t *testing.T) {
 }
 
 func TestUnmarshalTGSReq_optionalsNULLexceptsecond_ticket(t *testing.T) {
+	t.Parallel()
 	var a TGSReq
 	v := "encode_krb5_tgs_req(optionalsNULLexceptsecond_ticket)"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -340,6 +347,7 @@ func TestUnmarshalTGSReq_optionalsNULLexceptsecond_ticket(t *testing.T) {
 }
 
 func TestUnmarshalTGSReq_optionalsNULLexceptserver(t *testing.T) {
+	t.Parallel()
 	var a TGSReq
 	v := "encode_krb5_tgs_req(optionalsNULLexceptserver)"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -371,11 +379,8 @@ func TestUnmarshalTGSReq_optionalsNULLexceptserver(t *testing.T) {
 
 //// Marshal Tests ////
 
-type BitStringStruct struct {
-	Bs asn1.BitString `asn1:"explicit,tag:0"`
-}
-
 func TestMarshalKDCReqBody(t *testing.T) {
+	t.Parallel()
 	var a KDCReqBody
 	v := "encode_krb5_kdc_req_body"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -395,6 +400,7 @@ func TestMarshalKDCReqBody(t *testing.T) {
 }
 
 func TestMarshalASReq(t *testing.T) {
+	t.Parallel()
 	var a ASReq
 	v := "encode_krb5_as_req"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -413,6 +419,7 @@ func TestMarshalASReq(t *testing.T) {
 }
 
 func TestMarshalTGSReq(t *testing.T) {
+	t.Parallel()
 	var a TGSReq
 	v := "encode_krb5_tgs_req"
 	b, err := hex.DecodeString(testdata.TestVectors[v])

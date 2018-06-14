@@ -14,6 +14,7 @@ import (
 )
 
 func TestUnmarshalKRBPriv(t *testing.T) {
+	t.Parallel()
 	var a KRBPriv
 	v := "encode_krb5_priv"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -32,6 +33,7 @@ func TestUnmarshalKRBPriv(t *testing.T) {
 }
 
 func TestUnmarshalEncPrivPart(t *testing.T) {
+	t.Parallel()
 	var a EncKrbPrivPart
 	v := "encode_krb5_enc_priv_part"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -56,6 +58,7 @@ func TestUnmarshalEncPrivPart(t *testing.T) {
 }
 
 func TestUnmarshalEncPrivPart_optionalsNULL(t *testing.T) {
+	t.Parallel()
 	var a EncKrbPrivPart
 	v := "encode_krb5_enc_priv_part(optionalsNULL)"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -72,6 +75,7 @@ func TestUnmarshalEncPrivPart_optionalsNULL(t *testing.T) {
 }
 
 func TestMarshalKRBPriv(t *testing.T) {
+	t.Parallel()
 	var a KRBPriv
 	v := "encode_krb5_priv"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -105,6 +109,7 @@ func TestMarshalKRBPriv(t *testing.T) {
 }
 
 func TestKRBPriv_EncryptEncPart(t *testing.T) {
+	t.Parallel()
 	var a KRBPriv
 	v := "encode_krb5_priv"
 	b, err := hex.DecodeString(testdata.TestVectors[v])

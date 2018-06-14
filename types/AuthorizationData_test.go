@@ -12,6 +12,7 @@ import (
 )
 
 func TestUnmarshalAuthorizationData(t *testing.T) {
+	t.Parallel()
 	var a AuthorizationData
 	v := "encode_krb5_authorization_data"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
@@ -30,6 +31,7 @@ func TestUnmarshalAuthorizationData(t *testing.T) {
 }
 
 func TestUnmarshalAuthorizationData_kdcissued(t *testing.T) {
+	t.Parallel()
 	var a ADKDCIssued
 	v := "encode_krb5_ad_kdcissued"
 	b, err := hex.DecodeString(testdata.TestVectors[v])
