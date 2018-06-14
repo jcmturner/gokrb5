@@ -25,6 +25,7 @@ func main() {
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	c.LibDefaults.NoAddresses = true
 	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 	httpRequest(s.URL, cl)
@@ -32,11 +33,10 @@ func main() {
 	b, _ = hex.DecodeString(testdata.TESTUSER2_KEYTAB)
 	kt, _ = keytab.Parse(b)
 	c, _ = config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	c.LibDefaults.NoAddresses = true
 	cl = client.NewClientWithKeytab("testuser2", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 	httpRequest(s.URL, cl)
-
-	//httpRequest("http://host.test.gokrb5/index.html")
 }
 
 func httpRequest(url string, cl client.Client) {
