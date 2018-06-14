@@ -141,11 +141,19 @@ func (cl *Client) getSessionFromRemoteRealm(realm string) (*session, error) {
 }
 
 // GetSessionFromRealm returns the session for the realm provided.
-func (cl *Client) GetSessionFromRealm(realm string) (*session, error) {
+func (cl *Client) GetSessionFromRealm(realm string) (sess *session, err error) {
 	cl.sessions.mux.RLock()
 	s, ok := cl.sessions.Entries[realm]
+	cl.sessions.mux.RUnlock()
+	if !ok {
+		// Try to request TGT from trusted remote Realm
+		s, err = cl.getSessionFromRemoteRealm(realm)
+		if err != nil {
+			return
+		}
+	}
 	// Create another session to return to prevent race condition.
-	sess := &session{
+	sess = &session{
 		Realm:                s.Realm,
 		AuthTime:             s.AuthTime,
 		EndTime:              s.EndTime,
@@ -154,12 +162,7 @@ func (cl *Client) GetSessionFromRealm(realm string) (*session, error) {
 		SessionKey:           s.SessionKey,
 		SessionKeyExpiration: s.SessionKeyExpiration,
 	}
-	cl.sessions.mux.RUnlock()
-	if !ok {
-		// Try to request TGT from trusted remote Realm
-		return cl.getSessionFromRemoteRealm(realm)
-	}
-	return sess, nil
+	return
 }
 
 // GetSessionFromPrincipalName returns the session for the realm of the principal provided.
