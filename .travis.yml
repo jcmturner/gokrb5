@@ -44,6 +44,7 @@ script:
   #- golint -set_exit_status $(go list ./...) # golint to be added
   - go test -v -race -tags="integration dns" ./... # Run all the tests with the race detector enabled and integration tests
   - GOARCH=386 go test -v -tags="integration dns" ./... # 32bit tests
+  - go run -tags="examples" examples/example.go
 
 addons:
   hosts:
