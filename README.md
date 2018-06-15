@@ -125,7 +125,7 @@ This will involve these steps:
 
 * Generate a new Authenticator and generate a sequence number and subkey:
 ```go
-auth := types.NewAuthenticator(cl.Credentials.Realm, cl.Credentials.CName)
+auth, _ := types.NewAuthenticator(cl.Credentials.Realm, cl.Credentials.CName)
 etype, _ := crypto.GetEtype(key.KeyType)
 auth.GenerateSeqNumberAndSubKey(key.KeyType, etype.GetKeyByteSize())
 ```
