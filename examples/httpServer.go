@@ -27,7 +27,7 @@ func main() {
 
 	// Set up handler mappings wrapping in the SPNEGOKRB5Authenticate handler wrapper
 	mux := http.NewServeMux()
-	mux.Handle("/", service.SPNEGOKRB5Authenticate(th, kt, "", l))
+	mux.Handle("/", service.SPNEGOKRB5Authenticate(th, kt, "", false, l))
 
 	// Start up the web server
 	log.Fatal(http.ListenAndServe(":9080", mux))
@@ -37,6 +37,6 @@ func main() {
 func testAppHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	ctx := r.Context()
-	fmt.Fprintf(w, "<html>\nTEST.GOKRB5 Handler\nAuthenticed user: %s\nUser's realm: %s\n</html>", ctx.Value(service.CREDENTIALS_CTXKEY).(credentials.Credentials).Username, ctx.Value(service.CREDENTIALS_CTXKEY).(credentials.Credentials).Realm)
+	fmt.Fprintf(w, "<html>\nTEST.GOKRB5 Handler\nAuthenticed user: %s\nUser's realm: %s\n</html>", ctx.Value(service.CTXKeyCredentials).(credentials.Credentials).Username, ctx.Value(service.CTXKeyCredentials).(credentials.Credentials).Realm)
 	return
 }

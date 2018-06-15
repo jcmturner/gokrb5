@@ -72,7 +72,7 @@ func encryptAuthenticator(a types.Authenticator, sessionKey types.EncryptionKey,
 	}
 	var usage int
 	switch tkt.SName.NameType {
-	case nametype.KRB_NT_PRINCIPAL:
+	case nametype.KRB_NT_PRINCIPAL,nametype.KRB_NT_SRV_INST:
 		usage = keyusage.AP_REQ_AUTHENTICATOR
 	case nametype.KRB_NT_SRV_INST:
 		usage = keyusage.TGS_REQ_PA_TGS_REQ_AP_REQ_AUTHENTICATOR
@@ -89,7 +89,7 @@ func encryptAuthenticator(a types.Authenticator, sessionKey types.EncryptionKey,
 func (a *APReq) DecryptAuthenticator(sessionKey types.EncryptionKey) (auth types.Authenticator, err error) {
 	var usage uint32
 	switch a.Ticket.SName.NameType {
-	case nametype.KRB_NT_PRINCIPAL:
+	case nametype.KRB_NT_PRINCIPAL,nametype.KRB_NT_SRV_INST:
 		usage = keyusage.AP_REQ_AUTHENTICATOR
 	case nametype.KRB_NT_SRV_INST:
 		usage = keyusage.TGS_REQ_PA_TGS_REQ_AP_REQ_AUTHENTICATOR
