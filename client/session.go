@@ -55,7 +55,7 @@ func (cl *Client) AddSession(tkt messages.Ticket, dep messages.EncKDCRepPart) {
 		TGT:                  tkt,
 		SessionKey:           dep.Key,
 		SessionKeyExpiration: dep.KeyExpiration,
-		cancel:               make(chan bool),
+		cancel:               make(chan bool, 1),
 	}
 	// if a session already exists for this, cancel its auto renew.
 	if i, ok := cl.sessions.Entries[tkt.SName.NameString[1]]; ok {
