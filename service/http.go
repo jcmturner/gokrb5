@@ -27,11 +27,15 @@ const (
 	// CTXKeyAuthenticated is the request context key holding a boolean indicating if the request has been authenticated.
 	CTXKeyAuthenticated ctxKey = 0
 	// CTXKeyCredentials is the request context key holding the credentials gopkg.in/jcmturner/goidentity.v2/Identity object.
-	CTXKeyCredentials              ctxKey = 1
-	HTTPHeaderAuthResponse                = "WWW-Authenticate"
-	HTTPHeaderAuthResponseValueKey        = "Negotiate"
-	HTTPHeaderAuthRequest                 = "Authorization"
-	UnauthorizedMsg                       = "Unauthorised.\n"
+	CTXKeyCredentials ctxKey = 1
+	// HTTPHeaderAuthRequest is the header that will hold authn/z information.
+	HTTPHeaderAuthRequest = "Authorization"
+	// HTTPHeaderAuthResponse is the header that will hold SPNEGO data from the server.
+	HTTPHeaderAuthResponse = "WWW-Authenticate"
+	// HTTPHeaderAuthResponseValueKey is the key in the auth header for SPNEGO.
+	HTTPHeaderAuthResponseValueKey = "Negotiate"
+	// UnauthorizedMsg is the message returned in the body when authentication fails.
+	UnauthorizedMsg = "Unauthorised.\n"
 )
 
 // SPNEGOKRB5Authenticate is a Kerberos SPNEGO authentication HTTP handler wrapper.

@@ -14,7 +14,7 @@ import (
 )
 
 func TestClient_SuccessfulLogin_AD(t *testing.T) {
-	b, err := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	c.Realms[0].KDC = []string{testdata.TEST_KDC_AD}
@@ -28,7 +28,7 @@ func TestClient_SuccessfulLogin_AD(t *testing.T) {
 }
 
 func TestClient_GetServiceTicket_AD(t *testing.T) {
-	b, err := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	c.Realms[0].KDC = []string{testdata.TEST_KDC_AD}
@@ -49,7 +49,7 @@ func TestClient_GetServiceTicket_AD(t *testing.T) {
 }
 
 func TestClient_SuccessfulLogin_AD_TRUST_USER_DOMAIN(t *testing.T) {
-	b, err := hex.DecodeString(testdata.TESTUSER1_USERKRB5_AD_KEYTAB)
+	b, _ := hex.DecodeString(testdata.TESTUSER1_USERKRB5_AD_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	c.Realms[0].KDC = []string{testdata.TEST_KDC_AD_TRUST_USER_DOMAIN}
