@@ -1,6 +1,10 @@
 package types
 
-import "strings"
+import (
+	"strings"
+
+	"gopkg.in/jcmturner/gokrb5.v5/iana/nametype"
+)
 
 // Reference: https://www.ietf.org/rfc/rfc4120.txt
 // Section: 5.2.2
@@ -45,4 +49,18 @@ func (pn *PrincipalName) Equal(n PrincipalName) bool {
 // GetPrincipalNameString returns the PrincipalName in string form.
 func (pn *PrincipalName) GetPrincipalNameString() string {
 	return strings.Join(pn.NameString, "/")
+}
+
+// ParseSPNString will parse a string in the format <service>/<name>@<realm>
+// a PrincipalName type will be returned with the name type set to KRB_NT_PRINCIPAL(1)
+// and the realm will be returned as a string. If the "@<realm>" suffix
+// is not included in the SPN then the value of realm string returned will be ""
+func ParseSPNString(spn string) (pn PrincipalName, realm string) {
+	if strings.Contains(spn, "@") {
+		s := strings.Split(spn, "@")
+		realm = s[len(s)-1]
+		spn = strings.TrimSuffix(spn, "@"+realm)
+	}
+	pn = NewPrincipalName(nametype.KRB_NT_PRINCIPAL, spn)
+	return
 }
