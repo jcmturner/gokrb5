@@ -62,7 +62,7 @@ func TestClient_Login_DNSKDCs(t *testing.T) {
 	//Blank out the KDCs to ensure they are not being used
 	c.Realms = []config.Realm{}
 
-	b, err := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
