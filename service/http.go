@@ -27,7 +27,11 @@ const (
 	// CTXKeyAuthenticated is the request context key holding a boolean indicating if the request has been authenticated.
 	CTXKeyAuthenticated ctxKey = 0
 	// CTXKeyCredentials is the request context key holding the credentials gopkg.in/jcmturner/goidentity.v2/Identity object.
-	CTXKeyCredentials ctxKey = 1
+	CTXKeyCredentials              ctxKey = 1
+	HTTPHeaderAuthResponse                = "WWW-Authenticate"
+	HTTPHeaderAuthResponseValueKey        = "Negotiate"
+	HTTPHeaderAuthRequest                 = "Authorization"
+	UnauthorizedMsg                       = "Unauthorised.\n"
 )
 
 // SPNEGOKRB5Authenticate is a Kerberos SPNEGO authentication HTTP handler wrapper.
@@ -48,11 +52,11 @@ const (
 // and use the value from the Principal column for the keytab entry the service should use.
 func SPNEGOKRB5Authenticate(f http.Handler, kt keytab.Keytab, ktprinc string, requireHostAddr bool, l *log.Logger) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		s := strings.SplitN(r.Header.Get("Authorization"), " ", 2)
-		if len(s) != 2 || s[0] != "Negotiate" {
-			w.Header().Set("WWW-Authenticate", "Negotiate")
+		s := strings.SplitN(r.Header.Get(HTTPHeaderAuthRequest), " ", 2)
+		if len(s) != 2 || s[0] != HTTPHeaderAuthResponseValueKey {
+			w.Header().Set(HTTPHeaderAuthResponse, HTTPHeaderAuthResponseValueKey)
 			w.WriteHeader(401)
-			w.Write([]byte("Unauthorised.\n"))
+			w.Write([]byte(UnauthorizedMsg))
 			return
 		}
 		b, err := base64.StdEncoding.DecodeString(s[1])
@@ -106,11 +110,11 @@ func rejectSPNEGO(w http.ResponseWriter, l *log.Logger, logMsg string) {
 }
 
 func spnegoResponseReject(w http.ResponseWriter) {
-	w.Header().Set("WWW-Authenticate", spnegoNegTokenRespReject)
+	w.Header().Set(HTTPHeaderAuthResponse, spnegoNegTokenRespReject)
 	w.WriteHeader(http.StatusUnauthorized)
-	w.Write([]byte("Unauthorised.\n"))
+	w.Write([]byte(UnauthorizedMsg))
 }
 
 func spnegoResponseAcceptCompleted(w http.ResponseWriter) {
-	w.Header().Set("WWW-Authenticate", spnegoNegTokenRespKRBAcceptCompleted)
+	w.Header().Set(HTTPHeaderAuthResponse, spnegoNegTokenRespKRBAcceptCompleted)
 }
