@@ -12,6 +12,11 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v5/keytab"
 )
 
+// POTENTIAL BREAKING CHANGE notice. Context keys used will change to a name-spaced strings to avoid clashes.
+// If you are using the constants service.CTXKeyAuthenticated and service.CTXKeyCredentials
+// defined below when retrieving data from the request context your code will be unaffected.
+// However if, for example, you are retrieving context like this: r.Context().Value(1) then
+// you will need to update to replace the 1 with service.CTXKeyCredentials.
 type ctxKey int
 
 const (
@@ -29,10 +34,19 @@ const (
 //
 // kt - keytab for the service user
 //
-// sa - service account name.
-// If Active Directory is used for the KDC this is the account name you have set the SPN against (setspn.exe -a "HTTP/<fqdn>" <account name>)
-// If the SPN was added to the KDC without associating it with an account pass and empty string "". This is the case if you create the SPN in MIT KDC with: /usr/sbin/kadmin.local -q "add_principal HTTP/<fqdn>"
-func SPNEGOKRB5Authenticate(f http.Handler, kt keytab.Keytab, sa string, requireHostAddr bool, l *log.Logger) http.Handler {
+// ktprinc - keytab principal override for the service.
+// The service looks for this principal in the keytab to use to decrypt tickets.
+// If "" is passed as ktprinc then the principal will be automatically derived
+// from the service name (SName) and realm in the ticket the service is trying to decrypt.
+// This is often sufficient if you create the SPN in MIT KDC with: /usr/sbin/kadmin.local -q "add_principal HTTP/<fqdn>"
+// When Active Directory is used for the KDC this may need to be the account name you have set the SPN against
+// (setspn.exe -a "HTTP/<fqdn>" <account name>)
+// If you are unsure run:
+//
+// klist -k <service's keytab file>
+//
+// and use the value from the Principal column for the keytab entry the service should use.
+func SPNEGOKRB5Authenticate(f http.Handler, kt keytab.Keytab, ktprinc string, requireHostAddr bool, l *log.Logger) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		s := strings.SplitN(r.Header.Get("Authorization"), " ", 2)
 		if len(s) != 2 || s[0] != "Negotiate" {
@@ -67,7 +81,7 @@ func SPNEGOKRB5Authenticate(f http.Handler, kt keytab.Keytab, sa string, require
 			return
 		}
 
-		if ok, creds, err := ValidateAPREQ(mt.APReq, kt, sa, r.RemoteAddr, requireHostAddr); ok {
+		if ok, creds, err := ValidateAPREQ(mt.APReq, kt, ktprinc, r.RemoteAddr, requireHostAddr); ok {
 			ctx := r.Context()
 			ctx = context.WithValue(ctx, CTXKeyCredentials, creds)
 			ctx = context.WithValue(ctx, CTXKeyAuthenticated, true)

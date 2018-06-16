@@ -186,14 +186,19 @@ func MarshalTicketSequence(tkts []Ticket) (asn1.RawValue, error) {
 }
 
 // DecryptEncPart decrypts the encrypted part of the ticket.
-func (t *Ticket) DecryptEncPart(keytab keytab.Keytab, sa string) error {
-	var upn []string
-	if sa != "" {
-		upn = strings.Split(sa, "/")
+func (t *Ticket) DecryptEncPart(keytab keytab.Keytab, ktprinc string) error {
+	var upn types.PrincipalName
+	realm := t.Realm
+	if ktprinc != "" {
+		var r string
+		upn, r = types.ParseSPNString(ktprinc)
+		if r != "" {
+			realm = r
+		}
 	} else {
-		upn = t.SName.NameString
+		upn = t.SName
 	}
-	key, err := keytab.GetEncryptionKey(upn, t.Realm, t.EncPart.KVNO, t.EncPart.EType)
+	key, err := keytab.GetEncryptionKey(upn.NameString, realm, t.EncPart.KVNO, t.EncPart.EType)
 	if err != nil {
 		return NewKRBError(t.SName, t.Realm, errorcode.KRB_AP_ERR_NOKEY, fmt.Sprintf("Could not get key from keytab: %v", err))
 	}
