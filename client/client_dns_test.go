@@ -67,7 +67,7 @@ func TestClient_Login_DNSKDCs(t *testing.T) {
 	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 
-	err = cl.Login()
+	err := cl.Login()
 	if err != nil {
 		t.Errorf("error on logging in using DNS lookup of KDCs: %v\n", err)
 	}

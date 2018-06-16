@@ -46,7 +46,7 @@ func TestClient_SuccessfulLogin_Keytab(t *testing.T) {
 		cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 		cl.WithConfig(c)
 
-		err = cl.Login()
+		err := cl.Login()
 		if err != nil {
 			t.Errorf("error on logging in with KDC %s: %v\n", test, err)
 		}
@@ -89,7 +89,7 @@ func TestClient_SuccessfulLogin_TCPOnly(t *testing.T) {
 	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 
-	err = cl.Login()
+	err := cl.Login()
 	if err != nil {
 		t.Fatalf("error on login: %v\n", err)
 	}
@@ -120,7 +120,7 @@ func TestClient_ASExchange_TGSExchange_EncTypes_Keytab(t *testing.T) {
 		cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 		cl.WithConfig(c)
 
-		err = cl.Login()
+		err := cl.Login()
 		if err != nil {
 			t.Errorf("error on login using enctype %s: %v\n", test, err)
 		}
@@ -181,7 +181,7 @@ func TestClient_FailedLogin(t *testing.T) {
 	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 
-	err = cl.Login()
+	err := cl.Login()
 	if err == nil {
 		t.Fatal("login with incorrect password did not error")
 	}
@@ -199,7 +199,7 @@ func TestClient_SuccessfulLogin_UserRequiringPreAuth(t *testing.T) {
 	cl := NewClientWithKeytab("testuser2", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 
-	err = cl.Login()
+	err := cl.Login()
 	if err != nil {
 		t.Fatalf("error on login: %v\n", err)
 	}
@@ -218,7 +218,7 @@ func TestClient_SuccessfulLogin_UserRequiringPreAuth_TCPOnly(t *testing.T) {
 	cl := NewClientWithKeytab("testuser2", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 
-	err = cl.Login()
+	err := cl.Login()
 	if err != nil {
 		t.Fatalf("error on login: %v\n", err)
 	}
@@ -232,7 +232,7 @@ func TestClient_NetworkTimeout(t *testing.T) {
 	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 
-	err = cl.Login()
+	err := cl.Login()
 	if err == nil {
 		t.Fatal("login with incorrect KDC address did not error")
 	}
@@ -250,7 +250,7 @@ func TestClient_GetServiceTicket(t *testing.T) {
 	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 
-	err = cl.Login()
+	err := cl.Login()
 	if err != nil {
 		t.Fatalf("error on login: %v\n", err)
 	}
@@ -283,7 +283,7 @@ func TestClient_GetServiceTicket_InvalidSPN(t *testing.T) {
 	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 
-	err = cl.Login()
+	err := cl.Login()
 	if err != nil {
 		t.Fatalf("error on login: %v\n", err)
 	}
@@ -305,7 +305,7 @@ func TestClient_GetServiceTicket_OlderKDC(t *testing.T) {
 	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 
-	err = cl.Login()
+	err := cl.Login()
 	if err != nil {
 		t.Fatalf("error on login: %v\n", err)
 	}
@@ -715,7 +715,7 @@ func TestClient_AutoRenew_Goroutine_Count(t *testing.T) {
 	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 
-	err = cl.Login()
+	err := cl.Login()
 	if err != nil {
 		t.Errorf("error on logging in: %v\n", err)
 	}

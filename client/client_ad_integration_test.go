@@ -21,7 +21,7 @@ func TestClient_SuccessfulLogin_AD(t *testing.T) {
 	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 
-	err = cl.Login()
+	err := cl.Login()
 	if err != nil {
 		t.Fatalf("Error on login: %v\n", err)
 	}
@@ -35,7 +35,7 @@ func TestClient_GetServiceTicket_AD(t *testing.T) {
 	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 
-	err = cl.Login()
+	err := cl.Login()
 	if err != nil {
 		t.Fatalf("Error on login: %v\n", err)
 	}
@@ -58,7 +58,7 @@ func TestClient_SuccessfulLogin_AD_TRUST_USER_DOMAIN(t *testing.T) {
 	cl.WithConfig(c)
 	cl.GoKrb5Conf.DisablePAFXFast = true
 
-	err = cl.Login()
+	err := cl.Login()
 	if err != nil {
 		t.Fatalf("Error on login: %v\n", err)
 	}
