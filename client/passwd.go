@@ -27,6 +27,9 @@ func (cl *Client) ChangePasswd(newPasswd string) (bool, error) {
 		return false, err
 	}
 	ASRep, err := cl.ASExchange(cl.Credentials.Realm, ASReq, 0)
+	if err != nil {
+		return false, err
+	}
 
 	msg, key, err := kadmin.ChangePasswdMsg(cl.Credentials.CName, cl.Credentials.Realm, newPasswd, ASRep.Ticket, ASRep.DecryptedEncPart.Key)
 	if err != nil {
