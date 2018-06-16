@@ -35,8 +35,8 @@ func (s *SPNEGO) Unmarshal(b []byte) error {
 			return fmt.Errorf("not a valid SPNEGO token: %v", err)
 		}
 		// Check the OID is the SPNEGO OID value
-		if !oid.Equal(asn1.ObjectIdentifier{1, 3, 6, 1, 5, 5, 2}) {
-			return errors.New("OID does not match SPNEGO OID 1.3.6.1.5.5.2")
+		if !oid.Equal(SPNEGO_OID) {
+			return fmt.Errorf("OID %s does not match SPNEGO OID %s", oid.String(), SPNEGO_OID.String())
 		}
 	} else {
 		// Could be a NegTokenResp/Targ
