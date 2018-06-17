@@ -711,7 +711,7 @@ func TestClient_AutoRenew_Goroutine_Count(t *testing.T) {
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
-	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
+	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC_SHORTTICKETS}
 	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 
