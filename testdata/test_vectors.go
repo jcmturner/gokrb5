@@ -131,6 +131,7 @@ const (
 	TEST_KDC_LASTEST              = "98"
 	TEST_KDC_RESDOM               = "188"
 	TEST_KDC_OLD                  = "78"
+	TEST_KDC_SHORTTICKETS         = "58"
 	TEST_KDC_BADADDR              = "10.80.88.153"
 	TEST_KDC_AD                   = "10.80.88.68:88"
 	TEST_KDC_AD_TRUST_USER_DOMAIN = "10.80.88.48:88"
