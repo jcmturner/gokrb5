@@ -5,16 +5,23 @@ package main
 import (
 	"encoding/hex"
 	"fmt"
+	"log"
+	"net/http"
+	"os"
+
+	//"github.com/pkg/profile"
 	"gopkg.in/jcmturner/gokrb5.v5/credentials"
 	"gopkg.in/jcmturner/gokrb5.v5/keytab"
 	"gopkg.in/jcmturner/gokrb5.v5/service"
 	"gopkg.in/jcmturner/gokrb5.v5/testdata"
-	"log"
-	"net/http"
-	"os"
+)
+
+const (
+	port = ":9080"
 )
 
 func main() {
+	//defer profile.Start(profile.TraceProfile).Stop()
 	// Create logger
 	l := log.New(os.Stderr, "GOKRB5 Service: ", log.Ldate|log.Ltime|log.Lshortfile)
 
@@ -30,15 +37,28 @@ func main() {
 	mux.Handle("/", service.SPNEGOKRB5Authenticate(th, kt, "", false, l))
 
 	// Start up the web server
-	log.Fatal(http.ListenAndServe(":9080", mux))
+	log.Fatal(http.ListenAndServe(port, mux))
 }
 
 // Simple application specific handler
 func testAppHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	ctx := r.Context()
-	fmt.Fprintf(w, "<html>\nTEST.GOKRB5 Handler\nAuthenticed user: %s\nUser's realm: %s\n</html>",
-		ctx.Value(service.CTXKeyCredentials).(credentials.Credentials).Username,
-		ctx.Value(service.CTXKeyCredentials).(credentials.Credentials).Realm)
+	creds := ctx.Value(service.CTXKeyCredentials).(credentials.Credentials)
+	fmt.Fprintf(w,
+		`<html>
+<h1>GOKRB5 Handler</h1>
+<ul>
+<li>Authenticed user: %s</li>
+<li>User's realm: %s</li>
+<li>Authn time: %v</li>
+<li>Session ID: %s</li>
+<ul>
+</html>`,
+		creds.UserName(),
+		creds.Domain(),
+		creds.AuthTime(),
+		creds.SessionID(),
+	)
 	return
 }
