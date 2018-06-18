@@ -1,7 +1,7 @@
 package pac
 
 import (
-	"fmt"
+	"encoding/binary"
 
 	"gopkg.in/jcmturner/gokrb5.v5/mstypes"
 	"gopkg.in/jcmturner/gokrb5.v5/ndr"
@@ -14,16 +14,13 @@ type ClientClaimsInfo struct {
 
 // Unmarshal bytes into the ClientClaimsInfo struct
 func (k *ClientClaimsInfo) Unmarshal(b []byte) error {
-	ch, _, p, err := ndr.ReadHeaders(&b)
-	if err != nil {
-		return fmt.Errorf("error parsing byte stream headers: %v", err)
-	}
-	e := &ch.Endianness
+	var p int
+	var e binary.ByteOrder = binary.LittleEndian
 
 	//The next 4 bytes are an RPC unique pointer referent. We just skip these
 	p += 4
 
-	k.Claims = mstypes.ReadClaimsSetMetadata(&b, &p, e)
+	k.Claims = mstypes.ReadClaimsSetMetadata(&b, &p, &e)
 
 	//Check that there is only zero padding left
 	if len(b) >= p {
