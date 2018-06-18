@@ -17,10 +17,14 @@ func (k *ClientClaimsInfo) Unmarshal(b []byte) error {
 	var p int
 	var e binary.ByteOrder = binary.LittleEndian
 
-	//The next 4 bytes are an RPC unique pointer referent. We just skip these
-	p += 4
+	//This is a ClaimsBlob https://msdn.microsoft.com/en-us/library/hh554119.aspx
+	cb := mstypes.ReadClaimsBlob(&b, &p, &e)
 
-	k.Claims = mstypes.ReadClaimsSetMetadata(&b, &p, &e)
+	if cb.ULBlobSizeinBytes > 0 {
+		var i int
+		k.Claims = mstypes.ReadClaimsSetMetadata(&cb.EncodedBlob, &i, &e)
+		p = i
+	}
 
 	//Check that there is only zero padding left
 	if len(b) >= p {
