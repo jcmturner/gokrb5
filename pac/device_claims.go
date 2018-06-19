@@ -1,7 +1,7 @@
 package pac
 
 import (
-	"fmt"
+	"encoding/binary"
 
 	"gopkg.in/jcmturner/gokrb5.v5/mstypes"
 	"gopkg.in/jcmturner/gokrb5.v5/ndr"
@@ -14,16 +14,17 @@ type DeviceClaimsInfo struct {
 
 // Unmarshal bytes into the DeviceClaimsInfo struct
 func (k *DeviceClaimsInfo) Unmarshal(b []byte) error {
-	ch, _, p, err := ndr.ReadHeaders(&b)
-	if err != nil {
-		return fmt.Errorf("error parsing byte stream headers: %v", err)
+	var p int
+	var e binary.ByteOrder = binary.LittleEndian
+
+	//This is a ClaimsBlob https://msdn.microsoft.com/en-us/library/hh554119.aspx
+	cb := mstypes.ReadClaimsBlob(&b, &p, &e)
+
+	if cb.ULBlobSizeinBytes > 0 {
+		var i int
+		k.Claims = mstypes.ReadClaimsSetMetadata(&cb.EncodedBlob, &i, &e)
+		p = i
 	}
-	e := &ch.Endianness
-
-	//The next 4 bytes are an RPC unique pointer referent. We just skip these
-	p += 4
-
-	k.Claims = mstypes.ReadClaimsSetMetadata(&b, &p, e)
 
 	//Check that there is only zero padding left
 	if len(b) >= p {
