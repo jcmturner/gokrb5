@@ -23,20 +23,15 @@ type CredentialsInfo struct {
 
 // Unmarshal bytes into the CredentialsInfo struct
 func (c *CredentialsInfo) Unmarshal(b []byte, k types.EncryptionKey) error {
-	ch, _, p, err := ndr.ReadHeaders(&b)
-	if err != nil {
-		return fmt.Errorf("error parsing byte stream headers: %v", err)
-	}
-	e := &ch.Endianness
+	//The CredentialsInfo structure is a simple structure that is not NDR-encoded.
+	var p int
+	var e binary.ByteOrder = binary.LittleEndian
 
-	//The next 4 bytes are an RPC unique pointer referent. We just skip these
-	p += 4
+	c.Version = ndr.ReadUint32(&b, &p, &e)
+	c.EType = ndr.ReadUint32(&b, &p, &e)
+	c.PACCredentialDataEncrypted = ndr.ReadBytes(&b, &p, len(b)-p, &e)
 
-	c.Version = ndr.ReadUint32(&b, &p, e)
-	c.EType = ndr.ReadUint32(&b, &p, e)
-	c.PACCredentialDataEncrypted = ndr.ReadBytes(&b, &p, len(b)-p, e)
-
-	err = c.DecryptEncPart(k, e)
+	err := c.DecryptEncPart(k, &e)
 	if err != nil {
 		return fmt.Errorf("error decrypting PAC Credentials Data: %v", err)
 	}
