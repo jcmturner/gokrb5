@@ -216,7 +216,7 @@ func (t *Ticket) DecryptEncPart(keytab keytab.Keytab, ktprinc string) error {
 }
 
 // GetPACType returns a Microsoft PAC that has been extracted from the ticket and processed.
-func (t *Ticket) GetPACType(keytab keytab.Keytab, sa string) (bool, pac.PACType, error) {
+func (t *Ticket) GetPACType(keytab keytab.Keytab, ktprinc string) (bool, pac.PACType, error) {
 	var isPAC bool
 	for _, ad := range t.DecryptedEncPart.AuthorizationData {
 		if ad.ADType == adtype.ADIfRelevant {
@@ -233,8 +233,8 @@ func (t *Ticket) GetPACType(keytab keytab.Keytab, sa string) (bool, pac.PACType,
 					return isPAC, p, fmt.Errorf("error unmarshaling PAC: %v", err)
 				}
 				var upn []string
-				if sa != "" {
-					upn = strings.Split(sa, "/")
+				if ktprinc != "" {
+					upn = strings.Split(ktprinc, "/")
 				} else {
 					upn = t.SName.NameString
 				}
