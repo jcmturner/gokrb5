@@ -229,9 +229,11 @@ func ReadConformantVaryingString(b *[]byte, p *int, e *binary.ByteOrder) (string
 		s[i] = rune(ReadUint16(b, p, e))
 	}
 	ensureAlignment(p, 4)
-	// Remove any null terminator
-	if s[len(s)-1] == rune(0) {
-		s = s[:len(s)-1]
+	if len(s) > 0 {
+		// Remove any null terminator
+		if s[len(s)-1] == rune(0) {
+			s = s[:len(s)-1]
+		}
 	}
 	return string(s), nil
 }
