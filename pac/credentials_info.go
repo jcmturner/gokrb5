@@ -2,6 +2,7 @@ package pac
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 
 	"gopkg.in/jcmturner/gokrb5.v5/crypto"
@@ -28,6 +29,9 @@ func (c *CredentialsInfo) Unmarshal(b []byte, k types.EncryptionKey) error {
 	var e binary.ByteOrder = binary.LittleEndian
 
 	c.Version = ndr.ReadUint32(&b, &p, &e)
+	if c.Version != 0 {
+		return errors.New("credentials info version is not zero")
+	}
 	c.EType = ndr.ReadUint32(&b, &p, &e)
 	c.PACCredentialDataEncrypted = ndr.ReadBytes(&b, &p, len(b)-p, &e)
 

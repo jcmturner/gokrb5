@@ -260,13 +260,3 @@ func ReadUTF16String(n int, b *[]byte, p *int, e *binary.ByteOrder) string {
 	}
 	return string(s)
 }
-
-func ReadUTF16NullTermString(b *[]byte, p *int, e *binary.ByteOrder) string {
-	var s []rune
-	r := ReadUint16(b, p, e)
-	for r != 0 {
-		s = append(s, rune(r))
-		r = ReadUint16(b, p, e)
-	}
-	return string(s)
-}
