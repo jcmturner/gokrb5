@@ -1,7 +1,7 @@
 package pac
 
 import (
-	"encoding/binary"
+	"fmt"
 
 	"gopkg.in/jcmturner/gokrb5.v5/mstypes"
 	"gopkg.in/jcmturner/gokrb5.v5/ndr"
@@ -14,26 +14,26 @@ type DeviceClaimsInfo struct {
 
 // Unmarshal bytes into the DeviceClaimsInfo struct
 func (k *DeviceClaimsInfo) Unmarshal(b []byte) error {
-	var p int
-	var e binary.ByteOrder = binary.LittleEndian
+	ch, _, p, err := ndr.ReadHeaders(&b)
+	if err != nil {
+		return fmt.Errorf("error parsing byte stream headers of DEVICE_CLAIMS_INFO: %v", err)
+	}
+	e := &ch.Endianness
+	//The next 4 bytes are an RPC unique pointer referent. We just skip these
+	p += 4
 
-	//This is a ClaimsBlob https://msdn.microsoft.com/en-us/library/hh554119.aspx
-	cb := mstypes.ReadClaimsBlob(&b, &p, &e)
-
-	if cb.ULBlobSizeinBytes > 0 {
-		var i int
-		k.Claims = mstypes.ReadClaimsSetMetadata(&cb.EncodedBlob, &i, &e)
-		p = i
+	k.Claims, err = mstypes.ReadClaimsSetMetadata(&b, &p, e)
+	if err != nil {
+		return err
 	}
 
 	//Check that there is only zero padding left
 	if len(b) >= p {
 		for _, v := range b[p:] {
 			if v != 0 {
-				return ndr.Malformed{EText: "non-zero padding left over at end of data stream"}
+				return ndr.Malformed{EText: "Non-zero padding left over at end of data stream"}
 			}
 		}
 	}
-
 	return nil
 }
