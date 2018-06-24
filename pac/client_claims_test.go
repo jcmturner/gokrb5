@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/gokrb5.v5/testdata"
 )
 
@@ -19,5 +20,5 @@ func TestPAC_ClientClaimsInfo_Unmarshal(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error unmarshaling test data: %v", err)
 	}
-
+	assert.Equal(t, "testuser1", k.Claims.ClaimsSet.ClaimsArrays[0].ClaimsEntries[0].TypeString.Value, "claims value not as expected")
 }

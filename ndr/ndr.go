@@ -244,3 +244,23 @@ func ensureAlignment(p *int, byteSize int) {
 		}
 	}
 }
+
+// ReadUTF16String returns a string that is UTF16 encoded in a byte slice. n is the number of bytes representing the string
+func ReadUTF16String(n int, b *[]byte, p *int, e *binary.ByteOrder) string {
+	//Length divided by 2 as each run is 16bits = 2bytes
+	s := make([]rune, n/2, n/2)
+	for i := 0; i < len(s); i++ {
+		s[i] = rune(ReadUint16(b, p, e))
+	}
+	return string(s)
+}
+
+func ReadUTF16NullTermString(b *[]byte, p *int, e *binary.ByteOrder) string {
+	var s []rune
+	r := ReadUint16(b, p, e)
+	for r != 0 {
+		s = append(s, rune(r))
+		r = ReadUint16(b, p, e)
+	}
+	return string(s)
+}
