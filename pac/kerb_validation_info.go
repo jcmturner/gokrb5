@@ -168,11 +168,15 @@ func (k *KerbValidationInfo) Unmarshal(b []byte) (err error) {
 	if err = k.HomeDirectoryDrive.UnmarshalString(&b, &p, e); err != nil {
 		return
 	}
-
+	var ah ndr.ConformantArrayHeader
 	if k.GroupCount > 0 {
-		ac := ndr.ReadUniDimensionalConformantArrayHeader(&b, &p, e)
-		if ac != int(k.GroupCount) {
-			return errors.New("error with size of group list")
+		ah, err = ndr.ReadUniDimensionalConformantArrayHeader(&b, &p, e)
+		if err != nil {
+			return
+		}
+		if ah.MaxCount != int(k.GroupCount) {
+			err = errors.New("error with size of group list")
+			return
 		}
 		g := make([]mstypes.GroupMembership, k.GroupCount, k.GroupCount)
 		for i := range g {
@@ -196,9 +200,12 @@ func (k *KerbValidationInfo) Unmarshal(b []byte) (err error) {
 	}
 
 	if k.SIDCount > 0 {
-		ac := ndr.ReadUniDimensionalConformantArrayHeader(&b, &p, e)
-		if ac != int(k.SIDCount) {
-			return fmt.Errorf("error with size of ExtraSIDs list. Expected: %d, Actual: %d", k.SIDCount, ac)
+		ah, err = ndr.ReadUniDimensionalConformantArrayHeader(&b, &p, e)
+		if err != nil {
+			return
+		}
+		if ah.MaxCount != int(k.SIDCount) {
+			return fmt.Errorf("error with size of ExtraSIDs list. Expected: %d, Actual: %d", k.SIDCount, ah.MaxCount)
 		}
 		es := make([]mstypes.KerbSidAndAttributes, k.SIDCount, k.SIDCount)
 		attr := make([]uint32, k.SIDCount, k.SIDCount)
@@ -227,11 +234,14 @@ func (k *KerbValidationInfo) Unmarshal(b []byte) (err error) {
 	}
 
 	if k.ResourceGroupCount > 0 {
-		ac := ndr.ReadUniDimensionalConformantArrayHeader(&b, &p, e)
-		if ac != int(k.ResourceGroupCount) {
-			return fmt.Errorf("error with size of ResourceGroup list. Expected: %d, Actual: %d", k.ResourceGroupCount, ac)
+		ah, err = ndr.ReadUniDimensionalConformantArrayHeader(&b, &p, e)
+		if err != nil {
+			return
 		}
-		g := make([]mstypes.GroupMembership, ac, ac)
+		if ah.MaxCount != int(k.ResourceGroupCount) {
+			return fmt.Errorf("error with size of ResourceGroup list. Expected: %d, Actual: %d", k.ResourceGroupCount, ah.MaxCount)
+		}
+		g := make([]mstypes.GroupMembership, k.ResourceGroupCount, k.ResourceGroupCount)
 		for i := range g {
 			g[i] = mstypes.ReadGroupMembership(&b, &p, e)
 		}

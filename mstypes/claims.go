@@ -1,6 +1,7 @@
 package mstypes
 
 import (
+	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -106,26 +107,39 @@ func ReadClaimsSetMetadata(b *[]byte, p *int, e *binary.ByteOrder) (c ClaimsSetM
 	c.claimsSetSize = ndr.ReadUint32(b, p, e)
 	*p += 4 //Move over pointer to ClaimSet array
 	c.CompressionFormat = ndr.ReadUint16(b, p, e)
+	// TODO Currently compression is not supported so if it is compressed we just have to return.
+	if c.CompressionFormat != CompressionFormatNone {
+		*p = len(*b)
+		return
+	}
 	c.uncompressedClaimsSetSize = ndr.ReadUint32(b, p, e)
 	c.ReservedType = ndr.ReadUint16(b, p, e)
 	c.reservedFieldSize = ndr.ReadUint32(b, p, e)
 	*p += 4 //Move over pointer to ReservedField array
+	var ah ndr.ConformantArrayHeader
 	if c.claimsSetSize > 0 {
 		// ClaimsSet is a conformant array https://msdn.microsoft.com/en-us/library/windows/desktop/aa373603(v=vs.85).aspx
-		css := ndr.ReadUniDimensionalConformantArrayHeader(b, p, e)
-		if css != int(c.claimsSetSize) {
+		ah, err = ndr.ReadUniDimensionalConformantArrayHeader(b, p, e)
+		if err != nil {
+			return
+		}
+		if ah.MaxCount != int(c.claimsSetSize) {
 			err = errors.New("error with size of CLAIMS_SET array")
 			return
 		}
 		csb := ndr.ReadBytes(b, p, int(c.claimsSetSize), e)
+		//TODO put decompression here
 		c.ClaimsSet, err = ReadClaimsSet(csb)
 		if err != nil {
 			return
 		}
 	}
 	if c.reservedFieldSize > 0 {
-		rfs := ndr.ReadUniDimensionalConformantArrayHeader(b, p, e)
-		if rfs != int(c.reservedFieldSize) {
+		ah, err = ndr.ReadUniDimensionalConformantArrayHeader(b, p, e)
+		if err != nil {
+			return
+		}
+		if ah.MaxCount != int(c.reservedFieldSize) {
 			err = errors.New("error with size of CLAIMS_SET_METADATA's reserved field array")
 			return
 		}
@@ -150,10 +164,15 @@ func ReadClaimsSet(b []byte) (c ClaimsSet, err error) {
 	c.ReservedType = ndr.ReadUint16(&b, &p, e)
 	c.reservedFieldSize = ndr.ReadUint32(&b, &p, e)
 	p += 4 //Move over pointer to ReservedField array
+	var ah ndr.ConformantArrayHeader
 	if c.ClaimsArrayCount > 0 {
-		ac := ndr.ReadUniDimensionalConformantArrayHeader(&b, &p, e)
-		if ac != int(c.ClaimsArrayCount) {
-			return c, errors.New("error with size of CLAIMS_SET's claims array")
+		ah, err = ndr.ReadUniDimensionalConformantArrayHeader(&b, &p, e)
+		if err != nil {
+			return
+		}
+		if ah.MaxCount != int(c.ClaimsArrayCount) {
+			err = errors.New("error with size of CLAIMS_SET's claims array")
+			return
 		}
 		c.ClaimsArrays = make([]ClaimsArray, c.ClaimsArrayCount, c.ClaimsArrayCount)
 		for i := range c.ClaimsArrays {
@@ -164,8 +183,11 @@ func ReadClaimsSet(b []byte) (c ClaimsSet, err error) {
 		}
 	}
 	if c.reservedFieldSize > 0 {
-		rfs := ndr.ReadUniDimensionalConformantArrayHeader(&b, &p, e)
-		if rfs != int(c.reservedFieldSize) {
+		ah, err = ndr.ReadUniDimensionalConformantArrayHeader(&b, &p, e)
+		if err != nil {
+			return
+		}
+		if ah.MaxCount != int(c.reservedFieldSize) {
 			err = errors.New("error with size of CLAIMS_SET's reserved field array")
 			return
 		}
@@ -176,16 +198,19 @@ func ReadClaimsSet(b []byte) (c ClaimsSet, err error) {
 
 // ReadClaimsArray reads a ClaimsArray from the bytes slice.
 func ReadClaimsArray(b *[]byte, p *int, e *binary.ByteOrder) (c ClaimsArray, err error) {
-	//Not sure about the first element
 	c.ClaimsSourceType = ndr.ReadUint16(b, p, e)
 	c.ClaimsCount = ndr.ReadUint32(b, p, e)
 	*p += 4 //Move over pointer to claims array
-	ec := ndr.ReadUniDimensionalConformantArrayHeader(b, p, e)
-	if ec != int(c.ClaimsCount) {
+	ah, err := ndr.ReadUniDimensionalConformantArrayHeader(b, p, e)
+	if err != nil {
+		return
+	}
+	if ah.MaxCount != int(c.ClaimsCount) {
 		err = errors.New("error with size of CLAIMS_ARRAY's claims entries")
 		return
 	}
 	c.ClaimsEntries = make([]ClaimEntry, c.ClaimsCount, c.ClaimsCount)
+
 	for i := range c.ClaimsEntries {
 		c.ClaimsEntries[i], err = ReadClaimEntry(b, p, e)
 		if err != nil {
@@ -205,17 +230,23 @@ func ReadClaimEntry(b *[]byte, p *int, e *binary.ByteOrder) (c ClaimEntry, err e
 	if err != nil {
 		return
 	}
-	ac := ndr.ReadUniDimensionalConformantArrayHeader(b, p, e)
-	if ac != int(vc) {
+	ah, err := ndr.ReadUniDimensionalConformantArrayHeader(b, p, e)
+	if err != nil {
+		return
+	}
+	if ah.MaxCount != int(vc) {
 		return c, errors.New("error with size of CLAIM_ENTRY's value")
 	}
-	*p += 4 //Move over pointer
 	switch c.Type {
 	case ClaimTypeIDInt64:
 		c.TypeInt64.ValueCount = vc
 		c.TypeInt64.Value = make([]int64, vc, vc)
 		for i := range c.TypeInt64.Value {
-			c.TypeInt64.Value[i], _ = binary.Varint((*b)[*p : *p+8])
+			buf := bytes.NewReader((*b)[*p : *p+8])
+			err = binary.Read(buf, *e, &c.TypeInt64.Value[i])
+			if err != nil {
+				return
+			}
 		}
 	case ClaimTypeIDUInt64:
 		c.TypeUInt64.ValueCount = vc
@@ -226,6 +257,7 @@ func ReadClaimEntry(b *[]byte, p *int, e *binary.ByteOrder) (c ClaimEntry, err e
 	case ClaimTypeIDString:
 		c.TypeString.ValueCount = vc
 		c.TypeString.Value = make([]string, vc, vc)
+		*p += 4 * (int(vc)) // Move over pointers
 		for i := range c.TypeString.Value {
 			c.TypeString.Value[i], err = ndr.ReadConformantVaryingString(b, p, e)
 			if err != nil {
