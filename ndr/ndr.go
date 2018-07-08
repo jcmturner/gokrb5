@@ -6,7 +6,10 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
+	"os"
 )
+
+// Useful reference: https://docs.microsoft.com/en-us/windows/desktop/Rpc/rpc-ndr-engine
 
 /*
 Serialization Version 1
@@ -408,4 +411,35 @@ func ReadUTF16String(n int, b *[]byte, p *int, e *binary.ByteOrder) string {
 		s[i] = rune(ReadUint16(b, p, e))
 	}
 	return string(s)
+}
+
+func DebugByteSteamView(p int, b []byte) {
+	fmt.Fprintf(os.Stderr, "Full %v\n", b)
+	fmt.Fprintf(os.Stderr, "At pos %v\n", b[p:])
+	fmt.Fprintln(os.Stderr, "uint32 view:")
+	var e binary.ByteOrder = binary.LittleEndian
+	var sl []int
+	for p < len(b) {
+		l := p
+		i := ReadUint32(&b, &p, &e)
+		if l+4 <= len(b) {
+			fmt.Fprintf(os.Stderr, "%d:\t%v\t\t%d\n", l, b[l:l+4], i)
+		} else {
+			fmt.Fprintf(os.Stderr, "%d:\t%v\t\t%d\n", l, b[l:], i)
+		}
+
+		sc := l - 8
+		if ReadUint32(&b, &sc, &e) == i {
+			//Possible str
+			sc -= 4
+			sl = append(sl, sc)
+		}
+	}
+	for _, i := range sl {
+		sc := i
+		s, e := ReadConformantVaryingString(&b, &i, &e)
+		if e == nil {
+			fmt.Fprintf(os.Stderr, "Potential string at %d: %s\n", sc, s)
+		}
+	}
 }

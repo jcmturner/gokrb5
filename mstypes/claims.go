@@ -164,6 +164,7 @@ func ReadClaimsSet(b []byte) (c ClaimsSet, err error) {
 	c.ReservedType = ndr.ReadUint16(&b, &p, e)
 	c.reservedFieldSize = ndr.ReadUint32(&b, &p, e)
 	p += 4 //Move over pointer to ReservedField array
+
 	var ah ndr.ConformantArrayHeader
 	if c.ClaimsArrayCount > 0 {
 		ah, err = ndr.ReadUniDimensionalConformantArrayHeader(&b, &p, e)
@@ -210,9 +211,25 @@ func ReadClaimsArray(b *[]byte, p *int, e *binary.ByteOrder) (c ClaimsArray, err
 		return
 	}
 	c.ClaimsEntries = make([]ClaimEntry, c.ClaimsCount, c.ClaimsCount)
-
 	for i := range c.ClaimsEntries {
-		c.ClaimsEntries[i], err = ReadClaimEntry(b, p, e)
+		var vc uint32
+		c.ClaimsEntries[i].Type, vc, err = ReadClaimEntriesUnionHeaders(b, p, e)
+		if err != nil {
+			return
+		}
+		switch c.ClaimsEntries[i].Type {
+		case ClaimTypeIDInt64:
+			c.ClaimsEntries[i].TypeInt64.ValueCount = vc
+		case ClaimTypeIDUInt64:
+			c.ClaimsEntries[i].TypeUInt64.ValueCount = vc
+		case ClaimTypeIDString:
+			c.ClaimsEntries[i].TypeString.ValueCount = vc
+		case ClaimsTypeIDBoolean:
+			c.ClaimsEntries[i].TypeBool.ValueCount = vc
+		}
+	}
+	for i := range c.ClaimsEntries {
+		err = FillClaimEntry(b, p, e, &c.ClaimsEntries[i])
 		if err != nil {
 			return
 		}
@@ -220,12 +237,24 @@ func ReadClaimsArray(b *[]byte, p *int, e *binary.ByteOrder) (c ClaimsArray, err
 	return
 }
 
-// ReadClaimEntry reads a ClaimEntry from the bytes slice.
-func ReadClaimEntry(b *[]byte, p *int, e *binary.ByteOrder) (c ClaimEntry, err error) {
-	*p += 4 //Move over pointer to ID string
-	c.Type = ndr.ReadUint16(b, p, e)
+func ReadClaimEntriesUnionHeaders(b *[]byte, p *int, e *binary.ByteOrder) (uint16, uint32, error) {
+	*p += 4
+	// This is an NDR union: http://pubs.opengroup.org/onlinepubs/9629399/chap14.htm#tagfcjh_39
+	// The discriminant [tag] is marshalled into the transmitted data stream twice:
+	// once as the field or parameter in the procedure argument list and
+	// once as the first part of the union representation [value]
+	t1 := ndr.ReadUint16(b, p, e)
+	t2 := ndr.ReadUint16(b, p, e)
+	if t1 != t2 {
+		return 0, 0, ndr.Malformed{EText: "malformed NDR encoding of CLAIM_ENTRY union"}
+	}
 	vc := ndr.ReadUint32(b, p, e)
 	*p += 4 //Move over pointer to array of values
+	return t1, vc, nil
+}
+
+// FillClaimEntry reads a ClaimEntry from the bytes slice.
+func FillClaimEntry(b *[]byte, p *int, e *binary.ByteOrder, c *ClaimEntry) (err error) {
 	c.ID, err = ndr.ReadConformantVaryingString(b, p, e)
 	if err != nil {
 		return
@@ -234,30 +263,34 @@ func ReadClaimEntry(b *[]byte, p *int, e *binary.ByteOrder) (c ClaimEntry, err e
 	if err != nil {
 		return
 	}
-	if ah.MaxCount != int(vc) {
-		return c, errors.New("error with size of CLAIM_ENTRY's value")
-	}
 	switch c.Type {
 	case ClaimTypeIDInt64:
-		c.TypeInt64.ValueCount = vc
-		c.TypeInt64.Value = make([]int64, vc, vc)
+		if ah.MaxCount != int(c.TypeInt64.ValueCount) {
+			return errors.New("error with size of CLAIM_ENTRY's value")
+		}
+		c.TypeInt64.Value = make([]int64, c.TypeInt64.ValueCount, c.TypeInt64.ValueCount)
 		for i := range c.TypeInt64.Value {
 			buf := bytes.NewReader((*b)[*p : *p+8])
 			err = binary.Read(buf, *e, &c.TypeInt64.Value[i])
 			if err != nil {
 				return
 			}
+			*p += 8 // progress position for a uint64
 		}
 	case ClaimTypeIDUInt64:
-		c.TypeUInt64.ValueCount = vc
-		c.TypeUInt64.Value = make([]uint64, vc, vc)
+		if ah.MaxCount != int(c.TypeUInt64.ValueCount) {
+			return errors.New("error with size of CLAIM_ENTRY's value")
+		}
+		c.TypeUInt64.Value = make([]uint64, c.TypeUInt64.ValueCount, c.TypeUInt64.ValueCount)
 		for i := range c.TypeUInt64.Value {
 			c.TypeUInt64.Value[i] = ndr.ReadUint64(b, p, e)
 		}
 	case ClaimTypeIDString:
-		c.TypeString.ValueCount = vc
-		c.TypeString.Value = make([]string, vc, vc)
-		*p += 4 * (int(vc)) // Move over pointers
+		if ah.MaxCount != int(c.TypeString.ValueCount) {
+			return errors.New("error with size of CLAIM_ENTRY's value")
+		}
+		c.TypeString.Value = make([]string, c.TypeString.ValueCount, c.TypeString.ValueCount)
+		*p += 4 * (int(c.TypeString.ValueCount)) // Move over pointers
 		for i := range c.TypeString.Value {
 			c.TypeString.Value[i], err = ndr.ReadConformantVaryingString(b, p, e)
 			if err != nil {
@@ -265,8 +298,10 @@ func ReadClaimEntry(b *[]byte, p *int, e *binary.ByteOrder) (c ClaimEntry, err e
 			}
 		}
 	case ClaimsTypeIDBoolean:
-		c.TypeBool.ValueCount = vc
-		c.TypeBool.Value = make([]bool, vc, vc)
+		if ah.MaxCount != int(c.TypeBool.ValueCount) {
+			return errors.New("error with size of CLAIM_ENTRY's value")
+		}
+		c.TypeBool.Value = make([]bool, c.TypeBool.ValueCount, c.TypeBool.ValueCount)
 		for i := range c.TypeBool.Value {
 			if ndr.ReadUint64(b, p, e) != 0 {
 				c.TypeBool.Value[i] = true
