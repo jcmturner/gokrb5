@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"gopkg.in/jcmturner/gokrb5.v5/mstypes"
-	"gopkg.in/jcmturner/gokrb5.v5/ndr"
+	"gopkg.in/jcmturner/rpc.v0/ndr"
 )
 
 // Claims reference: https://msdn.microsoft.com/en-us/library/hh553895.aspx

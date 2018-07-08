@@ -9,8 +9,8 @@ import (
 
 	"gopkg.in/jcmturner/gokrb5.v5/crypto"
 	"gopkg.in/jcmturner/gokrb5.v5/iana/keyusage"
-	"gopkg.in/jcmturner/gokrb5.v5/ndr"
 	"gopkg.in/jcmturner/gokrb5.v5/types"
+	"gopkg.in/jcmturner/rpc.v0/ndr"
 )
 
 // PACType implements: https://msdn.microsoft.com/en-us/library/cc237950.aspx

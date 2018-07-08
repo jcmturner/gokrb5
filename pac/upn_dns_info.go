@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"sort"
 
-	"gopkg.in/jcmturner/gokrb5.v5/ndr"
+	"gopkg.in/jcmturner/rpc.v0/ndr"
 )
 
 // UPNDNSInfo implements https://msdn.microsoft.com/en-us/library/dd240468.aspx

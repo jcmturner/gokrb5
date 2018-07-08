@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 
 	"gopkg.in/jcmturner/gokrb5.v5/iana/chksumtype"
-	"gopkg.in/jcmturner/gokrb5.v5/ndr"
+	"gopkg.in/jcmturner/rpc.v0/ndr"
 )
 
 /*
