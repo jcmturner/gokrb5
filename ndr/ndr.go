@@ -1,4 +1,4 @@
-// Package ndr is a partial implementation of NDR encoding: http://pubs.opengroup.org/onlinepubs/9629399/chap14.htm
+// Package ndr is DEPRECATED and will be removed from next major revision of gokrb5. Please use gopkg.in/jcmturner/rpc.vX instead. This package is a partial implementation of NDR encoding: http://pubs.opengroup.org/onlinepubs/9629399/chap14.htm
 package ndr
 
 import (
@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"math"
 )
-
-// Useful reference: https://docs.microsoft.com/en-us/windows/desktop/Rpc/rpc-ndr-engine
 
 /*
 Serialization Version 1
@@ -208,9 +206,6 @@ func ReadIEEEfloat64(b *[]byte, p *int, e *binary.ByteOrder) float64 {
 	return math.Float64frombits(ReadUint64(b, p, e))
 }
 
-// Conformant - don't know the max count in advance
-// Varying - don't know the actual count in advance
-
 // ReadConformantVaryingString reads a Conformant and Varying String from the bytes slice.
 // A conformant and varying string is a string in which the maximum number of elements is not known beforehand and therefore is included in the representation of the string.
 // NDR represents a conformant and varying string as an ordered sequence of representations of the string elements, preceded by three unsigned long integers.
@@ -222,7 +217,7 @@ func ReadConformantVaryingString(b *[]byte, p *int, e *binary.ByteOrder) (string
 	o := ReadUint32(b, p, e) // Offset
 	a := ReadUint32(b, p, e) // Actual count
 	if a > (m-o) || o > m {
-		return "", Malformed{EText: fmt.Sprintf("Not enough bytes to read conformant varying string. Max: %d, Offset: %d, Actual: %d", m, o, a)}
+		return "", Malformed{EText: fmt.Sprintf("Not enough bytes. Max: %d, Offset: %d, Actual: %d", m, o, a)}
 	}
 	//Unicode string so each element is 2 bytes
 	//move position based on the offset
@@ -234,164 +229,12 @@ func ReadConformantVaryingString(b *[]byte, p *int, e *binary.ByteOrder) (string
 		s[i] = rune(ReadUint16(b, p, e))
 	}
 	ensureAlignment(p, 4)
-	if len(s) > 0 {
-		// Remove any null terminator
-		if s[len(s)-1] == rune(0) {
-			s = s[:len(s)-1]
-		}
-	}
 	return string(s), nil
 }
 
-// NDR defines a special representation for an array whose elements are strings.
-// In the NDR representation of an array of strings, any conformance information (maximum element counts)
-// for the strings is removed from the string representations and included in the conformance information for the array,
-// but any variance information (offsets and actual element counts) for the strings remains with the string representations.
-//
-// If the strings are conformant or if any dimension of the array is conformant, then the representation contains maximum element counts for all dimensions of the array and for the strings.
-//
-// If the strings are non-conformant and the array is non-conformant, then the representation does not contain any maximum element counts.
-//
-// If any dimension of the array is varying, then the representation contains offsets and actual counts for all dimensions of the array.
-//
-// If the array is non-varying, then the representation does not contain any offsets or actual counts for the array, although it does contain offsets and actual counts for the strings.
-func ReadConformantVaryingStringArray(b *[]byte, p *int, e *binary.ByteOrder, n int) ([]string, error) {
-	// Read Max count for each dimension
-	sm := make([]int, n, n)
-	for i := range sm {
-		sm[i] = int(ReadUint32(b, p, e))
-	}
-	// max count for all the strings
-	m := int(ReadUint32(b, p, e))
-	// Read each elements header
-	h := make([]VaryingArrayHeader, n, n)
-	for i := range h {
-		// Offset for the dimension
-		h[i].Offset = int(ReadUint32(b, p, e))
-		// Actual count for the dimension
-		h[i].ActualCount = int(ReadUint32(b, p, e))
-	}
-	sa := make([]string, n, n)
-	for i := range sa {
-		o := int(ReadUint32(b, p, e)) // Offset
-		a := int(ReadUint32(b, p, e)) // Actual count
-		if a > (m-h[i].Offset) || h[i].Offset > m {
-			return sa, Malformed{EText: fmt.Sprintf("Not enough bytes to read conformant varying string. Max: %d, Offset: %d, Actual: %d", m, o, a)}
-		}
-		//Unicode string so each element is 2 bytes
-		//move position based on the offset
-		if o > 0 {
-			*p += int(o * 2)
-		}
-		s := make([]rune, a, a)
-		for i := 0; i < len(s); i++ {
-			s[i] = rune(ReadUint16(b, p, e))
-		}
-		ensureAlignment(p, 4)
-		if len(s) > 0 {
-			// Remove any null terminator
-			if s[len(s)-1] == rune(0) {
-				s = s[:len(s)-1]
-			}
-		}
-		sa[i] = string(s)
-	}
-	return sa, nil
-}
-
-type ConformantArrayHeader struct {
-	MaxCount int
-}
-
-type VaryingArrayHeader struct {
-	Offset      int
-	ActualCount int
-}
-
-type ConformantVaryingArrayHeader struct {
-	ConformantArrayHeader
-	VaryingArrayHeader
-}
-
 // ReadUniDimensionalConformantArrayHeader reads a UniDimensionalConformantArrayHeader from the bytes slice.
-func ReadUniDimensionalConformantArrayHeader(b *[]byte, p *int, e *binary.ByteOrder) (h ConformantArrayHeader, err error) {
-	if len((*b)[*p:]) < 4 {
-		err = Malformed{EText: "Not enough bytes to read uni-dimensional conformant array"}
-		return
-	}
-	// Max count int
-	h.MaxCount = int(ReadUint32(b, p, e))
-	return
-}
-
-// ReadMultiDimensionalConformantArrayHeader reads a MultiDimensionalConformantArrayHeader of n dimensions from the bytes slice.
-func ReadMultiDimensionalConformantArrayHeader(b *[]byte, p *int, e *binary.ByteOrder, n int) ([]ConformantArrayHeader, error) {
-	if len((*b)[*p:]) < n*4 {
-		return []ConformantArrayHeader{}, Malformed{EText: "Not enough bytes to read conformant array"}
-	}
-	h := make([]ConformantArrayHeader, n, n)
-	for i := range h {
-		// Max count int for that dimension
-		h[i].MaxCount = int(ReadUint32(b, p, e))
-	}
-	return h, nil
-}
-
-// ReadUniDimensionalVaryingArrayHeader reads a UniDimensionalVaryingArrayHeader from the bytes slice.
-func ReadUniDimensionalVaryingArrayHeader(b *[]byte, p *int, e *binary.ByteOrder) (h VaryingArrayHeader, err error) {
-	if len((*b)[*p:]) < 8 {
-		err = Malformed{EText: "Not enough bytes to read uni-dimensional varying array"}
-		return
-	}
-	h.Offset = int(ReadUint32(b, p, e))
-	h.ActualCount = int(ReadUint32(b, p, e))
-	return
-}
-
-// ReadMultiDimensionalVaryingArrayHeader reads a MultiDimensionalVaryingArrayHeader of n dimensions from the bytes slice.
-func ReadMultiDimensionalVaryingArrayHeader(b *[]byte, p *int, e *binary.ByteOrder, n int) ([]VaryingArrayHeader, error) {
-	if len((*b)[*p:]) < n*4*2 {
-		return []VaryingArrayHeader{}, Malformed{EText: "Not enough bytes to read varying array"}
-	}
-	h := make([]VaryingArrayHeader, n, n)
-	for i := range h {
-		// Offset for the dimension
-		h[i].Offset = int(ReadUint32(b, p, e))
-		// Actual count for the dimension
-		h[i].ActualCount = int(ReadUint32(b, p, e))
-	}
-	return h, nil
-}
-
-// ReadUniDimensionalConformantVaryingArrayHeader reads a UniDimensionalConformantVaryingArrayHeader from the bytes slice.
-func ReadUniDimensionalConformantVaryingArrayHeader(b *[]byte, p *int, e *binary.ByteOrder) (h ConformantVaryingArrayHeader, err error) {
-	if len((*b)[*p:]) < 12 {
-		err = Malformed{EText: "Not enough bytes to read uni-dimensional conformant varying array"}
-		return
-	}
-	h.MaxCount = int(ReadUint32(b, p, e))
-	h.Offset = int(ReadUint32(b, p, e))
-	h.ActualCount = int(ReadUint32(b, p, e))
-	if h.ActualCount > (h.MaxCount-h.Offset) || h.Offset > h.MaxCount {
-		err = Malformed{EText: fmt.Sprintf("Not enough bytes to read uni-dimensional conformant varying array. Max: %d, Offset: %d, Actual: %d", h.MaxCount, h.Offset, h.ActualCount)}
-	}
-	return
-}
-
-// ReadMultiDimensionalConformantVaryingArrayHeader reads a MultiDimensionalConformantVaryingArrayHeader of n dimensions from the bytes slice.
-func ReadMultiDimensionalConformantVaryingArrayHeader(b *[]byte, p *int, e *binary.ByteOrder, n int) ([]ConformantVaryingArrayHeader, error) {
-	if len((*b)[*p:]) < n*4*3 {
-		return []ConformantVaryingArrayHeader{}, Malformed{EText: "Not enough bytes to read conformant varying array"}
-	}
-	h := make([]ConformantVaryingArrayHeader, n, n)
-	for i := range h {
-		h[i].MaxCount = int(ReadUint32(b, p, e))
-	}
-	for i := range h {
-		h[i].Offset = int(ReadUint32(b, p, e))
-		h[i].ActualCount = int(ReadUint32(b, p, e))
-	}
-	return h, nil
+func ReadUniDimensionalConformantArrayHeader(b *[]byte, p *int, e *binary.ByteOrder) int {
+	return int(ReadUint32(b, p, e))
 }
 
 func ensureAlignment(p *int, byteSize int) {
@@ -401,44 +244,3 @@ func ensureAlignment(p *int, byteSize int) {
 		}
 	}
 }
-
-// ReadUTF16String returns a string that is UTF16 encoded in a byte slice. n is the number of bytes representing the string
-func ReadUTF16String(n int, b *[]byte, p *int, e *binary.ByteOrder) string {
-	//Length divided by 2 as each run is 16bits = 2bytes
-	s := make([]rune, n/2, n/2)
-	for i := 0; i < len(s); i++ {
-		s[i] = rune(ReadUint16(b, p, e))
-	}
-	return string(s)
-}
-
-//func DebugByteSteamView(p int, b []byte) {
-//	fmt.Fprintf(os.Stderr, "Full %v\n", b)
-//	fmt.Fprintf(os.Stderr, "At pos %v\n", b[p:])
-//	fmt.Fprintln(os.Stderr, "uint32 view:")
-//	var e binary.ByteOrder = binary.LittleEndian
-//	var sl []int
-//	for p < len(b) {
-//		l := p
-//		i := ReadUint32(&b, &p, &e)
-//		if l+4 <= len(b) {
-//			fmt.Fprintf(os.Stderr, "%d:\t%v\t\t%d\n", l, b[l:l+4], i)
-//		} else {
-//			fmt.Fprintf(os.Stderr, "%d:\t%v\t\t%d\n", l, b[l:], i)
-//		}
-//
-//		sc := l - 8
-//		if ReadUint32(&b, &sc, &e) == i {
-//			//Possible str
-//			sc -= 4
-//			sl = append(sl, sc)
-//		}
-//	}
-//	for _, i := range sl {
-//		sc := i
-//		s, e := ReadConformantVaryingString(&b, &i, &e)
-//		if e == nil {
-//			fmt.Fprintf(os.Stderr, "Potential string at %d: %s\n", sc, s)
-//		}
-//	}
-//}
