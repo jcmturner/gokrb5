@@ -40,7 +40,11 @@ func (cl *Client) ASExchange(realm string, ASReq messages.ASReq, referral int) (
 				}
 				rb, err = cl.SendToKDC(b, realm)
 				if err != nil {
-					return messages.ASRep{}, krberror.Errorf(err, krberror.NetworkingError, "AS Exchange Error: failed sending AS_REQ to KDC")
+					if _, ok := err.(messages.KRBError); ok {
+						return messages.ASRep{}, krberror.Errorf(err, krberror.KDCError, "AS Exchange Error: error response from KDC")
+					} else {
+						return messages.ASRep{}, krberror.Errorf(err, krberror.NetworkingError, "AS Exchange Error: failed sending AS_REQ to KDC")
+					}
 				}
 			case errorcode.KDC_ERR_WRONG_REALM:
 				// Client referral https://tools.ietf.org/html/rfc6806.html#section-7

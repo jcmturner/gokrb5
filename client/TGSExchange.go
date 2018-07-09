@@ -28,7 +28,11 @@ func (cl *Client) TGSExchange(spn types.PrincipalName, kdcRealm string, tkt mess
 	}
 	r, err := cl.SendToKDC(b, kdcRealm)
 	if err != nil {
-		return tgsReq, tgsRep, krberror.Errorf(err, krberror.NetworkingError, "TGS Exchange Error: issue sending TGS_REQ to KDC")
+		if _, ok := err.(messages.KRBError); ok {
+			return tgsReq, tgsRep, krberror.Errorf(err, krberror.KDCError, "TGS Exchange Error: error response from KDC")
+		} else {
+			return tgsReq, tgsRep, krberror.Errorf(err, krberror.NetworkingError, "TGS Exchange Error: issue sending TGS_REQ to KDC")
+		}
 	}
 	err = tgsRep.Unmarshal(r)
 	if err != nil {
