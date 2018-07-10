@@ -33,7 +33,7 @@ func (k *ClientClaimsInfo) Unmarshal(b []byte) error {
 	if len(b) >= p {
 		for _, v := range b[p:] {
 			if v != 0 {
-				return ndr.Malformed{EText: "Non-zero padding left over at end of data stream"}
+				return ndr.Malformed{EText: "non-zero padding left over at end of data stream"}
 			}
 		}
 	}

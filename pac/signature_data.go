@@ -60,7 +60,7 @@ func (k *SignatureData) Unmarshal(b []byte) ([]byte, error) {
 	//Check that there is only zero padding left
 	for _, v := range b[p:] {
 		if v != 0 {
-			return []byte{}, ndr.Malformed{EText: "Non-zero padding left over at end of data stream"}
+			return []byte{}, ndr.Malformed{EText: "non-zero padding left over at end of data stream"}
 		}
 	}
 

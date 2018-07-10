@@ -2,10 +2,8 @@ package pac
 
 import (
 	"encoding/binary"
-	"encoding/hex"
 	"errors"
 	"fmt"
-	"os"
 
 	"gopkg.in/jcmturner/gokrb5.v5/crypto"
 	"gopkg.in/jcmturner/gokrb5.v5/iana/keyusage"
@@ -141,7 +139,6 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			}
 			pac.UPNDNSInfo = &k
 		case ulTypePACClientClaimsInfo:
-			fmt.Fprintf(os.Stderr, "Claims: %v\n", hex.EncodeToString(p))
 			if pac.ClientClaimsInfo != nil || len(p) < 1 {
 				//Must ignore subsequent buffers of this type
 				continue
@@ -151,7 +148,6 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			if err != nil {
 				return fmt.Errorf("error processing ClientClaimsInfo: %v", err)
 			}
-			fmt.Fprintf(os.Stderr, "Claims Struct: %+v\n", k)
 			pac.ClientClaimsInfo = &k
 		case ulTypePACDeviceInfo:
 			if pac.DeviceInfo != nil {
