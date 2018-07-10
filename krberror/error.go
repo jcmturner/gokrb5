@@ -46,17 +46,10 @@ func NewKrberror(et, s string) Krberror {
 // Errorf appends to or creates a new Krberror.
 func Errorf(err error, et, format string, a ...interface{}) Krberror {
 	if e, ok := err.(Krberror); ok {
-		if len(a) > 0 {
-			e.EText = append([]string{fmt.Sprintf("%s: "+format, et, a)}, e.EText...)
-			return e
-		}
-		e.EText = append([]string{fmt.Sprintf("%s: "+format, et)}, e.EText...)
+		e.Add(et, fmt.Sprintf(format, a...))
 		return e
 	}
-	if len(a) > 0 {
-		return NewErrorf(et, format+": %s", a, err)
-	}
-	return NewErrorf(et, format+": %s", err)
+	return NewErrorf(et, format+": %s", append(a, err)...)
 }
 
 // NewErrorf creates a new Krberror from a formatted string.
