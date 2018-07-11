@@ -468,7 +468,7 @@ func (c *Config) ResolveRealm(domainName string) string {
 func Load(cfgPath string) (*Config, error) {
 	fh, err := os.Open(cfgPath)
 	if err != nil {
-		return nil, errors.New("configuration file could not be openned: " + cfgPath + " " + err.Error())
+		return nil, errors.New("configuration file could not be opened: " + cfgPath + " " + err.Error())
 	}
 	defer fh.Close()
 	scanner := bufio.NewScanner(fh)
