@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"gopkg.in/jcmturner/gokrb5.v5/mstypes"
-	"gopkg.in/jcmturner/gokrb5.v5/ndr"
+	"gopkg.in/jcmturner/rpc.v0/ndr"
 )
 
 // DeviceClaimsInfo implements https://msdn.microsoft.com/en-us/library/hh554226.aspx
@@ -16,14 +16,16 @@ type DeviceClaimsInfo struct {
 func (k *DeviceClaimsInfo) Unmarshal(b []byte) error {
 	ch, _, p, err := ndr.ReadHeaders(&b)
 	if err != nil {
-		return fmt.Errorf("error parsing byte stream headers: %v", err)
+		return fmt.Errorf("error parsing byte stream headers of DEVICE_CLAIMS_INFO: %v", err)
 	}
 	e := &ch.Endianness
-
 	//The next 4 bytes are an RPC unique pointer referent. We just skip these
 	p += 4
 
-	k.Claims = mstypes.ReadClaimsSetMetadata(&b, &p, e)
+	k.Claims, err = mstypes.ReadClaimsSetMetadata(&b, &p, e)
+	if err != nil {
+		return err
+	}
 
 	//Check that there is only zero padding left
 	if len(b) >= p {
@@ -33,6 +35,5 @@ func (k *DeviceClaimsInfo) Unmarshal(b []byte) error {
 			}
 		}
 	}
-
 	return nil
 }

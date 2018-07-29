@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 
 	"gopkg.in/jcmturner/gokrb5.v5/mstypes"
-	"gopkg.in/jcmturner/gokrb5.v5/ndr"
+	"gopkg.in/jcmturner/rpc.v0/ndr"
 )
 
 // ClientInfo implements https://msdn.microsoft.com/en-us/library/cc237951.aspx
@@ -25,18 +25,13 @@ func (k *ClientInfo) Unmarshal(b []byte) error {
 	if len(b[p:]) < int(k.NameLength) {
 		return ndr.Malformed{EText: "PAC ClientInfo length truncated"}
 	}
-	//Length divided by 2 as each run is 16bits = 2bytes
-	s := make([]rune, k.NameLength/2, k.NameLength/2)
-	for i := 0; i < len(s); i++ {
-		s[i] = rune(ndr.ReadUint16(&b, &p, &e))
-	}
-	k.Name = string(s)
+	k.Name = ndr.ReadUTF16String(int(k.NameLength), &b, &p, &e)
 
 	//Check that there is only zero padding left
 	if len(b) >= p {
 		for _, v := range b[p:] {
 			if v != 0 {
-				return ndr.Malformed{EText: "Non-zero padding left over at end of data stream"}
+				return ndr.Malformed{EText: "non-zero padding left over at end of data stream"}
 			}
 		}
 	}

@@ -1,4 +1,4 @@
-// Package ndr is a partial implementation of NDR encoding: http://pubs.opengroup.org/onlinepubs/9629399/chap14.htm
+// Package ndr is DEPRECATED and will be removed from next major revision of gokrb5. Please use gopkg.in/jcmturner/rpc.vX instead. This package is a partial implementation of NDR encoding: http://pubs.opengroup.org/onlinepubs/9629399/chap14.htm
 package ndr
 
 import (
