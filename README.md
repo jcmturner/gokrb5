@@ -227,7 +227,9 @@ if validuser, ok := ctx.Value(service.CTXKeyAuthenticated).(bool); ok && validus
 To validate the AP_REQ sent by the client on the service side call this method:
 ```go
 import 	"gopkg.in/jcmturner/gokrb5.v5/service"
-if ok, creds, err := service.ValidateAPREQ(mt.APReq, kt, r.RemoteAddr); ok {
+var ktprinc string //The SPN of the service to find the key in the keytab.
+var requireHostAddr bool //Whether to force requiring the ticket to contain host addresses to check the client against.
+if ok, creds, err := service.ValidateAPREQ(mt.APReq, kt, ktprinc, r.RemoteAddr, requireHostAddr); ok {
         // Perform application specifc actions
         // creds object has details about the client identity
 }
