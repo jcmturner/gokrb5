@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"gopkg.in/jcmturner/gokrb5.v5/mstypes"
-	"gopkg.in/jcmturner/gokrb5.v5/ndr"
+	"gopkg.in/jcmturner/rpc.v0/ndr"
 )
 
 // DeviceInfo implements https://msdn.microsoft.com/en-us/library/hh536402.aspx
@@ -47,10 +47,11 @@ func (k *DeviceInfo) Unmarshal(b []byte) error {
 	}
 
 	k.SIDCount = ndr.ReadUint32(&b, &p, e)
+	var ah ndr.ConformantArrayHeader
 	if k.SIDCount > 0 {
-		ac := ndr.ReadUniDimensionalConformantArrayHeader(&b, &p, e)
-		if ac != int(k.SIDCount) {
-			return fmt.Errorf("error with size of ExtraSIDs list. expected: %d, Actual: %d", k.SIDCount, ac)
+		ah, err = ndr.ReadUniDimensionalConformantArrayHeader(&b, &p, e)
+		if ah.MaxCount != int(k.SIDCount) {
+			return fmt.Errorf("error with size of ExtraSIDs list. expected: %d, Actual: %d", k.SIDCount, ah.MaxCount)
 		}
 		es := make([]mstypes.KerbSidAndAttributes, k.SIDCount, k.SIDCount)
 		attr := make([]uint32, k.SIDCount, k.SIDCount)

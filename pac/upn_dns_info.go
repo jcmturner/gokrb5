@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"sort"
 
-	"gopkg.in/jcmturner/gokrb5.v5/ndr"
+	"gopkg.in/jcmturner/rpc.v0/ndr"
 )
 
 // UPNDNSInfo implements https://msdn.microsoft.com/en-us/library/dd240468.aspx
@@ -58,7 +58,7 @@ func (k *UPNDNSInfo) Unmarshal(b []byte) error {
 	//Check that there is only zero padding left
 	for _, v := range b[l[2]:] {
 		if v != 0 {
-			return ndr.Malformed{EText: "Non-zero padding left over at end of data stream."}
+			return ndr.Malformed{EText: "non-zero padding left over at end of data stream."}
 		}
 	}
 

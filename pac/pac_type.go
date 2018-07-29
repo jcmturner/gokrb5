@@ -7,8 +7,8 @@ import (
 
 	"gopkg.in/jcmturner/gokrb5.v5/crypto"
 	"gopkg.in/jcmturner/gokrb5.v5/iana/keyusage"
-	"gopkg.in/jcmturner/gokrb5.v5/ndr"
 	"gopkg.in/jcmturner/gokrb5.v5/types"
+	"gopkg.in/jcmturner/rpc.v0/ndr"
 )
 
 // PACType implements: https://msdn.microsoft.com/en-us/library/cc237950.aspx
@@ -67,16 +67,20 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			}
 			pac.KerbValidationInfo = &k
 		case ulTypeCredentials:
-			if pac.CredentialsInfo != nil {
-				//Must ignore subsequent buffers of this type
-				continue
-			}
-			var k CredentialsInfo
-			err := k.Unmarshal(p, key)
-			if err != nil {
-				return fmt.Errorf("error processing CredentialsInfo: %v", err)
-			}
-			pac.CredentialsInfo = &k
+			// Currently PAC parsing is only useful on the service side in gokrb5
+			// The CredentialsInfo are only useful when gokrb5 has implemented RFC4556 and only applied on the client side.
+			// Skipping CredentialsInfo - will be revisited under RFC4556 implementation.
+			continue
+			//if pac.CredentialsInfo != nil {
+			//	//Must ignore subsequent buffers of this type
+			//	continue
+			//}
+			//var k CredentialsInfo
+			//err := k.Unmarshal(p, key) // The encryption key used is the AS reply key only available to the client.
+			//if err != nil {
+			//	return fmt.Errorf("error processing CredentialsInfo: %v", err)
+			//}
+			//pac.CredentialsInfo = &k
 		case ulTypePACServerSignatureData:
 			if pac.ServerChecksum != nil {
 				//Must ignore subsequent buffers of this type
@@ -135,7 +139,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			}
 			pac.UPNDNSInfo = &k
 		case ulTypePACClientClaimsInfo:
-			if pac.ClientClaimsInfo != nil {
+			if pac.ClientClaimsInfo != nil || len(p) < 1 {
 				//Must ignore subsequent buffers of this type
 				continue
 			}
