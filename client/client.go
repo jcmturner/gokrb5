@@ -167,22 +167,22 @@ func (cl *Client) LoadConfig(cfgPath string) (*Client, error) {
 
 // IsConfigured indicates if the client has the values required set.
 func (cl *Client) IsConfigured() (bool, error) {
+	if cl.Credentials.Username == "" {
+		return false, errors.New("client does not have a username")
+	}
+	if cl.Credentials.Realm == "" {
+		return false, errors.New("client does not have a define realm")
+	}
 	// Client needs to have either a password, keytab or a session already (later when loading from CCache)
 	if !cl.Credentials.HasPassword() && !cl.Credentials.HasKeytab() {
-		sess, err := cl.GetSessionFromRealm(cl.Config.LibDefaults.DefaultRealm)
+		sess, err := cl.GetSessionFromRealm(cl.Credentials.Realm)
 		if err != nil || sess.AuthTime.IsZero() {
 			return false, errors.New("client has neither a keytab nor a password set and no session")
 		}
 	}
-	if cl.Credentials.Username == "" {
-		return false, errors.New("client does not have a username")
-	}
-	if cl.Config.LibDefaults.DefaultRealm == "" {
-		return false, errors.New("client krb5 config does not have a default realm")
-	}
 	if !cl.Config.LibDefaults.DNSLookupKDC {
 		for _, r := range cl.Config.Realms {
-			if r.Realm == cl.Config.LibDefaults.DefaultRealm {
+			if r.Realm == cl.Credentials.Realm {
 				if len(r.KDC) > 0 {
 					return true, nil
 				}
@@ -195,8 +195,8 @@ func (cl *Client) IsConfigured() (bool, error) {
 
 // Login the client with the KDC via an AS exchange.
 func (cl *Client) Login() error {
-	if cl.Credentials.Realm == "" {
-		cl.Credentials.Realm = cl.Config.LibDefaults.DefaultRealm
+	if ok, err := cl.IsConfigured(); !ok {
+		return err
 	}
 	ASReq, err := messages.NewASReqForTGT(cl.Credentials.Realm, cl.Config, cl.Credentials.CName)
 	if err != nil {

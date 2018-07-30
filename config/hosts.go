@@ -12,6 +12,9 @@ import (
 
 // GetKDCs returns the count of KDCs available and a map of KDC host names keyed on preference order.
 func (c *Config) GetKDCs(realm string, tcp bool) (int, map[int]string, error) {
+	if realm == "" {
+		realm = c.LibDefaults.DefaultRealm
+	}
 	kdcs := make(map[int]string)
 	var count int
 

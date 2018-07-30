@@ -41,6 +41,7 @@ func (cl *Client) TGSExchange(spn types.PrincipalName, kdcRealm string, tkt mess
 	if err != nil {
 		return tgsReq, tgsRep, krberror.Errorf(err, krberror.EncodingError, "TGS Exchange Error: failed to process the TGS_REP")
 	}
+	// TODO should this check the first element is krbtgt rather than the nametype?
 	if tgsRep.Ticket.SName.NameType == nametype.KRB_NT_SRV_INST && !tgsRep.Ticket.SName.Equal(spn) {
 		if referral > 5 {
 			return tgsReq, tgsRep, krberror.Errorf(err, krberror.KRBMsgError, "maximum number of referrals exceeded")
