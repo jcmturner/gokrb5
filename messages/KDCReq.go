@@ -244,11 +244,11 @@ func (k *ASReq) Unmarshal(b []byte) error {
 	var m marshalKDCReq
 	_, err := asn1.UnmarshalWithParams(b, &m, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.ASREQ))
 	if err != nil {
-		return krberror.Errorf(err, krberror.EncodingError, "Error unmarshaling AS_REQ")
+		return krberror.Errorf(err, krberror.EncodingError, "error unmarshaling AS_REQ")
 	}
 	expectedMsgType := msgtype.KRB_AS_REQ
 	if m.MsgType != expectedMsgType {
-		return krberror.NewErrorf(krberror.KRBMsgError, "Message ID does not indicate a AS_REQ. Expected: %v; Actual: %v", expectedMsgType, m.MsgType)
+		return krberror.NewErrorf(krberror.KRBMsgError, "message ID does not indicate a AS_REQ. Expected: %v; Actual: %v", expectedMsgType, m.MsgType)
 	}
 	var reqb KDCReqBody
 	err = reqb.Unmarshal(m.ReqBody.Bytes)
@@ -267,16 +267,16 @@ func (k *TGSReq) Unmarshal(b []byte) error {
 	var m marshalKDCReq
 	_, err := asn1.UnmarshalWithParams(b, &m, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.TGSREQ))
 	if err != nil {
-		return krberror.Errorf(err, krberror.EncodingError, "Error unmarshaling TGS_REQ")
+		return krberror.Errorf(err, krberror.EncodingError, "error unmarshaling TGS_REQ")
 	}
 	expectedMsgType := msgtype.KRB_TGS_REQ
 	if m.MsgType != expectedMsgType {
-		return krberror.NewErrorf(krberror.KRBMsgError, "Message ID does not indicate a TGS_REQ. Expected: %v; Actual: %v", expectedMsgType, m.MsgType)
+		return krberror.NewErrorf(krberror.KRBMsgError, "message ID does not indicate a TGS_REQ. Expected: %v; Actual: %v", expectedMsgType, m.MsgType)
 	}
 	var reqb KDCReqBody
 	err = reqb.Unmarshal(m.ReqBody.Bytes)
 	if err != nil {
-		return krberror.Errorf(err, krberror.EncodingError, "Error processing TGS_REQ body")
+		return krberror.Errorf(err, krberror.EncodingError, "error processing TGS_REQ body")
 	}
 	k.MsgType = m.MsgType
 	k.PAData = m.PAData
@@ -290,7 +290,7 @@ func (k *KDCReqBody) Unmarshal(b []byte) error {
 	var m marshalKDCReqBody
 	_, err := asn1.Unmarshal(b, &m)
 	if err != nil {
-		return krberror.Errorf(err, krberror.EncodingError, "Error unmarshaling KDC_REQ body")
+		return krberror.Errorf(err, krberror.EncodingError, "error unmarshaling KDC_REQ body")
 	}
 	k.KDCOptions = m.KDCOptions
 	if len(k.KDCOptions.Bytes) < 4 {
@@ -311,7 +311,7 @@ func (k *KDCReqBody) Unmarshal(b []byte) error {
 	if len(m.AdditionalTickets.Bytes) > 0 {
 		k.AdditionalTickets, err = UnmarshalTicketsSequence(m.AdditionalTickets)
 		if err != nil {
-			return krberror.Errorf(err, krberror.EncodingError, "Error unmarshaling additional tickets")
+			return krberror.Errorf(err, krberror.EncodingError, "error unmarshaling additional tickets")
 		}
 	}
 	return nil
@@ -337,7 +337,7 @@ func (k *ASReq) Marshal() ([]byte, error) {
 	}
 	mk, err := asn1.Marshal(m)
 	if err != nil {
-		return mk, krberror.Errorf(err, krberror.EncodingError, "Error marshaling AS_REQ")
+		return mk, krberror.Errorf(err, krberror.EncodingError, "error marshaling AS_REQ")
 	}
 	mk = asn1tools.AddASNAppTag(mk, asnAppTag.ASREQ)
 	return mk, nil
@@ -363,7 +363,7 @@ func (k *TGSReq) Marshal() ([]byte, error) {
 	}
 	mk, err := asn1.Marshal(m)
 	if err != nil {
-		return mk, krberror.Errorf(err, krberror.EncodingError, "Error marshaling AS_REQ")
+		return mk, krberror.Errorf(err, krberror.EncodingError, "error marshaling AS_REQ")
 	}
 	mk = asn1tools.AddASNAppTag(mk, asnAppTag.TGSREQ)
 	return mk, nil
@@ -387,7 +387,7 @@ func (k *KDCReqBody) Marshal() ([]byte, error) {
 	}
 	rawtkts, err := MarshalTicketSequence(k.AdditionalTickets)
 	if err != nil {
-		return b, krberror.Errorf(err, krberror.EncodingError, "Error in marshaling KDC request body additional tickets")
+		return b, krberror.Errorf(err, krberror.EncodingError, "error in marshaling KDC request body additional tickets")
 	}
 	//The asn1.rawValue needs the tag setting on it for where it is in the KDCReqBody
 	rawtkts.Tag = 11
@@ -396,7 +396,7 @@ func (k *KDCReqBody) Marshal() ([]byte, error) {
 	}
 	b, err = asn1.Marshal(m)
 	if err != nil {
-		return b, krberror.Errorf(err, krberror.EncodingError, "Error in marshaling KDC request body")
+		return b, krberror.Errorf(err, krberror.EncodingError, "error in marshaling KDC request body")
 	}
 	return b, nil
 }

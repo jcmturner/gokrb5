@@ -50,7 +50,7 @@ func (k *KRBPriv) Unmarshal(b []byte) error {
 	}
 	expectedMsgType := msgtype.KRB_PRIV
 	if k.MsgType != expectedMsgType {
-		return krberror.NewErrorf(krberror.KRBMsgError, "Message ID does not indicate a KRB_PRIV. Expected: %v; Actual: %v", expectedMsgType, k.MsgType)
+		return krberror.NewErrorf(krberror.KRBMsgError, "message ID does not indicate a KRB_PRIV. Expected: %v; Actual: %v", expectedMsgType, k.MsgType)
 	}
 	return nil
 }

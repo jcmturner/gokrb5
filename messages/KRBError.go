@@ -54,7 +54,7 @@ func (k *KRBError) Unmarshal(b []byte) error {
 	}
 	expectedMsgType := msgtype.KRB_ERROR
 	if k.MsgType != expectedMsgType {
-		return krberror.NewErrorf(krberror.KRBMsgError, "Message ID does not indicate a KRB_ERROR. Expected: %v; Actual: %v", expectedMsgType, k.MsgType)
+		return krberror.NewErrorf(krberror.KRBMsgError, "message ID does not indicate a KRB_ERROR. Expected: %v; Actual: %v", expectedMsgType, k.MsgType)
 	}
 	return nil
 }
@@ -74,10 +74,10 @@ func processUnmarshalReplyError(b []byte, err error) error {
 		var krberr KRBError
 		tmperr := krberr.Unmarshal(b)
 		if tmperr != nil {
-			return krberror.Errorf(err, krberror.EncodingError, "Failed to unmarshal KDC's reply")
+			return krberror.Errorf(err, krberror.EncodingError, "failed to unmarshal KDC's reply")
 		}
 		return krberr
 	default:
-		return krberror.Errorf(err, krberror.EncodingError, "Failed to unmarshal KDC's reply")
+		return krberror.Errorf(err, krberror.EncodingError, "failed to unmarshal KDC's reply")
 	}
 }
