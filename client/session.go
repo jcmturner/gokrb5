@@ -17,6 +17,15 @@ type sessions struct {
 	mux     sync.RWMutex
 }
 
+func (s *sessions) destroy() {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	for k, e := range s.Entries {
+		e.destroy()
+		delete(s.Entries, k)
+	}
+}
+
 // Client session struct.
 type session struct {
 	Realm                string
@@ -34,12 +43,20 @@ func (s *session) update(tkt messages.Ticket, dep messages.EncKDCRepPart) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	s.AuthTime = dep.AuthTime
-	s.AuthTime = dep.AuthTime
 	s.EndTime = dep.EndTime
 	s.RenewTill = dep.RenewTill
 	s.TGT = tkt
 	s.SessionKey = dep.Key
 	s.SessionKeyExpiration = dep.KeyExpiration
+}
+
+func (s *session) destroy() {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	s.cancel <- true
+	s.EndTime = time.Now().UTC()
+	s.RenewTill = s.EndTime
+	s.SessionKeyExpiration = s.EndTime
 }
 
 // AddSession adds a session for a realm with a TGT to the client's session cache.
