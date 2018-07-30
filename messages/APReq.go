@@ -10,7 +10,6 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v5/iana/asnAppTag"
 	"gopkg.in/jcmturner/gokrb5.v5/iana/keyusage"
 	"gopkg.in/jcmturner/gokrb5.v5/iana/msgtype"
-	"gopkg.in/jcmturner/gokrb5.v5/iana/nametype"
 	"gopkg.in/jcmturner/gokrb5.v5/krberror"
 	"gopkg.in/jcmturner/gokrb5.v5/types"
 )
@@ -70,7 +69,7 @@ func encryptAuthenticator(a types.Authenticator, sessionKey types.EncryptionKey,
 	if err != nil {
 		return ed, krberror.Errorf(err, krberror.EncodingError, "Marshaling error of EncryptedData form of Authenticator")
 	}
-	usage := authenticatorKeyUsage(tkt.SName.NameType)
+	usage := authenticatorKeyUsage(tkt.SName)
 	ed, err = crypto.GetEncryptedData(m, sessionKey, uint32(usage), tkt.EncPart.KVNO)
 	if err != nil {
 		return ed, krberror.Errorf(err, krberror.EncryptingError, "Error encrypting Authenticator")
@@ -81,7 +80,7 @@ func encryptAuthenticator(a types.Authenticator, sessionKey types.EncryptionKey,
 // DecryptAuthenticator decrypts the Authenticator within the AP_REQ.
 // sessionKey may simply be the key within the decrypted EncPart of the ticket within the AP_REQ.
 func (a *APReq) DecryptAuthenticator(sessionKey types.EncryptionKey) (auth types.Authenticator, err error) {
-	usage := authenticatorKeyUsage(a.Ticket.SName.NameType)
+	usage := authenticatorKeyUsage(a.Ticket.SName)
 	ab, e := crypto.DecryptEncPart(a.Authenticator, sessionKey, uint32(usage))
 	if e != nil {
 		err = fmt.Errorf("error decrypting authenticator: %v", e)
@@ -95,17 +94,11 @@ func (a *APReq) DecryptAuthenticator(sessionKey types.EncryptionKey) (auth types
 	return
 }
 
-func authenticatorKeyUsage(nt int32) int {
-	switch nt {
-	case nametype.KRB_NT_PRINCIPAL:
-		return keyusage.AP_REQ_AUTHENTICATOR
-	case nametype.KRB_NT_SRV_HST:
-		return keyusage.AP_REQ_AUTHENTICATOR
-	case nametype.KRB_NT_SRV_INST:
+func authenticatorKeyUsage(pn types.PrincipalName) int {
+	if pn.NameString[0] == "krbtgt" {
 		return keyusage.TGS_REQ_PA_TGS_REQ_AP_REQ_AUTHENTICATOR
-	default:
-		return keyusage.AP_REQ_AUTHENTICATOR
 	}
+	return keyusage.AP_REQ_AUTHENTICATOR
 }
 
 // Unmarshal bytes b into the APReq struct.
