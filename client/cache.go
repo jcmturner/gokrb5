@@ -55,6 +55,15 @@ func (c *Cache) addEntry(tkt messages.Ticket, authTime, startTime, endTime, rene
 	return c.Entries[spn]
 }
 
+// Clear deletes all the cache entries
+func (c *Cache) clear() {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	for k := range c.Entries {
+		delete(c.Entries, k)
+	}
+}
+
 // RemoveEntry removes the cache entry for the defined SPN.
 func (c *Cache) RemoveEntry(spn string) {
 	c.mux.Lock()
