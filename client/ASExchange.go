@@ -77,7 +77,7 @@ func setPAData(cl *Client, krberr messages.KRBError, ASReq *messages.ASReq) erro
 	if cl.GoKrb5Conf.AssumePAEncTimestampRequired {
 		paTSb, err := types.GetPAEncTSEncAsnMarshalled()
 		if err != nil {
-			return krberror.Errorf(err, krberror.KRBMsgError, "Error creating PAEncTSEnc for Pre-Authentication")
+			return krberror.Errorf(err, krberror.KRBMsgError, "error creating PAEncTSEnc for Pre-Authentication")
 		}
 		var et etype.EType
 		if krberr.ErrorCode == 0 {
@@ -95,15 +95,15 @@ func setPAData(cl *Client, krberr messages.KRBError, ASReq *messages.ASReq) erro
 		}
 		key, err := cl.Key(et, krberr)
 		if err != nil {
-			return krberror.Errorf(err, krberror.EncryptingError, "Error getting key from credentials")
+			return krberror.Errorf(err, krberror.EncryptingError, "error getting key from credentials")
 		}
 		paEncTS, err := crypto.GetEncryptedData(paTSb, key, keyusage.AS_REQ_PA_ENC_TIMESTAMP, 1)
 		if err != nil {
-			return krberror.Errorf(err, krberror.EncryptingError, "Error encrypting pre-authentication timestamp")
+			return krberror.Errorf(err, krberror.EncryptingError, "error encrypting pre-authentication timestamp")
 		}
 		pb, err := paEncTS.Marshal()
 		if err != nil {
-			return krberror.Errorf(err, krberror.EncodingError, "Error marshaling the PAEncTSEnc encrypted data")
+			return krberror.Errorf(err, krberror.EncodingError, "error marshaling the PAEncTSEnc encrypted data")
 		}
 		pa := types.PAData{
 			PADataType:  patype.PA_ENC_TIMESTAMP,
@@ -152,7 +152,7 @@ func preAuthEType(krberr messages.KRBError) (etype etype.EType, err error) {
 	}
 	etype, e = crypto.GetEtype(etypeID)
 	if e != nil {
-		err = krberror.Errorf(e, krberror.EncryptingError, "Error creating etype")
+		err = krberror.Errorf(e, krberror.EncryptingError, "error creating etype")
 		return
 	}
 	return etype, nil

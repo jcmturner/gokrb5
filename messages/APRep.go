@@ -49,7 +49,7 @@ func (a *APRep) Unmarshal(b []byte) error {
 	}
 	expectedMsgType := msgtype.KRB_AP_REP
 	if a.MsgType != expectedMsgType {
-		return krberror.NewErrorf(krberror.KRBMsgError, "Message ID does not indicate a KRB_AP_REP. Expected: %v; Actual: %v", expectedMsgType, a.MsgType)
+		return krberror.NewErrorf(krberror.KRBMsgError, "message ID does not indicate a KRB_AP_REP. Expected: %v; Actual: %v", expectedMsgType, a.MsgType)
 	}
 	return nil
 }
