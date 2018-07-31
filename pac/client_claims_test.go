@@ -91,7 +91,6 @@ func TestPAC_ClientClaimsMultiValueStr_Unmarshal(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error unmarshaling test data: %v", err)
 	}
-	t.Logf("%+v\n", k)
 	assert.Equal(t, uint32(1), k.Claims.ClaimsSet.ClaimsArrayCount, "claims array count not as expected")
 	assert.Equal(t, mstypes.ClaimsSourceTypeAD, k.Claims.ClaimsSet.ClaimsArrays[0].ClaimsSourceType, "claims source type not as expected")
 	assert.Equal(t, uint32(1), k.Claims.ClaimsSet.ClaimsArrays[0].ClaimsCount, "claims count not as expected")
@@ -114,7 +113,6 @@ func TestPAC_ClientClaimsInfoMultiEntry_Unmarshal(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error unmarshaling test data: %v", err)
 	}
-	t.Logf("%+v\n", k)
 	assert.Equal(t, uint32(1), k.Claims.ClaimsSet.ClaimsArrayCount, "claims array count not as expected")
 	assert.Equal(t, mstypes.ClaimsSourceTypeAD, k.Claims.ClaimsSet.ClaimsArrays[0].ClaimsSourceType, "claims source type not as expected")
 	assert.Equal(t, uint32(2), k.Claims.ClaimsSet.ClaimsArrays[0].ClaimsCount, "claims count not as expected")
