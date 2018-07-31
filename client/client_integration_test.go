@@ -745,7 +745,7 @@ func TestClient_Destroy(t *testing.T) {
 		t.Fatalf("error on login: %v\n", err)
 	}
 	spn := "HTTP/host.test.gokrb5"
-	tkt, key, err := cl.GetServiceTicket(spn)
+	_, _, err = cl.GetServiceTicket(spn)
 	if err != nil {
 		t.Fatalf("error getting service ticket: %v\n", err)
 	}
