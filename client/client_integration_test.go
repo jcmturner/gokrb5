@@ -752,12 +752,10 @@ func TestClient_Destroy(t *testing.T) {
 	n := runtime.NumGoroutine()
 	time.Sleep(time.Second * 120)
 	cl.Destroy()
+	time.Sleep(time.Second * 10)
 	m := runtime.NumGoroutine()
 	t.Logf("DESTROY: %d %d", n, m)
 	assert.True(t, m < n, "auto-renewal goroutine was not stopped when client destroyed")
-	is, err := cl.IsConfigured()
-	if err != nil {
-		t.Errorf("error checking if destroyed client is configured: %v", err)
-	}
+	is, _ := cl.IsConfigured()
 	assert.False(t, is, "client is still configured after it was destroyed")
 }
