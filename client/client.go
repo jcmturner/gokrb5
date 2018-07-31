@@ -4,7 +4,6 @@ package client
 import (
 	"errors"
 	"fmt"
-	"time"
 
 	"gopkg.in/jcmturner/gokrb5.v5/config"
 	"gopkg.in/jcmturner/gokrb5.v5/credentials"
@@ -217,7 +216,8 @@ func (cl *Client) Login() error {
 
 // Destroy stops the auto-renewal of all sessions and removes the sessions and cache entries from the client.
 func (cl *Client) Destroy() {
+	creds := credentials.NewCredentials("", "")
 	cl.sessions.destroy()
 	cl.Cache.clear()
-	cl.Credentials.ValidUntil = time.Now().UTC()
+	cl.Credentials = &creds
 }

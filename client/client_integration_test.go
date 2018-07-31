@@ -727,3 +727,33 @@ func TestClient_AutoRenew_Goroutine_Count(t *testing.T) {
 		}
 	}
 }
+
+func TestClient_Destroy(t *testing.T) {
+	addr := os.Getenv("TEST_KDC_ADDR")
+	if addr == "" {
+		addr = testdata.TEST_KDC_ADDR
+	}
+	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	kt, _ := keytab.Parse(b)
+	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC_SHORTTICKETS}
+	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
+	cl.WithConfig(c)
+
+	err := cl.Login()
+	if err != nil {
+		t.Fatalf("error on login: %v\n", err)
+	}
+	spn := "HTTP/host.test.gokrb5"
+	tkt, key, err := cl.GetServiceTicket(spn)
+	if err != nil {
+		t.Fatalf("error getting service ticket: %v\n", err)
+	}
+	n := runtime.NumGoroutine()
+	time.Sleep(time.Second * 120)
+	cl.Destroy()
+	m := runtime.NumGoroutine()
+	t.Logf("DESTROY: %d %d", n, m)
+	assert.True(t, m < n, "auto-renewal goroutine was not stopped when client destroyed")
+	assert.False(t, cl.IsConfigured(), "client is still configured after it was destroyed")
+}
