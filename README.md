@@ -89,6 +89,11 @@ err := cl.Login()
 ```
 Kerberos Ticket Granting Tickets (TGT) will be automatically renewed unless the client was created from a CCache.
 
+A client can be destroyed with the following method:
+```go
+cl.Destroy()
+```
+
 #### Active Directory KDC and FAST negotiation
 Active Directory does not commonly support FAST negotiation so you will need to disable this on the client.
 If this is the case you will see this error:
