@@ -87,7 +87,9 @@ func (cl *Client) enableAutoSessionRenewal(s *session) {
 	var timer *time.Timer
 	go func(s *session) {
 		for {
+			s.mux.RLock()
 			w := (s.EndTime.Sub(time.Now().UTC()) * 5) / 6
+			s.mux.RUnlock()
 			if w < 0 {
 				return
 			}
