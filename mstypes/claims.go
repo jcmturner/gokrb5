@@ -17,7 +17,7 @@ const (
 	CompressionFormatXPressHuff uint16 = 4
 )
 
-// ClaimsSourceTypeAD
+// ClaimsSourceTypeAD https://msdn.microsoft.com/en-us/library/hh553809.aspx
 const ClaimsSourceTypeAD uint16 = 1
 
 // Claim Type assigned numbers
