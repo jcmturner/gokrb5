@@ -50,6 +50,9 @@ func (k *DeviceInfo) Unmarshal(b []byte) error {
 	var ah ndr.ConformantArrayHeader
 	if k.SIDCount > 0 {
 		ah, err = ndr.ReadUniDimensionalConformantArrayHeader(&b, &p, e)
+		if err != nil {
+			return fmt.Errorf("could not read ExtraSIDs array header: %v", err)
+		}
 		if ah.MaxCount != int(k.SIDCount) {
 			return fmt.Errorf("error with size of ExtraSIDs list. expected: %d, Actual: %d", k.SIDCount, ah.MaxCount)
 		}

@@ -17,7 +17,7 @@ const (
 	CompressionFormatXPressHuff uint16 = 4
 )
 
-// ClaimsSourceType
+// ClaimsSourceTypeAD
 const ClaimsSourceTypeAD uint16 = 1
 
 // Claim Type assigned numbers
@@ -52,7 +52,7 @@ type ClaimsSetMetadata struct {
 	ReservedField             []byte
 }
 
-// ClaimSet implements https://msdn.microsoft.com/en-us/library/hh554122.aspx
+// ClaimsSet implements https://msdn.microsoft.com/en-us/library/hh554122.aspx
 type ClaimsSet struct {
 	ClaimsArrayCount  uint32
 	ClaimsArrays      []ClaimsArray
@@ -237,6 +237,7 @@ func ReadClaimsArray(b *[]byte, p *int, e *binary.ByteOrder) (c ClaimsArray, err
 	return
 }
 
+// ReadClaimEntriesUnionHeaders reads the union headers from the byte stream.
 func ReadClaimEntriesUnionHeaders(b *[]byte, p *int, e *binary.ByteOrder) (uint16, uint32, error) {
 	*p += 4
 	// This is an NDR union: http://pubs.opengroup.org/onlinepubs/9629399/chap14.htm#tagfcjh_39
