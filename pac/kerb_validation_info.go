@@ -2,11 +2,11 @@
 package pac
 
 import (
-	"errors"
+	"bytes"
 	"fmt"
 
-	"gopkg.in/jcmturner/gokrb5.v5/mstypes"
-	"gopkg.in/jcmturner/rpc.v0/ndr"
+	"gopkg.in/jcmturner/rpc.v1/mstypes"
+	"gopkg.in/jcmturner/rpc.v1/ndr"
 )
 
 // KERB_VALIDATION_INFO flags.
@@ -32,256 +32,75 @@ const (
 // It is a subset due to historical reasons and to the use of the common Active Directory to generate this information.
 // The KERB_VALIDATION_INFO structure is marshaled by RPC [MS-RPCE].
 type KerbValidationInfo struct {
-	LogOnTime               mstypes.FileTime
-	LogOffTime              mstypes.FileTime
-	KickOffTime             mstypes.FileTime
-	PasswordLastSet         mstypes.FileTime
-	PasswordCanChange       mstypes.FileTime
-	PasswordMustChange      mstypes.FileTime
-	EffectiveName           mstypes.RPCUnicodeString
-	FullName                mstypes.RPCUnicodeString
-	LogonScript             mstypes.RPCUnicodeString
-	ProfilePath             mstypes.RPCUnicodeString
-	HomeDirectory           mstypes.RPCUnicodeString
-	HomeDirectoryDrive      mstypes.RPCUnicodeString
-	LogonCount              uint16
-	BadPasswordCount        uint16
-	UserID                  uint32
-	PrimaryGroupID          uint32
-	GroupCount              uint32
-	pGroupIDs               uint32
-	GroupIDs                []mstypes.GroupMembership
-	UserFlags               uint32
-	UserSessionKey          mstypes.UserSessionKey
-	LogonServer             mstypes.RPCUnicodeString
-	LogonDomainName         mstypes.RPCUnicodeString
-	pLogonDomainID          uint32
-	LogonDomainID           mstypes.RPCSID
-	Reserved1               []uint32 // Has 2 elements
-	UserAccountControl      uint32
-	SubAuthStatus           uint32
-	LastSuccessfulILogon    mstypes.FileTime
-	LastFailedILogon        mstypes.FileTime
-	FailedILogonCount       uint32
-	Reserved3               uint32
-	SIDCount                uint32
-	pExtraSIDs              uint32
-	ExtraSIDs               []mstypes.KerbSidAndAttributes
-	pResourceGroupDomainSID uint32
-	ResourceGroupDomainSID  mstypes.RPCSID
-	ResourceGroupCount      uint32
-	pResourceGroupIDs       uint32
-	ResourceGroupIDs        []mstypes.GroupMembership
+	LogOnTime              mstypes.FileTime
+	LogOffTime             mstypes.FileTime
+	KickOffTime            mstypes.FileTime
+	PasswordLastSet        mstypes.FileTime
+	PasswordCanChange      mstypes.FileTime
+	PasswordMustChange     mstypes.FileTime
+	EffectiveName          mstypes.RPCUnicodeString
+	FullName               mstypes.RPCUnicodeString
+	LogonScript            mstypes.RPCUnicodeString
+	ProfilePath            mstypes.RPCUnicodeString
+	HomeDirectory          mstypes.RPCUnicodeString
+	HomeDirectoryDrive     mstypes.RPCUnicodeString
+	LogonCount             uint16
+	BadPasswordCount       uint16
+	UserID                 uint32
+	PrimaryGroupID         uint32
+	GroupCount             uint32
+	GroupIDs               []mstypes.GroupMembership `ndr:"pointer,conformant"`
+	UserFlags              uint32
+	UserSessionKey         mstypes.UserSessionKey
+	LogonServer            mstypes.RPCUnicodeString
+	LogonDomainName        mstypes.RPCUnicodeString
+	LogonDomainID          mstypes.RPCSID `ndr:"pointer"`
+	Reserved1              [2]uint32      // Has 2 elements
+	UserAccountControl     uint32
+	SubAuthStatus          uint32
+	LastSuccessfulILogon   mstypes.FileTime
+	LastFailedILogon       mstypes.FileTime
+	FailedILogonCount      uint32
+	Reserved3              uint32
+	SIDCount               uint32
+	ExtraSIDs              []mstypes.KerbSidAndAttributes `ndr:"pointer,conformant"`
+	ResourceGroupDomainSID mstypes.RPCSID                 `ndr:"pointer"`
+	ResourceGroupCount     uint32
+	ResourceGroupIDs       []mstypes.GroupMembership `ndr:"pointer,conformant"`
 }
 
 // Unmarshal bytes into the DeviceInfo struct
 func (k *KerbValidationInfo) Unmarshal(b []byte) (err error) {
-	ch, _, p, err := ndr.ReadHeaders(&b)
+	dec := ndr.NewDecoder(bytes.NewReader(b))
+	err = dec.Decode(k)
 	if err != nil {
-		return fmt.Errorf("error parsing byte stream headers: %v", err)
+		err = fmt.Errorf("error unmarshaling KerbValidationInfo: %v", err)
 	}
-	e := &ch.Endianness
-
-	//The next 4 bytes are an RPC unique pointer referent. We just skip these
-	p += 4
-
-	k.LogOnTime = mstypes.ReadFileTime(&b, &p, e)
-	k.LogOffTime = mstypes.ReadFileTime(&b, &p, e)
-	k.KickOffTime = mstypes.ReadFileTime(&b, &p, e)
-	k.PasswordLastSet = mstypes.ReadFileTime(&b, &p, e)
-	k.PasswordCanChange = mstypes.ReadFileTime(&b, &p, e)
-	k.PasswordMustChange = mstypes.ReadFileTime(&b, &p, e)
-
-	if k.EffectiveName, err = mstypes.ReadRPCUnicodeString(&b, &p, e); err != nil {
-		return
-	}
-	if k.FullName, err = mstypes.ReadRPCUnicodeString(&b, &p, e); err != nil {
-		return
-	}
-	if k.LogonScript, err = mstypes.ReadRPCUnicodeString(&b, &p, e); err != nil {
-		return
-	}
-	if k.ProfilePath, err = mstypes.ReadRPCUnicodeString(&b, &p, e); err != nil {
-		return
-	}
-	if k.HomeDirectory, err = mstypes.ReadRPCUnicodeString(&b, &p, e); err != nil {
-		return
-	}
-	if k.HomeDirectoryDrive, err = mstypes.ReadRPCUnicodeString(&b, &p, e); err != nil {
-		return
-	}
-
-	k.LogonCount = ndr.ReadUint16(&b, &p, e)
-	k.BadPasswordCount = ndr.ReadUint16(&b, &p, e)
-	k.UserID = ndr.ReadUint32(&b, &p, e)
-	k.PrimaryGroupID = ndr.ReadUint32(&b, &p, e)
-	k.GroupCount = ndr.ReadUint32(&b, &p, e)
-	k.pGroupIDs = ndr.ReadUint32(&b, &p, e)
-
-	k.UserFlags = ndr.ReadUint32(&b, &p, e)
-	k.UserSessionKey = mstypes.ReadUserSessionKey(&b, &p, e)
-
-	if k.LogonServer, err = mstypes.ReadRPCUnicodeString(&b, &p, e); err != nil {
-		return
-	}
-	if k.LogonDomainName, err = mstypes.ReadRPCUnicodeString(&b, &p, e); err != nil {
-		return
-	}
-
-	k.pLogonDomainID = ndr.ReadUint32(&b, &p, e)
-
-	k.Reserved1 = []uint32{
-		ndr.ReadUint32(&b, &p, e),
-		ndr.ReadUint32(&b, &p, e),
-	}
-
-	k.UserAccountControl = ndr.ReadUint32(&b, &p, e)
-	k.SubAuthStatus = ndr.ReadUint32(&b, &p, e)
-	k.LastSuccessfulILogon = mstypes.ReadFileTime(&b, &p, e)
-	k.LastFailedILogon = mstypes.ReadFileTime(&b, &p, e)
-	k.FailedILogonCount = ndr.ReadUint32(&b, &p, e)
-	k.Reserved3 = ndr.ReadUint32(&b, &p, e)
-
-	k.SIDCount = ndr.ReadUint32(&b, &p, e)
-	k.pExtraSIDs = ndr.ReadUint32(&b, &p, e)
-
-	k.pResourceGroupDomainSID = ndr.ReadUint32(&b, &p, e)
-	k.ResourceGroupCount = ndr.ReadUint32(&b, &p, e)
-	k.pResourceGroupIDs = ndr.ReadUint32(&b, &p, e)
-
-	// Populate pointers
-	if err = k.EffectiveName.UnmarshalString(&b, &p, e); err != nil {
-		return
-	}
-	if err = k.FullName.UnmarshalString(&b, &p, e); err != nil {
-		return
-	}
-	if err = k.LogonScript.UnmarshalString(&b, &p, e); err != nil {
-		return
-	}
-	if err = k.ProfilePath.UnmarshalString(&b, &p, e); err != nil {
-		return
-	}
-	if err = k.HomeDirectory.UnmarshalString(&b, &p, e); err != nil {
-		return
-	}
-	if err = k.HomeDirectoryDrive.UnmarshalString(&b, &p, e); err != nil {
-		return
-	}
-	var ah ndr.ConformantArrayHeader
-	if k.GroupCount > 0 {
-		ah, err = ndr.ReadUniDimensionalConformantArrayHeader(&b, &p, e)
-		if err != nil {
-			return
-		}
-		if ah.MaxCount != int(k.GroupCount) {
-			err = errors.New("error with size of group list")
-			return
-		}
-		g := make([]mstypes.GroupMembership, k.GroupCount, k.GroupCount)
-		for i := range g {
-			g[i] = mstypes.ReadGroupMembership(&b, &p, e)
-		}
-		k.GroupIDs = g
-	}
-
-	if err = k.LogonServer.UnmarshalString(&b, &p, e); err != nil {
-		return
-	}
-	if err = k.LogonDomainName.UnmarshalString(&b, &p, e); err != nil {
-		return
-	}
-
-	if k.pLogonDomainID != 0 {
-		k.LogonDomainID, err = mstypes.ReadRPCSID(&b, &p, e)
-		if err != nil {
-			return fmt.Errorf("error reading LogonDomainID: %v", err)
-		}
-	}
-
-	if k.SIDCount > 0 {
-		ah, err = ndr.ReadUniDimensionalConformantArrayHeader(&b, &p, e)
-		if err != nil {
-			return
-		}
-		if ah.MaxCount != int(k.SIDCount) {
-			return fmt.Errorf("error with size of ExtraSIDs list. Expected: %d, Actual: %d", k.SIDCount, ah.MaxCount)
-		}
-		es := make([]mstypes.KerbSidAndAttributes, k.SIDCount, k.SIDCount)
-		attr := make([]uint32, k.SIDCount, k.SIDCount)
-		ptr := make([]uint32, k.SIDCount, k.SIDCount)
-		for i := range attr {
-			ptr[i] = ndr.ReadUint32(&b, &p, e)
-			attr[i] = ndr.ReadUint32(&b, &p, e)
-		}
-		for i := range es {
-			if ptr[i] != 0 {
-				s, err := mstypes.ReadRPCSID(&b, &p, e)
-				es[i] = mstypes.KerbSidAndAttributes{SID: s, Attributes: attr[i]}
-				if err != nil {
-					return ndr.Malformed{EText: fmt.Sprintf("could not read ExtraSIDs: %v", err)}
-				}
-			}
-		}
-		k.ExtraSIDs = es
-	}
-
-	if k.pResourceGroupDomainSID != 0 {
-		k.ResourceGroupDomainSID, err = mstypes.ReadRPCSID(&b, &p, e)
-		if err != nil {
-			return err
-		}
-	}
-
-	if k.ResourceGroupCount > 0 {
-		ah, err = ndr.ReadUniDimensionalConformantArrayHeader(&b, &p, e)
-		if err != nil {
-			return
-		}
-		if ah.MaxCount != int(k.ResourceGroupCount) {
-			return fmt.Errorf("error with size of ResourceGroup list. Expected: %d, Actual: %d", k.ResourceGroupCount, ah.MaxCount)
-		}
-		g := make([]mstypes.GroupMembership, k.ResourceGroupCount, k.ResourceGroupCount)
-		for i := range g {
-			g[i] = mstypes.ReadGroupMembership(&b, &p, e)
-		}
-		k.ResourceGroupIDs = g
-	}
-
-	//Check that there is only zero padding left
-	if len(b) >= p {
-		for _, v := range b[p:] {
-			if v != 0 {
-				return ndr.Malformed{EText: "non-zero padding left over at end of data stream"}
-			}
-		}
-	}
-
-	return nil
+	return
 }
 
 // GetGroupMembershipSIDs returns a slice of strings containing the group membership SIDs found in the PAC.
 func (k *KerbValidationInfo) GetGroupMembershipSIDs() []string {
 	var g []string
-	lSID := k.LogonDomainID.ToString()
+	lSID := k.LogonDomainID.String()
 	for i := range k.GroupIDs {
 		g = append(g, fmt.Sprintf("%s-%d", lSID, k.GroupIDs[i].RelativeID))
 	}
 	for _, s := range k.ExtraSIDs {
 		var exists = false
 		for _, es := range g {
-			if es == s.SID.ToString() {
+			if es == s.SID.String() {
 				exists = true
 				break
 			}
 		}
 		if !exists {
-			g = append(g, s.SID.ToString())
+			g = append(g, s.SID.String())
 		}
 	}
 	for _, r := range k.ResourceGroupIDs {
 		var exists = false
-		s := fmt.Sprintf("%s-%d", k.ResourceGroupDomainSID.ToString(), r.RelativeID)
+		s := fmt.Sprintf("%s-%d", k.ResourceGroupDomainSID.String(), r.RelativeID)
 		for _, es := range g {
 			if es == s {
 				exists = true

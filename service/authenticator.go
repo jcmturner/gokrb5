@@ -124,7 +124,7 @@ func (a KRB5BasicAuthenticator) Authenticate() (i goidentity.Identity, ok bool, 
 			PrimaryGroupID:      int(pac.KerbValidationInfo.PrimaryGroupID),
 			LogonServer:         pac.KerbValidationInfo.LogonServer.Value,
 			LogonDomainName:     pac.KerbValidationInfo.LogonDomainName.Value,
-			LogonDomainID:       pac.KerbValidationInfo.LogonDomainID.ToString(),
+			LogonDomainID:       pac.KerbValidationInfo.LogonDomainID.String(),
 		})
 	}
 	ok = true
