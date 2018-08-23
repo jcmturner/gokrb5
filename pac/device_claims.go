@@ -1,39 +1,33 @@
 package pac
 
 import (
+	"bytes"
 	"fmt"
 
-	"gopkg.in/jcmturner/gokrb5.v5/mstypes"
-	"gopkg.in/jcmturner/rpc.v0/ndr"
+	"gopkg.in/jcmturner/rpc.v1/mstypes"
+	"gopkg.in/jcmturner/rpc.v1/ndr"
 )
 
-// DeviceClaimsInfo implements https://msdn.microsoft.com/en-us/library/hh554226.aspx
+// Claims reference: https://msdn.microsoft.com/en-us/library/hh553895.aspx
+
+// ClientClaimsInfo implements https://msdn.microsoft.com/en-us/library/hh536365.aspx
 type DeviceClaimsInfo struct {
-	Claims mstypes.ClaimsSetMetadata
+	ClaimsSetMetadata mstypes.ClaimsSetMetadata
+	ClaimsSet         mstypes.ClaimsSet
 }
 
-// Unmarshal bytes into the DeviceClaimsInfo struct
-func (k *DeviceClaimsInfo) Unmarshal(b []byte) error {
-	ch, _, p, err := ndr.ReadHeaders(&b)
+// Unmarshal bytes into the ClientClaimsInfo struct
+func (k *DeviceClaimsInfo) Unmarshal(b []byte) (err error) {
+	dec := ndr.NewDecoder(bytes.NewReader(b))
+	m := new(mstypes.ClaimsSetMetadata)
+	err = dec.Decode(m)
 	if err != nil {
-		return fmt.Errorf("error parsing byte stream headers of DEVICE_CLAIMS_INFO: %v", err)
+		err = fmt.Errorf("error unmarshaling ClientClaimsInfo ClaimsSetMetadata: %v", err)
 	}
-	e := &ch.Endianness
-	//The next 4 bytes are an RPC unique pointer referent. We just skip these
-	p += 4
-
-	k.Claims, err = mstypes.ReadClaimsSetMetadata(&b, &p, e)
+	k.ClaimsSetMetadata = *m
+	k.ClaimsSet, err = k.ClaimsSetMetadata.ClaimsSet()
 	if err != nil {
-		return err
+		err = fmt.Errorf("error unmarshaling ClientClaimsInfo ClaimsSet: %v", err)
 	}
-
-	//Check that there is only zero padding left
-	if len(b) >= p {
-		for _, v := range b[p:] {
-			if v != 0 {
-				return ndr.Malformed{EText: "non-zero padding left over at end of data stream"}
-			}
-		}
-	}
-	return nil
+	return
 }
