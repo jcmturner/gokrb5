@@ -98,7 +98,7 @@ func ValidateAPREQ(APReq messages.APReq, kt keytab.Keytab, sa string, cAddr stri
 			PrimaryGroupID:      int(pac.KerbValidationInfo.PrimaryGroupID),
 			LogonServer:         pac.KerbValidationInfo.LogonServer.Value,
 			LogonDomainName:     pac.KerbValidationInfo.LogonDomainName.Value,
-			LogonDomainID:       pac.KerbValidationInfo.LogonDomainID.ToString(),
+			LogonDomainID:       pac.KerbValidationInfo.LogonDomainID.String(),
 		})
 	}
 	return true, creds, nil
