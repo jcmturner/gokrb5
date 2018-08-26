@@ -1,14 +1,27 @@
 package pac
 
 import (
-	"encoding/binary"
+	"bytes"
 	"errors"
 	"fmt"
 
 	"gopkg.in/jcmturner/gokrb5.v5/crypto"
 	"gopkg.in/jcmturner/gokrb5.v5/iana/keyusage"
 	"gopkg.in/jcmturner/gokrb5.v5/types"
-	"gopkg.in/jcmturner/rpc.v0/ndr"
+	"gopkg.in/jcmturner/rpc.v1/mstypes"
+)
+
+const (
+	ulTypeKerbValidationInfo     = 1
+	ulTypeCredentials            = 2
+	ulTypePACServerSignatureData = 6
+	ulTypePACKDCSignatureData    = 7
+	ulTypePACClientInfo          = 10
+	ulTypeS4UDelegationInfo      = 11
+	ulTypeUPNDNSInfo             = 12
+	ulTypePACClientClaimsInfo    = 13
+	ulTypePACDeviceInfo          = 14
+	ulTypePACDeviceClaimsInfo    = 15
 )
 
 // PACType implements: https://msdn.microsoft.com/en-us/library/cc237950.aspx
@@ -30,19 +43,42 @@ type PACType struct {
 	ZeroSigData        []byte
 }
 
+// InfoBuffer implements the PAC Info Buffer: https://msdn.microsoft.com/en-us/library/cc237954.aspx
+type InfoBuffer struct {
+	ULType       uint32 // A 32-bit unsigned integer in little-endian format that describes the type of data present in the buffer contained at Offset.
+	CBBufferSize uint32 // A 32-bit unsigned integer in little-endian format that contains the size, in bytes, of the buffer in the PAC located at Offset.
+	Offset       uint64 // A 64-bit unsigned integer in little-endian format that contains the offset to the beginning of the buffer, in bytes, from the beginning of the PACTYPE structure. The data offset MUST be a multiple of eight. The following sections specify the format of each type of element.
+}
+
 // Unmarshal bytes into the PACType struct
-func (pac *PACType) Unmarshal(b []byte) error {
-	var p int
-	var e binary.ByteOrder = binary.LittleEndian
+func (pac *PACType) Unmarshal(b []byte) (err error) {
 	pac.Data = b
 	zb := make([]byte, len(b), len(b))
 	copy(zb, b)
 	pac.ZeroSigData = zb
-	pac.CBuffers = ndr.ReadUint32(&b, &p, &e)
-	pac.Version = ndr.ReadUint32(&b, &p, &e)
+	r := mstypes.NewReader(bytes.NewReader(b))
+	pac.CBuffers, err = r.Uint32()
+	if err != nil {
+		return
+	}
+	pac.Version, err = r.Uint32()
+	if err != nil {
+		return
+	}
 	buf := make([]InfoBuffer, pac.CBuffers, pac.CBuffers)
 	for i := range buf {
-		buf[i] = ReadPACInfoBuffer(&b, &p, &e)
+		buf[i].ULType, err = r.Uint32()
+		if err != nil {
+			return
+		}
+		buf[i].CBBufferSize, err = r.Uint32()
+		if err != nil {
+			return
+		}
+		buf[i].Offset, err = r.Uint64()
+		if err != nil {
+			return
+		}
 	}
 	pac.Buffers = buf
 	return nil

@@ -1,15 +1,15 @@
 package pac
 
 import (
-	"encoding/binary"
+	"bytes"
 	"errors"
 	"fmt"
 
 	"gopkg.in/jcmturner/gokrb5.v5/crypto"
 	"gopkg.in/jcmturner/gokrb5.v5/iana/keyusage"
-	"gopkg.in/jcmturner/gokrb5.v5/mstypes"
 	"gopkg.in/jcmturner/gokrb5.v5/types"
-	"gopkg.in/jcmturner/rpc.v0/ndr"
+	"gopkg.in/jcmturner/rpc.v1/mstypes"
+	"gopkg.in/jcmturner/rpc.v1/ndr"
 )
 
 // https://msdn.microsoft.com/en-us/library/cc237931.aspx
@@ -23,27 +23,34 @@ type CredentialsInfo struct {
 }
 
 // Unmarshal bytes into the CredentialsInfo struct
-func (c *CredentialsInfo) Unmarshal(b []byte, k types.EncryptionKey) error {
+func (c *CredentialsInfo) Unmarshal(b []byte, k types.EncryptionKey) (err error) {
 	//The CredentialsInfo structure is a simple structure that is not NDR-encoded.
-	var p int
-	var e binary.ByteOrder = binary.LittleEndian
+	r := mstypes.NewReader(bytes.NewReader(b))
 
-	c.Version = ndr.ReadUint32(&b, &p, &e)
-	if c.Version != 0 {
-		return errors.New("credentials info version is not zero")
-	}
-	c.EType = ndr.ReadUint32(&b, &p, &e)
-	c.PACCredentialDataEncrypted = ndr.ReadBytes(&b, &p, len(b)-p, &e)
-
-	err := c.DecryptEncPart(k, &e)
+	c.Version, err = r.Uint32()
 	if err != nil {
-		return fmt.Errorf("error decrypting PAC Credentials Data: %v", err)
+		return
 	}
-	return nil
+	if c.Version != 0 {
+		err = errors.New("credentials info version is not zero")
+		return
+	}
+	c.EType, err = r.Uint32()
+	if err != nil {
+		return
+	}
+	c.PACCredentialDataEncrypted, err = r.ReadBytes(len(b) - 8)
+
+	err = c.DecryptEncPart(k)
+	if err != nil {
+		err = fmt.Errorf("error decrypting PAC Credentials Data: %v", err)
+		return
+	}
+	return
 }
 
 // DecryptEncPart decrypts the encrypted part of the CredentialsInfo.
-func (c *CredentialsInfo) DecryptEncPart(k types.EncryptionKey, e *binary.ByteOrder) error {
+func (c *CredentialsInfo) DecryptEncPart(k types.EncryptionKey) error {
 	if k.KeyType != int32(c.EType) {
 		return fmt.Errorf("key provided is not the correct type. Type needed: %d, type provided: %d", c.EType, k.KeyType)
 	}
@@ -51,8 +58,10 @@ func (c *CredentialsInfo) DecryptEncPart(k types.EncryptionKey, e *binary.ByteOr
 	if err != nil {
 		return err
 	}
-	var p int
-	c.PACCredentialData = ReadPACCredentialData(&pt, &p, e)
+	err = c.PACCredentialData.Unmarshal(pt)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -67,65 +76,11 @@ type CredentialData struct {
 }
 
 // ReadPACCredentialData reads a CredentialData from the byte slice.
-func ReadPACCredentialData(b *[]byte, p *int, e *binary.ByteOrder) CredentialData {
-	c := ndr.ReadUint32(b, p, e)
-	cr := make([]SECPKGSupplementalCred, c, c)
-	for i := range cr {
-		cr[i] = ReadSECPKGSupplementalCred(b, p, e)
+func (c *CredentialData) Unmarshal(b []byte) (err error) {
+	dec := ndr.NewDecoder(bytes.NewReader(b))
+	err = dec.Decode(c)
+	if err != nil {
+		err = fmt.Errorf("error unmarshaling KerbValidationInfo: %v", err)
 	}
-	return CredentialData{
-		CredentialCount: c,
-		Credentials:     cr,
-	}
+	return
 }
-
-// SECPKGSupplementalCred implements https://msdn.microsoft.com/en-us/library/cc237956.aspx
-type SECPKGSupplementalCred struct {
-	PackageName    mstypes.RPCUnicodeString
-	CredentialSize uint32
-	Credentials    []uint8 // Is a ptr. Size is the value of CredentialSize
-}
-
-// ReadSECPKGSupplementalCred reads a SECPKGSupplementalCred from the byte slice.
-func ReadSECPKGSupplementalCred(b *[]byte, p *int, e *binary.ByteOrder) SECPKGSupplementalCred {
-	n, _ := mstypes.ReadRPCUnicodeString(b, p, e)
-	cs := ndr.ReadUint32(b, p, e)
-	c := make([]uint8, cs, cs)
-	for i := range c {
-		c[i] = ndr.ReadUint8(b, p)
-	}
-	return SECPKGSupplementalCred{
-		PackageName:    n,
-		CredentialSize: cs,
-		Credentials:    c,
-	}
-}
-
-// NTLMSupplementalCred implements https://msdn.microsoft.com/en-us/library/cc237949.aspx
-type NTLMSupplementalCred struct {
-	Version    uint32 // A 32-bit unsigned integer that defines the credential version.This field MUST be 0x00000000.
-	Flags      uint32
-	LMPassword []byte // A 16-element array of unsigned 8-bit integers that define the LM OWF. The LmPassword member MUST be ignored if the L flag is not set in the Flags member.
-	NTPassword []byte // A 16-element array of unsigned 8-bit integers that define the NT OWF. The LtPassword member MUST be ignored if the N flag is not set in the Flags member.
-}
-
-// ReadNTLMSupplementalCred reads a NTLMSupplementalCred from the byte slice.
-func ReadNTLMSupplementalCred(b *[]byte, p *int, e *binary.ByteOrder) NTLMSupplementalCred {
-	v := ndr.ReadUint32(b, p, e)
-	f := ndr.ReadUint32(b, p, e)
-	l := ndr.ReadBytes(b, p, 16, e)
-	n := ndr.ReadBytes(b, p, 16, e)
-	return NTLMSupplementalCred{
-		Version:    v,
-		Flags:      f,
-		LMPassword: l,
-		NTPassword: n,
-	}
-}
-
-const (
-	// NTLMSupCredLMOWF indicates that the LM OWF member is present and valid.
-	NTLMSupCredLMOWF = 31
-	// NTLMSupCredNTOWF indicates that the NT OWF member is present and valid.
-	NTLMSupCredNTOWF = 30
-)

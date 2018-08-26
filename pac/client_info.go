@@ -1,10 +1,9 @@
 package pac
 
 import (
-	"encoding/binary"
+	"bytes"
 
-	"gopkg.in/jcmturner/gokrb5.v5/mstypes"
-	"gopkg.in/jcmturner/rpc.v0/ndr"
+	"gopkg.in/jcmturner/rpc.v1/mstypes"
 )
 
 // ClientInfo implements https://msdn.microsoft.com/en-us/library/cc237951.aspx
@@ -15,26 +14,18 @@ type ClientInfo struct {
 }
 
 // Unmarshal bytes into the ClientInfo struct
-func (k *ClientInfo) Unmarshal(b []byte) error {
+func (k *ClientInfo) Unmarshal(b []byte) (err error) {
 	//The PAC_CLIENT_INFO structure is a simple structure that is not NDR-encoded.
-	var p int
-	var e binary.ByteOrder = binary.LittleEndian
+	r := mstypes.NewReader(bytes.NewReader(b))
 
-	k.ClientID = mstypes.ReadFileTime(&b, &p, &e)
-	k.NameLength = ndr.ReadUint16(&b, &p, &e)
-	if len(b[p:]) < int(k.NameLength) {
-		return ndr.Malformed{EText: "PAC ClientInfo length truncated"}
+	k.ClientID, err = r.FileTime()
+	if err != nil {
+		return
 	}
-	k.Name = ndr.ReadUTF16String(int(k.NameLength), &b, &p, &e)
-
-	//Check that there is only zero padding left
-	if len(b) >= p {
-		for _, v := range b[p:] {
-			if v != 0 {
-				return ndr.Malformed{EText: "non-zero padding left over at end of data stream"}
-			}
-		}
+	k.NameLength, err = r.Uint16()
+	if err != nil {
+		return
 	}
-
-	return nil
+	k.Name, err = r.UTF16String(int(k.NameLength))
+	return
 }

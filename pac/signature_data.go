@@ -1,10 +1,10 @@
 package pac
 
 import (
-	"encoding/binary"
+	"bytes"
 
 	"gopkg.in/jcmturner/gokrb5.v5/iana/chksumtype"
-	"gopkg.in/jcmturner/rpc.v0/ndr"
+	"gopkg.in/jcmturner/rpc.v1/mstypes"
 )
 
 /*
@@ -39,11 +39,14 @@ type SignatureData struct {
 }
 
 // Unmarshal bytes into the SignatureData struct
-func (k *SignatureData) Unmarshal(b []byte) ([]byte, error) {
-	var p int
-	var e binary.ByteOrder = binary.LittleEndian
+func (k *SignatureData) Unmarshal(b []byte) (rb []byte, err error) {
+	r := mstypes.NewReader(bytes.NewReader(b))
 
-	k.SignatureType = ndr.ReadUint32(&b, &p, &e)
+	k.SignatureType, err = r.Uint32()
+	if err != nil {
+		return
+	}
+
 	var c int
 	switch k.SignatureType {
 	case chksumtype.KERB_CHECKSUM_HMAC_MD5_UNSIGNED:
@@ -53,22 +56,24 @@ func (k *SignatureData) Unmarshal(b []byte) ([]byte, error) {
 	case uint32(chksumtype.HMAC_SHA1_96_AES256):
 		c = 12
 	}
-	sp := p
-	k.Signature = ndr.ReadBytes(&b, &p, c, &e)
-	k.RODCIdentifier = ndr.ReadUint16(&b, &p, &e)
+	k.Signature, err = r.ReadBytes(c)
+	if err != nil {
+		return
+	}
 
-	//Check that there is only zero padding left
-	for _, v := range b[p:] {
-		if v != 0 {
-			return []byte{}, ndr.Malformed{EText: "non-zero padding left over at end of data stream"}
+	// When the KDC is not an Read Only Domain Controller (RODC), this field does not exist.
+	if len(b) >= 4+c+2 {
+		k.RODCIdentifier, err = r.Uint16()
+		if err != nil {
+			return
 		}
 	}
 
 	// Create bytes with zeroed signature needed for checksum verification
-	rb := make([]byte, len(b), len(b))
+	rb = make([]byte, len(b), len(b))
 	copy(rb, b)
 	z := make([]byte, len(b), len(b))
-	copy(rb[sp:sp+c], z)
+	copy(rb[4:4+c], z)
 
-	return rb, nil
+	return
 }

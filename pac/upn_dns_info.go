@@ -1,10 +1,9 @@
 package pac
 
 import (
-	"encoding/binary"
-	"sort"
+	"bytes"
 
-	"gopkg.in/jcmturner/rpc.v0/ndr"
+	"gopkg.in/jcmturner/rpc.v1/mstypes"
 )
 
 // UPNDNSInfo implements https://msdn.microsoft.com/en-us/library/dd240468.aspx
@@ -23,44 +22,52 @@ const (
 )
 
 // Unmarshal bytes into the UPN_DNSInfo struct
-func (k *UPNDNSInfo) Unmarshal(b []byte) error {
+func (k *UPNDNSInfo) Unmarshal(b []byte) (err error) {
 	//The UPN_DNS_INFO structure is a simple structure that is not NDR-encoded.
-	var p int
-	var e binary.ByteOrder = binary.LittleEndian
-
-	k.UPNLength = ndr.ReadUint16(&b, &p, &e)
-	k.UPNOffset = ndr.ReadUint16(&b, &p, &e)
-	k.DNSDomainNameLength = ndr.ReadUint16(&b, &p, &e)
-	k.DNSDomainNameOffset = ndr.ReadUint16(&b, &p, &e)
-	k.Flags = ndr.ReadUint32(&b, &p, &e)
-	ub := b[k.UPNOffset : k.UPNOffset+k.UPNLength]
-	db := b[k.DNSDomainNameOffset : k.DNSDomainNameOffset+k.DNSDomainNameLength]
+	r := mstypes.NewReader(bytes.NewReader(b))
+	k.UPNLength, err = r.Uint16()
+	if err != nil {
+		return
+	}
+	k.UPNOffset, err = r.Uint16()
+	if err != nil {
+		return
+	}
+	k.DNSDomainNameLength, err = r.Uint16()
+	if err != nil {
+		return
+	}
+	k.DNSDomainNameOffset, err = r.Uint16()
+	if err != nil {
+		return
+	}
+	k.Flags, err = r.Uint32()
+	if err != nil {
+		return
+	}
+	ub := mstypes.NewReader(bytes.NewReader(b[k.UPNOffset : k.UPNOffset+k.UPNLength]))
+	db := mstypes.NewReader(bytes.NewReader(b[k.DNSDomainNameOffset : k.DNSDomainNameOffset+k.DNSDomainNameLength]))
 
 	u := make([]rune, k.UPNLength/2, k.UPNLength/2)
 	for i := 0; i < len(u); i++ {
-		q := i * 2
-		u[i] = rune(ndr.ReadUint16(&ub, &q, &e))
+		var r uint16
+		r, err = ub.Uint16()
+		if err != nil {
+			return
+		}
+		u[i] = rune(r)
 	}
 	k.UPN = string(u)
 	d := make([]rune, k.DNSDomainNameLength/2, k.DNSDomainNameLength/2)
 	for i := 0; i < len(d); i++ {
-		q := i * 2
-		d[i] = rune(ndr.ReadUint16(&db, &q, &e))
+		var r uint16
+		r, err = db.Uint16()
+		if err != nil {
+			return
+		}
+		d[i] = rune(r)
 	}
 	k.DNSDomain = string(d)
 
-	l := []int{
-		p,
-		int(k.UPNOffset + k.UPNLength),
-		int(k.DNSDomainNameOffset + k.DNSDomainNameLength),
-	}
-	sort.Ints(l)
-	//Check that there is only zero padding left
-	for _, v := range b[l[2]:] {
-		if v != 0 {
-			return ndr.Malformed{EText: "non-zero padding left over at end of data stream."}
-		}
-	}
-
-	return nil
+	return
 }
