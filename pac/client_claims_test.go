@@ -34,7 +34,7 @@ func TestPAC_ClientClaimsInfoStr_Unmarshal(t *testing.T) {
 	assert.Equal(t, uint16(3), k.ClaimsSet.ClaimsArrays[0].ClaimEntries[0].Type, "claims entry type not as expected")
 	assert.Equal(t, uint32(1), k.ClaimsSet.ClaimsArrays[0].ClaimEntries[0].TypeString.ValueCount, "claims value count not as expected")
 	assert.Equal(t, ClaimsEntryIDStr, k.ClaimsSet.ClaimsArrays[0].ClaimEntries[0].ID, "claims entry ID not as expected")
-	assert.Equal(t, []mstypes.LPWSTR{{ClaimsEntryValueStr}}, k.ClaimsSet.ClaimsArrays[0].ClaimEntries[0].TypeString.Value, "claims value not as expected")
+	assert.Equal(t, []mstypes.LPWSTR{{Value: ClaimsEntryValueStr}}, k.ClaimsSet.ClaimsArrays[0].ClaimEntries[0].TypeString.Value, "claims value not as expected")
 	assert.Equal(t, mstypes.CompressionFormatNone, k.ClaimsSetMetadata.CompressionFormat, "compression format not as expected")
 }
 
@@ -97,7 +97,7 @@ func TestPAC_ClientClaimsMultiValueStr_Unmarshal(t *testing.T) {
 	assert.Equal(t, mstypes.ClaimTypeIDString, k.ClaimsSet.ClaimsArrays[0].ClaimEntries[0].Type, "claims entry type not as expected")
 	assert.Equal(t, uint32(4), k.ClaimsSet.ClaimsArrays[0].ClaimEntries[0].TypeString.ValueCount, "claims value count not as expected")
 	assert.Equal(t, "ad://ext/otherIpPhone:88d5de9f6b4af985", k.ClaimsSet.ClaimsArrays[0].ClaimEntries[0].ID, "claims entry ID not as expected")
-	assert.Equal(t, []mstypes.LPWSTR{{"str1"}, {"str2"}, {"str3"}, {"str4"}}, k.ClaimsSet.ClaimsArrays[0].ClaimEntries[0].TypeString.Value, "claims value not as expected")
+	assert.Equal(t, []mstypes.LPWSTR{{Value: "str1"}, {Value: "str2"}, {Value: "str3"}, {Value: "str4"}}, k.ClaimsSet.ClaimsArrays[0].ClaimEntries[0].TypeString.Value, "claims value not as expected")
 	assert.Equal(t, mstypes.CompressionFormatNone, k.ClaimsSetMetadata.CompressionFormat, "compression format not as expected")
 }
 
@@ -123,7 +123,7 @@ func TestPAC_ClientClaimsInfoMultiEntry_Unmarshal(t *testing.T) {
 	assert.Equal(t, uint16(3), k.ClaimsSet.ClaimsArrays[0].ClaimEntries[1].Type, "claims entry type not as expected")
 	assert.Equal(t, uint32(1), k.ClaimsSet.ClaimsArrays[0].ClaimEntries[1].TypeString.ValueCount, "claims value count not as expected")
 	assert.Equal(t, ClaimsEntryIDStr, k.ClaimsSet.ClaimsArrays[0].ClaimEntries[1].ID, "claims entry ID not as expected")
-	assert.Equal(t, []mstypes.LPWSTR{{ClaimsEntryValueStr}}, k.ClaimsSet.ClaimsArrays[0].ClaimEntries[1].TypeString.Value, "claims value not as expected")
+	assert.Equal(t, []mstypes.LPWSTR{{Value: ClaimsEntryValueStr}}, k.ClaimsSet.ClaimsArrays[0].ClaimEntries[1].TypeString.Value, "claims value not as expected")
 	assert.Equal(t, mstypes.CompressionFormatNone, k.ClaimsSetMetadata.CompressionFormat, "compression format not as expected")
 }
 
