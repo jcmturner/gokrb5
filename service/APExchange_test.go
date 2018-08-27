@@ -51,7 +51,9 @@ func TestValidateAPREQ(t *testing.T) {
 		t.Fatalf("Error getting test AP_REQ: %v", err)
 	}
 
-	ok, _, err := ValidateAPREQ(APReq, kt, "", "127.0.0.1", false)
+	c := NewSPNEGOAuthenticator(kt)
+	c.ClientAddr = "127.0.0.1"
+	ok, _, err := ValidateAPREQ(APReq, c)
 	if !ok || err != nil {
 		t.Fatalf("Validation of AP_REQ failed when it should not have: %v", err)
 	}
@@ -94,8 +96,9 @@ func TestValidateAPREQ_KRB_AP_ERR_BADMATCH(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error getting test AP_REQ: %v", err)
 	}
-
-	ok, _, err := ValidateAPREQ(APReq, kt, "", "127.0.0.1", false)
+	c := NewSPNEGOAuthenticator(kt)
+	c.ClientAddr = "127.0.0.1"
+	ok, _, err := ValidateAPREQ(APReq, c)
 	if ok || err == nil {
 		t.Fatal("Validation of AP_REQ passed when it should not have")
 	}
@@ -141,7 +144,9 @@ func TestValidateAPREQ_LargeClockSkew(t *testing.T) {
 		t.Fatalf("Error getting test AP_REQ: %v", err)
 	}
 
-	ok, _, err := ValidateAPREQ(APReq, kt, "", "127.0.0.1", false)
+	c := NewSPNEGOAuthenticator(kt)
+	c.ClientAddr = "127.0.0.1"
+	ok, _, err := ValidateAPREQ(APReq, c)
 	if ok || err == nil {
 		t.Fatal("Validation of AP_REQ passed when it should not have")
 	}
@@ -185,12 +190,14 @@ func TestValidateAPREQ_Replay(t *testing.T) {
 		t.Fatalf("Error getting test AP_REQ: %v", err)
 	}
 
-	ok, _, err := ValidateAPREQ(APReq, kt, "", "127.0.0.1", false)
+	c := NewSPNEGOAuthenticator(kt)
+	c.ClientAddr = "127.0.0.1"
+	ok, _, err := ValidateAPREQ(APReq, c)
 	if !ok || err != nil {
 		t.Fatalf("Validation of AP_REQ failed when it should not have: %v", err)
 	}
 	// Replay
-	ok, _, err = ValidateAPREQ(APReq, kt, "", "127.0.0.1", false)
+	ok, _, err = ValidateAPREQ(APReq, c)
 	if ok || err == nil {
 		t.Fatal("Validation of AP_REQ passed when it should not have")
 	}
@@ -232,7 +239,9 @@ func TestValidateAPREQ_FutureTicket(t *testing.T) {
 		t.Fatalf("Error getting test AP_REQ: %v", err)
 	}
 
-	ok, _, err := ValidateAPREQ(APReq, kt, "", "127.0.0.1", false)
+	c := NewSPNEGOAuthenticator(kt)
+	c.ClientAddr = "127.0.0.1"
+	ok, _, err := ValidateAPREQ(APReq, c)
 	if ok || err == nil {
 		t.Fatal("Validation of AP_REQ passed when it should not have")
 	}
@@ -278,7 +287,9 @@ func TestValidateAPREQ_InvalidTicket(t *testing.T) {
 		t.Fatalf("Error getting test AP_REQ: %v", err)
 	}
 
-	ok, _, err := ValidateAPREQ(APReq, kt, "", "127.0.0.1", false)
+	c := NewSPNEGOAuthenticator(kt)
+	c.ClientAddr = "127.0.0.1"
+	ok, _, err := ValidateAPREQ(APReq, c)
 	if ok || err == nil {
 		t.Fatal("Validation of AP_REQ passed when it should not have")
 	}
@@ -323,7 +334,9 @@ func TestValidateAPREQ_ExpiredTicket(t *testing.T) {
 		t.Fatalf("Error getting test AP_REQ: %v", err)
 	}
 
-	ok, _, err := ValidateAPREQ(APReq, kt, "", "127.0.0.1", false)
+	c := NewSPNEGOAuthenticator(kt)
+	c.ClientAddr = "127.0.0.1"
+	ok, _, err := ValidateAPREQ(APReq, c)
 	if ok || err == nil {
 		t.Fatal("Validation of AP_REQ passed when it should not have")
 	}

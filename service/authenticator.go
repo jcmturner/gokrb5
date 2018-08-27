@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	goidentity "gopkg.in/jcmturner/goidentity.v2"
+	goidentity "gopkg.in/jcmturner/goidentity.v3"
 	"gopkg.in/jcmturner/gokrb5.v5/client"
 	"gopkg.in/jcmturner/gokrb5.v5/config"
 	"gopkg.in/jcmturner/gokrb5.v5/credentials"
@@ -15,7 +15,7 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v5/keytab"
 )
 
-// SPNEGOAuthenticator implements gopkg.in/jcmturner/goidentity.v2.Authenticator interface
+// SPNEGOAuthenticator implements gopkg.in/jcmturner/goidentity.v3.Authenticator interface
 type SPNEGOAuthenticator struct {
 	SPNEGOHeaderValue  string
 	Keytab             *keytab.Keytab
@@ -30,7 +30,7 @@ func NewSPNEGOAuthenticator(kt keytab.Keytab) *SPNEGOAuthenticator {
 }
 
 // Authenticate and retrieve a goidentity.Identity. In this case it is a pointer to a credentials.Credentials
-func (a *SPNEGOAuthenticator) Authenticate() (i goidentity.Identity, ok bool, err error) {
+func (a SPNEGOAuthenticator) Authenticate() (i goidentity.Identity, ok bool, err error) {
 	b, err := base64.StdEncoding.DecodeString(a.SPNEGOHeaderValue)
 	if err != nil {
 		err = fmt.Errorf("SPNEGO error in base64 decoding negotiation header: %v", err)
@@ -57,7 +57,7 @@ func (a *SPNEGOAuthenticator) Authenticate() (i goidentity.Identity, ok bool, er
 		return
 	}
 
-	ok, creds, err := ValidateAPREQ(mt.APReq, a)
+	ok, creds, err := ValidateAPREQ(mt.APReq, &a)
 	if err != nil {
 		err = fmt.Errorf("SPNEGO validation error: %v", err)
 		return
@@ -71,7 +71,7 @@ func (a SPNEGOAuthenticator) Mechanism() string {
 	return "SPNEGO Kerberos"
 }
 
-// KRB5BasicAuthenticator implements gopkg.in/jcmturner/goidentity.v2.Authenticator interface.
+// KRB5BasicAuthenticator implements gopkg.in/jcmturner/goidentity.v3.Authenticator interface.
 // It takes username and password so can be used for basic authentication.
 type KRB5BasicAuthenticator struct {
 	BasicHeaderValue string

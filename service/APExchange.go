@@ -80,25 +80,29 @@ func ValidateAPREQ(APReq messages.APReq, c *SPNEGOAuthenticator) (bool, credenti
 	creds.SetAuthTime(t)
 	creds.SetAuthenticated(true)
 	creds.SetValidUntil(APReq.Ticket.DecryptedEncPart.EndTime)
-	isPAC, pac, err := APReq.Ticket.GetPACType(*c.Keytab, c.ServicePrincipal)
-	if isPAC && err != nil {
-		return false, creds, err
-	}
-	if isPAC {
-		// There is a valid PAC. Adding attributes to creds
-		creds.SetADCredentials(credentials.ADCredentials{
-			GroupMembershipSIDs: pac.KerbValidationInfo.GetGroupMembershipSIDs(),
-			LogOnTime:           pac.KerbValidationInfo.LogOnTime.Time(),
-			LogOffTime:          pac.KerbValidationInfo.LogOffTime.Time(),
-			PasswordLastSet:     pac.KerbValidationInfo.PasswordLastSet.Time(),
-			EffectiveName:       pac.KerbValidationInfo.EffectiveName.Value,
-			FullName:            pac.KerbValidationInfo.FullName.Value,
-			UserID:              int(pac.KerbValidationInfo.UserID),
-			PrimaryGroupID:      int(pac.KerbValidationInfo.PrimaryGroupID),
-			LogonServer:         pac.KerbValidationInfo.LogonServer.Value,
-			LogonDomainName:     pac.KerbValidationInfo.LogonDomainName.Value,
-			LogonDomainID:       pac.KerbValidationInfo.LogonDomainID.String(),
-		})
+
+	//PAC decoding
+	if !c.DisablePACDecoding {
+		isPAC, pac, err := APReq.Ticket.GetPACType(*c.Keytab, c.ServicePrincipal)
+		if isPAC && err != nil {
+			return false, creds, err
+		}
+		if isPAC {
+			// There is a valid PAC. Adding attributes to creds
+			creds.SetADCredentials(credentials.ADCredentials{
+				GroupMembershipSIDs: pac.KerbValidationInfo.GetGroupMembershipSIDs(),
+				LogOnTime:           pac.KerbValidationInfo.LogOnTime.Time(),
+				LogOffTime:          pac.KerbValidationInfo.LogOffTime.Time(),
+				PasswordLastSet:     pac.KerbValidationInfo.PasswordLastSet.Time(),
+				EffectiveName:       pac.KerbValidationInfo.EffectiveName.Value,
+				FullName:            pac.KerbValidationInfo.FullName.Value,
+				UserID:              int(pac.KerbValidationInfo.UserID),
+				PrimaryGroupID:      int(pac.KerbValidationInfo.PrimaryGroupID),
+				LogonServer:         pac.KerbValidationInfo.LogonServer.Value,
+				LogonDomainName:     pac.KerbValidationInfo.LogonDomainName.Value,
+				LogonDomainID:       pac.KerbValidationInfo.LogonDomainID.String(),
+			})
+		}
 	}
 	return true, creds, nil
 }
