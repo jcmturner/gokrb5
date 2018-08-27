@@ -2,14 +2,10 @@ package service
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"log"
 	"net/http"
 	"strings"
-
-	"gopkg.in/jcmturner/gokrb5.v5/gssapi"
-	"gopkg.in/jcmturner/gokrb5.v5/keytab"
 )
 
 // POTENTIAL BREAKING CHANGE notice. Context keys used will change to a name-spaced strings to avoid clashes.
@@ -39,22 +35,7 @@ const (
 )
 
 // SPNEGOKRB5Authenticate is a Kerberos SPNEGO authentication HTTP handler wrapper.
-//
-// kt - keytab for the service user
-//
-// ktprinc - keytab principal override for the service.
-// The service looks for this principal in the keytab to use to decrypt tickets.
-// If "" is passed as ktprinc then the principal will be automatically derived
-// from the service name (SName) and realm in the ticket the service is trying to decrypt.
-// This is often sufficient if you create the SPN in MIT KDC with: /usr/sbin/kadmin.local -q "add_principal HTTP/<fqdn>"
-// When Active Directory is used for the KDC this may need to be the account name you have set the SPN against
-// (setspn.exe -a "HTTP/<fqdn>" <account name>)
-// If you are unsure run:
-//
-// klist -k <service's keytab file>
-//
-// and use the value from the Principal column for the keytab entry the service should use.
-func SPNEGOKRB5Authenticate(f http.Handler, kt keytab.Keytab, ktprinc string, requireHostAddr bool, l *log.Logger) http.Handler {
+func SPNEGOKRB5Authenticate(f http.Handler, c *SPNEGOAuthenticator, l *log.Logger) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		s := strings.SplitN(r.Header.Get(HTTPHeaderAuthRequest), " ", 2)
 		if len(s) != 2 || s[0] != HTTPHeaderAuthResponseValueKey {
@@ -63,38 +44,18 @@ func SPNEGOKRB5Authenticate(f http.Handler, kt keytab.Keytab, ktprinc string, re
 			w.Write([]byte(UnauthorizedMsg))
 			return
 		}
-		b, err := base64.StdEncoding.DecodeString(s[1])
+		c.SPNEGOHeaderValue = s[1]
+		id, authned, err := c.Authenticate()
 		if err != nil {
-			rejectSPNEGO(w, l, fmt.Sprintf("%v - SPNEGO error in base64 decoding negotiation header: %v", r.RemoteAddr, err))
+			rejectSPNEGO(w, l, fmt.Sprintf("%v - %v", r.RemoteAddr, err))
 			return
 		}
-		var spnego gssapi.SPNEGO
-		err = spnego.Unmarshal(b)
-		if !spnego.Init {
-			rejectSPNEGO(w, l, fmt.Sprintf("%v - SPNEGO negotiation token is not a NegTokenInit: %v", r.RemoteAddr, err))
-			return
-		}
-		if !spnego.NegTokenInit.MechTypes[0].Equal(gssapi.MechTypeOIDKRB5) && !spnego.NegTokenInit.MechTypes[0].Equal(gssapi.MechTypeOIDMSLegacyKRB5) {
-			rejectSPNEGO(w, l, fmt.Sprintf("%v - SPNEGO OID of MechToken is not of type KRB5", r.RemoteAddr))
-			return
-		}
-		var mt gssapi.MechToken
-		err = mt.Unmarshal(spnego.NegTokenInit.MechToken)
-		if err != nil {
-			rejectSPNEGO(w, l, fmt.Sprintf("%v - SPNEGO error unmarshaling MechToken: %v", r.RemoteAddr, err))
-			return
-		}
-		if !mt.IsAPReq() {
-			rejectSPNEGO(w, l, fmt.Sprintf("%v - MechToken does not contain an AP_REQ - KRB_AP_ERR_MSG_TYPE", r.RemoteAddr))
-			return
-		}
-
-		if ok, creds, err := ValidateAPREQ(mt.APReq, kt, ktprinc, r.RemoteAddr, requireHostAddr); ok {
+		if authned {
 			ctx := r.Context()
-			ctx = context.WithValue(ctx, CTXKeyCredentials, creds)
+			ctx = context.WithValue(ctx, CTXKeyCredentials, id)
 			ctx = context.WithValue(ctx, CTXKeyAuthenticated, true)
 			if l != nil {
-				l.Printf("%v %s@%s - SPNEGO authentication succeeded", r.RemoteAddr, creds.Username, creds.Realm)
+				l.Printf("%v %s@%s - SPNEGO authentication succeeded", r.RemoteAddr, id.UserName(), id.Domain())
 			}
 			spnegoResponseAcceptCompleted(w)
 			f.ServeHTTP(w, r.WithContext(ctx))
@@ -102,6 +63,7 @@ func SPNEGOKRB5Authenticate(f http.Handler, kt keytab.Keytab, ktprinc string, re
 			rejectSPNEGO(w, l, fmt.Sprintf("%v - SPNEGO Kerberos authentication failed: %v", r.RemoteAddr, err))
 			return
 		}
+		return
 	})
 }
 
