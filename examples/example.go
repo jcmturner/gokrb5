@@ -66,7 +66,7 @@ func httpServer() *httptest.Server {
 	b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	th := http.HandlerFunc(testAppHandler)
-	c := service.NewSPNEGOAuthenticator(kt)
+	c := service.NewSPNEGOConfig(kt)
 	s := httptest.NewServer(service.SPNEGOKRB5Authenticate(th, c, l))
 	return s
 }
@@ -76,8 +76,8 @@ func testAppHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "<html>\n<p><h1>TEST.GOKRB5 Handler</h1></p>\n")
 	if validuser, ok := ctx.Value(service.CTXKeyAuthenticated).(bool); ok && validuser {
 		if creds, ok := ctx.Value(service.CTXKeyCredentials).(goidentity.Identity); ok {
-			fmt.Fprintf(w, "<ul><li>Authenticed user: %s</li>\n", creds.Username)
-			fmt.Fprintf(w, "<li>User's realm: %s</li></ul>\n", creds.Realm)
+			fmt.Fprintf(w, "<ul><li>Authenticed user: %s</li>\n", creds.UserName())
+			fmt.Fprintf(w, "<li>User's realm: %s</li></ul>\n", creds.Domain())
 		}
 
 	} else {

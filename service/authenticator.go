@@ -17,20 +17,33 @@ import (
 
 // SPNEGOAuthenticator implements gopkg.in/jcmturner/goidentity.v3.Authenticator interface
 type SPNEGOAuthenticator struct {
-	SPNEGOHeaderValue  string
-	Keytab             *keytab.Keytab
+	SPNEGOHeaderValue string
+	ClientAddr        string
+	Config            *SPNEGOConfig
+}
+
+type SPNEGOConfig struct {
+	Keytab             keytab.Keytab
 	ServicePrincipal   string
-	ClientAddr         string
 	RequireHostAddr    bool
 	DisablePACDecoding bool
 }
 
-func NewSPNEGOAuthenticator(kt keytab.Keytab) *SPNEGOAuthenticator {
-	return &SPNEGOAuthenticator{Keytab: &kt}
+func NewSPNEGOAuthenticator(kt keytab.Keytab) (a SPNEGOAuthenticator) {
+	a.Config = NewSPNEGOConfig(kt)
+	return
 }
 
-// Authenticate and retrieve a goidentity.Identity. In this case it is a pointer to a credentials.Credentials
-func (a SPNEGOAuthenticator) Authenticate() (i goidentity.Identity, ok bool, err error) {
+func NewSPNEGOConfig(kt keytab.Keytab) *SPNEGOConfig {
+	return &SPNEGOConfig{Keytab: kt}
+}
+
+func (c *SPNEGOConfig) Authenticate(neg, addr string) (i goidentity.Identity, ok bool, err error) {
+	a := SPNEGOAuthenticator{
+		SPNEGOHeaderValue: neg,
+		ClientAddr:        addr,
+		Config:            c,
+	}
 	b, err := base64.StdEncoding.DecodeString(a.SPNEGOHeaderValue)
 	if err != nil {
 		err = fmt.Errorf("SPNEGO error in base64 decoding negotiation header: %v", err)
@@ -57,13 +70,18 @@ func (a SPNEGOAuthenticator) Authenticate() (i goidentity.Identity, ok bool, err
 		return
 	}
 
-	ok, creds, err := ValidateAPREQ(mt.APReq, &a)
+	ok, creds, err := ValidateAPREQ(mt.APReq, a)
 	if err != nil {
 		err = fmt.Errorf("SPNEGO validation error: %v", err)
 		return
 	}
 	i = &creds
 	return
+}
+
+// Authenticate and retrieve a goidentity.Identity. In this case it is a pointer to a credentials.Credentials
+func (a SPNEGOAuthenticator) Authenticate() (i goidentity.Identity, ok bool, err error) {
+	return a.Config.Authenticate(a.SPNEGOHeaderValue, a.ClientAddr)
 }
 
 // Mechanism returns the authentication mechanism.
