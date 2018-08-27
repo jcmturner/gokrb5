@@ -5,6 +5,7 @@ package main
 import (
 	"encoding/hex"
 	"fmt"
+	"gopkg.in/jcmturner/goidentity.v3"
 	"gopkg.in/jcmturner/gokrb5.v5/client"
 	"gopkg.in/jcmturner/gokrb5.v5/config"
 	"gopkg.in/jcmturner/gokrb5.v5/credentials"
@@ -75,7 +76,7 @@ func testAppHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	fmt.Fprint(w, "<html>\n<p><h1>TEST.GOKRB5 Handler</h1></p>\n")
 	if validuser, ok := ctx.Value(service.CTXKeyAuthenticated).(bool); ok && validuser {
-		if creds, ok := ctx.Value(service.CTXKeyCredentials).(credentials.Credentials); ok {
+		if creds, ok := ctx.Value(service.CTXKeyCredentials).(goidentity.Identity); ok {
 			fmt.Fprintf(w, "<ul><li>Authenticed user: %s</li>\n", creds.UserName())
 			fmt.Fprintf(w, "<li>User's realm: %s</li>\n", creds.Domain())
 			fmt.Fprint(w, "<li>Authz Attributes (Group Memberships):</li><ul>\n")
@@ -83,7 +84,7 @@ func testAppHandler(w http.ResponseWriter, r *http.Request) {
 				fmt.Fprintf(w, "<li>%v</li>\n", s)
 			}
 			fmt.Fprint(w, "</ul>\n")
-			if ADCreds, ok := creds.Attributes[credentials.AttributeKeyADCredentials].(credentials.ADCredentials); ok {
+			if ADCreds, ok := creds.Attributes()[credentials.AttributeKeyADCredentials].(credentials.ADCredentials); ok {
 				// Now access the fields of the ADCredentials struct. For example:
 				fmt.Fprintf(w, "<li>EffectiveName: %v</li>\n", ADCreds.EffectiveName)
 				fmt.Fprintf(w, "<li>FullName: %v</li>\n", ADCreds.FullName)

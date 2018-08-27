@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/jcmturner/goidentity.v3"
 	"gopkg.in/jcmturner/gokrb5.v5/client"
-	"gopkg.in/jcmturner/gokrb5.v5/credentials"
 	"gopkg.in/jcmturner/gokrb5.v5/iana/nametype"
 	"gopkg.in/jcmturner/gokrb5.v5/keytab"
 	"gopkg.in/jcmturner/gokrb5.v5/messages"
@@ -246,13 +246,16 @@ func httpServer() *httptest.Server {
 	b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	th := http.HandlerFunc(testAppHandler)
-	s := httptest.NewServer(SPNEGOKRB5Authenticate(th, kt, "", false, l))
+	c := NewSPNEGOAuthenticator(kt)
+	s := httptest.NewServer(SPNEGOKRB5Authenticate(th, c, l))
 	return s
 }
 
 func testAppHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	ctx := r.Context()
-	fmt.Fprintf(w, "<html>\nTEST.GOKRB5 Handler\nAuthenticed user: %s\nUser's realm: %s\n</html>", ctx.Value(CTXKeyCredentials).(credentials.Credentials).Username, ctx.Value(CTXKeyCredentials).(credentials.Credentials).Realm)
+	fmt.Fprintf(w, "<html>\nTEST.GOKRB5 Handler\nAuthenticed user: %s\nUser's realm: %s\n</html>",
+		ctx.Value(CTXKeyCredentials).(goidentity.Identity).UserName(),
+		ctx.Value(CTXKeyCredentials).(goidentity.Identity).Domain())
 	return
 }

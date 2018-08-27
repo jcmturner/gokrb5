@@ -12,7 +12,7 @@ import (
 
 const (
 	// AttributeKeyADCredentials assigned number for AD credentials.
-	AttributeKeyADCredentials = 1
+	AttributeKeyADCredentials = "gokrb5AttributeKeyADCredentials"
 )
 
 // Credentials struct for a user.
@@ -25,7 +25,7 @@ type Credentials struct {
 	CName       types.PrincipalName
 	Keytab      keytab.Keytab
 	Password    string
-	Attributes  map[int]interface{}
+	attributes  map[string]interface{}
 	ValidUntil  time.Time
 
 	authenticated   bool
@@ -62,7 +62,7 @@ func NewCredentials(username string, realm string) Credentials {
 		Realm:       realm,
 		CName:       types.NewPrincipalName(nametype.KRB_NT_PRINCIPAL, username),
 		Keytab:      keytab.NewKeytab(),
-		Attributes:  make(map[int]interface{}),
+		attributes:  make(map[string]interface{}),
 		sessionID:   uid,
 	}
 }
@@ -79,7 +79,7 @@ func NewCredentialsFromPrincipal(cname types.PrincipalName, realm string) Creden
 		Realm:           realm,
 		CName:           cname,
 		Keytab:          keytab.NewKeytab(),
-		Attributes:      make(map[int]interface{}),
+		attributes:      make(map[string]interface{}),
 		groupMembership: make(map[string]bool),
 		sessionID:       uid,
 	}
@@ -120,7 +120,7 @@ func (c *Credentials) HasPassword() bool {
 
 // SetADCredentials adds ADCredentials attributes to the credentials
 func (c *Credentials) SetADCredentials(a ADCredentials) {
-	c.Attributes[AttributeKeyADCredentials] = a
+	c.SetAttribute(AttributeKeyADCredentials, a)
 	if a.FullName != "" {
 		c.SetDisplayName(a.FullName)
 	}
@@ -254,4 +254,20 @@ func (c *Credentials) Expired() bool {
 		return true
 	}
 	return false
+}
+
+func (c *Credentials) Attributes() map[string]interface{} {
+	return c.attributes
+}
+
+func (c *Credentials) SetAttribute(k string, v interface{}) {
+	c.attributes[k] = v
+}
+
+func (c *Credentials) SetAttributes(a map[string]interface{}) {
+	c.attributes = a
+}
+
+func (c *Credentials) RemoveAttribute(k string) {
+	delete(c.attributes, k)
 }

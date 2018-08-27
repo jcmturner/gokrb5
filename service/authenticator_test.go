@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/goidentity.v2"
+	"gopkg.in/jcmturner/goidentity.v3"
 )
 
 func TestImplementsInterface(t *testing.T) {
