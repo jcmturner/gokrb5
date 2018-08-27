@@ -34,7 +34,8 @@ func main() {
 
 	// Set up handler mappings wrapping in the SPNEGOKRB5Authenticate handler wrapper
 	mux := http.NewServeMux()
-	mux.Handle("/", service.SPNEGOKRB5Authenticate(th, kt, "", false, l))
+	c := service.NewSPNEGOAuthenticator(kt)
+	mux.Handle("/", service.SPNEGOKRB5Authenticate(th, c, l))
 
 	// Start up the web server
 	log.Fatal(http.ListenAndServe(port, mux))

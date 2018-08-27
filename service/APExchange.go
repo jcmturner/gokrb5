@@ -7,16 +7,15 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v5/credentials"
 	"gopkg.in/jcmturner/gokrb5.v5/iana/errorcode"
 	"gopkg.in/jcmturner/gokrb5.v5/iana/flags"
-	"gopkg.in/jcmturner/gokrb5.v5/keytab"
 	"gopkg.in/jcmturner/gokrb5.v5/krberror"
 	"gopkg.in/jcmturner/gokrb5.v5/messages"
 	"gopkg.in/jcmturner/gokrb5.v5/types"
 )
 
 // ValidateAPREQ validates an AP_REQ sent to the service. Returns a boolean for if the AP_REQ is valid and the client's principal name and realm.
-func ValidateAPREQ(APReq messages.APReq, kt keytab.Keytab, sa string, cAddr string, requireHostAddr bool) (bool, credentials.Credentials, error) {
+func ValidateAPREQ(APReq messages.APReq, c *SPNEGOAuthenticator) (bool, credentials.Credentials, error) {
 	var creds credentials.Credentials
-	err := APReq.Ticket.DecryptEncPart(kt, sa)
+	err := APReq.Ticket.DecryptEncPart(*c.Keytab, c.ServicePrincipal)
 	if err != nil {
 		return false, creds, krberror.Errorf(err, krberror.DecryptingError, "error decrypting encpart of service ticket provided")
 	}
@@ -35,7 +34,7 @@ func ValidateAPREQ(APReq messages.APReq, kt keytab.Keytab, sa string, cAddr stri
 		//address of the client.  If no match is found or the server insists on
 		//ticket addresses but none are present in the ticket, the
 		//KRB_AP_ERR_BADADDR error is returned.
-		h, err := types.GetHostAddress(cAddr)
+		h, err := types.GetHostAddress(c.ClientAddr)
 		if err != nil {
 			err := messages.NewKRBError(APReq.Ticket.SName, APReq.Ticket.Realm, errorcode.KRB_AP_ERR_BADADDR, err.Error())
 			return false, creds, err
@@ -44,7 +43,7 @@ func ValidateAPREQ(APReq messages.APReq, kt keytab.Keytab, sa string, cAddr stri
 			err := messages.NewKRBError(APReq.Ticket.SName, APReq.Ticket.Realm, errorcode.KRB_AP_ERR_BADADDR, "Client address not within the list contained in the service ticket")
 			return false, creds, err
 		}
-	} else if requireHostAddr {
+	} else if c.RequireHostAddr {
 		err := messages.NewKRBError(APReq.Ticket.SName, APReq.Ticket.Realm, errorcode.KRB_AP_ERR_BADADDR, "ticket does not contain HostAddress values required")
 		return false, creds, err
 	}
@@ -81,7 +80,7 @@ func ValidateAPREQ(APReq messages.APReq, kt keytab.Keytab, sa string, cAddr stri
 	creds.SetAuthTime(t)
 	creds.SetAuthenticated(true)
 	creds.SetValidUntil(APReq.Ticket.DecryptedEncPart.EndTime)
-	isPAC, pac, err := APReq.Ticket.GetPACType(kt, sa)
+	isPAC, pac, err := APReq.Ticket.GetPACType(*c.Keytab, c.ServicePrincipal)
 	if isPAC && err != nil {
 		return false, creds, err
 	}

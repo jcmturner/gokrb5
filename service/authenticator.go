@@ -17,15 +17,20 @@ import (
 
 // SPNEGOAuthenticator implements gopkg.in/jcmturner/goidentity.v2.Authenticator interface
 type SPNEGOAuthenticator struct {
-	SPNEGOHeaderValue string
-	Keytab            *keytab.Keytab
-	ServiceAccount    string
-	ClientAddr        string
-	RequireHostAddr   bool
+	SPNEGOHeaderValue  string
+	Keytab             *keytab.Keytab
+	ServicePrincipal   string
+	ClientAddr         string
+	RequireHostAddr    bool
+	DisablePACDecoding bool
+}
+
+func NewSPNEGOAuthenticator(kt keytab.Keytab) *SPNEGOAuthenticator {
+	return &SPNEGOAuthenticator{Keytab: &kt}
 }
 
 // Authenticate and retrieve a goidentity.Identity. In this case it is a pointer to a credentials.Credentials
-func (a SPNEGOAuthenticator) Authenticate() (i goidentity.Identity, ok bool, err error) {
+func (a *SPNEGOAuthenticator) Authenticate() (i goidentity.Identity, ok bool, err error) {
 	b, err := base64.StdEncoding.DecodeString(a.SPNEGOHeaderValue)
 	if err != nil {
 		err = fmt.Errorf("SPNEGO error in base64 decoding negotiation header: %v", err)
@@ -52,12 +57,12 @@ func (a SPNEGOAuthenticator) Authenticate() (i goidentity.Identity, ok bool, err
 		return
 	}
 
-	ok, c, err := ValidateAPREQ(mt.APReq, *a.Keytab, a.ServiceAccount, a.ClientAddr, a.RequireHostAddr)
+	ok, creds, err := ValidateAPREQ(mt.APReq, a)
 	if err != nil {
 		err = fmt.Errorf("SPNEGO validation error: %v", err)
 		return
 	}
-	i = &c
+	i = &creds
 	return
 }
 
