@@ -13,9 +13,9 @@ import (
 )
 
 // ValidateAPREQ validates an AP_REQ sent to the service. Returns a boolean for if the AP_REQ is valid and the client's principal name and realm.
-func ValidateAPREQ(APReq messages.APReq, c *SPNEGOAuthenticator) (bool, credentials.Credentials, error) {
+func ValidateAPREQ(APReq messages.APReq, sa SPNEGOAuthenticator) (bool, credentials.Credentials, error) {
 	var creds credentials.Credentials
-	err := APReq.Ticket.DecryptEncPart(*c.Keytab, c.ServicePrincipal)
+	err := APReq.Ticket.DecryptEncPart(sa.Config.Keytab, sa.Config.ServicePrincipal)
 	if err != nil {
 		return false, creds, krberror.Errorf(err, krberror.DecryptingError, "error decrypting encpart of service ticket provided")
 	}
@@ -34,7 +34,7 @@ func ValidateAPREQ(APReq messages.APReq, c *SPNEGOAuthenticator) (bool, credenti
 		//address of the client.  If no match is found or the server insists on
 		//ticket addresses but none are present in the ticket, the
 		//KRB_AP_ERR_BADADDR error is returned.
-		h, err := types.GetHostAddress(c.ClientAddr)
+		h, err := types.GetHostAddress(sa.ClientAddr)
 		if err != nil {
 			err := messages.NewKRBError(APReq.Ticket.SName, APReq.Ticket.Realm, errorcode.KRB_AP_ERR_BADADDR, err.Error())
 			return false, creds, err
@@ -43,7 +43,7 @@ func ValidateAPREQ(APReq messages.APReq, c *SPNEGOAuthenticator) (bool, credenti
 			err := messages.NewKRBError(APReq.Ticket.SName, APReq.Ticket.Realm, errorcode.KRB_AP_ERR_BADADDR, "Client address not within the list contained in the service ticket")
 			return false, creds, err
 		}
-	} else if c.RequireHostAddr {
+	} else if sa.Config.RequireHostAddr {
 		err := messages.NewKRBError(APReq.Ticket.SName, APReq.Ticket.Realm, errorcode.KRB_AP_ERR_BADADDR, "ticket does not contain HostAddress values required")
 		return false, creds, err
 	}
@@ -82,8 +82,8 @@ func ValidateAPREQ(APReq messages.APReq, c *SPNEGOAuthenticator) (bool, credenti
 	creds.SetValidUntil(APReq.Ticket.DecryptedEncPart.EndTime)
 
 	//PAC decoding
-	if !c.DisablePACDecoding {
-		isPAC, pac, err := APReq.Ticket.GetPACType(*c.Keytab, c.ServicePrincipal)
+	if !sa.Config.DisablePACDecoding {
+		isPAC, pac, err := APReq.Ticket.GetPACType(sa.Config.Keytab, sa.Config.ServicePrincipal)
 		if isPAC && err != nil {
 			return false, creds, err
 		}

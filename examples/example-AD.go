@@ -66,7 +66,7 @@ func httpServer() *httptest.Server {
 	b, _ := hex.DecodeString(testdata.SYSHTTP_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	th := http.HandlerFunc(testAppHandler)
-	c := service.NewSPNEGOAuthenticator(kt)
+	c := service.NewSPNEGOConfig(kt)
 	c.ServicePrincipal = "sysHTTP"
 	s := httptest.NewServer(service.SPNEGOKRB5Authenticate(th, c, l))
 	return s
