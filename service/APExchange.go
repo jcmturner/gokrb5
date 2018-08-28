@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"time"
 
-	"gopkg.in/jcmturner/gokrb5.v5/credentials"
-	"gopkg.in/jcmturner/gokrb5.v5/iana/errorcode"
-	"gopkg.in/jcmturner/gokrb5.v5/iana/flags"
-	"gopkg.in/jcmturner/gokrb5.v5/krberror"
-	"gopkg.in/jcmturner/gokrb5.v5/messages"
-	"gopkg.in/jcmturner/gokrb5.v5/types"
+	"gopkg.in/jcmturner/gokrb5.v6/credentials"
+	"gopkg.in/jcmturner/gokrb5.v6/iana/errorcode"
+	"gopkg.in/jcmturner/gokrb5.v6/iana/flags"
+	"gopkg.in/jcmturner/gokrb5.v6/krberror"
+	"gopkg.in/jcmturner/gokrb5.v6/messages"
+	"gopkg.in/jcmturner/gokrb5.v6/types"
 )
 
 // ValidateAPREQ validates an AP_REQ sent to the service. Returns a boolean for if the AP_REQ is valid and the client's principal name and realm.

@@ -13,12 +13,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/goidentity.v3"
-	"gopkg.in/jcmturner/gokrb5.v5/client"
-	"gopkg.in/jcmturner/gokrb5.v5/iana/nametype"
-	"gopkg.in/jcmturner/gokrb5.v5/keytab"
-	"gopkg.in/jcmturner/gokrb5.v5/messages"
-	"gopkg.in/jcmturner/gokrb5.v5/testdata"
-	"gopkg.in/jcmturner/gokrb5.v5/types"
+	"gopkg.in/jcmturner/gokrb5.v6/client"
+	"gopkg.in/jcmturner/gokrb5.v6/iana/nametype"
+	"gopkg.in/jcmturner/gokrb5.v6/keytab"
+	"gopkg.in/jcmturner/gokrb5.v6/messages"
+	"gopkg.in/jcmturner/gokrb5.v6/testdata"
+	"gopkg.in/jcmturner/gokrb5.v6/types"
 )
 
 func TestService_SPNEGOKRB_NoAuthHeader(t *testing.T) {

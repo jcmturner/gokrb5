@@ -1,13 +1,13 @@
 # gokrb5
-[![GoDoc](https://godoc.org/gopkg.in/jcmturner/gokrb5.v5?status.svg)](https://godoc.org/gopkg.in/jcmturner/gokrb5.v5) [![Go Report Card](https://goreportcard.com/badge/gopkg.in/jcmturner/gokrb5.v5)](https://goreportcard.com/report/gopkg.in/jcmturner/gokrb5.v5) [![Build Status](https://travis-ci.org/jcmturner/gokrb5.svg?branch=master)](https://travis-ci.org/jcmturner/gokrb5)
+[![GoDoc](https://godoc.org/gopkg.in/jcmturner/gokrb5.v6?status.svg)](https://godoc.org/gopkg.in/jcmturner/gokrb5.v6) [![Go Report Card](https://goreportcard.com/badge/gopkg.in/jcmturner/gokrb5.v6)](https://goreportcard.com/report/gopkg.in/jcmturner/gokrb5.v6) [![Build Status](https://travis-ci.org/jcmturner/gokrb5.svg?branch=master)](https://travis-ci.org/jcmturner/gokrb5)
 
 To get the package, execute:
 ```
-go get -d gopkg.in/jcmturner/gokrb5.v5/...
+go get -d gopkg.in/jcmturner/gokrb5.v6/...
 ```
 To import this package, add the following line to your code:
 ```go
-import "gopkg.in/jcmturner/gokrb5.v5/<sub package>"
+import "gopkg.in/jcmturner/gokrb5.v6/<sub package>"
 ```
 
 ## Features
@@ -54,7 +54,7 @@ If you are interested in contributing to gokrb5, great! Please read the [contrib
 The gokrb5 libraries use the same krb5.conf configuration file format as MIT Kerberos, described [here](https://web.mit.edu/kerberos/krb5-latest/doc/admin/conf_files/krb5_conf.html).
 Config instances can be created by loading from a file path or by passing a string, io.Reader or bufio.Scanner to the relevant method:
 ```go
-import "gopkg.in/jcmturner/gokrb5.v5/config"
+import "gopkg.in/jcmturner/gokrb5.v6/config"
 cfg, err := config.Load("/path/to/config/file")
 cfg, err := config.NewConfigFromString(krb5Str) //String must have appropriate newline separations
 cfg, err := config.NewConfigFromReader(reader)
@@ -63,7 +63,7 @@ cfg, err := config.NewConfigFromScanner(scanner)
 ### Keytab files
 Standard keytab files can be read from a file or from a slice of bytes:
 ```go
-import 	"gopkg.in/jcmturner/gokrb5.v5/keytab"
+import 	"gopkg.in/jcmturner/gokrb5.v6/keytab"
 ktFromFile, err := keytab.Load("/path/to/file.keytab")
 ktFromBytes, err := keytab.Parse(b)
 
@@ -74,7 +74,7 @@ ktFromBytes, err := keytab.Parse(b)
 ### Kerberos Client
 Create a client instance with either a password or a keytab:
 ```go
-import 	"gopkg.in/jcmturner/gokrb5.v5/client"
+import 	"gopkg.in/jcmturner/gokrb5.v6/client"
 cl := client.NewClientWithPassword("username", "REALM.COM", "password")
 cl := client.NewClientWithKeytab("username", "REALM.COM", kt)
 
@@ -231,7 +231,7 @@ if validuser, ok := ctx.Value(service.CTXKeyAuthenticated).(bool); ok && validus
 #### Generic Kerberised Service - Validating Client Details
 To validate the AP_REQ sent by the client on the service side call this method:
 ```go
-import 	"gopkg.in/jcmturner/gokrb5.v5/service"
+import 	"gopkg.in/jcmturner/gokrb5.v6/service"
 var ktprinc string //The SPN of the service to find the key in the keytab.
 var requireHostAddr bool //Whether to force requiring the ticket to contain host addresses to check the client against.
 if ok, creds, err := service.ValidateAPREQ(mt.APReq, kt, ktprinc, r.RemoteAddr, requireHostAddr); ok {

@@ -9,9 +9,9 @@ import (
 	"fmt"
 
 	"gopkg.in/jcmturner/aescts.v1"
-	"gopkg.in/jcmturner/gokrb5.v5/crypto/common"
-	"gopkg.in/jcmturner/gokrb5.v5/crypto/etype"
-	"gopkg.in/jcmturner/gokrb5.v5/iana/etypeID"
+	"gopkg.in/jcmturner/gokrb5.v6/crypto/common"
+	"gopkg.in/jcmturner/gokrb5.v6/crypto/etype"
+	"gopkg.in/jcmturner/gokrb5.v6/iana/etypeID"
 )
 
 // EncryptData encrypts the data provided using methods specific to the etype provided as defined in RFC 8009.

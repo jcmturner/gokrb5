@@ -11,7 +11,7 @@ import (
 	"time"
 	"unsafe"
 
-	"gopkg.in/jcmturner/gokrb5.v5/types"
+	"gopkg.in/jcmturner/gokrb5.v6/types"
 )
 
 const (

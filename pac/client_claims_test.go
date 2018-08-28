@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v5/testdata"
+	"gopkg.in/jcmturner/gokrb5.v6/testdata"
 	"gopkg.in/jcmturner/rpc.v1/mstypes"
 )
 

@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v5/keytab"
-	"gopkg.in/jcmturner/gokrb5.v5/testdata"
+	"gopkg.in/jcmturner/gokrb5.v6/keytab"
+	"gopkg.in/jcmturner/gokrb5.v6/testdata"
 )
 
 func TestPACTypeValidate(t *testing.T) {
