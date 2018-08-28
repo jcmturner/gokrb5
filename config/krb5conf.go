@@ -21,7 +21,7 @@ import (
 
 // Config represents the KRB5 configuration.
 type Config struct {
-	LibDefaults *LibDefaults
+	LibDefaults LibDefaults
 	Realms      []Realm
 	DomainRealm DomainRealm
 	//CaPaths
@@ -83,7 +83,7 @@ type LibDefaults struct {
 }
 
 // Create a new LibDefaults struct.
-func newLibDefaults() *LibDefaults {
+func newLibDefaults() LibDefaults {
 	uid := "0"
 	var hdir string
 	usr, _ := user.Current()
@@ -94,7 +94,7 @@ func newLibDefaults() *LibDefaults {
 	opts := asn1.BitString{}
 	opts.Bytes, _ = hex.DecodeString("00000010")
 	opts.BitLength = len(opts.Bytes) * 8
-	return &LibDefaults{
+	return LibDefaults{
 		CCacheType:              4,
 		Clockskew:               time.Duration(300) * time.Second,
 		DefaultClientKeytabName: fmt.Sprintf("/usr/local/var/krb5/user/%s/client.keytab", uid),

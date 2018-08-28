@@ -433,7 +433,7 @@ func TestMultiThreadedClientSession(t *testing.T) {
 			if err != nil {
 				t.Logf("error getting session: %v", err)
 			}
-			fmt.Fprintf(ioutil.Discard, "%v", s.RenewTill)
+			fmt.Fprintf(ioutil.Discard, "%v", s.renewTill)
 		}()
 		time.Sleep(time.Second)
 	}
