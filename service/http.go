@@ -35,7 +35,7 @@ const (
 )
 
 // SPNEGOKRB5Authenticate is a Kerberos SPNEGO authentication HTTP handler wrapper.
-func SPNEGOKRB5Authenticate(f http.Handler, c *SPNEGOConfig, l *log.Logger) http.Handler {
+func SPNEGOKRB5Authenticate(f http.Handler, c *Config, l *log.Logger) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		s := strings.SplitN(r.Header.Get(HTTPHeaderAuthRequest), " ", 2)
 		if len(s) != 2 || s[0] != HTTPHeaderAuthResponseValueKey {
