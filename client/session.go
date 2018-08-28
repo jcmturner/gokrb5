@@ -28,57 +28,57 @@ func (s *sessions) destroy() {
 
 // Client session struct.
 type session struct {
-	Realm                string
-	AuthTime             time.Time
-	EndTime              time.Time
-	RenewTill            time.Time
-	TGT                  messages.Ticket
-	SessionKey           types.EncryptionKey
-	SessionKeyExpiration time.Time
+	realm                string
+	authTime             time.Time
+	endTime              time.Time
+	renewTill            time.Time
+	tgt                  messages.Ticket
+	sessionKey           types.EncryptionKey
+	sessionKeyExpiration time.Time
 	cancel               chan bool
 	mux                  sync.RWMutex
 }
 
-func (s *session) update(tkt messages.Ticket, dep messages.EncKDCRepPart) {
+func (s *session) update(tgt messages.Ticket, dep messages.EncKDCRepPart) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
-	s.AuthTime = dep.AuthTime
-	s.EndTime = dep.EndTime
-	s.RenewTill = dep.RenewTill
-	s.TGT = tkt
-	s.SessionKey = dep.Key
-	s.SessionKeyExpiration = dep.KeyExpiration
+	s.authTime = dep.AuthTime
+	s.endTime = dep.EndTime
+	s.renewTill = dep.RenewTill
+	s.tgt = tgt
+	s.sessionKey = dep.Key
+	s.sessionKeyExpiration = dep.KeyExpiration
 }
 
 func (s *session) destroy() {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	s.cancel <- true
-	s.EndTime = time.Now().UTC()
-	s.RenewTill = s.EndTime
-	s.SessionKeyExpiration = s.EndTime
+	s.endTime = time.Now().UTC()
+	s.renewTill = s.endTime
+	s.sessionKeyExpiration = s.endTime
 }
 
 // AddSession adds a session for a realm with a TGT to the client's session cache.
 // A goroutine is started to automatically renew the TGT before expiry.
-func (cl *Client) AddSession(tkt messages.Ticket, dep messages.EncKDCRepPart) {
+func (cl *Client) AddSession(tgt messages.Ticket, dep messages.EncKDCRepPart) {
 	cl.sessions.mux.Lock()
 	defer cl.sessions.mux.Unlock()
 	s := &session{
-		Realm:                tkt.SName.NameString[1],
-		AuthTime:             dep.AuthTime,
-		EndTime:              dep.EndTime,
-		RenewTill:            dep.RenewTill,
-		TGT:                  tkt,
-		SessionKey:           dep.Key,
-		SessionKeyExpiration: dep.KeyExpiration,
+		realm:                tgt.SName.NameString[1],
+		authTime:             dep.AuthTime,
+		endTime:              dep.EndTime,
+		renewTill:            dep.RenewTill,
+		tgt:                  tgt,
+		sessionKey:           dep.Key,
+		sessionKeyExpiration: dep.KeyExpiration,
 		cancel:               make(chan bool, 1),
 	}
 	// if a session already exists for this, cancel its auto renew.
-	if i, ok := cl.sessions.Entries[tkt.SName.NameString[1]]; ok {
+	if i, ok := cl.sessions.Entries[tgt.SName.NameString[1]]; ok {
 		i.cancel <- true
 	}
-	cl.sessions.Entries[tkt.SName.NameString[1]] = s
+	cl.sessions.Entries[tgt.SName.NameString[1]] = s
 	cl.enableAutoSessionRenewal(s)
 }
 
@@ -88,7 +88,7 @@ func (cl *Client) enableAutoSessionRenewal(s *session) {
 	go func(s *session) {
 		for {
 			s.mux.RLock()
-			w := (s.EndTime.Sub(time.Now().UTC()) * 5) / 6
+			w := (s.endTime.Sub(time.Now().UTC()) * 5) / 6
 			s.mux.RUnlock()
 			if w < 0 {
 				return
@@ -114,9 +114,9 @@ func (cl *Client) enableAutoSessionRenewal(s *session) {
 func (cl *Client) renewTGT(s *session) error {
 	spn := types.PrincipalName{
 		NameType:   nametype.KRB_NT_SRV_INST,
-		NameString: []string{"krbtgt", s.Realm},
+		NameString: []string{"krbtgt", s.realm},
 	}
-	_, tgsRep, err := cl.TGSExchange(spn, s.TGT.Realm, s.TGT, s.SessionKey, true, 0)
+	_, tgsRep, err := cl.TGSExchange(spn, s.tgt.Realm, s.tgt, s.sessionKey, true, 0)
 	if err != nil {
 		return krberror.Errorf(err, krberror.KRBMsgError, "error renewing TGT")
 	}
@@ -127,7 +127,7 @@ func (cl *Client) renewTGT(s *session) error {
 // updateSession updates either through renewal or creating a new login.
 // The boolean indicates if the update was a renewal.
 func (cl *Client) updateSession(s *session) (bool, error) {
-	if time.Now().UTC().Before(s.RenewTill) {
+	if time.Now().UTC().Before(s.renewTill) {
 		err := cl.renewTGT(s)
 		return true, err
 	}
@@ -135,7 +135,7 @@ func (cl *Client) updateSession(s *session) (bool, error) {
 	return false, err
 }
 
-func (cl *Client) getSessionFromRemoteRealm(realm string) (*session, error) {
+func (cl *Client) sessionFromRemoteRealm(realm string) (*session, error) {
 	cl.sessions.mux.RLock()
 	sess, ok := cl.sessions.Entries[cl.Credentials.Realm]
 	cl.sessions.mux.RUnlock()
@@ -148,7 +148,7 @@ func (cl *Client) getSessionFromRemoteRealm(realm string) (*session, error) {
 		NameString: []string{"krbtgt", realm},
 	}
 
-	_, tgsRep, err := cl.TGSExchange(spn, cl.Credentials.Realm, sess.TGT, sess.SessionKey, false, 0)
+	_, tgsRep, err := cl.TGSExchange(spn, cl.Credentials.Realm, sess.tgt, sess.sessionKey, false, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -160,32 +160,32 @@ func (cl *Client) getSessionFromRemoteRealm(realm string) (*session, error) {
 }
 
 // GetSessionFromRealm returns the session for the realm provided.
-func (cl *Client) GetSessionFromRealm(realm string) (sess *session, err error) {
+func (cl *Client) sessionFromRealm(realm string) (sess *session, err error) {
 	cl.sessions.mux.RLock()
 	s, ok := cl.sessions.Entries[realm]
 	cl.sessions.mux.RUnlock()
 	if !ok {
 		// Try to request TGT from trusted remote Realm
-		s, err = cl.getSessionFromRemoteRealm(realm)
+		s, err = cl.sessionFromRemoteRealm(realm)
 		if err != nil {
 			return
 		}
 	}
 	// Create another session to return to prevent race condition.
 	sess = &session{
-		Realm:                s.Realm,
-		AuthTime:             s.AuthTime,
-		EndTime:              s.EndTime,
-		RenewTill:            s.RenewTill,
-		TGT:                  s.TGT,
-		SessionKey:           s.SessionKey,
-		SessionKeyExpiration: s.SessionKeyExpiration,
+		realm:                s.realm,
+		authTime:             s.authTime,
+		endTime:              s.endTime,
+		renewTill:            s.renewTill,
+		tgt:                  s.tgt,
+		sessionKey:           s.sessionKey,
+		sessionKeyExpiration: s.sessionKeyExpiration,
 	}
 	return
 }
 
 // GetSessionFromPrincipalName returns the session for the realm of the principal provided.
-func (cl *Client) GetSessionFromPrincipalName(spn types.PrincipalName) (*session, error) {
+func (cl *Client) sessionFromPrincipalName(spn types.PrincipalName) (*session, error) {
 	realm := cl.Config.ResolveRealm(spn.NameString[len(spn.NameString)-1])
-	return cl.GetSessionFromRealm(realm)
+	return cl.sessionFromRealm(realm)
 }

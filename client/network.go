@@ -14,7 +14,7 @@ import (
 )
 
 // SendToKDC performs network actions to send data to the KDC.
-func (cl *Client) SendToKDC(b []byte, realm string) ([]byte, error) {
+func (cl *Client) sendToKDC(b []byte, realm string) ([]byte, error) {
 	var rb []byte
 	if cl.Config.LibDefaults.UDPPreferenceLimit == 1 {
 		//1 means we should always use TCP

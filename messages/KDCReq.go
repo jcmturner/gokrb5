@@ -154,7 +154,7 @@ func NewASReq(realm string, c *config.Config, cname, sname types.PrincipalName) 
 }
 
 // NewTGSReq generates a new KRB_TGS_REQ struct.
-func NewTGSReq(cname types.PrincipalName, kdcRealm string, c *config.Config, tkt Ticket, sessionKey types.EncryptionKey, spn types.PrincipalName, renewal bool) (TGSReq, error) {
+func NewTGSReq(cname types.PrincipalName, kdcRealm string, c *config.Config, tgt Ticket, sessionKey types.EncryptionKey, spn types.PrincipalName, renewal bool) (TGSReq, error) {
 	nonce, err := rand.Int(rand.Reader, big.NewInt(math.MaxInt32))
 	if err != nil {
 		return TGSReq{}, err
@@ -200,7 +200,7 @@ func NewTGSReq(cname types.PrincipalName, kdcRealm string, c *config.Config, tkt
 		types.SetFlag(&a.ReqBody.KDCOptions, flags.Renew)
 		types.SetFlag(&a.ReqBody.KDCOptions, flags.Renewable)
 	}
-	auth, err := types.NewAuthenticator(tkt.Realm, cname)
+	auth, err := types.NewAuthenticator(tgt.Realm, cname)
 	if err != nil {
 		return a, krberror.Errorf(err, krberror.KRBMsgError, "error generating new authenticator")
 	}
@@ -222,7 +222,7 @@ func NewTGSReq(cname types.PrincipalName, kdcRealm string, c *config.Config, tkt
 		CksumType: etype.GetHashID(),
 		Checksum:  cb,
 	}
-	apReq, err := NewAPReq(tkt, sessionKey, auth)
+	apReq, err := NewAPReq(tgt, sessionKey, auth)
 	if err != nil {
 		return a, krberror.Errorf(err, krberror.KRBMsgError, "error generating new AP_REQ")
 	}

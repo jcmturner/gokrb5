@@ -410,7 +410,7 @@ func TestMultiThreadedClientSession(t *testing.T) {
 		t.Fatalf("failed to log in: %v", err)
 	}
 
-	s, err := cl.GetSessionFromRealm("TEST.GOKRB5")
+	s, err := cl.sessionFromRealm("TEST.GOKRB5")
 	if err != nil {
 		t.Fatalf("error initially getting session: %v", err)
 	}
@@ -429,7 +429,7 @@ func TestMultiThreadedClientSession(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		go func() {
 			defer wg.Done()
-			s, err := cl.GetSessionFromRealm("TEST.GOKRB5")
+			s, err := cl.sessionFromRealm("TEST.GOKRB5")
 			if err != nil {
 				t.Logf("error getting session: %v", err)
 			}
