@@ -51,11 +51,11 @@ type Config struct {
 }
 
 func NewSPNEGOAuthenticator(kt keytab.Keytab) (a SPNEGOAuthenticator) {
-	a.Config = NewSPNEGOConfig(kt)
+	a.Config = NewConfig(kt)
 	return
 }
 
-func NewSPNEGOConfig(kt keytab.Keytab) *Config {
+func NewConfig(kt keytab.Keytab) *Config {
 	return &Config{Keytab: kt}
 }
 
