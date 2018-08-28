@@ -19,10 +19,31 @@ import (
 type SPNEGOAuthenticator struct {
 	SPNEGOHeaderValue string
 	ClientAddr        string
-	Config            *SPNEGOConfig
+	Config            *Config
 }
 
-type SPNEGOConfig struct {
+// Config for service side implementation
+//
+// Keytab (mandatory) - keytab for the service user
+//
+// KeytabPrincipal (optional) - keytab principal override for the service.
+// The service looks for this principal in the keytab to use to decrypt tickets.
+// If "" is passed as KeytabPrincipal then the principal will be automatically derived
+// from the service name (SName) and realm in the ticket the service is trying to decrypt.
+// This is often sufficient if you create the SPN in MIT KDC with: /usr/sbin/kadmin.local -q "add_principal HTTP/<fqdn>"
+// When Active Directory is used for the KDC this may need to be the account name you have set the SPN against
+// (setspn.exe -a "HTTP/<fqdn>" <account name>)
+// If you are unsure run:
+//
+// klist -k <service's keytab file>
+//
+// and use the value from the Principal column for the keytab entry the service should use.
+//
+// RequireHostAddr - require that the kerberos ticket must include client host IP addresses and one must match the client making the request.
+// This is controled in the client config with the noaddresses option (http://web.mit.edu/kerberos/krb5-latest/doc/admin/conf_files/krb5_conf.html).
+//
+// DisablePACDecoding - if set to true decoding of the Microsoft PAC will be disabled.
+type Config struct {
 	Keytab             keytab.Keytab
 	ServicePrincipal   string
 	RequireHostAddr    bool
@@ -34,11 +55,11 @@ func NewSPNEGOAuthenticator(kt keytab.Keytab) (a SPNEGOAuthenticator) {
 	return
 }
 
-func NewSPNEGOConfig(kt keytab.Keytab) *SPNEGOConfig {
-	return &SPNEGOConfig{Keytab: kt}
+func NewSPNEGOConfig(kt keytab.Keytab) *Config {
+	return &Config{Keytab: kt}
 }
 
-func (c *SPNEGOConfig) Authenticate(neg, addr string) (i goidentity.Identity, ok bool, err error) {
+func (c *Config) Authenticate(neg, addr string) (i goidentity.Identity, ok bool, err error) {
 	a := SPNEGOAuthenticator{
 		SPNEGOHeaderValue: neg,
 		ClientAddr:        addr,
@@ -92,14 +113,13 @@ func (a SPNEGOAuthenticator) Mechanism() string {
 // KRB5BasicAuthenticator implements gopkg.in/jcmturner/goidentity.v3.Authenticator interface.
 // It takes username and password so can be used for basic authentication.
 type KRB5BasicAuthenticator struct {
+	SPN              string
 	BasicHeaderValue string
+	ServiceConfig    Config
+	ClientConfig     *config.Config
 	realm            string
 	username         string
 	password         string
-	ServiceKeytab    *keytab.Keytab
-	ServiceAccount   string
-	Config           *config.Config
-	SPN              string
 }
 
 // Authenticate and return the identity. The boolean indicates if the authentication was successful.
@@ -110,7 +130,7 @@ func (a KRB5BasicAuthenticator) Authenticate() (i goidentity.Identity, ok bool, 
 		return
 	}
 	cl := client.NewClientWithPassword(a.username, a.realm, a.password)
-	cl.WithConfig(a.Config)
+	cl.WithConfig(a.ClientConfig)
 	err = cl.Login()
 	if err != nil {
 		// Username and/or password could be wrong
@@ -122,14 +142,14 @@ func (a KRB5BasicAuthenticator) Authenticate() (i goidentity.Identity, ok bool, 
 		err = fmt.Errorf("could not get service ticket: %v", err)
 		return
 	}
-	err = tkt.DecryptEncPart(*a.ServiceKeytab, a.ServiceAccount)
+	err = tkt.DecryptEncPart(a.ServiceConfig.Keytab, a.ServiceConfig.ServicePrincipal)
 	if err != nil {
 		err = fmt.Errorf("could not decrypt service ticket: %v", err)
 		return
 	}
 	cl.Credentials.SetAuthTime(time.Now().UTC())
 	cl.Credentials.SetAuthenticated(true)
-	isPAC, pac, err := tkt.GetPACType(*a.ServiceKeytab, a.ServiceAccount)
+	isPAC, pac, err := tkt.GetPACType(a.ServiceConfig.Keytab, a.ServiceConfig.ServicePrincipal)
 	if isPAC && err != nil {
 		err = fmt.Errorf("error processing PAC: %v", err)
 		return
