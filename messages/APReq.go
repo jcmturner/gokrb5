@@ -4,14 +4,14 @@ import (
 	"fmt"
 
 	"github.com/jcmturner/gofork/encoding/asn1"
-	"gopkg.in/jcmturner/gokrb5.v5/asn1tools"
-	"gopkg.in/jcmturner/gokrb5.v5/crypto"
-	"gopkg.in/jcmturner/gokrb5.v5/iana"
-	"gopkg.in/jcmturner/gokrb5.v5/iana/asnAppTag"
-	"gopkg.in/jcmturner/gokrb5.v5/iana/keyusage"
-	"gopkg.in/jcmturner/gokrb5.v5/iana/msgtype"
-	"gopkg.in/jcmturner/gokrb5.v5/krberror"
-	"gopkg.in/jcmturner/gokrb5.v5/types"
+	"gopkg.in/jcmturner/gokrb5.v6/asn1tools"
+	"gopkg.in/jcmturner/gokrb5.v6/crypto"
+	"gopkg.in/jcmturner/gokrb5.v6/iana"
+	"gopkg.in/jcmturner/gokrb5.v6/iana/asnAppTag"
+	"gopkg.in/jcmturner/gokrb5.v6/iana/keyusage"
+	"gopkg.in/jcmturner/gokrb5.v6/iana/msgtype"
+	"gopkg.in/jcmturner/gokrb5.v6/krberror"
+	"gopkg.in/jcmturner/gokrb5.v6/types"
 )
 
 /*AP-REQ          ::= [APPLICATION 14] SEQUENCE {

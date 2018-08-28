@@ -5,10 +5,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v5/iana"
-	"gopkg.in/jcmturner/gokrb5.v5/iana/msgtype"
-	"gopkg.in/jcmturner/gokrb5.v5/iana/nametype"
-	"gopkg.in/jcmturner/gokrb5.v5/testdata"
+	"gopkg.in/jcmturner/gokrb5.v6/iana"
+	"gopkg.in/jcmturner/gokrb5.v6/iana/msgtype"
+	"gopkg.in/jcmturner/gokrb5.v6/iana/nametype"
+	"gopkg.in/jcmturner/gokrb5.v6/testdata"
 )
 
 func TestUnmarshalAPReq(t *testing.T) {

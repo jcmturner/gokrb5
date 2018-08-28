@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v5/iana/keyusage"
-	"gopkg.in/jcmturner/gokrb5.v5/types"
+	"gopkg.in/jcmturner/gokrb5.v6/iana/keyusage"
+	"gopkg.in/jcmturner/gokrb5.v6/types"
 )
 
 const (

@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	"github.com/jcmturner/gofork/encoding/asn1"
-	"gopkg.in/jcmturner/gokrb5.v5/credentials"
-	"gopkg.in/jcmturner/gokrb5.v5/messages"
-	"gopkg.in/jcmturner/gokrb5.v5/types"
+	"gopkg.in/jcmturner/gokrb5.v6/credentials"
+	"gopkg.in/jcmturner/gokrb5.v6/messages"
+	"gopkg.in/jcmturner/gokrb5.v6/types"
 )
 
 /*
