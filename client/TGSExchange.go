@@ -11,14 +11,8 @@ import (
 
 // TGSExchange performs a TGS exchange to retrieve a ticket to the specified SPN.
 // The ticket retrieved is added to the client's cache.
-func (cl *Client) TGSExchange(spn types.PrincipalName, kdcRealm string, tkt messages.Ticket, sessionKey types.EncryptionKey, renewal bool, referral int) (tgsReq messages.TGSReq, tgsRep messages.TGSRep, err error) {
-	//// Check what sessions we have for this SPN.
-	//// Will get the session to the default realm if one does not exist for requested SPN
-	//sess, err := cl.GetSessionFromPrincipalName(spn)
-	//if err != nil {
-	//	return tgsReq, tgsRep,  err
-	//}
-	tgsReq, err = messages.NewTGSReq(cl.Credentials.CName, kdcRealm, cl.Config, tkt, sessionKey, spn, renewal)
+func (cl *Client) TGSExchange(spn types.PrincipalName, kdcRealm string, tgt messages.Ticket, sessionKey types.EncryptionKey, renewal bool, referral int) (tgsReq messages.TGSReq, tgsRep messages.TGSRep, err error) {
+	tgsReq, err = messages.NewTGSReq(cl.Credentials.CName, kdcRealm, cl.Config, tgt, sessionKey, spn, renewal)
 	if err != nil {
 		return tgsReq, tgsRep, krberror.Errorf(err, krberror.KRBMsgError, "TGS Exchange Error: failed to generate a new TGS_REQ")
 	}
@@ -26,7 +20,7 @@ func (cl *Client) TGSExchange(spn types.PrincipalName, kdcRealm string, tkt mess
 	if err != nil {
 		return tgsReq, tgsRep, krberror.Errorf(err, krberror.EncodingError, "TGS Exchange Error: failed to generate a new TGS_REQ")
 	}
-	r, err := cl.SendToKDC(b, kdcRealm)
+	r, err := cl.sendToKDC(b, kdcRealm)
 	if err != nil {
 		if _, ok := err.(messages.KRBError); ok {
 			return tgsReq, tgsRep, krberror.Errorf(err, krberror.KDCError, "TGS Exchange Error: kerberos error response from KDC")
@@ -73,27 +67,27 @@ func (cl *Client) GetServiceTicket(spn string) (messages.Ticket, types.Encryptio
 		return tkt, skey, nil
 	}
 	princ := types.NewPrincipalName(nametype.KRB_NT_PRINCIPAL, spn)
-	sess, err := cl.GetSessionFromPrincipalName(princ)
+	sess, err := cl.sessionFromPrincipalName(princ)
 	if err != nil {
 		return tkt, skey, err
 	}
 	// Ensure TGT still valid
-	if time.Now().UTC().After(sess.EndTime) {
+	if time.Now().UTC().After(sess.endTime) {
 		_, err := cl.updateSession(sess)
 		if err != nil {
 			return tkt, skey, err
 		}
 		// Get the session again as it could have been replaced by the update
-		sess, err = cl.GetSessionFromPrincipalName(princ)
+		sess, err = cl.sessionFromPrincipalName(princ)
 		if err != nil {
 			return tkt, skey, err
 		}
 	}
-	_, tgsRep, err := cl.TGSExchange(princ, sess.Realm, sess.TGT, sess.SessionKey, false, 0)
+	_, tgsRep, err := cl.TGSExchange(princ, sess.realm, sess.tgt, sess.sessionKey, false, 0)
 	if err != nil {
 		return tkt, skey, err
 	}
-	cl.Cache.addEntry(
+	cl.cache.addEntry(
 		tgsRep.Ticket,
 		tgsRep.DecryptedEncPart.AuthTime,
 		tgsRep.DecryptedEncPart.StartTime,

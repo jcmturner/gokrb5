@@ -74,7 +74,7 @@ func (c *Cache) RemoveEntry(spn string) {
 // GetCachedTicket returns a ticket from the cache for the SPN.
 // Only a ticket that is currently valid will be returned.
 func (cl *Client) GetCachedTicket(spn string) (messages.Ticket, types.EncryptionKey, bool) {
-	if e, ok := cl.Cache.getEntry(spn); ok {
+	if e, ok := cl.cache.getEntry(spn); ok {
 		//If within time window of ticket return it
 		if time.Now().UTC().After(e.StartTime) && time.Now().UTC().Before(e.EndTime) {
 			return e.Ticket, e.SessionKey, true
@@ -99,7 +99,7 @@ func (cl *Client) renewTicket(e CacheEntry) (CacheEntry, error) {
 	if err != nil {
 		return e, err
 	}
-	e = cl.Cache.addEntry(
+	e = cl.cache.addEntry(
 		tgsRep.Ticket,
 		tgsRep.DecryptedEncPart.AuthTime,
 		tgsRep.DecryptedEncPart.StartTime,

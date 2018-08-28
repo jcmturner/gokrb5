@@ -23,7 +23,7 @@ func (cl *Client) ASExchange(realm string, ASReq messages.ASReq, referral int) (
 	}
 	var ASRep messages.ASRep
 
-	rb, err := cl.SendToKDC(b, realm)
+	rb, err := cl.sendToKDC(b, realm)
 	if err != nil {
 		if e, ok := err.(messages.KRBError); ok {
 			switch e.ErrorCode {
@@ -38,7 +38,7 @@ func (cl *Client) ASExchange(realm string, ASReq messages.ASReq, referral int) (
 				if err != nil {
 					return messages.ASRep{}, krberror.Errorf(err, krberror.EncodingError, "AS Exchange Error: failed marshaling AS_REQ with PAData")
 				}
-				rb, err = cl.SendToKDC(b, realm)
+				rb, err = cl.sendToKDC(b, realm)
 				if err != nil {
 					if _, ok := err.(messages.KRBError); ok {
 						return messages.ASRep{}, krberror.Errorf(err, krberror.KDCError, "AS Exchange Error: kerberos error response from KDC")

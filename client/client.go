@@ -21,9 +21,9 @@ import (
 type Client struct {
 	Credentials *credentials.Credentials
 	Config      *config.Config
-	GoKrb5Conf  *Config
+	GoKrb5Conf  Config
 	sessions    *sessions
-	Cache       *Cache
+	cache       *Cache
 }
 
 // Config struct holds GoKRB5 specific client configurations.
@@ -41,11 +41,11 @@ func NewClientWithPassword(username, realm, password string) Client {
 	return Client{
 		Credentials: creds.WithPassword(password),
 		Config:      config.NewConfig(),
-		GoKrb5Conf:  &Config{},
+		GoKrb5Conf:  Config{},
 		sessions: &sessions{
 			Entries: make(map[string]*session),
 		},
-		Cache: NewCache(),
+		cache: NewCache(),
 	}
 }
 
@@ -55,11 +55,11 @@ func NewClientWithKeytab(username, realm string, kt keytab.Keytab) Client {
 	return Client{
 		Credentials: creds.WithKeytab(kt),
 		Config:      config.NewConfig(),
-		GoKrb5Conf:  &Config{},
+		GoKrb5Conf:  Config{},
 		sessions: &sessions{
 			Entries: make(map[string]*session),
 		},
-		Cache: NewCache(),
+		cache: NewCache(),
 	}
 }
 
@@ -70,11 +70,11 @@ func NewClientFromCCache(c credentials.CCache) (Client, error) {
 	cl := Client{
 		Credentials: c.GetClientCredentials(),
 		Config:      config.NewConfig(),
-		GoKrb5Conf:  &Config{},
+		GoKrb5Conf:  Config{},
 		sessions: &sessions{
 			Entries: make(map[string]*session),
 		},
-		Cache: NewCache(),
+		cache: NewCache(),
 	}
 	spn := types.PrincipalName{
 		NameType:   nametype.KRB_NT_SRV_INST,
@@ -90,12 +90,12 @@ func NewClientFromCCache(c credentials.CCache) (Client, error) {
 		return cl, fmt.Errorf("TGT bytes in cache are not valid: %v", err)
 	}
 	cl.sessions.Entries[c.DefaultPrincipal.Realm] = &session{
-		Realm:      c.DefaultPrincipal.Realm,
-		AuthTime:   cred.AuthTime,
-		EndTime:    cred.EndTime,
-		RenewTill:  cred.RenewTill,
-		TGT:        tgt,
-		SessionKey: cred.Key,
+		realm:      c.DefaultPrincipal.Realm,
+		authTime:   cred.AuthTime,
+		endTime:    cred.EndTime,
+		renewTill:  cred.RenewTill,
+		tgt:        tgt,
+		sessionKey: cred.Key,
 	}
 	for _, cred := range c.GetEntries() {
 		var tkt messages.Ticket
@@ -103,7 +103,7 @@ func NewClientFromCCache(c credentials.CCache) (Client, error) {
 		if err != nil {
 			return cl, fmt.Errorf("cache entry ticket bytes are not valid: %v", err)
 		}
-		cl.Cache.addEntry(
+		cl.cache.addEntry(
 			tkt,
 			cred.AuthTime,
 			cred.StartTime,
@@ -175,8 +175,8 @@ func (cl *Client) IsConfigured() (bool, error) {
 	}
 	// Client needs to have either a password, keytab or a session already (later when loading from CCache)
 	if !cl.Credentials.HasPassword() && !cl.Credentials.HasKeytab() {
-		sess, err := cl.GetSessionFromRealm(cl.Credentials.Realm)
-		if err != nil || sess.AuthTime.IsZero() {
+		sess, err := cl.sessionFromRealm(cl.Credentials.Realm)
+		if err != nil || sess.authTime.IsZero() {
 			return false, errors.New("client has neither a keytab nor a password set and no session")
 		}
 	}
@@ -218,6 +218,6 @@ func (cl *Client) Login() error {
 func (cl *Client) Destroy() {
 	creds := credentials.NewCredentials("", "")
 	cl.sessions.destroy()
-	cl.Cache.clear()
+	cl.cache.clear()
 	cl.Credentials = &creds
 }
