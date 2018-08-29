@@ -256,18 +256,22 @@ func (c *Credentials) Expired() bool {
 	return false
 }
 
+// Attributes returns the Credentials' attributes map.
 func (c *Credentials) Attributes() map[string]interface{} {
 	return c.attributes
 }
 
+// SetAttribute sets the value of an attribute.
 func (c *Credentials) SetAttribute(k string, v interface{}) {
 	c.attributes[k] = v
 }
 
+// SetAttributes replaces the attributes map with the one provided.
 func (c *Credentials) SetAttributes(a map[string]interface{}) {
 	c.attributes = a
 }
 
+// RemoveAttribute deletes an attribute from the attribute map that has the key provided.
 func (c *Credentials) RemoveAttribute(k string) {
 	delete(c.attributes, k)
 }

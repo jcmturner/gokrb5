@@ -40,7 +40,7 @@ type SPNEGOAuthenticator struct {
 // and use the value from the Principal column for the keytab entry the service should use.
 //
 // RequireHostAddr - require that the kerberos ticket must include client host IP addresses and one must match the client making the request.
-// This is controled in the client config with the noaddresses option (http://web.mit.edu/kerberos/krb5-latest/doc/admin/conf_files/krb5_conf.html).
+// This is controlled in the client config with the noaddresses option (http://web.mit.edu/kerberos/krb5-latest/doc/admin/conf_files/krb5_conf.html).
 //
 // DisablePACDecoding - if set to true decoding of the Microsoft PAC will be disabled.
 type Config struct {
@@ -50,15 +50,18 @@ type Config struct {
 	DisablePACDecoding bool
 }
 
+// NewSPNEGOAuthenticator creates a new SPNEGOAuthenticator.
 func NewSPNEGOAuthenticator(kt keytab.Keytab) (a SPNEGOAuthenticator) {
 	a.Config = NewConfig(kt)
 	return
 }
 
+// NewConfig creates a new kerberos service Config.
 func NewConfig(kt keytab.Keytab) *Config {
 	return &Config{Keytab: kt}
 }
 
+// Authenticate performs authentication checks against the negotiation header value provided.
 func (c *Config) Authenticate(neg, addr string) (i goidentity.Identity, ok bool, err error) {
 	a := SPNEGOAuthenticator{
 		SPNEGOHeaderValue: neg,
