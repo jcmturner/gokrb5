@@ -204,8 +204,8 @@ h := http.HandlerFunc(apphandler)
 ```
 Configure the HTTP handler:
 ```go
-serviceAccountName = ""
-http.Handler("/", service.SPNEGOKRB5Authenticate(h, kt, serviceAccountName, l))
+c := service.NewConfig(kt)
+http.Handler("/", service.SPNEGOKRB5Authenticate(h, c, l))
 ```
 The serviceAccountName needs to be defined when using Active Directory where the SPN is mapped to a user account.
 If this is not required it should be set to an empty string "".
@@ -218,8 +218,8 @@ Access the credentials within your application:
 ```go
 ctx := r.Context()
 if validuser, ok := ctx.Value(service.CTXKeyAuthenticated).(bool); ok && validuser {
-        if creds, ok := ctx.Value(service.CTXKeyCredentials).(credentials.Credentials); ok {
-                if ADCreds, ok := creds.Attributes[credentials.AttributeKeyADCredentials].(credentials.ADCredentials); ok {
+        if creds, ok := ctx.Value(service.CTXKeyCredentials).(goidentity.Identity); ok {
+                if ADCreds, ok := creds.Attributes()[credentials.AttributeKeyADCredentials].(credentials.ADCredentials); ok {
                         // Now access the fields of the ADCredentials struct. For example:
                         groupSids := ADCreds.GroupMembershipSIDs
                 }
@@ -232,10 +232,9 @@ if validuser, ok := ctx.Value(service.CTXKeyAuthenticated).(bool); ok && validus
 To validate the AP_REQ sent by the client on the service side call this method:
 ```go
 import 	"gopkg.in/jcmturner/gokrb5.v6/service"
-var ktprinc string //The SPN of the service to find the key in the keytab.
-var requireHostAddr bool //Whether to force requiring the ticket to contain host addresses to check the client against.
-if ok, creds, err := service.ValidateAPREQ(mt.APReq, kt, ktprinc, r.RemoteAddr, requireHostAddr); ok {
-        // Perform application specifc actions
+a := service.NewSPNEGOAuthenticator(kt)
+if ok, creds, err := service.ValidateAPREQ(mt.APReq, a); ok {
+        // Perform application specific actions
         // creds object has details about the client identity
 }
 ```
