@@ -10,7 +10,7 @@ import (
 
 // Claims reference: https://msdn.microsoft.com/en-us/library/hh553895.aspx
 
-// ClientClaimsInfo implements https://msdn.microsoft.com/en-us/library/hh536365.aspx
+// DeviceClaimsInfo implements https://msdn.microsoft.com/en-us/library/hh554226.aspx
 type DeviceClaimsInfo struct {
 	ClaimsSetMetadata mstypes.ClaimsSetMetadata
 	ClaimsSet         mstypes.ClaimsSet

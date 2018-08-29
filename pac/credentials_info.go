@@ -75,7 +75,7 @@ type CredentialData struct {
 	Credentials     []SECPKGSupplementalCred // Size is the value of CredentialCount
 }
 
-// ReadPACCredentialData reads a CredentialData from the byte slice.
+// Unmarshal converts the bytes provided into a CredentialData type.
 func (c *CredentialData) Unmarshal(b []byte) (err error) {
 	dec := ndr.NewDecoder(bytes.NewReader(b))
 	err = dec.Decode(c)
