@@ -17,11 +17,19 @@
 | Display name | Attribute | Type |
 | -------------|-----------|------|
 | username | sAMAccountName | string |
-| msTSAllowLogon | msTSAllowLogon | boolean |
-| sAMAccountType | sAMAccountType | Integer |
+| otherIpPhone | otherIpPhone | multi-valued string |
 | objectClass | objectClass | multi-valued unsigned integer |
-| ou | ou | multi-valued string |
-| postalAddress | postalAddress | multi-valued string |
+| msDS-SupportedEncryptionTypes | msDS-SupportedEncryptionTypes | Integer |
+
+### Add Attributes to User
+* Edit testuser1 in Active Directory Users and Computers
+* Go to Telephones tab
+* Click the "Other" button next to IP Phone
+* Add these strings:
+  * str1
+  * str2
+  * str3
+  * str4
 
 ### Inspect Values
 ```
