@@ -127,9 +127,6 @@ func (c *Credentials) SetADCredentials(a ADCredentials) {
 	if a.EffectiveName != "" {
 		c.SetUserName(a.EffectiveName)
 	}
-	if a.LogonDomainName != "" {
-		c.SetDomain(a.LogonDomainName)
-	}
 	for i := range a.GroupMembershipSIDs {
 		c.AddAuthzAttribute(a.GroupMembershipSIDs[i])
 	}

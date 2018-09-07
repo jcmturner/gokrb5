@@ -23,18 +23,20 @@ func main() {
 	s := httpServer()
 	defer s.Close()
 
-	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	b, _ := hex.DecodeString(testdata.TESTUSER1_USERKRB5_AD_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	cl := client.NewClientWithKeytab("testuser1", "USER.GOKRB5", kt)
 	cl.WithConfig(c)
+	cl.GoKrb5Conf.DisablePAFXFast = true
 	httpRequest(s.URL, cl)
 
-	b, _ = hex.DecodeString(testdata.TESTUSER2_KEYTAB)
+	b, _ = hex.DecodeString(testdata.TESTUSER2_USERKRB5_AD_KEYTAB)
 	kt, _ = keytab.Parse(b)
 	c, _ = config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	cl = client.NewClientWithKeytab("testuser2", "USER.GOKRB5", kt)
 	cl.WithConfig(c)
+	cl.GoKrb5Conf.DisablePAFXFast = true
 	httpRequest(s.URL, cl)
 
 	//httpRequest("http://host.test.gokrb5/index.html")
@@ -63,7 +65,7 @@ func httpRequest(url string, cl client.Client) {
 
 func httpServer() *httptest.Server {
 	l := log.New(os.Stderr, "GOKRB5 Service: ", log.Ldate|log.Ltime|log.Lshortfile)
-	b, _ := hex.DecodeString(testdata.SYSHTTP_KEYTAB)
+	b, _ := hex.DecodeString(testdata.SYSHTTP_RESGOKRB5_AD_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	th := http.HandlerFunc(testAppHandler)
 	c := service.NewConfig(kt)

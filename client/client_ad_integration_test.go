@@ -46,6 +46,16 @@ func TestClient_GetServiceTicket_AD(t *testing.T) {
 	}
 	assert.Equal(t, spn, tkt.SName.GetPrincipalNameString())
 	assert.Equal(t, int32(18), key.KeyType)
+
+	b, _ = hex.DecodeString(testdata.SYSHTTP_KEYTAB)
+	skt, _ := keytab.Parse(b)
+	err = tkt.DecryptEncPart(skt, "sysHTTP")
+	if err != nil {
+		t.Errorf("could not decrypt service ticket: %v", err)
+	}
+	isPAC, pac, err := tkt.GetPACType(skt, "sysHTTP")
+	assert.True(t, isPAC, "should have PAC")
+	assert.Equal(t, "TEST.GOKRB5", pac.KerbValidationInfo.LogonDomainName.String(), "domain name in PAC not correct")
 }
 
 func TestClient_SuccessfulLogin_AD_TRUST_USER_DOMAIN(t *testing.T) {
