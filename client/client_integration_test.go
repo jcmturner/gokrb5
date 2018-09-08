@@ -338,21 +338,27 @@ func TestClient_SetSPNEGOHeader(t *testing.T) {
 	if url == "" {
 		url = testdata.TEST_HTTP_URL
 	}
-	r, _ := http.NewRequest("GET", url, nil)
-	httpResp, err := http.DefaultClient.Do(r)
-	if err != nil {
-		t.Fatalf("request error: %v\n", err)
+	paths := []string{
+		"/modkerb/index.html",
+		"/modgssapi/index.html",
 	}
-	assert.Equal(t, http.StatusUnauthorized, httpResp.StatusCode, "Status code in response to client with no SPNEGO not as expected")
-	err = cl.SetSPNEGOHeader(r, "HTTP/host.test.gokrb5")
-	if err != nil {
-		t.Fatalf("error setting client SPNEGO header: %v", err)
+	for _, p := range paths {
+		r, _ := http.NewRequest("GET", url+p, nil)
+		httpResp, err := http.DefaultClient.Do(r)
+		if err != nil {
+			t.Fatalf("%s request error: %v\n", url+p, err)
+		}
+		assert.Equal(t, http.StatusUnauthorized, httpResp.StatusCode, "Status code in response to client with no SPNEGO not as expected")
+		err = cl.SetSPNEGOHeader(r, "HTTP/host.test.gokrb5")
+		if err != nil {
+			t.Fatalf("error setting client SPNEGO header: %v", err)
+		}
+		httpResp, err = http.DefaultClient.Do(r)
+		if err != nil {
+			t.Fatalf("%s request error: %v\n", url+p, err)
+		}
+		assert.Equal(t, http.StatusOK, httpResp.StatusCode, "Status code in response to client SPNEGO request not as expected")
 	}
-	httpResp, err = http.DefaultClient.Do(r)
-	if err != nil {
-		t.Fatalf("request error: %v\n", err)
-	}
-	assert.Equal(t, http.StatusOK, httpResp.StatusCode, "Status code in response to client SPNEGO request not as expected")
 }
 
 func TestMultiThreadedClientUse(t *testing.T) {
