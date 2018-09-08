@@ -633,7 +633,7 @@ func TestGetServiceTicketFromCCacheTGT(t *testing.T) {
 	if url == "" {
 		url = testdata.TEST_HTTP_URL
 	}
-	r, _ := http.NewRequest("GET", url, nil)
+	r, _ := http.NewRequest("GET", url+"/modgssapi/index.html", nil)
 	err = cl.SetSPNEGOHeader(r, "HTTP/host.test.gokrb5")
 	if err != nil {
 		t.Fatalf("error setting client SPNEGO header: %v", err)
@@ -668,7 +668,7 @@ func TestGetServiceTicketFromCCacheWithoutKDC(t *testing.T) {
 	if url == "" {
 		url = testdata.TEST_HTTP_URL
 	}
-	r, _ := http.NewRequest("GET", url, nil)
+	r, _ := http.NewRequest("GET", url+"/modgssapi/index.html", nil)
 	err = cl.SetSPNEGOHeader(r, "HTTP/host.test.gokrb5")
 	if err != nil {
 		t.Fatalf("error setting client SPNEGO header: %v", err)
