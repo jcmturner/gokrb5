@@ -8,12 +8,15 @@ ENTRYPOINT ["/usr/sbin/httpd", "-DFOREGROUND"]
 RUN yum install -y \
   httpd \
   mod_auth_kerb \
+  mod_auth_gssapi \
   mod_ssl \
   tcpdump krb5-workstation vim \
   && yum update -y && yum clean all
 
+RUN mkdir /var/www/html/modkerb && mkdir /var/www/html/modgssapi
 ADD httpd-krb5.conf /etc/httpd/conf.d/
-ADD index.html /var/www/html/index.html
+ADD index.html /var/www/html/modkerb/index.html
+ADD index.html /var/www/html/modgssapi/index.html
 ADD krb5.conf /etc/krb5.conf
 ADD http.testtab /etc/httpd/
 #RUN ln -sf /dev/stdout /var/log/httpd/access_log && \
