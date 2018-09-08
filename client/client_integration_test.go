@@ -451,7 +451,7 @@ func spnegoGet(cl *Client) error {
 	if url == "" {
 		url = testdata.TEST_HTTP_URL
 	}
-	r, _ := http.NewRequest("GET", url, nil)
+	r, _ := http.NewRequest("GET", url+"/modgssapi/index.html", nil)
 	httpResp, err := http.DefaultClient.Do(r)
 	if err != nil {
 		return fmt.Errorf("request error: %v\n", err)
