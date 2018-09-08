@@ -2,7 +2,7 @@ package config
 
 import "fmt"
 
-// Unsupported directive error.
+// UnsupportedDirective error.
 type UnsupportedDirective struct {
 	text string
 }
