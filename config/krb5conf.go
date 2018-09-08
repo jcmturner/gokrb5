@@ -123,11 +123,8 @@ func (l *LibDefaults) parseLines(lines []string) error {
 		if line == "" {
 			continue
 		}
-		if strings.Contains(line, "v4_") {
-			return errors.New("v4 configurations are not supported in Realms section")
-		}
 		if !strings.Contains(line, "=") {
-			return fmt.Errorf("libdefaults configuration line invalid: %s", line)
+			return InvalidErrorf("libdefaults section line (%s)", line)
 		}
 
 		p := strings.Split(line, "=")
@@ -136,26 +133,26 @@ func (l *LibDefaults) parseLines(lines []string) error {
 		case "allow_weak_crypto":
 			v, err := parseBoolean(p[1])
 			if err != nil {
-				return fmt.Errorf("libdefaults configuration line invalid. %v: %s", err, line)
+				return InvalidErrorf("libdefaults section line (%s): %v", line, err)
 			}
 			l.AllowWeakCrypto = v
 		case "canonicalize":
 			v, err := parseBoolean(p[1])
 			if err != nil {
-				return fmt.Errorf("libdefaults configuration line invalid. %v: %s", err, line)
+				return InvalidErrorf("libdefaults section line (%s): %v", line, err)
 			}
 			l.Canonicalize = v
 		case "ccache_type":
 			p[1] = strings.TrimSpace(p[1])
 			v, err := strconv.ParseUint(p[1], 10, 32)
 			if err != nil || v < 0 || v > 4 {
-				return fmt.Errorf("libdefaults configuration line invalid: %s", line)
+				return InvalidErrorf("libdefaults section line (%s)", line)
 			}
 			l.CCacheType = int(v)
 		case "clockskew":
 			d, err := parseDuration(p[1])
 			if err != nil {
-				return fmt.Errorf("libdefaults configuration line invalid. %v: %s", err, line)
+				return InvalidErrorf("libdefaults section line (%s): %v", line, err)
 			}
 			l.Clockskew = d
 		case "default_client_keytab_name":
@@ -171,19 +168,19 @@ func (l *LibDefaults) parseLines(lines []string) error {
 		case "dns_canonicalize_hostname":
 			v, err := parseBoolean(p[1])
 			if err != nil {
-				return fmt.Errorf("libdefaults configuration line invalid. %v: %s", err, line)
+				return InvalidErrorf("libdefaults section line (%s): %v", line, err)
 			}
 			l.DNSCanonicalizeHostname = v
 		case "dns_lookup_kdc":
 			v, err := parseBoolean(p[1])
 			if err != nil {
-				return fmt.Errorf("libdefaults configuration line invalid. %v: %s", err, line)
+				return InvalidErrorf("libdefaults section line (%s): %v", line, err)
 			}
 			l.DNSLookupKDC = v
 		case "dns_lookup_realm":
 			v, err := parseBoolean(p[1])
 			if err != nil {
-				return fmt.Errorf("libdefaults configuration line invalid. %v: %s", err, line)
+				return InvalidErrorf("libdefaults section line (%s): %v", line, err)
 			}
 			l.DNSLookupRealm = v
 		case "extra_addresses":
@@ -196,19 +193,19 @@ func (l *LibDefaults) parseLines(lines []string) error {
 		case "forwardable":
 			v, err := parseBoolean(p[1])
 			if err != nil {
-				return fmt.Errorf("libdefaults configuration line invalid. %v: %s", err, line)
+				return InvalidErrorf("libdefaults section line (%s): %v", line, err)
 			}
 			l.Forwardable = v
 		case "ignore_acceptor_hostname":
 			v, err := parseBoolean(p[1])
 			if err != nil {
-				return fmt.Errorf("libdefaults configuration line invalid. %v: %s", err, line)
+				return InvalidErrorf("libdefaults section line (%s): %v", line, err)
 			}
 			l.IgnoreAcceptorHostname = v
 		case "k5login_authoritative":
 			v, err := parseBoolean(p[1])
 			if err != nil {
-				return fmt.Errorf("libdefaults configuration line invalid. %v: %s", err, line)
+				return InvalidErrorf("libdefaults section line (%s): %v", line, err)
 			}
 			l.K5LoginAuthoritative = v
 		case "k5login_directory":
@@ -218,7 +215,7 @@ func (l *LibDefaults) parseLines(lines []string) error {
 			v = strings.Replace(v, "0x", "", -1)
 			b, err := hex.DecodeString(v)
 			if err != nil {
-				return fmt.Errorf("libdefaults configuration line invalid: %s", line)
+				return InvalidErrorf("libdefaults section line (%s): %v", line, err)
 			}
 			l.KDCDefaultOptions.Bytes = b
 			l.KDCDefaultOptions.BitLength = len(b) * 8
@@ -226,13 +223,13 @@ func (l *LibDefaults) parseLines(lines []string) error {
 			p[1] = strings.TrimSpace(p[1])
 			v, err := strconv.ParseInt(p[1], 10, 32)
 			if err != nil || v < 0 {
-				return fmt.Errorf("libdefaults configuration line invalid: %s", line)
+				return InvalidErrorf("libdefaults section line (%s)", line)
 			}
 			l.KDCTimeSync = int(v)
 		case "noaddresses":
 			v, err := parseBoolean(p[1])
 			if err != nil {
-				return fmt.Errorf("libdefaults configuration line invalid. %v: %s", err, line)
+				return InvalidErrorf("libdefaults section line (%s): %v", line, err)
 			}
 			l.NoAddresses = v
 		case "permitted_enctypes":
@@ -244,7 +241,7 @@ func (l *LibDefaults) parseLines(lines []string) error {
 			for _, s := range t {
 				i, err := strconv.ParseInt(s, 10, 32)
 				if err != nil {
-					return fmt.Errorf("libdefaults configuration line invalid: %s", line)
+					return InvalidErrorf("libdefaults section line (%s): %v", line, err)
 				}
 				v = append(v, int(i))
 			}
@@ -252,52 +249,52 @@ func (l *LibDefaults) parseLines(lines []string) error {
 		case "proxiable":
 			v, err := parseBoolean(p[1])
 			if err != nil {
-				return fmt.Errorf("libdefaults configuration line invalid. %v: %s", err, line)
+				return InvalidErrorf("libdefaults section line (%s): %v", line, err)
 			}
 			l.Proxiable = v
 		case "rdns":
 			v, err := parseBoolean(p[1])
 			if err != nil {
-				return fmt.Errorf("libdefaults configuration line invalid. %v: %s", err, line)
+				return InvalidErrorf("libdefaults section line (%s): %v", line, err)
 			}
 			l.RDNS = v
 		case "realm_try_domains":
 			p[1] = strings.TrimSpace(p[1])
 			v, err := strconv.ParseInt(p[1], 10, 32)
 			if err != nil || v < -1 {
-				return fmt.Errorf("libdefaults configuration line invalid: %s", line)
+				return InvalidErrorf("libdefaults section line (%s)", line)
 			}
 			l.RealmTryDomains = int(v)
 		case "renew_lifetime":
 			d, err := parseDuration(p[1])
 			if err != nil {
-				return fmt.Errorf("libdefaults configuration line invalid. %v: %s", err, line)
+				return InvalidErrorf("libdefaults section line (%s): %v", line, err)
 			}
 			l.RenewLifetime = d
 		case "safe_checksum_type":
 			p[1] = strings.TrimSpace(p[1])
 			v, err := strconv.ParseInt(p[1], 10, 32)
 			if err != nil || v < 0 {
-				return fmt.Errorf("libdefaults configuration line invalid: %s", line)
+				return InvalidErrorf("libdefaults section line (%s)", line)
 			}
 			l.SafeChecksumType = int(v)
 		case "ticket_lifetime":
 			d, err := parseDuration(p[1])
 			if err != nil {
-				return fmt.Errorf("libdefaults configuration line invalid. %v: %s", err, line)
+				return InvalidErrorf("libdefaults section line (%s): %v", line, err)
 			}
 			l.TicketLifetime = d
 		case "udp_preference_limit":
 			p[1] = strings.TrimSpace(p[1])
 			v, err := strconv.ParseUint(p[1], 10, 32)
 			if err != nil || v > 32700 {
-				return fmt.Errorf("libdefaults configuration line invalid: %s", line)
+				return InvalidErrorf("libdefaults section line (%s)", line)
 			}
 			l.UDPPreferenceLimit = int(v)
 		case "verify_ap_req_nofail":
 			v, err := parseBoolean(p[1])
 			if err != nil {
-				return fmt.Errorf("libdefaults configuration line invalid. %v: %s", err, line)
+				return InvalidErrorf("libdefaults section line (%s): %v", line, err)
 			}
 			l.VerifyAPReqNofail = v
 		default:
@@ -324,18 +321,47 @@ type Realm struct {
 }
 
 // Parse the lines of a [realms] entry into the Realm struct.
-func (r *Realm) parseLines(name string, lines []string) error {
+func (r *Realm) parseLines(name string, lines []string) (err error) {
 	r.Realm = name
 	var adminServerFinal bool
 	var KDCFinal bool
 	var kpasswdServerFinal bool
 	var masterKDCFinal bool
+	var ignore bool
+	var c int // counts the depth of blocks within brackets { }
 	for _, line := range lines {
-		if strings.TrimSpace(line) == "" {
+		if ignore && c > 0 && !strings.Contains(line, "{") && !strings.Contains(line, "}") {
 			continue
 		}
-		if !strings.Contains(line, "=") {
-			return fmt.Errorf("realm configuration line invalid: %s", line)
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		if !strings.Contains(line, "=") && !strings.Contains(line, "}") {
+			return InvalidErrorf("realms section line (%s)", line)
+		}
+		if strings.Contains(line, "v4_") {
+			ignore = true
+			err = UnsupportedDirective{"v4 configurations are not supported"}
+		}
+		if strings.Contains(line, "{") {
+			c++
+			if ignore {
+				continue
+			}
+		}
+		if strings.Contains(line, "}") {
+			c--
+			if c < 0 {
+				return InvalidErrorf("unpaired curly brackets")
+			}
+			if ignore {
+				if c < 1 {
+					c = 0
+					ignore = false
+				}
+				continue
+			}
 		}
 
 		p := strings.Split(line, "=")
@@ -372,45 +398,54 @@ func (r *Realm) parseLines(name string, lines []string) error {
 			r.KPasswdServer = append(r.KPasswdServer, s[0]+":464")
 		}
 	}
-	return nil
+	return
 }
 
 // Parse the lines of the [realms] section of the configuration into an slice of Realm structs.
-func parseRealms(lines []string) ([]Realm, error) {
-	var realms []Realm
-	start := -1
+func parseRealms(lines []string) (realms []Realm, err error) {
 	var name string
+	var start int
+	var c int
 	for i, l := range lines {
-		if strings.TrimSpace(l) == "" {
+		l = strings.TrimSpace(l)
+		if l == "" {
 			continue
 		}
-		if strings.Contains(l, "v4_") {
-			return nil, errors.New("v4 configurations are not supported in Realms section")
-		}
+		//if strings.Contains(l, "v4_") {
+		//	return nil, errors.New("v4 configurations are not supported in Realms section")
+		//}
 		if strings.Contains(l, "{") {
-			if start >= 0 {
-				// already started a block!!!
-				return nil, errors.New("invalid Realms section in configuration")
-			}
-			start = i
+			c++
 			if !strings.Contains(l, "=") {
 				return nil, fmt.Errorf("realm configuration line invalid: %s", l)
 			}
-			p := strings.Split(l, "=")
-			name = strings.TrimSpace(p[0])
+			if c == 1 {
+				start = i
+				p := strings.Split(l, "=")
+				name = strings.TrimSpace(p[0])
+			}
 		}
 		if strings.Contains(l, "}") {
-			if start < 0 {
+			if c < 1 {
 				// but not started a block!!!
 				return nil, errors.New("invalid Realms section in configuration")
 			}
-			var r Realm
-			r.parseLines(name, lines[start+1:i])
-			realms = append(realms, r)
-			start = -1
+			c--
+			if c == 0 {
+				var r Realm
+				e := r.parseLines(name, lines[start+1:i])
+				if e != nil {
+					if _, ok := e.(UnsupportedDirective); !ok {
+						err = e
+						return
+					}
+					err = e
+				}
+				realms = append(realms, r)
+			}
 		}
 	}
-	return realms, nil
+	return
 }
 
 // DomainRealm maps the domains to realms representing the [domain_realm] section of the configuration.
@@ -423,7 +458,7 @@ func (d *DomainRealm) parseLines(lines []string) error {
 			continue
 		}
 		if !strings.Contains(line, "=") {
-			return fmt.Errorf("realm configuration line invalid: %s", line)
+			return InvalidErrorf("realm line (%s)", line)
 		}
 		p := strings.Split(line, "=")
 		domain := strings.TrimSpace(strings.ToLower(p[0]))
@@ -490,6 +525,7 @@ func NewConfigFromReader(r io.Reader) (*Config, error) {
 // NewConfigFromScanner creates a new Config struct from a bufio.Scanner.
 func NewConfigFromScanner(scanner *bufio.Scanner) (*Config, error) {
 	c := NewConfig()
+	var e error
 	sections := make(map[int]string)
 	var sectionLineNum []int
 	var lines []string
@@ -531,24 +567,33 @@ func NewConfigFromScanner(scanner *bufio.Scanner) (*Config, error) {
 		case "libdefaults":
 			err := c.LibDefaults.parseLines(lines[start:end])
 			if err != nil {
-				return nil, fmt.Errorf("error processing libdefaults section: %v", err)
+				if _, ok := err.(UnsupportedDirective); !ok {
+					return nil, fmt.Errorf("error processing libdefaults section: %v", err)
+				}
+				e = err
 			}
 		case "realms":
 			realms, err := parseRealms(lines[start:end])
 			if err != nil {
-				return nil, fmt.Errorf("error processing realms section: %v", err)
+				if _, ok := err.(UnsupportedDirective); !ok {
+					return nil, fmt.Errorf("error processing realms section: %v", err)
+				}
+				e = err
 			}
 			c.Realms = realms
 		case "domain_realm":
 			err := c.DomainRealm.parseLines(lines[start:end])
 			if err != nil {
-				return nil, fmt.Errorf("error processing domaain_realm section: %v", err)
+				if _, ok := err.(UnsupportedDirective); !ok {
+					return nil, fmt.Errorf("error processing domaain_realm section: %v", err)
+				}
+				e = err
 			}
 		default:
 			continue
 		}
 	}
-	return c, nil
+	return c, e
 }
 
 // Parse a space delimited list of ETypes into a list of EType numbers optionally filtering out weak ETypes.
