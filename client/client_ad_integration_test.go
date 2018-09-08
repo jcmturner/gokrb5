@@ -53,7 +53,10 @@ func TestClient_GetServiceTicket_AD(t *testing.T) {
 	if err != nil {
 		t.Errorf("could not decrypt service ticket: %v", err)
 	}
-	isPAC, pac, err := tkt.GetPACType(skt, "sysHTTP")
+	isPAC, pac, e := tkt.GetPACType(skt, "sysHTTP")
+	if e != nil {
+		t.Errorf("error getting PAC: %v", e)
+	}
 	assert.True(t, isPAC, "should have PAC")
 	assert.Equal(t, "TEST.GOKRB5", pac.KerbValidationInfo.LogonDomainName.String(), "domain name in PAC not correct")
 }
