@@ -45,7 +45,7 @@ func main() {
 func testAppHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	ctx := r.Context()
-	creds := ctx.Value(service.CTXKeyCredentials).(credentials.Credentials)
+	creds := ctx.Value(service.CTXKeyCredentials).(*credentials.Credentials)
 	fmt.Fprintf(w,
 		`<html>
 <h1>GOKRB5 Handler</h1>
