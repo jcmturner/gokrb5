@@ -10,7 +10,8 @@ import (
 	"os"
 
 	//"github.com/pkg/profile"
-	"gopkg.in/jcmturner/gokrb5.v6/credentials"
+	// "gopkg.in/jcmturner/gokrb5.v6/credentials"
+	goidentity "gopkg.in/jcmturner/goidentity.v3"
 	"gopkg.in/jcmturner/gokrb5.v6/keytab"
 	"gopkg.in/jcmturner/gokrb5.v6/service"
 	"gopkg.in/jcmturner/gokrb5.v6/testdata"
