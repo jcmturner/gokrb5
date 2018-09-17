@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 
-	// "gopkg.in/jcmturner/gokrb5.v6/credentials"
 	goidentity "gopkg.in/jcmturner/goidentity.v3"
 	"gopkg.in/jcmturner/gokrb5.v6/keytab"
 	"gopkg.in/jcmturner/gokrb5.v6/service"
