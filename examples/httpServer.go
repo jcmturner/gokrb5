@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 
-	//"github.com/pkg/profile"
 	// "gopkg.in/jcmturner/gokrb5.v6/credentials"
 	goidentity "gopkg.in/jcmturner/goidentity.v3"
 	"gopkg.in/jcmturner/gokrb5.v6/keytab"
