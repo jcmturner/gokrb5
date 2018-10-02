@@ -79,10 +79,14 @@ func (c *Config) Authenticate(neg, addr string) (i goidentity.Identity, ok bool,
 		err = fmt.Errorf("SPNEGO negotiation token is not a NegTokenInit: %v", err)
 		return
 	}
-	if !spnego.NegTokenInit.MechTypes[0].Equal(gssapi.MechTypeOIDKRB5) {
-		err = errors.New("SPNEGO OID of MechToken is not of type KRB5")
-		return
-	}
+	krb5Found := false
+        for i := 0 ; i < len(spnego.NegTokenInit.MechTypes) ; i++ {
+            if spnego.NegTokenInit.MechTypes[i].Equal(gssapi.MechTypeOIDKRB5) { krb5Found = true }
+        }
+        if !krb5Found {
+                err = errors.New("SPNEGO OID of MechToken is not of type KRB5")
+                return
+        }
 	var mt gssapi.MechToken
 	err = mt.Unmarshal(spnego.NegTokenInit.MechToken)
 	if err != nil {
