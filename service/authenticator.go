@@ -81,10 +81,10 @@ func (c *Config) Authenticate(neg, addr string) (i goidentity.Identity, ok bool,
 	}
 	var krb5Found bool
 	for _, t := range spnego.NegTokenInit.MechTypes {
- 	   if t.Equal(gssapi.MechTypeOIDKRB5) {
-        	krb5Found = true
-        	break
-    	   }
+		if t.Equal(gssapi.MechTypeOIDKRB5) {
+			krb5Found = true
+			break
+    	   	}
 	}
         if !krb5Found {
                 err = errors.New("SPNEGO OID of MechToken is not of type KRB5")
