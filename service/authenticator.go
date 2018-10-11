@@ -81,8 +81,8 @@ func (c *Config) Authenticate(neg, addr string) (i goidentity.Identity, ok bool,
 	}
 	if !(spnego.NegTokenInit.MechTypes[0].Equal(gssapi.MechTypeOIDKRB5) ||
 		spnego.NegTokenInit.MechTypes[0].Equal(gssapi.MechTypeOIDMSLegacyKRB5)) {
-			err = errors.New("SPNEGO OID of MechToken is not of type KRB5")
-			return
+		err = errors.New("SPNEGO OID of MechToken is not of type KRB5")
+		return
 	}
 	var mt gssapi.MechToken
 	err = mt.Unmarshal(spnego.NegTokenInit.MechToken)
