@@ -11,14 +11,10 @@ for the preferred mechanism (KRB5 in this case) of the client. The ``NewNegToken
 includes this in the message.
 
 The server side responds to this message with a one of four messages:
+
 | Message Type/State | Description |
 |--------------------|-------------|
-| accept-completed | indicates that the
-                     initiator-selected mechanism was acceptable to the target, and that
-                     the security mechanism token embedded in the first negotiation
-                     message was sufficient to complete the authentication |
+| accept-completed | indicates that the initiator-selected mechanism was acceptable to the target, and that the security mechanism token embedded in the first negotiation message was sufficient to complete the authentication |
 | accept-incomplete | At least one more message is needed from the client to establish security context. |
 | reject | Negotiation is being terminated. |
-| request-mic | (this state can only be present in the first reply message from the target) 
-                indicates that the MIC token exchange is REQUIRED if per-message integrity 
-                services are available |
+| request-mic | (this state can only be present in the first reply message from the target) indicates that the MIC token exchange is REQUIRED if per-message integrity services are available |
