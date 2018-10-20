@@ -59,6 +59,16 @@ func (s *session) destroy() {
 	s.sessionKeyExpiration = s.endTime
 }
 
+func (s *session) valid() bool {
+	s.mux.RLock()
+	defer s.mux.RUnlock()
+	t := time.Now().UTC()
+	if t.Before(s.endTime) && s.authTime.Before(t) {
+		return true
+	}
+	return false
+}
+
 // AddSession adds a session for a realm with a TGT to the client's session cache.
 // A goroutine is started to automatically renew the TGT before expiry.
 func (cl *Client) AddSession(tgt messages.Ticket, dep messages.EncKDCRepPart) {

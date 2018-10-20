@@ -32,6 +32,7 @@ type Client struct {
 type Config struct {
 	DisablePAFXFast              bool
 	AssumePAEncTimestampRequired bool
+	preAuthEType                 int32
 }
 
 // NewClientWithPassword creates a new client from a password credential.

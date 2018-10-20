@@ -708,17 +708,18 @@ func TestClient_ChangePasswd(t *testing.T) {
 	assert.True(t, ok, "password was not changed back")
 }
 
-func TestClient_AutoRenew_Goroutine_Count(t *testing.T) {
+func TestClient_AutoRenew_Goroutine(t *testing.T) {
 	// Tests that the auto renew of client credentials is not spawning goroutines out of control.
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
 		addr = testdata.TEST_KDC_ADDR
 	}
-	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	b, _ := hex.DecodeString(testdata.TESTUSER2_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC_SHORTTICKETS}
-	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
+	c.LibDefaults.PreferredPreauthTypes = []int{int(etypeID.DES3_CBC_SHA1_KD)} // a preauth etype the KDC does not support. Test this does not cause renewal to fail.
+	cl := NewClientWithKeytab("testuser2", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 
 	err := cl.Login()
@@ -728,6 +729,13 @@ func TestClient_AutoRenew_Goroutine_Count(t *testing.T) {
 	n := runtime.NumGoroutine()
 	for i := 0; i < 6; i++ {
 		time.Sleep(time.Second * 20)
+		sess, err := cl.sessionFromRealm("TEST.GOKRB5")
+		if err != nil {
+			t.Errorf("could not get client's session: %v", err)
+		}
+		if !sess.valid() {
+			t.Fatalf("session auto update failed")
+		}
 		if runtime.NumGoroutine() > n {
 			t.Fatalf("number of goroutines is increasing: should not be more than %d, is %d", n, runtime.NumGoroutine())
 		}
