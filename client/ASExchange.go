@@ -27,7 +27,7 @@ func (cl *Client) ASExchange(realm string, ASReq messages.ASReq, referral int) (
 	if err != nil {
 		if e, ok := err.(messages.KRBError); ok {
 			switch e.ErrorCode {
-			case errorcode.KDC_ERR_PREAUTH_REQUIRED:
+			case errorcode.KDC_ERR_PREAUTH_REQUIRED, errorcode.KDC_ERR_PREAUTH_FAILED:
 				// From now on assume this client will need to do this pre-auth and set the PAData
 				cl.GoKrb5Conf.AssumePAEncTimestampRequired = true
 				err = setPAData(cl, e, &ASReq)
@@ -81,8 +81,12 @@ func setPAData(cl *Client, krberr messages.KRBError, ASReq *messages.ASReq) erro
 		}
 		var et etype.EType
 		if krberr.ErrorCode == 0 {
-			// This is not in response to an error from the KDC. It is preemptive
-			et, err = crypto.GetEtype(ASReq.ReqBody.EType[0]) // Take the first as preference
+			etn := cl.GoKrb5Conf.preAuthEType
+			if etn == 0 {
+				etn = int32(cl.Config.LibDefaults.PreferredPreauthTypes[0])
+			}
+			// This is not in response to an error from the KDC. It is preemptive or renewal
+			et, err = crypto.GetEtype(etn) // Take the first as preference
 			if err != nil {
 				return krberror.Errorf(err, krberror.EncryptingError, "error getting etype for pre-auth encryption")
 			}
@@ -92,6 +96,7 @@ func setPAData(cl *Client, krberr messages.KRBError, ASReq *messages.ASReq) erro
 			if err != nil {
 				return krberror.Errorf(err, krberror.EncryptingError, "error getting etype for pre-auth encryption")
 			}
+			cl.GoKrb5Conf.preAuthEType = et.GetETypeID()
 		}
 		key, err := cl.Key(et, krberr)
 		if err != nil {
