@@ -127,6 +127,13 @@ func (s *session) tgtDetails() (string, messages.Ticket, types.EncryptionKey) {
 	return s.realm, s.tgt, s.sessionKey
 }
 
+// timeDetails is a thread safe way to get the session's validity time values
+func (s *session) timeDetails() (string, time.Time, time.Time, time.Time, time.Time) {
+	s.mux.RLock()
+	defer s.mux.RUnlock()
+	return s.realm, s.authTime, s.endTime, s.renewTill, s.sessionKeyExpiration
+}
+
 // enableAutoSessionRenewal turns on the automatic renewal for the client's TGT session.
 func (cl *Client) enableAutoSessionRenewal(s *session) {
 	var timer *time.Timer
