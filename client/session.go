@@ -37,8 +37,8 @@ func (s *sessions) update(sess *session) {
 			// Session in the sessions cache is not the same as one provided.
 			// Cancel the one in the cache and add this one.
 			i.mux.Lock()
+			defer i.mux.Unlock()
 			i.cancel <- true
-			i.mux.Unlock()
 			s.Entries[sess.realm] = sess
 			return
 		}
