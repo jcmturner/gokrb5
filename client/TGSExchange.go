@@ -1,8 +1,6 @@
 package client
 
 import (
-	"time"
-
 	"gopkg.in/jcmturner/gokrb5.v6/iana/nametype"
 	"gopkg.in/jcmturner/gokrb5.v6/krberror"
 	"gopkg.in/jcmturner/gokrb5.v6/messages"
@@ -67,23 +65,16 @@ func (cl *Client) GetServiceTicket(spn string) (messages.Ticket, types.Encryptio
 		return tkt, skey, nil
 	}
 	princ := types.NewPrincipalName(nametype.KRB_NT_PRINCIPAL, spn)
-	sess, err := cl.sessionFromPrincipalName(princ)
+	realm := cl.Config.ResolveRealm(princ.NameString[len(princ.NameString)-1])
+
+	err := cl.ensureValidSession(realm)
 	if err != nil {
 		return tkt, skey, err
 	}
-	// Ensure TGT still valid
-	if time.Now().UTC().After(sess.endTime) {
-		_, err := cl.updateSession(sess)
-		if err != nil {
-			return tkt, skey, err
-		}
-		// Get the session again as it could have been replaced by the update
-		sess, err = cl.sessionFromPrincipalName(princ)
-		if err != nil {
-			return tkt, skey, err
-		}
-	}
-	_, tgsRep, err := cl.TGSExchange(princ, sess.realm, sess.tgt, sess.sessionKey, false, 0)
+
+	tgt, skey, err := cl.sessionTGTDetails(realm)
+
+	_, tgsRep, err := cl.TGSExchange(princ, realm, tgt, skey, false, 0)
 	if err != nil {
 		return tkt, skey, err
 	}

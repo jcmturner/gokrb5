@@ -176,7 +176,7 @@ func (cl *Client) IsConfigured() (bool, error) {
 	}
 	// Client needs to have either a password, keytab or a session already (later when loading from CCache)
 	if !cl.Credentials.HasPassword() && !cl.Credentials.HasKeytab() {
-		sess, err := cl.sessionFromRealm(cl.Credentials.Realm)
+		sess, err := cl.realmSession(cl.Credentials.Realm)
 		if err != nil || sess.authTime.IsZero() {
 			return false, errors.New("client has neither a keytab nor a password set and no session")
 		}
