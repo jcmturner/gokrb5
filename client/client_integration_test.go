@@ -416,7 +416,7 @@ func TestMultiThreadedClientSession(t *testing.T) {
 		t.Fatalf("failed to log in: %v", err)
 	}
 
-	s, err := cl.sessionFromRealm("TEST.GOKRB5")
+	s, err := cl.realmSession("TEST.GOKRB5")
 	if err != nil {
 		t.Fatalf("error initially getting session: %v", err)
 	}
@@ -435,7 +435,7 @@ func TestMultiThreadedClientSession(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		go func() {
 			defer wg.Done()
-			s, err := cl.sessionFromRealm("TEST.GOKRB5")
+			s, err := cl.realmSession("TEST.GOKRB5")
 			if err != nil {
 				t.Logf("error getting session: %v", err)
 			}
@@ -729,7 +729,7 @@ func TestClient_AutoRenew_Goroutine(t *testing.T) {
 	n := runtime.NumGoroutine()
 	for i := 0; i < 6; i++ {
 		time.Sleep(time.Second * 20)
-		sess, err := cl.sessionFromRealm("TEST.GOKRB5")
+		sess, err := cl.realmSession("TEST.GOKRB5")
 		if err != nil {
 			t.Errorf("could not get client's session: %v", err)
 		}
