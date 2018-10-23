@@ -36,7 +36,9 @@ func (s *sessions) update(sess *session) {
 		if i != sess {
 			// Session in the sessions cache is not the same as one provided.
 			// Cancel the one in the cache and add this one.
+			i.mux.Lock()
 			i.cancel <- true
+			i.mux.Unlock()
 			s.Entries[sess.realm] = sess
 			return
 		}
@@ -123,22 +125,6 @@ func (s *session) tgtDetails() (string, messages.Ticket, types.EncryptionKey) {
 	s.mux.RLock()
 	defer s.mux.RUnlock()
 	return s.realm, s.tgt, s.sessionKey
-}
-
-// copy returns a copy of the session
-func (s *session) copy() session {
-	s.mux.RLock()
-	defer s.mux.RUnlock()
-	sess := session{
-		realm:                s.realm,
-		authTime:             s.authTime,
-		endTime:              s.endTime,
-		renewTill:            s.renewTill,
-		tgt:                  s.tgt,
-		sessionKey:           s.sessionKey,
-		sessionKeyExpiration: s.sessionKeyExpiration,
-	}
-	return sess
 }
 
 // enableAutoSessionRenewal turns on the automatic renewal for the client's TGT session.
