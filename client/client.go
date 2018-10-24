@@ -176,8 +176,8 @@ func (cl *Client) IsConfigured() (bool, error) {
 	}
 	// Client needs to have either a password, keytab or a session already (later when loading from CCache)
 	if !cl.Credentials.HasPassword() && !cl.Credentials.HasKeytab() {
-		sess, err := cl.realmSession(cl.Credentials.Realm)
-		if err != nil || sess.authTime.IsZero() {
+		authTime, _, _, _, err := cl.sessionTimes(cl.Credentials.Realm)
+		if err != nil || authTime.IsZero() {
 			return false, errors.New("client has neither a keytab nor a password set and no session")
 		}
 	}
@@ -212,6 +212,28 @@ func (cl *Client) Login() error {
 		return err
 	}
 	cl.AddSession(ASRep.Ticket, ASRep.DecryptedEncPart)
+	return nil
+}
+
+// remoteRealmSession returns the session for a realm that the client is not a member of but for which there is a trust
+func (cl *Client) realmLogin(realm string) error {
+	err := cl.ensureValidSession(cl.Credentials.Realm)
+	if err != nil || realm == cl.Credentials.Realm {
+		return err
+	}
+	tgt, skey, err := cl.sessionTGT(cl.Credentials.Realm)
+
+	spn := types.PrincipalName{
+		NameType:   nametype.KRB_NT_SRV_INST,
+		NameString: []string{"krbtgt", realm},
+	}
+
+	_, tgsRep, err := cl.TGSExchange(spn, cl.Credentials.Realm, tgt, skey, false, 0)
+	if err != nil {
+		return err
+	}
+	cl.AddSession(tgsRep.Ticket, tgsRep.DecryptedEncPart)
+
 	return nil
 }
 
