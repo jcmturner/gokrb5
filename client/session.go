@@ -179,7 +179,7 @@ func (cl *Client) renewTGT(s *session) error {
 	return nil
 }
 
-// updateSession updates either through renewal or creating a new login.
+// refreshSession updates either through renewal or creating a new login.
 // The boolean indicates if the update was a renewal.
 func (cl *Client) refreshSession(s *session) (bool, error) {
 	s.mux.RLock()
@@ -190,14 +190,7 @@ func (cl *Client) refreshSession(s *session) (bool, error) {
 		err := cl.renewTGT(s)
 		return true, err
 	}
-	if realm != cl.Credentials.Realm {
-		// session is not for the client's own realm
-		_, err := cl.remoteRealmSession(realm)
-		if err != nil {
-			return false, err
-		}
-	}
-	err := cl.Login()
+	err := cl.realmLogin(realm)
 	return false, err
 }
 
@@ -214,62 +207,31 @@ func (cl *Client) ensureValidSession(realm string) error {
 		_, err := cl.refreshSession(s)
 		return err
 	}
-	if realm != cl.Credentials.Realm {
-		// not for the client's own realm
-		_, err := cl.remoteRealmSession(realm)
-		return err
-	}
-	return cl.Login()
-}
-
-// remoteRealmSession returns the session for a realm that the client is not a member of but for which there is a trust
-func (cl *Client) remoteRealmSession(realm string) (*session, error) {
-	s, ok := cl.sessions.get(cl.Credentials.Realm)
-	if !ok || !s.valid() {
-		err := cl.Login()
-		if err != nil {
-			return nil, fmt.Errorf("client was unable to login: %v", err)
-		}
-	}
-
-	spn := types.PrincipalName{
-		NameType:   nametype.KRB_NT_SRV_INST,
-		NameString: []string{"krbtgt", realm},
-	}
-
-	_, tgsRep, err := cl.TGSExchange(spn, cl.Credentials.Realm, s.tgt, s.sessionKey, false, 0)
-	if err != nil {
-		return nil, err
-	}
-	cl.AddSession(tgsRep.Ticket, tgsRep.DecryptedEncPart)
-
-	cl.sessions.mux.RLock()
-	defer cl.sessions.mux.RUnlock()
-	return cl.sessions.Entries[realm], nil
-}
-
-// realmSession returns the session for the realm provided.
-func (cl *Client) realmSession(realm string) (*session, error) {
-	s, ok := cl.sessions.get(realm)
-	var err error
-	if !ok {
-		// Try to request TGT from trusted remote Realm
-		s, err = cl.remoteRealmSession(realm)
-		if err != nil {
-			return s, err
-		}
-	}
-	return s, nil
+	return cl.realmLogin(realm)
 }
 
 // sessionTGTDetails is a thread safe way to get the TGT and session key values for a realm
-func (cl *Client) sessionTGTDetails(realm string) (tgt messages.Ticket, sessionKey types.EncryptionKey, err error) {
-	var s *session
-	s, err = cl.realmSession(realm)
+func (cl *Client) sessionTGT(realm string) (tgt messages.Ticket, sessionKey types.EncryptionKey, err error) {
+	err = cl.ensureValidSession(realm)
 	if err != nil {
 		return
 	}
-	realm, tgt, sessionKey = s.tgtDetails()
+	s, ok := cl.sessions.get(realm)
+	if !ok {
+		err = fmt.Errorf("could not find TGT session for %s", realm)
+		return
+	}
+	_, tgt, sessionKey = s.tgtDetails()
+	return
+}
+
+func (cl *Client) sessionTimes(realm string) (authTime, endTime, renewTime, sessionExp time.Time, err error) {
+	s, ok := cl.sessions.get(realm)
+	if !ok {
+		err = fmt.Errorf("could not find TGT session for %s", realm)
+		return
+	}
+	_, authTime, endTime, renewTime, sessionExp = s.timeDetails()
 	return
 }
 
