@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -71,9 +72,12 @@ type session struct {
 // AddSession adds a session for a realm with a TGT to the client's session cache.
 // A goroutine is started to automatically renew the TGT before expiry.
 func (cl *Client) AddSession(tgt messages.Ticket, dep messages.EncKDCRepPart) {
-	realm := cl.spnRealm(tgt.SName)
+	if strings.ToLower(tgt.SName.NameString[0]) != "krbtgt" {
+		// Not a TGT
+		return
+	}
 	s := &session{
-		realm:                realm,
+		realm:                tgt.SName.NameString[len(tgt.SName.NameString)-1],
 		authTime:             dep.AuthTime,
 		endTime:              dep.EndTime,
 		renewTill:            dep.RenewTill,
