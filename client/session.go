@@ -141,7 +141,9 @@ func (s *session) timeDetails() (string, time.Time, time.Time, time.Time, time.T
 // enableAutoSessionRenewal turns on the automatic renewal for the client's TGT session.
 func (cl *Client) enableAutoSessionRenewal(s *session) {
 	var timer *time.Timer
+	s.mux.Lock()
 	s.cancel = make(chan bool, 1)
+	s.mux.Unlock()
 	go func(s *session) {
 		for {
 			s.mux.RLock()
