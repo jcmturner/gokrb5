@@ -4,6 +4,7 @@ package client
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"gopkg.in/jcmturner/gokrb5.v6/config"
 	"gopkg.in/jcmturner/gokrb5.v6/credentials"
@@ -217,9 +218,15 @@ func (cl *Client) Login() error {
 
 // remoteRealmSession returns the session for a realm that the client is not a member of but for which there is a trust
 func (cl *Client) realmLogin(realm string) error {
-	err := cl.ensureValidSession(cl.Credentials.Realm)
-	if err != nil || realm == cl.Credentials.Realm {
-		return err
+	if realm == cl.Credentials.Realm {
+		return cl.Login()
+	}
+	_, endTime, _, _, err := cl.sessionTimes(cl.Credentials.Realm)
+	if err != nil || time.Now().UTC().After(endTime) {
+		err := cl.Login()
+		if err != nil {
+			return fmt.Errorf("could not get valid TGT for client's realm: %v", err)
+		}
 	}
 	tgt, skey, err := cl.sessionTGT(cl.Credentials.Realm)
 
