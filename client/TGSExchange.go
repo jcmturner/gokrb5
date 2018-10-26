@@ -68,6 +68,9 @@ func (cl *Client) GetServiceTicket(spn string) (messages.Ticket, types.Encryptio
 	realm := cl.Config.ResolveRealm(princ.NameString[len(princ.NameString)-1])
 
 	tgt, skey, err := cl.sessionTGT(realm)
+	if err != nil {
+		return tkt, skey, err
+	}
 
 	_, tgsRep, err := cl.TGSExchange(princ, realm, tgt, skey, false, 0)
 	if err != nil {

@@ -229,6 +229,9 @@ func (cl *Client) realmLogin(realm string) error {
 		}
 	}
 	tgt, skey, err := cl.sessionTGT(cl.Credentials.Realm)
+	if err != nil {
+		return err
+	}
 
 	spn := types.PrincipalName{
 		NameType:   nametype.KRB_NT_SRV_INST,
