@@ -1,5 +1,5 @@
 # gokrb5
-![Version](https://img.shields.io/github/release/jcmturner/gokrb5.svg)
+[![Version](https://img.shields.io/github/release/jcmturner/gokrb5.svg)](https://github.com/jcmturner/gokrb5/releases)
 
 [![GoDoc](https://godoc.org/gopkg.in/jcmturner/gokrb5.v6?status.svg)](https://godoc.org/gopkg.in/jcmturner/gokrb5.v6) [![Go Report Card](https://goreportcard.com/badge/gopkg.in/jcmturner/gokrb5.v6)](https://goreportcard.com/report/gopkg.in/jcmturner/gokrb5.v6) [![Build Status](https://travis-ci.org/jcmturner/gokrb5.svg?branch=master)](https://travis-ci.org/jcmturner/gokrb5)
 
@@ -19,7 +19,7 @@ import "gopkg.in/jcmturner/gokrb5.v6/<sub package>"
 ```
 
 ## Features
-* Pure Go - no dependency on external libraries 
+* **Pure Go** - no dependency on external libraries 
 * No platform specific code
 * Server Side
   * HTTP handler wrapper implements SPNEGO Kerberos authentication
