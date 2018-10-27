@@ -1,6 +1,14 @@
 # gokrb5
+![Version](https://img.shields.io/github/release/jcmturner/gokrb5.svg)
+
 [![GoDoc](https://godoc.org/gopkg.in/jcmturner/gokrb5.v6?status.svg)](https://godoc.org/gopkg.in/jcmturner/gokrb5.v6) [![Go Report Card](https://goreportcard.com/badge/gopkg.in/jcmturner/gokrb5.v6)](https://goreportcard.com/report/gopkg.in/jcmturner/gokrb5.v6) [![Build Status](https://travis-ci.org/jcmturner/gokrb5.svg?branch=master)](https://travis-ci.org/jcmturner/gokrb5)
 
+#### Go Version Support
+![Go version](https://img.shields.io/badge/Go-1.11-brightgreen.svg)
+![Go version](https://img.shields.io/badge/Go-1.10-brightgreen.svg)
+![Go version](https://img.shields.io/badge/Go-1.9-brightgreen.svg)
+
+### Go Get
 To get the package, execute:
 ```
 go get -d gopkg.in/jcmturner/gokrb5.v6/...
@@ -37,7 +45,7 @@ import "gopkg.in/jcmturner/gokrb5.v6/<sub package>"
 | rc4-hmac | 23 | -138 | 4757 |
 
 
-Currently the following is working/tested:
+The following is working/tested:
 * Tested against MIT KDC (1.6.3 is the oldest version tested against) and Microsoft Active Directory (Windows 2008 R2)
 * Tested against a KDC that supports PA-FX-FAST.
 * Tested against users that have pre-authentication required using PA-ENC-TIMESTAMP.
