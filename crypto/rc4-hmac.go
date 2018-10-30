@@ -2,6 +2,7 @@ package crypto
 
 import (
 	"bytes"
+	"crypto/hmac"
 	"crypto/md5"
 	"hash"
 	"io"
@@ -130,8 +131,5 @@ func (e RC4HMAC) VerifyChecksum(protocolKey, data, chksum []byte, usage uint32) 
 	if err != nil {
 		return false
 	}
-	if !bytes.Equal(checksum, chksum) {
-		return false
-	}
-	return true
+	return hmac.Equal(checksum, chksum)
 }

@@ -2,6 +2,7 @@ package gssapi
 
 import (
 	"bytes"
+	"crypto/hmac"
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
@@ -157,7 +158,7 @@ func (wt *WrapToken) VerifyCheckSum(key types.EncryptionKey, keyUsage uint32) (b
 	if cErr != nil {
 		return false, cErr
 	}
-	if !bytes.Equal(computed, wt.CheckSum) {
+	if !hmac.Equal(computed, wt.CheckSum) {
 		return false, fmt.Errorf(
 			"checksum mismatch. Computed: %s, Contained in token: %s",
 			hex.EncodeToString(computed), hex.EncodeToString(wt.CheckSum))
