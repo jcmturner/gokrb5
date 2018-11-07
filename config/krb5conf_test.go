@@ -51,6 +51,10 @@ const (
         admin_server = kerberos.example.com
         auth_to_local = RULE:[1:$1@$0](.*@EXAMPLE.COM)s/.*//
  }
+ lowercase.org = {
+  kdc = kerberos.lowercase.org
+  admin_server = kerberos.lowercase.org
+ }
 
 
 [domain_realm]
@@ -61,6 +65,7 @@ const (
   .example.com = EXAMPLE.COM
  hostname1.example.com = EXAMPLE.COM
  hostname2.example.com = TEST.GOKRB5
+ .testlowercase.org = lowercase.org
 
 
 [appdefaults]
@@ -323,7 +328,7 @@ func TestLoad(t *testing.T) {
 	assert.Equal(t, "FILE:/home/gokrb5/client.keytab", c.LibDefaults.DefaultClientKeytabName, "[libdefaults] default_client_keytab_name not as expected")
 	assert.Equal(t, []string{"aes256-cts-hmac-sha1-96", "aes128-cts-hmac-sha1-96"}, c.LibDefaults.DefaultTktEnctypes, "[libdefaults] default_tkt_enctypes not as expected")
 
-	assert.Equal(t, 2, len(c.Realms), "Number of realms not as expected")
+	assert.Equal(t, 3, len(c.Realms), "Number of realms not as expected")
 	assert.Equal(t, "TEST.GOKRB5", c.Realms[0].Realm, "[realm] realm name not as expectd")
 	assert.Equal(t, []string{"10.80.88.88:749"}, c.Realms[0].AdminServer, "[realm] Admin_server not as expectd")
 	assert.Equal(t, []string{"10.80.88.88:464"}, c.Realms[0].KPasswdServer, "[realm] Kpasswd_server not as expectd")
@@ -513,6 +518,7 @@ func TestResolveRealm(t *testing.T) {
 		{"hostname2.example.com", "TEST.GOKRB5"},
 		{"one.two.three.example.com", "EXAMPLE.COM"},
 		{".test.gokrb5", "TEST.GOKRB5"},
+		{"foo.testlowercase.org", "lowercase.org"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.domainName, func(t *testing.T) {
