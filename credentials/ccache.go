@@ -90,7 +90,7 @@ func ParseCCache(b []byte) (c CCache, err error) {
 	p++
 	//Get credential cache version
 	//The second byte contains the version number (1 to 4)
-	c.Version = uint8(b[p])
+	c.Version = b[p]
 	if c.Version < 1 || c.Version > 4 {
 		err = errors.New("Invalid credential cache data. Keytab version is not within 1 to 4")
 		if err != nil {
@@ -147,7 +147,7 @@ func parseHeader(b []byte, p *int, c *CCache, e *binary.ByteOrder) error {
 func parsePrincipal(b []byte, p *int, c *CCache, e *binary.ByteOrder) (princ principal) {
 	if c.Version != 1 {
 		//Name Type is omitted in version 1
-		princ.PrincipalName.NameType = int32(readInt32(b, p, e))
+		princ.PrincipalName.NameType = readInt32(b, p, e)
 	}
 	nc := int(readInt32(b, p, e))
 	if c.Version == 1 {
@@ -156,7 +156,7 @@ func parsePrincipal(b []byte, p *int, c *CCache, e *binary.ByteOrder) (princ pri
 	}
 	lenRealm := readInt32(b, p, e)
 	princ.Realm = string(readBytes(b, p, int(lenRealm), e))
-	for i := 0; i < int(nc); i++ {
+	for i := 0; i < nc; i++ {
 		l := readInt32(b, p, e)
 		princ.PrincipalName.NameString = append(princ.PrincipalName.NameString, string(readBytes(b, p, int(l), e)))
 	}
