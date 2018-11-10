@@ -85,7 +85,7 @@ func SetFlag(f *asn1.BitString, i int) {
 		(*f).BitLength = len((*f).Bytes) * 8
 	}
 	//Which byte?
-	b := int(i / 8)
+	b := i / 8
 	//Which bit in byte
 	p := uint(7 - (i - 8*b))
 	(*f).Bytes[b] = (*f).Bytes[b] | (1 << p)
@@ -105,7 +105,7 @@ func UnsetFlag(f *asn1.BitString, i int) {
 		(*f).BitLength = len((*f).Bytes) * 8
 	}
 	//Which byte?
-	b := int(i / 8)
+	b := i / 8
 	//Which bit in byte
 	p := uint(7 - (i - 8*b))
 	(*f).Bytes[b] = (*f).Bytes[b] &^ (1 << p)
@@ -114,7 +114,7 @@ func UnsetFlag(f *asn1.BitString, i int) {
 // IsFlagSet tests if a flag is set in the ASN1 BitString.
 func IsFlagSet(f *asn1.BitString, i int) bool {
 	//Which byte?
-	b := int(i / 8)
+	b := i / 8
 	//Which bit in byte
 	p := uint(7 - (i - 8*b))
 	if (*f).Bytes[b]&(1<<p) != 0 {
