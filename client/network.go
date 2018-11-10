@@ -78,7 +78,7 @@ func dialKDCUDP(count int, kdcs map[int]string) (conn *net.UDPConn, err error) {
 		}
 		conn, err = net.DialUDP("udp", nil, udpAddr)
 		if err == nil {
-			conn.SetDeadline(time.Now().Add(time.Duration(5 * time.Second)))
+			conn.SetDeadline(time.Now().Add(5 * time.Second))
 			return
 		}
 		i++
@@ -97,7 +97,7 @@ func dialKDCTCP(count int, kdcs map[int]string) (conn *net.TCPConn, err error) {
 		}
 		conn, err = net.DialTCP("tcp", nil, tcpAddr)
 		if err == nil {
-			conn.SetDeadline(time.Now().Add(time.Duration(5 * time.Second)))
+			conn.SetDeadline(time.Now().Add(5 * time.Second))
 			return
 		}
 		i++
