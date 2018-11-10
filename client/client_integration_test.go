@@ -728,8 +728,8 @@ func TestClient_AutoRenew_Goroutine(t *testing.T) {
 		t.Errorf("error on logging in: %v\n", err)
 	}
 	n := runtime.NumGoroutine()
-	for i := 0; i < 6; i++ {
-		time.Sleep(time.Second * 20)
+	for i := 0; i < 24; i++ {
+		time.Sleep(time.Second * 5)
 		_, endTime, _, _, err := cl.sessionTimes("TEST.GOKRB5")
 		if err != nil {
 			t.Errorf("could not get client's session: %v", err)
@@ -737,6 +737,16 @@ func TestClient_AutoRenew_Goroutine(t *testing.T) {
 		if time.Now().UTC().After(endTime) {
 			t.Fatalf("session auto update failed")
 		}
+		spn := "HTTP/host.test.gokrb5"
+		tkt, key, err := cl.GetServiceTicket(spn)
+		if err != nil {
+			t.Fatalf("error getting service ticket: %v\n", err)
+		}
+		b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
+		skt, _ := keytab.Parse(b)
+		tkt.DecryptEncPart(skt, "")
+		assert.Equal(t, spn, tkt.SName.GetPrincipalNameString())
+		assert.Equal(t, int32(18), key.KeyType)
 		if runtime.NumGoroutine() > n {
 			t.Fatalf("number of goroutines is increasing: should not be more than %d, is %d", n, runtime.NumGoroutine())
 		}

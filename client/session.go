@@ -205,11 +205,12 @@ func (cl *Client) ensureValidSession(realm string) error {
 	s, ok := cl.sessions.get(realm)
 	if ok {
 		s.mux.RLock()
-		defer s.mux.RUnlock()
 		d := s.endTime.Sub(s.authTime) / 6
 		if s.endTime.Sub(time.Now().UTC()) > d {
+			s.mux.RUnlock()
 			return nil
 		}
+		s.mux.RUnlock()
 		_, err := cl.refreshSession(s)
 		return err
 	}
