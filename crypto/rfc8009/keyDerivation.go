@@ -78,7 +78,7 @@ func StringToKey(secret, salt, s2kparams string, e etype.EType) ([]byte, error) 
 	if err != nil {
 		return nil, err
 	}
-	return StringToKeyIter(secret, salt, int(i), e)
+	return StringToKeyIter(secret, salt, i, e)
 }
 
 // StringToKeyIter returns a key derived from the string provided according to the definition in RFC 8009.
@@ -105,7 +105,7 @@ func KDF_HMAC_SHA2(protocolKey, label, context []byte, kl int, e etype.EType) []
 	c := make([]byte, 4, 4)
 	binary.BigEndian.PutUint32(c, uint32(1))
 	c = append(c, label...)
-	c = append(c, byte(uint8(0)))
+	c = append(c, byte(0))
 	if len(context) > 0 {
 		c = append(c, context...)
 	}
@@ -119,7 +119,7 @@ func KDF_HMAC_SHA2(protocolKey, label, context []byte, kl int, e etype.EType) []
 // GetSaltP returns the salt value based on the etype name: https://tools.ietf.org/html/rfc8009#section-4
 func GetSaltP(salt, ename string) string {
 	b := []byte(ename)
-	b = append(b, byte(uint8(0)))
+	b = append(b, byte(0))
 	b = append(b, []byte(salt)...)
 	return string(b)
 }
