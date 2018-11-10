@@ -146,7 +146,7 @@ func Parse(b []byte) (kt Keytab, err error) {
 	}
 	//Get keytab version
 	//The 2nd byte contains the version number (1 or 2)
-	kt.Version = uint8(b[1])
+	kt.Version = b[1]
 	if kt.Version != 1 && kt.Version != 2 {
 		err = errors.New("invalid keytab data. Keytab version is neither 1 nor 2")
 		return
@@ -224,7 +224,7 @@ func (e entry) marshal(v int) ([]byte, error) {
 
 	t := make([]byte, 9)
 	endian.PutUint32(t[0:4], uint32(e.Timestamp.Unix()))
-	t[4] = byte(e.KVNO8)
+	t[4] = e.KVNO8
 	endian.PutUint16(t[5:7], uint16(e.Key.KeyType))
 	endian.PutUint16(t[7:9], uint16(len(e.Key.KeyValue)))
 	b = append(b, t...)
