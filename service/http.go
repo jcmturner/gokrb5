@@ -40,8 +40,7 @@ func SPNEGOKRB5Authenticate(f http.Handler, c *Config, l *log.Logger) http.Handl
 		s := strings.SplitN(r.Header.Get(HTTPHeaderAuthRequest), " ", 2)
 		if len(s) != 2 || s[0] != HTTPHeaderAuthResponseValueKey {
 			w.Header().Set(HTTPHeaderAuthResponse, HTTPHeaderAuthResponseValueKey)
-			w.WriteHeader(401)
-			w.Write([]byte(UnauthorizedMsg))
+			http.Error(w, UnauthorizedMsg, http.StatusUnauthorized)
 			return
 		}
 		id, authned, err := c.Authenticate(s[1], r.RemoteAddr)
@@ -76,8 +75,7 @@ func rejectSPNEGO(w http.ResponseWriter, l *log.Logger, logMsg string) {
 
 func spnegoResponseReject(w http.ResponseWriter) {
 	w.Header().Set(HTTPHeaderAuthResponse, spnegoNegTokenRespReject)
-	w.WriteHeader(http.StatusUnauthorized)
-	w.Write([]byte(UnauthorizedMsg))
+	http.Error(w, UnauthorizedMsg, http.StatusUnauthorized)
 }
 
 func spnegoResponseAcceptCompleted(w http.ResponseWriter) {
