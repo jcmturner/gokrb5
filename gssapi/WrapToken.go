@@ -45,7 +45,7 @@ From RFC 4121, section 4.2.6.2:
                              4.2.4.
 
 Quick notes:
-	- "EC" or "Extra Count" refers to the length of the cheksum.
+	- "EC" or "Extra Count" refers to the length of the checksum.
 	- "Flags" (complete details in section 4.2.2) is a set of bits:
 		- if bit 0 is set, it means the token was sent by the acceptor (generally the kerberized service).
 		- bit 1 indicates that the token's payload is encrypted
@@ -220,7 +220,7 @@ func NewInitiatorToken(payload []byte, key types.EncryptionKey) (*WrapToken, err
 
 	token := WrapToken{
 		Flags: 0x00, // all zeroed out (this is a token sent by the initiator)
-		// Checksum size: lenth of output of the HMAC function, in bytes.
+		// Checksum size: length of output of the HMAC function, in bytes.
 		EC:        uint16(encType.GetHMACBitLength() / 8),
 		RRC:       0,
 		SndSeqNum: 0,
