@@ -139,7 +139,7 @@ func UnmarshalTicketsSequence(in asn1.RawValue) ([]Ticket, error) {
 	for p < (len(b)) {
 		_, err := asn1.UnmarshalWithParams(b[p:], &raw, fmt.Sprintf("application,tag:%d", asnAppTag.Ticket))
 		if err != nil {
-			return nil, fmt.Errorf("unmarshaling sequence of tickets failed geting length of ticket: %v", err)
+			return nil, fmt.Errorf("unmarshaling sequence of tickets failed getting length of ticket: %v", err)
 		}
 		t, err := UnmarshalTicket(b[p:])
 		if err != nil {
@@ -166,7 +166,7 @@ func MarshalTicketSequence(tkts []Ticket) (asn1.RawValue, error) {
 	for i, t := range tkts {
 		b, err := t.Marshal()
 		if err != nil {
-			return raw, fmt.Errorf("error marshaling ticket number %d in seqence of tickets", i+1)
+			return raw, fmt.Errorf("error marshaling ticket number %d in sequence of tickets", i+1)
 		}
 		btkts = append(btkts, b...)
 	}

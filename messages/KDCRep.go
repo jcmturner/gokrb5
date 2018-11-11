@@ -166,7 +166,7 @@ func (k *ASRep) DecryptEncPart(c *credentials.Credentials) (types.EncryptionKey,
 		}
 	}
 	if !c.HasKeytab() && !c.HasPassword() {
-		return key, krberror.NewErrorf(krberror.DecryptingError, "no secret available in credentials to preform decryption of AS_REP encrypted part")
+		return key, krberror.NewErrorf(krberror.DecryptingError, "no secret available in credentials to perform decryption of AS_REP encrypted part")
 	}
 	b, err := crypto.DecryptEncPart(k.EncPart, key, keyusage.AS_REP_ENCPART)
 	if err != nil {

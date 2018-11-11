@@ -30,7 +30,7 @@ func DeriveRandom(key, usage []byte, e etype.EType) ([]byte, error) {
 	out := make([]byte, k/8)
 
 	/*If the output	of E is shorter than k bits, it is fed back into the encryption as many times as necessary.
-	The construct is as follows (where | indicates concatentation):
+	The construct is as follows (where | indicates concatenation):
 
 	K1 = E(Key, n-fold(Constant), initial-cipher-state)
 	K2 = E(Key, K1, initial-cipher-state)

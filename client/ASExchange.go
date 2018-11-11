@@ -14,7 +14,7 @@ import (
 // ASExchange performs an AS exchange for the client to retrieve a TGT.
 func (cl *Client) ASExchange(realm string, ASReq messages.ASReq, referral int) (messages.ASRep, error) {
 	if ok, err := cl.IsConfigured(); !ok {
-		return messages.ASRep{}, krberror.Errorf(err, krberror.ConfigError, "AS Exchange cannot be preformed")
+		return messages.ASRep{}, krberror.Errorf(err, krberror.ConfigError, "AS Exchange cannot be performed")
 	}
 
 	b, err := ASReq.Marshal()

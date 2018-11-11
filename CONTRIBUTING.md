@@ -49,7 +49,7 @@ This would require a minor (v\_.X.\_) version update.
 As gokrb5 is designed to be a core library used in other applications it is best to avoid dependencies the project has 
 no control over, other than the Go standard library, as issues with any dependency could have large knock on effects.
 * Provide useful commit messages.
-* Pull requests must address one issue only and keep to the scope of the issue. This makes it easier to review and merge, so your contribution will get 
+* Pull requests must address one issue only and keep to the scope of the issue. This makes it easier to review and merge, so your contribution will get
 incorporated faster this way.
 * Pull requests must have a message obeying this format:
 ```
@@ -57,13 +57,13 @@ incorporated faster this way.
 
 More detailed explanatory text. This should reference the related issue.
 ```
-This to adhere to the [git best practice](https://git-scm.com/book/en/v2/Distributed-Git-Contributing-to-a-Project) and 
-mirror the [contribution guidelines for the Go standard libarary](https://golang.org/doc/contribute.html).
+This to adhere to the [git best practice](https://git-scm.com/book/en/v2/Distributed-Git-Contributing-to-a-Project) and
+mirror the [contribution guidelines for the Go standard library](https://golang.org/doc/contribute.html).
 An Example:
 ```
 update to the godoc comments for the function Blah
 
-The godoc comments to function subpkg.Blah have been updated to make it 
+The godoc comments to function subpkg.Blah have been updated to make it
 clearer as to what the function is for.
 ```
 
@@ -74,7 +74,7 @@ A good rule of thumb: The easier you make it for the reader of an issue to help 
 When raising bugs please include the following items in your issue:
 * The version of gokrb5 being used (vX.Y.Z or master or branch name).
 * The version of Go being used (output of the ```go version``` command is handy).
-* Details of the environment in which you are seeing the issue. For example, what is being used as the KDC, 
+* Details of the environment in which you are seeing the issue. For example, what is being used as the KDC,
 what the krb5.conf contains, etc.
 * Details on how to re-create the issue.
 * Details on what you are experiencing that indicates the issue.
@@ -84,7 +84,7 @@ what the krb5.conf contains, etc.
 
 #### Enhancements 
 When raising enhancement requests or suggestions please include the following:
-* What the enhancment is or would do.
+* What the enhancement is or would do.
 * Why you need the enhancement or why you think it would be a good idea.
 * Any suggestions you may have on how to implement.
 
@@ -95,7 +95,7 @@ Running the tests without any particular switches runs only the unit tests.
 
 It is recommended to run tests with the ```-race``` argument.
 
-There are integration tests that run against various other network services such as KDCs, HTTP web servers, DNS servers, 
+There are integration tests that run against various other network services such as KDCs, HTTP web servers, DNS servers,
 etc. To run these pass ```-tags=integration``` as an argument to the go test command.
-There are vagrant and docker resources available to spin up these network services. See the 
+There are vagrant and docker resources available to spin up these network services. See the
 [readme](https://github.com/jcmturner/gokrb5/blob/master/testenv/README.md) in the testenv directory for instructions.

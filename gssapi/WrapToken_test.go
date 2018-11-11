@@ -186,6 +186,6 @@ func TestMarshal_Failures(t *testing.T) {
 func TestNewInitiatorTokenSignatureAndMarshalling(t *testing.T) {
 	t.Parallel()
 	token, tErr := NewInitiatorToken([]byte{0x01, 0x01, 0x00, 0x00}, getSessionKey())
-	assert.Nil(t, tErr, "Unexepected error.")
+	assert.Nil(t, tErr, "Unexpected error.")
 	assert.Equal(t, getResponseReference(), token, "Token failed to be marshalled to the expected bytes.")
 }
