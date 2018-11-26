@@ -28,7 +28,7 @@ func ValidateAPREQ(APReq messages.APReq, sa SPNEGOAuthenticator) (bool, credenti
 		err := messages.NewKRBError(APReq.Ticket.SName, APReq.Ticket.Realm, errorcode.KRB_AP_ERR_BADMATCH, "CName in Authenticator does not match that in service ticket")
 		return false, creds, err
 	}
-	if len(APReq.Ticket.DecryptedEncPart.CAddr) > 0 {
+	if sa.Config.RequireHostAddr && len(APReq.Ticket.DecryptedEncPart.CAddr) > 0 {
 		//The addresses in the ticket (if any) are then
 		//searched for an address matching the operating-system reported
 		//address of the client.  If no match is found or the server insists on
