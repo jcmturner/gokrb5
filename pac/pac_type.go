@@ -11,17 +11,19 @@ import (
 	"gopkg.in/jcmturner/rpc.v1/mstypes"
 )
 
+type InfoType uint32
+
 const (
-	ulTypeKerbValidationInfo     = 1
-	ulTypeCredentials            = 2
-	ulTypePACServerSignatureData = 6
-	ulTypePACKDCSignatureData    = 7
-	ulTypePACClientInfo          = 10
-	ulTypeS4UDelegationInfo      = 11
-	ulTypeUPNDNSInfo             = 12
-	ulTypePACClientClaimsInfo    = 13
-	ulTypePACDeviceInfo          = 14
-	ulTypePACDeviceClaimsInfo    = 15
+	infoTypeKerbValidationInfo     uint32 = 1
+	infoTypeCredentials            uint32 = 2
+	infoTypePACServerSignatureData uint32 = 6
+	infoTypePACKDCSignatureData    uint32 = 7
+	infoTypePACClientInfo          uint32 = 10
+	infoTypeS4UDelegationInfo      uint32 = 11
+	infoTypeUPNDNSInfo             uint32 = 12
+	infoTypePACClientClaimsInfo    uint32 = 13
+	infoTypePACDeviceInfo          uint32 = 14
+	infoTypePACDeviceClaimsInfo    uint32 = 15
 )
 
 // PACType implements: https://msdn.microsoft.com/en-us/library/cc237950.aspx
@@ -84,14 +86,12 @@ func (pac *PACType) Unmarshal(b []byte) (err error) {
 	return nil
 }
 
-// ProcessPACInfoBuffers processes the PAC Info Buffers.
-// https://msdn.microsoft.com/en-us/library/cc237954.aspx
-func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
+func (pac *PACType) PACInfoMandatoryBuffers(key types.EncryptionKey) error {
 	for _, buf := range pac.Buffers {
 		p := make([]byte, buf.CBBufferSize, buf.CBBufferSize)
 		copy(p, pac.Data[int(buf.Offset):int(buf.Offset)+int(buf.CBBufferSize)])
-		switch int(buf.ULType) {
-		case ulTypeKerbValidationInfo:
+		switch buf.ULType {
+		case infoTypeKerbValidationInfo:
 			if pac.KerbValidationInfo != nil {
 				//Must ignore subsequent buffers of this type
 				continue
@@ -102,7 +102,72 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 				return fmt.Errorf("error processing KerbValidationInfo: %v", err)
 			}
 			pac.KerbValidationInfo = &k
-		case ulTypeCredentials:
+		case infoTypePACServerSignatureData:
+			if pac.ServerChecksum != nil {
+				//Must ignore subsequent buffers of this type
+				continue
+			}
+			var k SignatureData
+			zb, err := k.Unmarshal(p)
+			copy(pac.ZeroSigData[int(buf.Offset):int(buf.Offset)+int(buf.CBBufferSize)], zb)
+			if err != nil {
+				return fmt.Errorf("error processing ServerChecksum: %v", err)
+			}
+			pac.ServerChecksum = &k
+		case infoTypePACKDCSignatureData:
+			if pac.KDCChecksum != nil {
+				//Must ignore subsequent buffers of this type
+				continue
+			}
+			var k SignatureData
+			zb, err := k.Unmarshal(p)
+			copy(pac.ZeroSigData[int(buf.Offset):int(buf.Offset)+int(buf.CBBufferSize)], zb)
+			if err != nil {
+				return fmt.Errorf("error processing KDCChecksum: %v", err)
+			}
+			pac.KDCChecksum = &k
+		case infoTypePACClientInfo:
+			if pac.ClientInfo != nil {
+				//Must ignore subsequent buffers of this type
+				continue
+			}
+			var k ClientInfo
+			err := k.Unmarshal(p)
+			if err != nil {
+				return fmt.Errorf("error processing ClientInfo: %v", err)
+			}
+			pac.ClientInfo = &k
+		default:
+			continue
+		}
+	}
+
+	if ok, err := pac.validate(key); !ok {
+		return err
+	}
+
+	return nil
+}
+
+// ProcessPACInfoBuffers processes the PAC Info Buffers.
+// https://msdn.microsoft.com/en-us/library/cc237954.aspx
+func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
+	for _, buf := range pac.Buffers {
+		p := make([]byte, buf.CBBufferSize, buf.CBBufferSize)
+		copy(p, pac.Data[int(buf.Offset):int(buf.Offset)+int(buf.CBBufferSize)])
+		switch buf.ULType {
+		case infoTypeKerbValidationInfo:
+			if pac.KerbValidationInfo != nil {
+				//Must ignore subsequent buffers of this type
+				continue
+			}
+			var k KerbValidationInfo
+			err := k.Unmarshal(p)
+			if err != nil {
+				return fmt.Errorf("error processing KerbValidationInfo: %v", err)
+			}
+			pac.KerbValidationInfo = &k
+		case infoTypeCredentials:
 			// Currently PAC parsing is only useful on the service side in gokrb5
 			// The CredentialsInfo are only useful when gokrb5 has implemented RFC4556 and only applied on the client side.
 			// Skipping CredentialsInfo - will be revisited under RFC4556 implementation.
@@ -117,7 +182,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			//	return fmt.Errorf("error processing CredentialsInfo: %v", err)
 			//}
 			//pac.CredentialsInfo = &k
-		case ulTypePACServerSignatureData:
+		case infoTypePACServerSignatureData:
 			if pac.ServerChecksum != nil {
 				//Must ignore subsequent buffers of this type
 				continue
@@ -129,7 +194,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 				return fmt.Errorf("error processing ServerChecksum: %v", err)
 			}
 			pac.ServerChecksum = &k
-		case ulTypePACKDCSignatureData:
+		case infoTypePACKDCSignatureData:
 			if pac.KDCChecksum != nil {
 				//Must ignore subsequent buffers of this type
 				continue
@@ -141,7 +206,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 				return fmt.Errorf("error processing KDCChecksum: %v", err)
 			}
 			pac.KDCChecksum = &k
-		case ulTypePACClientInfo:
+		case infoTypePACClientInfo:
 			if pac.ClientInfo != nil {
 				//Must ignore subsequent buffers of this type
 				continue
@@ -152,7 +217,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 				return fmt.Errorf("error processing ClientInfo: %v", err)
 			}
 			pac.ClientInfo = &k
-		case ulTypeS4UDelegationInfo:
+		case infoTypeS4UDelegationInfo:
 			if pac.S4UDelegationInfo != nil {
 				//Must ignore subsequent buffers of this type
 				continue
@@ -163,7 +228,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 				return fmt.Errorf("error processing S4U_DelegationInfo: %v", err)
 			}
 			pac.S4UDelegationInfo = &k
-		case ulTypeUPNDNSInfo:
+		case infoTypeUPNDNSInfo:
 			if pac.UPNDNSInfo != nil {
 				//Must ignore subsequent buffers of this type
 				continue
@@ -174,7 +239,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 				return fmt.Errorf("error processing UPN_DNSInfo: %v", err)
 			}
 			pac.UPNDNSInfo = &k
-		case ulTypePACClientClaimsInfo:
+		case infoTypePACClientClaimsInfo:
 			if pac.ClientClaimsInfo != nil || len(p) < 1 {
 				//Must ignore subsequent buffers of this type
 				continue
@@ -185,7 +250,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 				return fmt.Errorf("error processing ClientClaimsInfo: %v", err)
 			}
 			pac.ClientClaimsInfo = &k
-		case ulTypePACDeviceInfo:
+		case infoTypePACDeviceInfo:
 			if pac.DeviceInfo != nil {
 				//Must ignore subsequent buffers of this type
 				continue
@@ -196,7 +261,7 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 				return fmt.Errorf("error processing DeviceInfo: %v", err)
 			}
 			pac.DeviceInfo = &k
-		case ulTypePACDeviceClaimsInfo:
+		case infoTypePACDeviceClaimsInfo:
 			if pac.DeviceClaimsInfo != nil {
 				//Must ignore subsequent buffers of this type
 				continue
