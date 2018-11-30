@@ -154,81 +154,111 @@ func NewASReq(realm string, c *config.Config, cname, sname types.PrincipalName) 
 }
 
 // NewTGSReq generates a new KRB_TGS_REQ struct.
-func NewTGSReq(cname types.PrincipalName, kdcRealm string, c *config.Config, tgt Ticket, sessionKey types.EncryptionKey, spn types.PrincipalName, renewal bool) (TGSReq, error) {
+func NewTGSReq(cname types.PrincipalName, kdcRealm string, c *config.Config, tgt Ticket, sessionKey types.EncryptionKey, sname types.PrincipalName, renewal bool) (TGSReq, error) {
+	a, err := tgsReq(cname, sname, kdcRealm, renewal, c)
+	if err != nil {
+		return a, err
+	}
+	err = a.setPAData(tgt, sessionKey)
+	return a, err
+}
+
+// NewUser2UserTGSReq returns a TGS-REQ suitable for user-to-user authentication (https://tools.ietf.org/html/rfc4120#section-3.7)
+func NewUser2UserTGSReq(cname types.PrincipalName, kdcRealm string, c *config.Config, clientTGT Ticket, sessionKey types.EncryptionKey, sname types.PrincipalName, renewal bool, verifyingTGT Ticket) (TGSReq, error) {
+	a, err := tgsReq(cname, sname, kdcRealm, renewal, c)
+	if err != nil {
+		return a, err
+	}
+	a.ReqBody.AdditionalTickets = []Ticket{verifyingTGT}
+	types.SetFlag(&a.ReqBody.KDCOptions, flags.EncTktInSkey)
+	err = a.setPAData(clientTGT, sessionKey)
+	return a, err
+}
+
+// tgsReq populates the fields for a TGS_REQ
+func tgsReq(cname, sname types.PrincipalName, kdcRealm string, renewal bool, c *config.Config) (TGSReq, error) {
 	nonce, err := rand.Int(rand.Reader, big.NewInt(math.MaxInt32))
 	if err != nil {
 		return TGSReq{}, err
 	}
 	t := time.Now().UTC()
-	a := TGSReq{
-		KDCReqFields{
-			PVNO:    iana.PVNO,
-			MsgType: msgtype.KRB_TGS_REQ,
-			ReqBody: KDCReqBody{
-				KDCOptions: types.NewKrbFlags(),
-				Realm:      kdcRealm,
-				SName:      spn,
-				Till:       t.Add(c.LibDefaults.TicketLifetime),
-				Nonce:      int(nonce.Int64()),
-				EType:      c.LibDefaults.DefaultTGSEnctypeIDs,
-			},
-			Renewal: renewal,
+	k := KDCReqFields{
+		PVNO:    iana.PVNO,
+		MsgType: msgtype.KRB_TGS_REQ,
+		ReqBody: KDCReqBody{
+			KDCOptions: types.NewKrbFlags(),
+			Realm:      kdcRealm,
+			CName:      cname, // Add the CName to make validation of the reply easier
+			SName:      sname,
+			Till:       t.Add(c.LibDefaults.TicketLifetime),
+			Nonce:      int(nonce.Int64()),
+			EType:      c.LibDefaults.DefaultTGSEnctypeIDs,
 		},
+		Renewal: renewal,
 	}
 	if c.LibDefaults.Forwardable {
-		types.SetFlag(&a.ReqBody.KDCOptions, flags.Forwardable)
+		types.SetFlag(&k.ReqBody.KDCOptions, flags.Forwardable)
 	}
 	if c.LibDefaults.Canonicalize {
-		types.SetFlag(&a.ReqBody.KDCOptions, flags.Canonicalize)
+		types.SetFlag(&k.ReqBody.KDCOptions, flags.Canonicalize)
 	}
 	if c.LibDefaults.Proxiable {
-		types.SetFlag(&a.ReqBody.KDCOptions, flags.Proxiable)
+		types.SetFlag(&k.ReqBody.KDCOptions, flags.Proxiable)
 	}
 	if c.LibDefaults.RenewLifetime > time.Duration(0) {
-		types.SetFlag(&a.ReqBody.KDCOptions, flags.Renewable)
-		a.ReqBody.RTime = t.Add(c.LibDefaults.RenewLifetime)
+		types.SetFlag(&k.ReqBody.KDCOptions, flags.Renewable)
+		k.ReqBody.RTime = t.Add(c.LibDefaults.RenewLifetime)
 	}
 	if !c.LibDefaults.NoAddresses {
 		ha, err := types.LocalHostAddresses()
 		if err != nil {
-			return a, fmt.Errorf("could not get local addresses: %v", err)
+			return TGSReq{}, fmt.Errorf("could not get local addresses: %v", err)
 		}
 		ha = append(ha, types.HostAddressesFromNetIPs(c.LibDefaults.ExtraAddresses)...)
-		a.ReqBody.Addresses = ha
+		k.ReqBody.Addresses = ha
 	}
 	if renewal {
-		types.SetFlag(&a.ReqBody.KDCOptions, flags.Renew)
-		types.SetFlag(&a.ReqBody.KDCOptions, flags.Renewable)
+		types.SetFlag(&k.ReqBody.KDCOptions, flags.Renew)
+		types.SetFlag(&k.ReqBody.KDCOptions, flags.Renewable)
 	}
-	auth, err := types.NewAuthenticator(tgt.Realm, cname)
-	if err != nil {
-		return a, krberror.Errorf(err, krberror.KRBMsgError, "error generating new authenticator")
-	}
-	// Add the CName to make validation of the reply easier
-	a.ReqBody.CName = auth.CName
+	return TGSReq{
+		k,
+	}, nil
+}
+
+func (a *TGSReq) setPAData(tgt Ticket, sessionKey types.EncryptionKey) error {
+	// Marshal the request and calculate checksum
 	b, err := a.ReqBody.Marshal()
 	if err != nil {
-		return a, krberror.Errorf(err, krberror.EncodingError, "error marshaling TGS_REQ body")
+		return krberror.Errorf(err, krberror.EncodingError, "error marshaling TGS_REQ body")
 	}
 	etype, err := crypto.GetEtype(sessionKey.KeyType)
 	if err != nil {
-		return a, krberror.Errorf(err, krberror.EncryptingError, "error getting etype to encrypt authenticator")
+		return krberror.Errorf(err, krberror.EncryptingError, "error getting etype to encrypt authenticator")
 	}
 	cb, err := etype.GetChecksumHash(sessionKey.KeyValue, b, keyusage.TGS_REQ_PA_TGS_REQ_AP_REQ_AUTHENTICATOR_CHKSUM)
 	if err != nil {
-		return a, krberror.Errorf(err, krberror.ChksumError, "error getting etype checksum hash")
+		return krberror.Errorf(err, krberror.ChksumError, "error getting etype checksum hash")
+	}
+
+	// Form PAData for TGS_REQ
+	// Create authenticator
+	auth, err := types.NewAuthenticator(tgt.Realm, a.ReqBody.CName)
+	if err != nil {
+		return krberror.Errorf(err, krberror.KRBMsgError, "error generating new authenticator")
 	}
 	auth.Cksum = types.Checksum{
 		CksumType: etype.GetHashID(),
 		Checksum:  cb,
 	}
+	// Create AP_REQ
 	apReq, err := NewAPReq(tgt, sessionKey, auth)
 	if err != nil {
-		return a, krberror.Errorf(err, krberror.KRBMsgError, "error generating new AP_REQ")
+		return krberror.Errorf(err, krberror.KRBMsgError, "error generating new AP_REQ")
 	}
 	apb, err := apReq.Marshal()
 	if err != nil {
-		return a, krberror.Errorf(err, krberror.EncodingError, "error marshaling AP_REQ for pre-authentication data")
+		return krberror.Errorf(err, krberror.EncodingError, "error marshaling AP_REQ for pre-authentication data")
 	}
 	a.PAData = types.PADataSequence{
 		types.PAData{
@@ -236,7 +266,7 @@ func NewTGSReq(cname types.PrincipalName, kdcRealm string, c *config.Config, tgt
 			PADataValue: apb,
 		},
 	}
-	return a, nil
+	return nil
 }
 
 // Unmarshal bytes b into the ASReq struct.
