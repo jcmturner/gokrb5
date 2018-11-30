@@ -226,9 +226,9 @@ func tgsReq(cname, sname types.PrincipalName, kdcRealm string, renewal bool, c *
 	}, nil
 }
 
-func (a *TGSReq) setPAData(tgt Ticket, sessionKey types.EncryptionKey) error {
+func (k *TGSReq) setPAData(tgt Ticket, sessionKey types.EncryptionKey) error {
 	// Marshal the request and calculate checksum
-	b, err := a.ReqBody.Marshal()
+	b, err := k.ReqBody.Marshal()
 	if err != nil {
 		return krberror.Errorf(err, krberror.EncodingError, "error marshaling TGS_REQ body")
 	}
@@ -243,7 +243,7 @@ func (a *TGSReq) setPAData(tgt Ticket, sessionKey types.EncryptionKey) error {
 
 	// Form PAData for TGS_REQ
 	// Create authenticator
-	auth, err := types.NewAuthenticator(tgt.Realm, a.ReqBody.CName)
+	auth, err := types.NewAuthenticator(tgt.Realm, k.ReqBody.CName)
 	if err != nil {
 		return krberror.Errorf(err, krberror.KRBMsgError, "error generating new authenticator")
 	}
@@ -260,7 +260,7 @@ func (a *TGSReq) setPAData(tgt Ticket, sessionKey types.EncryptionKey) error {
 	if err != nil {
 		return krberror.Errorf(err, krberror.EncodingError, "error marshaling AP_REQ for pre-authentication data")
 	}
-	a.PAData = types.PADataSequence{
+	k.PAData = types.PADataSequence{
 		types.PAData{
 			PADataType:  patype.PA_TGS_REQ,
 			PADataValue: apb,

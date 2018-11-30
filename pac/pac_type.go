@@ -84,6 +84,7 @@ func (pac *PACType) Unmarshal(b []byte) (err error) {
 	return nil
 }
 
+// PACInfoMandatoryBuffers processes the mandatory PAC Info Buffers that must be present in the PAC.
 func (pac *PACType) PACInfoMandatoryBuffers(key types.EncryptionKey) error {
 	for _, buf := range pac.Buffers {
 		p := make([]byte, buf.CBBufferSize, buf.CBBufferSize)

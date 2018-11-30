@@ -34,6 +34,7 @@ func (cl *Client) TGSExchange(spn types.PrincipalName, kdcRealm string, tgt mess
 	return
 }
 
+// TGSREQ exchanges the provides TGS_REQ with the KDC to retrieve a TGS_REP
 func (cl *Client) TGSREQ(tgsReq messages.TGSReq, kdcRealm string, tgt messages.Ticket, sessionKey types.EncryptionKey, referral int) (messages.TGSReq, messages.TGSRep, error) {
 	tgsRep, err := cl.tgsExchange(tgsReq, kdcRealm, sessionKey)
 	if err != nil {
@@ -51,8 +52,14 @@ func (cl *Client) TGSREQ(tgsReq messages.TGSReq, kdcRealm string, tgt messages.T
 		referral++
 		if types.IsFlagSet(&tgsReq.ReqBody.KDCOptions, flags.EncTktInSkey) && len(tgsReq.ReqBody.AdditionalTickets) > 0 {
 			tgsReq, err = messages.NewUser2UserTGSReq(cl.Credentials.CName, kdcRealm, cl.Config, tgt, sessionKey, tgsReq.ReqBody.SName, tgsReq.Renewal, tgsReq.ReqBody.AdditionalTickets[0])
+			if err != nil {
+				return tgsReq, tgsRep, err
+			}
 		}
 		tgsReq, err = messages.NewTGSReq(cl.Credentials.CName, kdcRealm, cl.Config, tgt, sessionKey, tgsReq.ReqBody.SName, tgsReq.Renewal)
+		if err != nil {
+			return tgsReq, tgsRep, err
+		}
 		return cl.TGSREQ(tgsReq, realm, tgsRep.Ticket, tgsRep.DecryptedEncPart.Key, referral)
 	}
 	return tgsReq, tgsRep, err
