@@ -11,8 +11,6 @@ import (
 	"gopkg.in/jcmturner/rpc.v1/mstypes"
 )
 
-type InfoType uint32
-
 const (
 	infoTypeKerbValidationInfo     uint32 = 1
 	infoTypeCredentials            uint32 = 2
