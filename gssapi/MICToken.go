@@ -39,11 +39,14 @@ From RFC 4121, section 4.2.6.1:
    simplicity.
 
 */
-
 const (
-	MICHdrLen = 16
+	MICHdrLen = 16 // Length of the MIC Token's header
 )
 
+// MICToken represents a GSS API MIC token, as defined in RFC 4121.
+// It contains the header fields, the payload (this is not transmitted) and
+// the checksum, and provides the logic for converting to/from bytes plus
+// computing and verifying checksums
 type MICToken struct {
 	// const GSS Token ID: 0x0404
 	Flags byte // contains three flags: acceptor, sealed, acceptor subkey
@@ -53,14 +56,18 @@ type MICToken struct {
 	Checksum  []byte // checksum of { payload | header }
 }
 
+// Return the 2 bytes identifying a GSS API MIC token
 func getGssMICTokenId() *[2]byte {
 	return &[2]byte{0x04, 0x04}
 }
 
+// Return the filler bytes used in header
 func fillerBytes() *[5]byte {
 	return &[5]byte{0xFF, 0xFF, 0xFF, 0xFF, 0xFF}
 }
 
+// Marshal the MICToken into a byte slice.
+// The payload should have been set and the checksum computed, otherwise an error is returned.
 func (mt *MICToken) Marshal() ([]byte, error) {
 	if mt.Checksum == nil {
 		return nil, errors.New("checksum has not been set")
@@ -73,6 +80,9 @@ func (mt *MICToken) Marshal() ([]byte, error) {
 	return bytes, nil
 }
 
+// ComputeAndSetChecksum uses the passed encryption key and key usage to compute the checksum over the payload and
+// the header, and sets the Checksum field of this MICToken.
+// If the payload has not been set or the checksum has already been set, an error is returned.
 func (mt *MICToken) ComputeAndSetChecksum(key types.EncryptionKey, keyUsage uint32) error {
 	if mt.Payload == nil {
 		return errors.New("payload has not been set")
@@ -88,6 +98,11 @@ func (mt *MICToken) ComputeAndSetChecksum(key types.EncryptionKey, keyUsage uint
 	return nil
 }
 
+// ComputeChecksum computes and returns the checksum of this token, computed using the passed key and key usage.
+// Confirms to RFC 4121 in that the checksum will be computed over { body | header }.
+// In the context of Kerberos MIC tokens, mostly keyusage GSSAPI_ACCEPTOR_SIGN (=23)
+// and GSSAPI_INITIATOR_SIGN (=25) will be used.
+// Note: This will NOT update the struct's Checksum field.
 func (mt *MICToken) ComputeChecksum(key types.EncryptionKey, keyUsage uint32) ([]byte, error) {
 	if mt.Payload == nil {
 		return nil, errors.New("cannot compute checksum with uninitialized payload")
@@ -103,6 +118,7 @@ func (mt *MICToken) ComputeChecksum(key types.EncryptionKey, keyUsage uint32) ([
 	return encType.GetChecksumHash(key.KeyValue, checksumMe, keyUsage)
 }
 
+// Build a header suitable for a checksum computation
 func getMICChecksumHeader(flags byte, senderSeqNum uint64) []byte {
 	header := make([]byte, MICHdrLen)
 	copy(header[0:2], getGssMICTokenId()[:])
@@ -112,6 +128,9 @@ func getMICChecksumHeader(flags byte, senderSeqNum uint64) []byte {
 	return header
 }
 
+// Verify Checksum computes the token's checksum with the provided key and usage,
+// and compares it to the checksum present in the token.
+// In case of any failure, (false, err) is returned, with err an explanatory error.
 func (mt *MICToken) VerifyChecksum(key types.EncryptionKey, keyUsage uint32) (bool, error) {
 	computed, err := mt.ComputeChecksum(key, keyUsage)
 	if err != nil {
@@ -125,6 +144,9 @@ func (mt *MICToken) VerifyChecksum(key types.EncryptionKey, keyUsage uint32) (bo
 	return true, nil
 }
 
+// Unmarshal bytes into the corresponding MICToken.
+// If expectFromAcceptor is true we expect the token to have been emitted by the gss acceptor,
+// and will check the according flag, returning an error if the token does not match the expectation.
 func (mt *MICToken) Unmarshal(b []byte, expectFromAcceptor bool) error {
 	if len(b) < MICHdrLen {
 		return errors.New("bytes shorter than hedaer length")
@@ -154,6 +176,10 @@ func (mt *MICToken) Unmarshal(b []byte, expectFromAcceptor bool) error {
 	return nil
 }
 
+// NewInitiatorMICToken builds a new initiator token (acceptor flag will be set to 0) and computes the authenticated checksum.
+// Other flags are set to 0.
+// Note that in certain circumstances you may need to provide a sequence number that has been defined earlier.
+// This is currently not supported.
 func NewInitiatorMICToken(payload []byte, key types.EncryptionKey) (*MICToken, error) {
 	token := MICToken{
 		Flags:     0x00,
