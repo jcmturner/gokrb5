@@ -39,8 +39,18 @@ From RFC 4121, section 4.2.6.1:
    simplicity.
 
 */
+
 const (
-	MICHdrLen = 16 // Length of the MIC Token's header
+	// When set, this flag indicates the sender is the context acceptor.  When not set, it indicates the sender is the context initiator
+	MICTokenFlagSentByAcceptor = 1 << iota
+	// This flag indicates confidentiality is provided for.  It SHALL NOT be set in MIC tokens
+	MICTokenFlagSealed
+	// A subkey asserted by the context acceptor is used to protect the message
+	MICTokenFlagAcceptorSubkey
+)
+
+const (
+	hdrLen = 16 // Length of the MIC Token's header
 )
 
 // MICToken represents a GSS API MIC token, as defined in RFC 4121.
@@ -57,7 +67,7 @@ type MICToken struct {
 }
 
 // Return the 2 bytes identifying a GSS API MIC token
-func getGssMICTokenId() *[2]byte {
+func getGSSMICTokenId() *[2]byte {
 	return &[2]byte{0x04, 0x04}
 }
 
@@ -73,24 +83,21 @@ func (mt *MICToken) Marshal() ([]byte, error) {
 		return nil, errors.New("checksum has not been set")
 	}
 
-	bytes := make([]byte, MICHdrLen+len(mt.Checksum))
-	copy(bytes[0:MICHdrLen], getMICChecksumHeader(mt.Flags, mt.SndSeqNum)[:])
-	copy(bytes[MICHdrLen:], mt.Checksum)
+	bytes := make([]byte, hdrLen+len(mt.Checksum))
+	copy(bytes[0:hdrLen], mt.getMICChecksumHeader()[:])
+	copy(bytes[hdrLen:], mt.Checksum)
 
 	return bytes, nil
 }
 
-// ComputeAndSetChecksum uses the passed encryption key and key usage to compute the checksum over the payload and
+// SetChecksum uses the passed encryption key and key usage to compute the checksum over the payload and
 // the header, and sets the Checksum field of this MICToken.
 // If the payload has not been set or the checksum has already been set, an error is returned.
-func (mt *MICToken) ComputeAndSetChecksum(key types.EncryptionKey, keyUsage uint32) error {
-	if mt.Payload == nil {
-		return errors.New("payload has not been set")
-	}
+func (mt *MICToken) SetChecksum(key types.EncryptionKey, keyUsage uint32) error {
 	if mt.Checksum != nil {
 		return errors.New("checksum has already been computed")
 	}
-	checksum, err := mt.ComputeChecksum(key, keyUsage)
+	checksum, err := mt.checksum(key, keyUsage)
 	if err != nil {
 		return err
 	}
@@ -98,41 +105,41 @@ func (mt *MICToken) ComputeAndSetChecksum(key types.EncryptionKey, keyUsage uint
 	return nil
 }
 
-// ComputeChecksum computes and returns the checksum of this token, computed using the passed key and key usage.
+// Compute and return the checksum of this token, computed using the passed key and key usage.
 // Confirms to RFC 4121 in that the checksum will be computed over { body | header }.
 // In the context of Kerberos MIC tokens, mostly keyusage GSSAPI_ACCEPTOR_SIGN (=23)
 // and GSSAPI_INITIATOR_SIGN (=25) will be used.
 // Note: This will NOT update the struct's Checksum field.
-func (mt *MICToken) ComputeChecksum(key types.EncryptionKey, keyUsage uint32) ([]byte, error) {
+func (mt *MICToken) checksum(key types.EncryptionKey, keyUsage uint32) ([]byte, error) {
 	if mt.Payload == nil {
 		return nil, errors.New("cannot compute checksum with uninitialized payload")
 	}
-	checksumMe := make([]byte, MICHdrLen+len(mt.Payload))
-	copy(checksumMe[0:], mt.Payload)
-	copy(checksumMe[len(mt.Payload):], getMICChecksumHeader(mt.Flags, mt.SndSeqNum))
+	d := make([]byte, hdrLen+len(mt.Payload))
+	copy(d[0:], mt.Payload)
+	copy(d[len(mt.Payload):], mt.getMICChecksumHeader())
 
 	encType, err := crypto.GetEtype(key.KeyType)
 	if err != nil {
 		return nil, err
 	}
-	return encType.GetChecksumHash(key.KeyValue, checksumMe, keyUsage)
+	return encType.GetChecksumHash(key.KeyValue, d, keyUsage)
 }
 
 // Build a header suitable for a checksum computation
-func getMICChecksumHeader(flags byte, senderSeqNum uint64) []byte {
-	header := make([]byte, MICHdrLen)
-	copy(header[0:2], getGssMICTokenId()[:])
-	header[2] = flags
+func (mt *MICToken) getMICChecksumHeader() []byte {
+	header := make([]byte, hdrLen)
+	copy(header[0:2], getGSSMICTokenId()[:])
+	header[2] = mt.Flags
 	copy(header[3:8], fillerBytes()[:])
-	binary.BigEndian.PutUint64(header[8:16], senderSeqNum)
+	binary.BigEndian.PutUint64(header[8:16], mt.SndSeqNum)
 	return header
 }
 
-// Verify Checksum computes the token's checksum with the provided key and usage,
+// VerifyChecksum computes the token's checksum with the provided key and usage,
 // and compares it to the checksum present in the token.
 // In case of any failure, (false, err) is returned, with err an explanatory error.
 func (mt *MICToken) VerifyChecksum(key types.EncryptionKey, keyUsage uint32) (bool, error) {
-	computed, err := mt.ComputeChecksum(key, keyUsage)
+	computed, err := mt.checksum(key, keyUsage)
 	if err != nil {
 		return false, err
 	}
@@ -148,16 +155,16 @@ func (mt *MICToken) VerifyChecksum(key types.EncryptionKey, keyUsage uint32) (bo
 // If expectFromAcceptor is true we expect the token to have been emitted by the gss acceptor,
 // and will check the according flag, returning an error if the token does not match the expectation.
 func (mt *MICToken) Unmarshal(b []byte, expectFromAcceptor bool) error {
-	if len(b) < MICHdrLen {
-		return errors.New("bytes shorter than hedaer length")
+	if len(b) < hdrLen {
+		return errors.New("bytes shorter than header length")
 	}
-	if !bytes.Equal(getGssMICTokenId()[:], b[0:2]) {
+	if !bytes.Equal(getGSSMICTokenId()[:], b[0:2]) {
 		return fmt.Errorf("wrong Token ID, Expected %s, was %s",
-			hex.EncodeToString(getGssMICTokenId()[:]),
+			hex.EncodeToString(getGSSMICTokenId()[:]),
 			hex.EncodeToString(b[0:2]))
 	}
 	flags := b[2]
-	isFromAcceptor := flags&0x01 == 1
+	isFromAcceptor := flags&MICTokenFlagSentByAcceptor != 0
 	if isFromAcceptor && !expectFromAcceptor {
 		return errors.New("unexpected acceptor flag is set: not expecting a token from the acceptor")
 	}
@@ -172,7 +179,7 @@ func (mt *MICToken) Unmarshal(b []byte, expectFromAcceptor bool) error {
 
 	mt.Flags = flags
 	mt.SndSeqNum = binary.BigEndian.Uint64(b[8:16])
-	mt.Checksum = b[MICHdrLen:]
+	mt.Checksum = b[hdrLen:]
 	return nil
 }
 
@@ -187,7 +194,7 @@ func NewInitiatorMICToken(payload []byte, key types.EncryptionKey) (*MICToken, e
 		Payload:   payload,
 	}
 
-	if err := token.ComputeAndSetChecksum(key, keyusage.GSSAPI_INITIATOR_SIGN); err != nil {
+	if err := token.SetChecksum(key, keyusage.GSSAPI_INITIATOR_SIGN); err != nil {
 		return nil, err
 	}
 
