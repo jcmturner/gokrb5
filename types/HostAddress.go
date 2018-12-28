@@ -53,21 +53,19 @@ func GetHostAddress(s string) (HostAddress, error) {
 		return h, fmt.Errorf("invalid format of client address: %v", err)
 	}
 	ip := net.ParseIP(cAddr)
-	hb, err := ip.MarshalText()
-	if err != nil {
-		return h, fmt.Errorf("could not marshal client's address into bytes: %v", err)
-	}
 	var ht int32
 	if ip.To4() != nil {
 		ht = addrtype.IPv4
+		ip = ip.To4()
 	} else if ip.To16() != nil {
 		ht = addrtype.IPv6
+		ip = ip.To16()
 	} else {
 		return h, fmt.Errorf("could not determine client's address types: %v", err)
 	}
 	h = HostAddress{
 		AddrType: ht,
-		Address:  hb,
+		Address:  ip,
 	}
 	return h, nil
 }
