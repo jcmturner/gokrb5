@@ -50,7 +50,7 @@ const (
 )
 
 const (
-	hdrLen = 16 // Length of the MIC Token's header
+	micHdrLen = 16 // Length of the MIC Token's header
 )
 
 // MICToken represents a GSS API MIC token, as defined in RFC 4121.
@@ -67,7 +67,7 @@ type MICToken struct {
 }
 
 // Return the 2 bytes identifying a GSS API MIC token
-func getGSSMICTokenId() *[2]byte {
+func getGSSMICTokenID() *[2]byte {
 	return &[2]byte{0x04, 0x04}
 }
 
@@ -83,9 +83,9 @@ func (mt *MICToken) Marshal() ([]byte, error) {
 		return nil, errors.New("checksum has not been set")
 	}
 
-	bytes := make([]byte, hdrLen+len(mt.Checksum))
-	copy(bytes[0:hdrLen], mt.getMICChecksumHeader()[:])
-	copy(bytes[hdrLen:], mt.Checksum)
+	bytes := make([]byte, micHdrLen+len(mt.Checksum))
+	copy(bytes[0:micHdrLen], mt.getMICChecksumHeader()[:])
+	copy(bytes[micHdrLen:], mt.Checksum)
 
 	return bytes, nil
 }
@@ -114,7 +114,7 @@ func (mt *MICToken) checksum(key types.EncryptionKey, keyUsage uint32) ([]byte, 
 	if mt.Payload == nil {
 		return nil, errors.New("cannot compute checksum with uninitialized payload")
 	}
-	d := make([]byte, hdrLen+len(mt.Payload))
+	d := make([]byte, micHdrLen+len(mt.Payload))
 	copy(d[0:], mt.Payload)
 	copy(d[len(mt.Payload):], mt.getMICChecksumHeader())
 
@@ -127,8 +127,8 @@ func (mt *MICToken) checksum(key types.EncryptionKey, keyUsage uint32) ([]byte, 
 
 // Build a header suitable for a checksum computation
 func (mt *MICToken) getMICChecksumHeader() []byte {
-	header := make([]byte, hdrLen)
-	copy(header[0:2], getGSSMICTokenId()[:])
+	header := make([]byte, micHdrLen)
+	copy(header[0:2], getGSSMICTokenID()[:])
 	header[2] = mt.Flags
 	copy(header[3:8], fillerBytes()[:])
 	binary.BigEndian.PutUint64(header[8:16], mt.SndSeqNum)
@@ -155,12 +155,12 @@ func (mt *MICToken) VerifyChecksum(key types.EncryptionKey, keyUsage uint32) (bo
 // If expectFromAcceptor is true we expect the token to have been emitted by the gss acceptor,
 // and will check the according flag, returning an error if the token does not match the expectation.
 func (mt *MICToken) Unmarshal(b []byte, expectFromAcceptor bool) error {
-	if len(b) < hdrLen {
+	if len(b) < micHdrLen {
 		return errors.New("bytes shorter than header length")
 	}
-	if !bytes.Equal(getGSSMICTokenId()[:], b[0:2]) {
+	if !bytes.Equal(getGSSMICTokenID()[:], b[0:2]) {
 		return fmt.Errorf("wrong Token ID, Expected %s, was %s",
-			hex.EncodeToString(getGSSMICTokenId()[:]),
+			hex.EncodeToString(getGSSMICTokenID()[:]),
 			hex.EncodeToString(b[0:2]))
 	}
 	flags := b[2]
@@ -179,7 +179,7 @@ func (mt *MICToken) Unmarshal(b []byte, expectFromAcceptor bool) error {
 
 	mt.Flags = flags
 	mt.SndSeqNum = binary.BigEndian.Uint64(b[8:16])
-	mt.Checksum = b[hdrLen:]
+	mt.Checksum = b[micHdrLen:]
 	return nil
 }
 
