@@ -40,6 +40,8 @@ ENTROPY_PID=$!
   fi
 
   /usr/sbin/kadmin.local -q "add_principal -pw spnpasswordvalue -kvno 1 HTTP/host.test.gokrb5"
+  /usr/sbin/kadmin.local -q "add_principal -pw dnspasswordvalue -kvno 1 DNS/ns.test.gokrb5"
+
 
   /usr/sbin/kadmin.local -q "add_principal -pw passwordvalue -kvno 1 testuser1"
   /usr/sbin/kadmin.local -q "add_principal +requires_preauth -pw passwordvalue -kvno 1 testuser2"
