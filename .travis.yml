@@ -17,7 +17,7 @@ before_install:
   - sudo apt-get install -yq krb5-user
   - sudo chmod 666 /etc/krb5.conf
   - go get -u golang.org/x/lint/golint
-  - docker run -d -h kdc.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -e "TEST_KDC_ADDR=127.0.0.1" -p 53:53 -p 53:53/udp --name dns jcmturner/gokrb5:dns
+  - docker run -d -h ns.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -e "TEST_KDC_ADDR=127.0.0.1" -p 53:53 -p 53:53/udp --name dns jcmturner/gokrb5:dns
   - docker run -d -h kdc.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -p 88:88 -p 88:88/udp -p 464:464 -p 464:464/udp --name krb5kdc jcmturner/gokrb5:kdc-centos-default
   - docker run -d -h kdc.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -p 78:88 -p 78:88/udp --name krb5kdc-old jcmturner/gokrb5:kdc-older
   - docker run -d -h kdc.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -p 98:88 -p 98:88/udp --name krb5kdc-latest jcmturner/gokrb5:kdc-latest

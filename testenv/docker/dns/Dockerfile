@@ -5,6 +5,10 @@ EXPOSE 53
 
 ENTRYPOINT ["/var/named/named.sh"]
 
+ENV KRB5_KTNAME /etc/named.keytab
+ADD files/krb5.conf /etc/krb5.conf
+ADD files/krb5.testtab /etc/krb5.keytab
+
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update && apt-get install -y bind9 && \
   mkdir -p /var/named/data && \
