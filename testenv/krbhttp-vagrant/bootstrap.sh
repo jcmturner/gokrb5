@@ -12,6 +12,7 @@ yum install -y \
    mod_auth_gssapi \
    mod_ssl \
    ntp \
+   bind-utils \
    krb5-workstation
 
 systemctl stop firewalld
@@ -30,6 +31,7 @@ echo "10.80.88.90 host.test.gokrb5" >> /etc/hosts
 
 sh /vagrant/krb-setup.sh
 mv /vagrant/httpd-krb5.conf /etc/httpd/conf.d/
+cp /vagrant/host.testtab /etc/krb5.keytab
 chcon system_u:object_r:httpd_config_t:s0 /etc/httpd/conf.d/*
 chcon system_u:object_r:httpd_config_t:s0 /vagrant/http.testtab
 chmod 644 /vagrant/http.testtab

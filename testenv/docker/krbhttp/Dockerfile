@@ -19,6 +19,7 @@ ADD index.html /var/www/html/modkerb/index.html
 ADD index.html /var/www/html/modgssapi/index.html
 ADD krb5.conf /etc/krb5.conf
 ADD http.testtab /etc/httpd/
+ADD host.testtab /etc/krb5.keytab
 #RUN ln -sf /dev/stdout /var/log/httpd/access_log && \
 # ln -sf /dev/stdout /var/log/httpd/ssl_access_log && \
 # ln -sf /dev/stdout /var/log/httpd/ssl_request_log && \

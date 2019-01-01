@@ -9,5 +9,5 @@ $TTL	604800
 			2419200		; Expire
 			 604800 )	; Negative Cache TTL
 ;
-@	IN	NS	test.gokrb5.
+@	IN	NS	ns.test.gokrb5.
 88.88.80 IN  PTR host.test.gokrb5.
