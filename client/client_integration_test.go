@@ -395,7 +395,7 @@ func spnegoGet(cl *client.Client) error {
 	if httpResp.StatusCode != http.StatusUnauthorized {
 		return errors.New("did not get unauthorized code when no SPNEGO header set")
 	}
-	err = spnego.SetSPNEGOHeader(cl, r, "HTTP/host.tet.gokrb5")
+	err = spnego.SetSPNEGOHeader(cl, r, "HTTP/host.test.gokrb5")
 	if err != nil {
 		return fmt.Errorf("error setting client SPNEGO header: %v", err)
 	}
