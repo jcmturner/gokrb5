@@ -1,0 +1,195 @@
+package spnego
+
+import (
+	"context"
+	"errors"
+	"fmt"
+
+	"github.com/jcmturner/gofork/encoding/asn1"
+	"gopkg.in/jcmturner/gokrb5.v6/asn1tools"
+	"gopkg.in/jcmturner/gokrb5.v6/client"
+	"gopkg.in/jcmturner/gokrb5.v6/gssapi"
+	"gopkg.in/jcmturner/gokrb5.v6/iana/nametype"
+	"gopkg.in/jcmturner/gokrb5.v6/keytab"
+	"gopkg.in/jcmturner/gokrb5.v6/service"
+	"gopkg.in/jcmturner/gokrb5.v6/types"
+)
+
+// SPNEGO implements the GSS-API mechanism for RFC 4178
+type SPNEGO struct {
+	serviceSettings *service.Settings
+	client          *client.Client
+	spn             string
+}
+
+// SPNEGOClient configures the SPNEGO mechanism suitable for client side use.
+func SPNEGOClient(cl *client.Client, spn string) *SPNEGO {
+	s := new(SPNEGO)
+	s.client = cl
+	s.spn = spn
+	s.serviceSettings = service.NewSettings(nil, service.SPN(types.NewPrincipalName(nametype.KRB_NT_PRINCIPAL, spn)))
+	return s
+}
+
+// SPNEGOService configures the SPNEGO mechanism suitable for service side use.
+func SPNEGOService(kt *keytab.Keytab, options ...func(*service.Settings)) *SPNEGO {
+	s := new(SPNEGO)
+	s.serviceSettings = service.NewSettings(kt, options...)
+	return s
+}
+
+// OID returns the GSS-API assigned OID for SPNEGO.
+func (s *SPNEGO) OID() asn1.ObjectIdentifier {
+	return gssapi.OID(gssapi.OIDSPNEGO)
+}
+
+// AcquireCred is the GSS-API method to acquire a client credential via Kerberos for SPNEGO.
+func (s *SPNEGO) AcquireCred() error {
+	return s.client.Login()
+}
+
+// InitSecContext is the GSS-API method for the client to a generate a context token to the service via Kerberos.
+func (s *SPNEGO) InitSecContext() (gssapi.ContextToken, error) {
+	tkt, key, err := s.client.GetServiceTicket(s.spn)
+	if err != nil {
+		return &SPNEGOToken{}, err
+	}
+	negTokenInit, err := NewNegTokenInitKRB5(s.client, s.serviceSettings, tkt, key)
+	if err != nil {
+		return &SPNEGOToken{}, fmt.Errorf("could not create NegTokenInit: %v", err)
+	}
+	return &SPNEGOToken{
+		Init:         true,
+		NegTokenInit: negTokenInit,
+		settings:     s.serviceSettings,
+	}, nil
+}
+
+// AcceptSecContext is the GSS-API method for the service to verify the context token provided by the client and
+// establish a context.
+func (s *SPNEGO) AcceptSecContext(ct gssapi.ContextToken) (bool, context.Context, error) {
+	var ctx context.Context
+	t, ok := ct.(*SPNEGOToken)
+	if !ok {
+		return false, ctx, errors.New("context token provided was not an SPNEGO token")
+	}
+	var oid asn1.ObjectIdentifier
+	if t.Init {
+		oid = t.NegTokenInit.MechTypes[0]
+	}
+	if t.Resp {
+		oid = t.NegTokenResp.SupportedMech
+	}
+	if !(oid.Equal(gssapi.OID(gssapi.OIDKRB5)) || oid.Equal(gssapi.OID(gssapi.OIDMSLegacyKRB5))) {
+		return false, ctx, errors.New("SPNEGO OID of MechToken is not of type KRB5")
+	}
+	// Flags in the NegInit must be used 	t.NegTokenInit.ReqFlags
+	ok, status := ct.Verify()
+
+	//TODO
+	return true, ctx, status
+}
+
+// SPNEGOToken is a GSS-API context token
+type SPNEGOToken struct {
+	Init         bool
+	Resp         bool
+	NegTokenInit NegTokenInit
+	NegTokenResp NegTokenResp
+	settings     *service.Settings
+	context      context.Context
+}
+
+// Marshal SPNEGO context token
+func (s *SPNEGOToken) Marshal() ([]byte, error) {
+	var b []byte
+	if s.Init {
+		hb, _ := asn1.Marshal(gssapi.OID(gssapi.OIDSPNEGO))
+		tb, err := s.NegTokenInit.Marshal()
+		if err != nil {
+			return b, fmt.Errorf("could not marshal NegTokenInit: %v", err)
+		}
+		b = append(hb, tb...)
+		return asn1tools.AddASNAppTag(b, 0), nil
+	}
+	if s.Resp {
+		b, err := s.NegTokenResp.Marshal()
+		if err != nil {
+			return b, fmt.Errorf("could not marshal NegTokenResp: %v", err)
+		}
+		return b, nil
+	}
+	return b, errors.New("SPNEGO cannot be marshalled. It contains neither a NegTokenInit or NegTokenResp")
+}
+
+// Unmarshal SPNEGO context token
+func (s *SPNEGOToken) Unmarshal(b []byte) error {
+	var r []byte
+	var err error
+	if b[0] != byte(161) {
+		// Not a NegTokenResp/Targ could be a NegTokenInit
+		var oid asn1.ObjectIdentifier
+		r, err = asn1.UnmarshalWithParams(b, &oid, fmt.Sprintf("application,explicit,tag:%v", 0))
+		if err != nil {
+			return fmt.Errorf("not a valid SPNEGO token: %v", err)
+		}
+		// Check the OID is the SPNEGO OID value
+		SPNEGOOID := gssapi.OID(gssapi.OIDSPNEGO)
+		if !oid.Equal(SPNEGOOID) {
+			return fmt.Errorf("OID %s does not match SPNEGO OID %s", oid.String(), SPNEGOOID.String())
+		}
+	} else {
+		// Could be a NegTokenResp/Targ
+		r = b
+	}
+
+	var a asn1.RawValue
+	_, err = asn1.Unmarshal(r, &a)
+	if err != nil {
+		return fmt.Errorf("error unmarshalling SPNEGO: %v", err)
+	}
+	switch a.Tag {
+	case 0:
+		_, err = asn1.Unmarshal(a.Bytes, &s.NegTokenInit)
+		if err != nil {
+			return fmt.Errorf("error unmarshalling NegotiationToken type %d (Init): %v", a.Tag, err)
+		}
+		s.Init = true
+	case 1:
+		_, err = asn1.Unmarshal(a.Bytes, &s.NegTokenResp)
+		if err != nil {
+			return fmt.Errorf("error unmarshalling NegotiationToken type %d (Resp/Targ): %v", a.Tag, err)
+		}
+		s.Resp = true
+	default:
+		return errors.New("unknown choice type for NegotiationToken")
+	}
+	return nil
+}
+
+// Verify the SPNEGOToken
+func (s *SPNEGOToken) Verify() (bool, gssapi.Status) {
+	if (!s.Init && !s.Resp) || (s.Init && s.Resp) {
+		return false, gssapi.Status{Code: gssapi.StatusDefectiveToken, Message: "invalid SPNEGO token, unclear if NegTokenInit or NegTokenResp"}
+	}
+	if s.Init {
+		ok, status := s.NegTokenInit.Verify()
+		if ok {
+			s.context = s.NegTokenInit.Context()
+		}
+		return ok, status
+	}
+	if s.Resp {
+		ok, status := s.NegTokenResp.Verify()
+		if ok {
+			s.context = s.NegTokenResp.Context()
+		}
+		return ok, status
+	}
+	// should not be possible to get here
+	return false, gssapi.Status{Code: gssapi.StatusFailure, Message: "unable to verify SPNEGO token"}
+}
+
+func (s *SPNEGOToken) Context() context.Context {
+	return s.context
+}

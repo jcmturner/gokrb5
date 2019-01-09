@@ -13,6 +13,7 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v6/iana/adtype"
 	"gopkg.in/jcmturner/gokrb5.v6/iana/asnAppTag"
 	"gopkg.in/jcmturner/gokrb5.v6/iana/errorcode"
+	"gopkg.in/jcmturner/gokrb5.v6/iana/flags"
 	"gopkg.in/jcmturner/gokrb5.v6/iana/keyusage"
 	"gopkg.in/jcmturner/gokrb5.v6/keytab"
 	"gopkg.in/jcmturner/gokrb5.v6/krberror"
@@ -248,4 +249,20 @@ func (t *Ticket) GetPACType(keytab keytab.Keytab, ktprinc string) (bool, pac.PAC
 		}
 	}
 	return isPAC, pac.PACType{}, nil
+}
+
+// Valid checks it the ticket is currently valid. Max duration passed endtime passed in as argument.
+func (t *Ticket) Valid(d time.Duration) (bool, error) {
+	// Check for future tickets or invalid tickets
+	time := time.Now().UTC()
+	if t.DecryptedEncPart.StartTime.Sub(time) > d || types.IsFlagSet(&t.DecryptedEncPart.Flags, flags.Invalid) {
+		return false, NewKRBError(t.SName, t.Realm, errorcode.KRB_AP_ERR_TKT_NYV, "service ticket provided is not yet valid")
+	}
+
+	// Check for expired ticket
+	if time.Sub(t.DecryptedEncPart.EndTime) > d {
+		return false, NewKRBError(t.SName, t.Realm, errorcode.KRB_AP_ERR_TKT_EXPIRED, "service ticket provided has expired")
+	}
+
+	return true, nil
 }

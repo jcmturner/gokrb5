@@ -2,101 +2,140 @@
 package gssapi
 
 import (
-	"errors"
+	"context"
 	"fmt"
 
 	"github.com/jcmturner/gofork/encoding/asn1"
-	"gopkg.in/jcmturner/gokrb5.v6/asn1tools"
-	"gopkg.in/jcmturner/gokrb5.v6/credentials"
-	"gopkg.in/jcmturner/gokrb5.v6/messages"
-	"gopkg.in/jcmturner/gokrb5.v6/types"
 )
 
-// SPNEGO_OID is the OID for SPNEGO header type.
-var SPNEGO_OID = asn1.ObjectIdentifier{1, 3, 6, 1, 5, 5, 2}
+const (
+	OIDKRB5         OIDName = "KRB5"         // MechType OID for Kerberos 5
+	OIDMSLegacyKRB5 OIDName = "MSLegacyKRB5" // MechType OID for Kerberos 5
+	OIDSPNEGO       OIDName = "SPNEGO"
 
-// SPNEGO header struct
-type SPNEGO struct {
-	Init         bool
-	Resp         bool
-	NegTokenInit NegTokenInit
-	NegTokenResp NegTokenResp
+	// GSS-API status values
+	StatusBadBindings = 1 << iota
+	StatusBadMech
+	StatusBadName
+	StatusBadNameType
+	StatusBadStatus
+	StatusBadSig
+	StatusBadMIC
+	StatusContextExpired
+	StatusCredentialsExpired
+	StatusDefectiveCredential
+	StatusDefectiveToken
+	StatusFailure
+	StatusNoContext
+	StatusNoCred
+	StatusBadQOP
+	StatusUnauthorized
+	StatusUnavailable
+	StatusDuplicateElement
+	StatusNameNotMN
+	StatusComplete
+	StatusContinueNeeded
+	StatusDuplicateToken
+	StatusOldToken
+	StatusUnseqToken
+	StatusGapToken
+)
+
+type ContextToken interface {
+	Marshal() ([]byte, error)
+	Unmarshal(b []byte) error
+	Verify() (bool, Status)
+	Context() context.Context
 }
 
-// Unmarshal SPNEGO negotiation token
-func (s *SPNEGO) Unmarshal(b []byte) error {
-	var r []byte
-	var err error
-	if b[0] != byte(161) {
-		// Not a NegTokenResp/Targ could be a NegTokenInit
-		var oid asn1.ObjectIdentifier
-		r, err = asn1.UnmarshalWithParams(b, &oid, fmt.Sprintf("application,explicit,tag:%v", 0))
-		if err != nil {
-			return fmt.Errorf("not a valid SPNEGO token: %v", err)
-		}
-		// Check the OID is the SPNEGO OID value
-		if !oid.Equal(SPNEGO_OID) {
-			return fmt.Errorf("OID %s does not match SPNEGO OID %s", oid.String(), SPNEGO_OID.String())
-		}
-	} else {
-		// Could be a NegTokenResp/Targ
-		r = b
-	}
+type Mechanism interface {
+	OID() asn1.ObjectIdentifier
+	AcquireCred() error                                              //ASExchange - Client Side
+	InitSecContext() (ContextToken, error)                           //TGSExchnage builds AP_REQ to go into ContextToken to send to service - Client Side
+	AcceptSecContext(ct ContextToken) (bool, context.Context, error) //verifies the AP_REQ
+	MIC() MICToken                                                   //  apply integrity check, receive as token separate from message
+	VerifyMIC(mt MICToken)                                           //validate integrity check token along with message
+	Wrap(msg []byte) WrapToken                                       //  sign, optionally encrypt, encapsulate
+	Unwrap(wt WrapToken) []byte                                      //decapsulate, decrypt if needed, validate integrity check
+}
 
-	var a asn1.RawValue
-	_, err = asn1.Unmarshal(r, &a)
-	if err != nil {
-		return fmt.Errorf("error unmarshalling SPNEGO: %v", err)
+type OIDName string
+
+func OID(o OIDName) asn1.ObjectIdentifier {
+	switch o {
+	case OIDSPNEGO:
+		return asn1.ObjectIdentifier{1, 3, 6, 1, 5, 5, 2}
+	case OIDKRB5:
+		return asn1.ObjectIdentifier{1, 2, 840, 113554, 1, 2, 2}
+	case OIDMSLegacyKRB5:
+		return asn1.ObjectIdentifier{1, 2, 840, 48018, 1, 2, 2}
 	}
-	switch a.Tag {
-	case 0:
-		_, err = asn1.Unmarshal(a.Bytes, &s.NegTokenInit)
-		if err != nil {
-			return fmt.Errorf("error unmarshalling NegotiationToken type %d (Init): %v", a.Tag, err)
-		}
-		s.Init = true
-	case 1:
-		_, err = asn1.Unmarshal(a.Bytes, &s.NegTokenResp)
-		if err != nil {
-			return fmt.Errorf("error unmarshalling NegotiationToken type %d (Resp/Targ): %v", a.Tag, err)
-		}
-		s.Resp = true
+	return asn1.ObjectIdentifier{}
+}
+
+type Status struct {
+	Code    int
+	Message string
+}
+
+func (s Status) Error() string {
+	var str string
+	switch s.Code {
+	case StatusBadBindings:
+		str = "channel binding mismatch"
+	case StatusBadMech:
+		str = "unsupported mechanism requested"
+	case StatusBadName:
+		str = "invalid name provided"
+	case StatusBadNameType:
+		str = "name of unsupported type provided"
+	case StatusBadStatus:
+		str = "invalid input status selector"
+	case StatusBadSig:
+		str = "token had invalid integrity check"
+	case StatusBadMIC:
+		str = "preferred alias for GSS_S_BAD_SIG"
+	case StatusContextExpired:
+		str = "specified security context expired"
+	case StatusCredentialsExpired:
+		str = "expired credentials detected"
+	case StatusDefectiveCredential:
+		str = "defective credential detected"
+	case StatusDefectiveToken:
+		str = "defective token detected"
+	case StatusFailure:
+		str = "failure, unspecified at GSS-API level"
+	case StatusNoContext:
+		str = "no valid security context specified"
+	case StatusNoCred:
+		str = "no valid credentials provided"
+	case StatusBadQOP:
+		str = "unsupported QOP valu"
+	case StatusUnauthorized:
+		str = "operation unauthorized"
+	case StatusUnavailable:
+		str = "operation unavailable"
+	case StatusDuplicateElement:
+		str = "duplicate credential element requested"
+	case StatusNameNotMN:
+		str = "name contains multi-mechanism elements"
+	case StatusComplete:
+		str = "normal completion"
+	case StatusContinueNeeded:
+		str = "continuation call to routine required"
+	case StatusDuplicateToken:
+		str = "duplicate per-message token detected"
+	case StatusOldToken:
+		str = "timed-out per-message token detected"
+	case StatusUnseqToken:
+		str = "reordered (early) per-message token detected"
+	case StatusGapToken:
+		str = "skipped predecessor token(s) detected"
 	default:
-		return errors.New("unknown choice type for NegotiationToken")
+		str = "unknown GSS-API error status"
 	}
-	return nil
-}
-
-// Marshal SPNEGO negotiation token
-func (s *SPNEGO) Marshal() ([]byte, error) {
-	var b []byte
-	if s.Init {
-		hb, _ := asn1.Marshal(SPNEGO_OID)
-		tb, err := s.NegTokenInit.Marshal()
-		if err != nil {
-			return b, fmt.Errorf("could not marshal NegTokenInit: %v", err)
-		}
-		b = append(hb, tb...)
-		return asn1tools.AddASNAppTag(b, 0), nil
+	if s.Message != "" {
+		return fmt.Sprintf("%s: %s", str, s.Message)
 	}
-	if s.Resp {
-		b, err := s.NegTokenResp.Marshal()
-		if err != nil {
-			return b, fmt.Errorf("could not marshal NegTokenResp: %v", err)
-		}
-		return b, nil
-	}
-	return b, errors.New("SPNEGO cannot be marshalled. It contains neither a NegTokenInit or NegTokenResp")
-}
-
-// GetSPNEGOKrbNegTokenInit returns an SPNEGO struct containing a NegTokenInit.
-func GetSPNEGOKrbNegTokenInit(creds credentials.Credentials, tkt messages.Ticket, sessionKey types.EncryptionKey) (SPNEGO, error) {
-	negTokenInit, err := NewNegTokenInitKrb5(creds, tkt, sessionKey)
-	if err != nil {
-		return SPNEGO{}, fmt.Errorf("could not create NegTokenInit: %v", err)
-	}
-	return SPNEGO{
-		Init:         true,
-		NegTokenInit: negTokenInit,
-	}, nil
+	return str
 }

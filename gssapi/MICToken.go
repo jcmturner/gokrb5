@@ -135,10 +135,10 @@ func (mt *MICToken) getMICChecksumHeader() []byte {
 	return header
 }
 
-// VerifyChecksum computes the token's checksum with the provided key and usage,
+// Verify computes the token's checksum with the provided key and usage,
 // and compares it to the checksum present in the token.
 // In case of any failure, (false, err) is returned, with err an explanatory error.
-func (mt *MICToken) VerifyChecksum(key types.EncryptionKey, keyUsage uint32) (bool, error) {
+func (mt *MICToken) Verify(key types.EncryptionKey, keyUsage uint32) (bool, error) {
 	computed, err := mt.checksum(key, keyUsage)
 	if err != nil {
 		return false, err

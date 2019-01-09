@@ -1,13 +1,10 @@
-// +build integration
-// To turn on this test use -tags=integration in go test command
-
-package client
+package client_test
 
 import (
 	"bytes"
 	"encoding/hex"
+	"errors"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
@@ -16,19 +13,23 @@ import (
 	"testing"
 	"time"
 
-	"errors"
 	"fmt"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/jcmturner/gokrb5.v6/client"
 	"gopkg.in/jcmturner/gokrb5.v6/config"
 	"gopkg.in/jcmturner/gokrb5.v6/credentials"
 	"gopkg.in/jcmturner/gokrb5.v6/iana/etypeID"
 	"gopkg.in/jcmturner/gokrb5.v6/keytab"
+	"gopkg.in/jcmturner/gokrb5.v6/spnego"
+	"gopkg.in/jcmturner/gokrb5.v6/test"
 	"gopkg.in/jcmturner/gokrb5.v6/testdata"
 	"strings"
 	"sync"
 )
 
 func TestClient_SuccessfulLogin_Keytab(t *testing.T) {
+	test.Integration(t)
+
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
 		addr = testdata.TEST_KDC_ADDR
@@ -43,7 +44,7 @@ func TestClient_SuccessfulLogin_Keytab(t *testing.T) {
 	}
 	for _, test := range tests {
 		c.Realms[0].KDC = []string{addr + ":" + test}
-		cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
+		cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 		cl.WithConfig(c)
 
 		err := cl.Login()
@@ -54,6 +55,8 @@ func TestClient_SuccessfulLogin_Keytab(t *testing.T) {
 }
 
 func TestClient_SuccessfulLogin_Password(t *testing.T) {
+	test.Integration(t)
+
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
 		addr = testdata.TEST_KDC_ADDR
@@ -66,7 +69,7 @@ func TestClient_SuccessfulLogin_Password(t *testing.T) {
 	}
 	for _, test := range tests {
 		c.Realms[0].KDC = []string{addr + ":" + test}
-		cl := NewClientWithPassword("testuser1", "TEST.GOKRB5", "passwordvalue")
+		cl := client.NewClientWithPassword("testuser1", "TEST.GOKRB5", "passwordvalue")
 		cl.WithConfig(c)
 
 		err := cl.Login()
@@ -77,6 +80,8 @@ func TestClient_SuccessfulLogin_Password(t *testing.T) {
 }
 
 func TestClient_SuccessfulLogin_TCPOnly(t *testing.T) {
+	test.Integration(t)
+
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
@@ -86,7 +91,7 @@ func TestClient_SuccessfulLogin_TCPOnly(t *testing.T) {
 	}
 	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
 	c.LibDefaults.UDPPreferenceLimit = 1
-	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
+	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 
 	err := cl.Login()
@@ -96,6 +101,8 @@ func TestClient_SuccessfulLogin_TCPOnly(t *testing.T) {
 }
 
 func TestClient_ASExchange_TGSExchange_EncTypes_Keytab(t *testing.T) {
+	test.Integration(t)
+
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
@@ -117,7 +124,7 @@ func TestClient_ASExchange_TGSExchange_EncTypes_Keytab(t *testing.T) {
 		c.LibDefaults.DefaultTktEnctypeIDs = []int32{etypeID.ETypesByName[test]}
 		c.LibDefaults.DefaultTGSEnctypes = []string{test}
 		c.LibDefaults.DefaultTGSEnctypeIDs = []int32{etypeID.ETypesByName[test]}
-		cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
+		cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 		cl.WithConfig(c)
 
 		err := cl.Login()
@@ -134,6 +141,8 @@ func TestClient_ASExchange_TGSExchange_EncTypes_Keytab(t *testing.T) {
 }
 
 func TestClient_ASExchange_TGSExchange_EncTypes_Password(t *testing.T) {
+	test.Integration(t)
+
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
@@ -153,7 +162,7 @@ func TestClient_ASExchange_TGSExchange_EncTypes_Password(t *testing.T) {
 		c.LibDefaults.DefaultTktEnctypeIDs = []int32{etypeID.ETypesByName[test]}
 		c.LibDefaults.DefaultTGSEnctypes = []string{test}
 		c.LibDefaults.DefaultTGSEnctypeIDs = []int32{etypeID.ETypesByName[test]}
-		cl := NewClientWithPassword("testuser1", "TEST.GOKRB5", "passwordvalue")
+		cl := client.NewClientWithPassword("testuser1", "TEST.GOKRB5", "passwordvalue")
 		cl.WithConfig(c)
 
 		err := cl.Login()
@@ -170,6 +179,8 @@ func TestClient_ASExchange_TGSExchange_EncTypes_Password(t *testing.T) {
 }
 
 func TestClient_FailedLogin(t *testing.T) {
+	test.Integration(t)
+
 	b, _ := hex.DecodeString(testdata.TESTUSER1_WRONGPASSWD)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
@@ -178,7 +189,7 @@ func TestClient_FailedLogin(t *testing.T) {
 		addr = testdata.TEST_KDC_ADDR
 	}
 	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
-	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
+	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 
 	err := cl.Login()
@@ -188,6 +199,8 @@ func TestClient_FailedLogin(t *testing.T) {
 }
 
 func TestClient_SuccessfulLogin_UserRequiringPreAuth(t *testing.T) {
+	test.Integration(t)
+
 	b, _ := hex.DecodeString(testdata.TESTUSER2_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
@@ -196,7 +209,7 @@ func TestClient_SuccessfulLogin_UserRequiringPreAuth(t *testing.T) {
 		addr = testdata.TEST_KDC_ADDR
 	}
 	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
-	cl := NewClientWithKeytab("testuser2", "TEST.GOKRB5", kt)
+	cl := client.NewClientWithKeytab("testuser2", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 
 	err := cl.Login()
@@ -206,6 +219,8 @@ func TestClient_SuccessfulLogin_UserRequiringPreAuth(t *testing.T) {
 }
 
 func TestClient_SuccessfulLogin_UserRequiringPreAuth_TCPOnly(t *testing.T) {
+	test.Integration(t)
+
 	b, _ := hex.DecodeString(testdata.TESTUSER2_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
@@ -215,7 +230,7 @@ func TestClient_SuccessfulLogin_UserRequiringPreAuth_TCPOnly(t *testing.T) {
 	}
 	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
 	c.LibDefaults.UDPPreferenceLimit = 1
-	cl := NewClientWithKeytab("testuser2", "TEST.GOKRB5", kt)
+	cl := client.NewClientWithKeytab("testuser2", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 
 	err := cl.Login()
@@ -225,11 +240,13 @@ func TestClient_SuccessfulLogin_UserRequiringPreAuth_TCPOnly(t *testing.T) {
 }
 
 func TestClient_NetworkTimeout(t *testing.T) {
+	test.Integration(t)
+
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	c.Realms[0].KDC = []string{testdata.TEST_KDC_BADADDR + ":88"}
-	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
+	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 
 	err := cl.Login()
@@ -239,6 +256,8 @@ func TestClient_NetworkTimeout(t *testing.T) {
 }
 
 func TestClient_GetServiceTicket(t *testing.T) {
+	test.Integration(t)
+
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
@@ -247,7 +266,7 @@ func TestClient_GetServiceTicket(t *testing.T) {
 		addr = testdata.TEST_KDC_ADDR
 	}
 	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
-	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
+	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 
 	err := cl.Login()
@@ -272,6 +291,8 @@ func TestClient_GetServiceTicket(t *testing.T) {
 }
 
 func TestClient_GetServiceTicket_InvalidSPN(t *testing.T) {
+	test.Integration(t)
+
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
@@ -280,7 +301,7 @@ func TestClient_GetServiceTicket_InvalidSPN(t *testing.T) {
 		addr = testdata.TEST_KDC_ADDR
 	}
 	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
-	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
+	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 
 	err := cl.Login()
@@ -294,6 +315,8 @@ func TestClient_GetServiceTicket_InvalidSPN(t *testing.T) {
 }
 
 func TestClient_GetServiceTicket_OlderKDC(t *testing.T) {
+	test.Integration(t)
+
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
@@ -302,7 +325,7 @@ func TestClient_GetServiceTicket_OlderKDC(t *testing.T) {
 		addr = testdata.TEST_KDC_ADDR
 	}
 	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC_OLD}
-	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
+	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 
 	err := cl.Login()
@@ -318,50 +341,9 @@ func TestClient_GetServiceTicket_OlderKDC(t *testing.T) {
 	assert.Equal(t, int32(18), key.KeyType)
 }
 
-func TestClient_SetSPNEGOHeader(t *testing.T) {
-	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
-	kt, _ := keytab.Parse(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
-	addr := os.Getenv("TEST_KDC_ADDR")
-	if addr == "" {
-		addr = testdata.TEST_KDC_ADDR
-	}
-	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
-	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
-	cl.WithConfig(c)
-
-	err := cl.Login()
-	if err != nil {
-		t.Fatalf("error on AS_REQ: %v\n", err)
-	}
-	url := os.Getenv("TEST_HTTP_URL")
-	if url == "" {
-		url = testdata.TEST_HTTP_URL
-	}
-	paths := []string{
-		"/modkerb/index.html",
-		"/modgssapi/index.html",
-	}
-	for _, p := range paths {
-		r, _ := http.NewRequest("GET", url+p, nil)
-		httpResp, err := http.DefaultClient.Do(r)
-		if err != nil {
-			t.Fatalf("%s request error: %v\n", url+p, err)
-		}
-		assert.Equal(t, http.StatusUnauthorized, httpResp.StatusCode, "Status code in response to client with no SPNEGO not as expected")
-		err = cl.SetSPNEGOHeader(r, "HTTP/host.test.gokrb5")
-		if err != nil {
-			t.Fatalf("error setting client SPNEGO header: %v", err)
-		}
-		httpResp, err = http.DefaultClient.Do(r)
-		if err != nil {
-			t.Fatalf("%s request error: %v\n", url+p, err)
-		}
-		assert.Equal(t, http.StatusOK, httpResp.StatusCode, "Status code in response to client SPNEGO request not as expected")
-	}
-}
-
 func TestMultiThreadedClientUse(t *testing.T) {
+	test.Integration(t)
+
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
@@ -370,7 +352,7 @@ func TestMultiThreadedClientUse(t *testing.T) {
 		addr = testdata.TEST_KDC_ADDR
 	}
 	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
-	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
+	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 
 	var wg sync.WaitGroup
@@ -400,54 +382,7 @@ func TestMultiThreadedClientUse(t *testing.T) {
 	wg2.Wait()
 }
 
-func TestMultiThreadedClientSession(t *testing.T) {
-	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
-	kt, _ := keytab.Parse(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
-	addr := os.Getenv("TEST_KDC_ADDR")
-	if addr == "" {
-		addr = testdata.TEST_KDC_ADDR
-	}
-	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
-	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
-	cl.WithConfig(c)
-	err := cl.Login()
-	if err != nil {
-		t.Fatalf("failed to log in: %v", err)
-	}
-
-	s, ok := cl.sessions.get("TEST.GOKRB5")
-	if !ok {
-		t.Fatal("error initially getting session")
-	}
-	go func() {
-		for {
-			err := cl.renewTGT(s)
-			if err != nil {
-				t.Logf("error renewing TGT: %v", err)
-			}
-			time.Sleep(time.Millisecond * 100)
-		}
-	}()
-
-	var wg sync.WaitGroup
-	wg.Add(10)
-	for i := 0; i < 10; i++ {
-		go func() {
-			defer wg.Done()
-			tgt, _, err := cl.sessionTGT("TEST.GOKRB5")
-			if err != nil || tgt.Realm != "TEST.GOKRB5" {
-				t.Logf("error getting session: %v", err)
-			}
-			_, _, _, r, _ := cl.sessionTimes("TEST.GOKRB5")
-			fmt.Fprintf(ioutil.Discard, "%v", r)
-		}()
-		time.Sleep(time.Second)
-	}
-	wg.Wait()
-}
-
-func spnegoGet(cl *Client) error {
+func spnegoGet(cl *client.Client) error {
 	url := os.Getenv("TEST_HTTP_URL")
 	if url == "" {
 		url = testdata.TEST_HTTP_URL
@@ -460,7 +395,7 @@ func spnegoGet(cl *Client) error {
 	if httpResp.StatusCode != http.StatusUnauthorized {
 		return errors.New("did not get unauthorized code when no SPNEGO header set")
 	}
-	err = cl.SetSPNEGOHeader(r, "HTTP/host.test.gokrb5")
+	err = spnego.SetSPNEGOHeader(cl, r, "HTTP/host.tet.gokrb5")
 	if err != nil {
 		return fmt.Errorf("error setting client SPNEGO header: %v", err)
 	}
@@ -475,6 +410,8 @@ func spnegoGet(cl *Client) error {
 }
 
 func TestNewClientFromCCache(t *testing.T) {
+	test.Integration(t)
+
 	b, err := hex.DecodeString(testdata.CCACHE_TEST)
 	if err != nil {
 		t.Fatalf("error decoding test data")
@@ -483,7 +420,7 @@ func TestNewClientFromCCache(t *testing.T) {
 	if err != nil {
 		t.Fatal("error getting test CCache")
 	}
-	cl, err := NewClientFromCCache(cc)
+	cl, err := client.NewClientFromCCache(cc)
 	if err != nil {
 		t.Fatalf("error creating client from CCache: %v", err)
 	}
@@ -502,6 +439,8 @@ func TestNewClientFromCCache(t *testing.T) {
 // Login to the TEST.GOKRB5 domain and request service ticket for resource in the RESDOM.GOKRB5 domain.
 // There is a trust between the two domains.
 func TestClient_GetServiceTicket_Trusted_Resource_Domain(t *testing.T) {
+	test.Integration(t)
+
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
@@ -520,7 +459,7 @@ func TestClient_GetServiceTicket_Trusted_Resource_Domain(t *testing.T) {
 	}
 
 	c.LibDefaults.DefaultRealm = "TEST.GOKRB5"
-	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
+	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 	c.LibDefaults.DefaultTktEnctypes = []string{"aes256-cts-hmac-sha1-96"}
 	c.LibDefaults.DefaultTktEnctypeIDs = []int32{etypeID.ETypesByName["aes256-cts-hmac-sha1-96"]}
 	c.LibDefaults.DefaultTGSEnctypes = []string{"aes256-cts-hmac-sha1-96"}
@@ -611,6 +550,8 @@ func loadCCache() (credentials.CCache, error) {
 }
 
 func TestGetServiceTicketFromCCacheTGT(t *testing.T) {
+	test.Integration(t)
+
 	err := login()
 	if err != nil {
 		t.Fatalf("error logging in with kinit: %v", err)
@@ -625,17 +566,33 @@ func TestGetServiceTicketFromCCacheTGT(t *testing.T) {
 		addr = testdata.TEST_KDC_ADDR
 	}
 	cfg.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
-	cl, err := NewClientFromCCache(c)
+	cl, err := client.NewClientFromCCache(c)
 	if err != nil {
 		t.Fatalf("error generating client from ccache: %v", err)
 	}
 	cl.WithConfig(cfg)
+	spn := "HTTP/host.test.gokrb5"
+	tkt, key, err := cl.GetServiceTicket(spn)
+	if err != nil {
+		t.Fatalf("error getting service ticket: %v\n", err)
+	}
+	assert.Equal(t, spn, tkt.SName.GetPrincipalNameString())
+	assert.Equal(t, int32(18), key.KeyType)
+
+	//Check cache use - should get the same values back again
+	tkt2, key2, err := cl.GetServiceTicket(spn)
+	if err != nil {
+		t.Fatalf("error getting service ticket: %v\n", err)
+	}
+	assert.Equal(t, tkt.EncPart.Cipher, tkt2.EncPart.Cipher)
+	assert.Equal(t, key.KeyValue, key2.KeyValue)
+
 	url := os.Getenv("TEST_HTTP_URL")
 	if url == "" {
 		url = testdata.TEST_HTTP_URL
 	}
 	r, _ := http.NewRequest("GET", url+"/modgssapi/index.html", nil)
-	err = cl.SetSPNEGOHeader(r, "HTTP/host.test.gokrb5")
+	err = spnego.SetSPNEGOHeader(&cl, r, "HTTP/host.test.gokrb5")
 	if err != nil {
 		t.Fatalf("error setting client SPNEGO header: %v", err)
 	}
@@ -647,6 +604,8 @@ func TestGetServiceTicketFromCCacheTGT(t *testing.T) {
 }
 
 func TestGetServiceTicketFromCCacheWithoutKDC(t *testing.T) {
+	test.Integration(t)
+
 	err := login()
 	if err != nil {
 		t.Fatalf("error logging in with kinit: %v", err)
@@ -660,7 +619,7 @@ func TestGetServiceTicketFromCCacheWithoutKDC(t *testing.T) {
 		t.Errorf("error loading CCache: %v", err)
 	}
 	cfg, _ := config.NewConfigFromString("...")
-	cl, err := NewClientFromCCache(c)
+	cl, err := client.NewClientFromCCache(c)
 	if err != nil {
 		t.Fatalf("error generating client from ccache: %v", err)
 	}
@@ -670,7 +629,7 @@ func TestGetServiceTicketFromCCacheWithoutKDC(t *testing.T) {
 		url = testdata.TEST_HTTP_URL
 	}
 	r, _ := http.NewRequest("GET", url+"/modgssapi/index.html", nil)
-	err = cl.SetSPNEGOHeader(r, "HTTP/host.test.gokrb5")
+	err = spnego.SetSPNEGOHeader(&cl, r, "HTTP/host.test.gokrb5")
 	if err != nil {
 		t.Fatalf("error setting client SPNEGO header: %v", err)
 	}
@@ -682,6 +641,8 @@ func TestGetServiceTicketFromCCacheWithoutKDC(t *testing.T) {
 }
 
 func TestClient_ChangePasswd(t *testing.T) {
+	test.Integration(t)
+
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
@@ -691,7 +652,7 @@ func TestClient_ChangePasswd(t *testing.T) {
 	}
 	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
 	c.Realms[0].KPasswdServer = []string{addr + ":464"}
-	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
+	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 
 	ok, err := cl.ChangePasswd("newpassword")
@@ -700,7 +661,7 @@ func TestClient_ChangePasswd(t *testing.T) {
 	}
 	assert.True(t, ok, "password was not changed")
 
-	cl = NewClientWithPassword("testuser1", "TEST.GOKRB5", "newpassword")
+	cl = client.NewClientWithPassword("testuser1", "TEST.GOKRB5", "newpassword")
 	cl.WithConfig(c)
 	ok, err = cl.ChangePasswd(testdata.TESTUSER1_PASSWORD)
 	if err != nil {
@@ -709,51 +670,9 @@ func TestClient_ChangePasswd(t *testing.T) {
 	assert.True(t, ok, "password was not changed back")
 }
 
-func TestClient_AutoRenew_Goroutine(t *testing.T) {
-	// Tests that the auto renew of client credentials is not spawning goroutines out of control.
-	addr := os.Getenv("TEST_KDC_ADDR")
-	if addr == "" {
-		addr = testdata.TEST_KDC_ADDR
-	}
-	b, _ := hex.DecodeString(testdata.TESTUSER2_KEYTAB)
-	kt, _ := keytab.Parse(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
-	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC_SHORTTICKETS}
-	c.LibDefaults.PreferredPreauthTypes = []int{int(etypeID.DES3_CBC_SHA1_KD)} // a preauth etype the KDC does not support. Test this does not cause renewal to fail.
-	cl := NewClientWithKeytab("testuser2", "TEST.GOKRB5", kt)
-	cl.WithConfig(c)
-
-	err := cl.Login()
-	if err != nil {
-		t.Errorf("error on logging in: %v\n", err)
-	}
-	n := runtime.NumGoroutine()
-	for i := 0; i < 24; i++ {
-		time.Sleep(time.Second * 5)
-		_, endTime, _, _, err := cl.sessionTimes("TEST.GOKRB5")
-		if err != nil {
-			t.Errorf("could not get client's session: %v", err)
-		}
-		if time.Now().UTC().After(endTime) {
-			t.Fatalf("session auto update failed")
-		}
-		spn := "HTTP/host.test.gokrb5"
-		tkt, key, err := cl.GetServiceTicket(spn)
-		if err != nil {
-			t.Fatalf("error getting service ticket: %v\n", err)
-		}
-		b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
-		skt, _ := keytab.Parse(b)
-		tkt.DecryptEncPart(skt, "")
-		assert.Equal(t, spn, tkt.SName.GetPrincipalNameString())
-		assert.Equal(t, int32(18), key.KeyType)
-		if runtime.NumGoroutine() > n {
-			t.Fatalf("number of goroutines is increasing: should not be more than %d, is %d", n, runtime.NumGoroutine())
-		}
-	}
-}
-
 func TestClient_Destroy(t *testing.T) {
+	test.Integration(t)
+
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
 		addr = testdata.TEST_KDC_ADDR
@@ -762,7 +681,7 @@ func TestClient_Destroy(t *testing.T) {
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC_SHORTTICKETS}
-	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
+	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 	cl.WithConfig(c)
 
 	err := cl.Login()

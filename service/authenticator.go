@@ -2,7 +2,6 @@ package service
 
 import (
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -11,116 +10,25 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v6/client"
 	"gopkg.in/jcmturner/gokrb5.v6/config"
 	"gopkg.in/jcmturner/gokrb5.v6/credentials"
-	"gopkg.in/jcmturner/gokrb5.v6/gssapi"
 	"gopkg.in/jcmturner/gokrb5.v6/keytab"
 )
 
-// SPNEGOAuthenticator implements gopkg.in/jcmturner/goidentity.v3.Authenticator interface
-type SPNEGOAuthenticator struct {
-	SPNEGOHeaderValue string
-	ClientAddr        string
-	Config            *Config
-}
-
-// Config for service side implementation
-//
-// Keytab (mandatory) - keytab for the service user
-//
-// KeytabPrincipal (optional) - keytab principal override for the service.
-// The service looks for this principal in the keytab to use to decrypt tickets.
-// If "" is passed as KeytabPrincipal then the principal will be automatically derived
-// from the service name (SName) and realm in the ticket the service is trying to decrypt.
-// This is often sufficient if you create the SPN in MIT KDC with: /usr/sbin/kadmin.local -q "add_principal HTTP/<fqdn>"
-// When Active Directory is used for the KDC this may need to be the account name you have set the SPN against
-// (setspn.exe -a "HTTP/<fqdn>" <account name>)
-// If you are unsure run:
-//
-// klist -k <service's keytab file>
-//
-// and use the value from the Principal column for the keytab entry the service should use.
-//
-// RequireHostAddr - require that the kerberos ticket must include client host IP addresses and one must match the client making the request.
-// This is controlled in the client config with the noaddresses option (http://web.mit.edu/kerberos/krb5-latest/doc/admin/conf_files/krb5_conf.html).
-//
-// DisablePACDecoding - if set to true decoding of the Microsoft PAC will be disabled.
-type Config struct {
-	Keytab             keytab.Keytab
-	ServicePrincipal   string
-	RequireHostAddr    bool
-	DisablePACDecoding bool
-}
-
-// NewSPNEGOAuthenticator creates a new SPNEGOAuthenticator.
-func NewSPNEGOAuthenticator(kt keytab.Keytab) (a SPNEGOAuthenticator) {
-	a.Config = NewConfig(kt)
-	return
-}
-
-// NewConfig creates a new kerberos service Config.
-func NewConfig(kt keytab.Keytab) *Config {
-	return &Config{Keytab: kt}
-}
-
-// Authenticate performs authentication checks against the negotiation header value provided.
-func (c *Config) Authenticate(neg, addr string) (i goidentity.Identity, ok bool, err error) {
-	a := SPNEGOAuthenticator{
-		SPNEGOHeaderValue: neg,
-		ClientAddr:        addr,
-		Config:            c,
+// NewKRB5BasicAuthenticator creates a new NewKRB5BasicAuthenticator
+func NewKRB5BasicAuthenticator(headerVal string, kt *keytab.Keytab, krb5conf *config.Config, options ...func(*Settings)) KRB5BasicAuthenticator {
+	s := NewSettings(kt, options...)
+	return KRB5BasicAuthenticator{
+		BasicHeaderValue: headerVal,
+		clientConfig:     krb5conf,
+		serviceConfig:    s,
 	}
-	b, err := base64.StdEncoding.DecodeString(a.SPNEGOHeaderValue)
-	if err != nil {
-		err = fmt.Errorf("SPNEGO error in base64 decoding negotiation header: %v", err)
-		return
-	}
-	var spnego gssapi.SPNEGO
-	err = spnego.Unmarshal(b)
-	if !spnego.Init {
-		err = fmt.Errorf("SPNEGO negotiation token is not a NegTokenInit: %v", err)
-		return
-	}
-	if !(spnego.NegTokenInit.MechTypes[0].Equal(gssapi.MechTypeOIDKRB5) ||
-		spnego.NegTokenInit.MechTypes[0].Equal(gssapi.MechTypeOIDMSLegacyKRB5)) {
-		err = errors.New("SPNEGO OID of MechToken is not of type KRB5")
-		return
-	}
-	var mt gssapi.MechToken
-	err = mt.Unmarshal(spnego.NegTokenInit.MechToken)
-	if err != nil {
-		err = fmt.Errorf("SPNEGO error unmarshaling MechToken: %v", err)
-		return
-	}
-	if !mt.IsAPReq() {
-		err = errors.New("MechToken does not contain an AP_REQ - KRB_AP_ERR_MSG_TYPE")
-		return
-	}
-
-	ok, creds, err := ValidateAPREQ(mt.APReq, a)
-	if err != nil {
-		err = fmt.Errorf("SPNEGO validation error: %v", err)
-		return
-	}
-	i = &creds
-	return
-}
-
-// Authenticate and retrieve a goidentity.Identity. In this case it is a pointer to a credentials.Credentials
-func (a SPNEGOAuthenticator) Authenticate() (i goidentity.Identity, ok bool, err error) {
-	return a.Config.Authenticate(a.SPNEGOHeaderValue, a.ClientAddr)
-}
-
-// Mechanism returns the authentication mechanism.
-func (a SPNEGOAuthenticator) Mechanism() string {
-	return "SPNEGO Kerberos"
 }
 
 // KRB5BasicAuthenticator implements gopkg.in/jcmturner/goidentity.v3.Authenticator interface.
 // It takes username and password so can be used for basic authentication.
 type KRB5BasicAuthenticator struct {
-	SPN              string
 	BasicHeaderValue string
-	ServiceConfig    Config
-	ClientConfig     *config.Config
+	serviceConfig    *Settings
+	clientConfig     *config.Config
 	realm            string
 	username         string
 	password         string
@@ -134,26 +42,26 @@ func (a KRB5BasicAuthenticator) Authenticate() (i goidentity.Identity, ok bool, 
 		return
 	}
 	cl := client.NewClientWithPassword(a.username, a.realm, a.password)
-	cl.WithConfig(a.ClientConfig)
+	cl.WithConfig(a.clientConfig)
 	err = cl.Login()
 	if err != nil {
 		// Username and/or password could be wrong
 		err = fmt.Errorf("error with user credentials during login: %v", err)
 		return
 	}
-	tkt, _, err := cl.GetServiceTicket(a.SPN)
+	tkt, _, err := cl.GetServiceTicket(a.serviceConfig.SPN().GetPrincipalNameString())
 	if err != nil {
 		err = fmt.Errorf("could not get service ticket: %v", err)
 		return
 	}
-	err = tkt.DecryptEncPart(a.ServiceConfig.Keytab, a.ServiceConfig.ServicePrincipal)
+	err = tkt.DecryptEncPart(*a.serviceConfig.Keytab, a.serviceConfig.SPN().GetPrincipalNameString())
 	if err != nil {
 		err = fmt.Errorf("could not decrypt service ticket: %v", err)
 		return
 	}
 	cl.Credentials.SetAuthTime(time.Now().UTC())
 	cl.Credentials.SetAuthenticated(true)
-	isPAC, pac, err := tkt.GetPACType(a.ServiceConfig.Keytab, a.ServiceConfig.ServicePrincipal)
+	isPAC, pac, err := tkt.GetPACType(*a.serviceConfig.Keytab, a.serviceConfig.SPN().GetPrincipalNameString())
 	if isPAC && err != nil {
 		err = fmt.Errorf("error processing PAC: %v", err)
 		return

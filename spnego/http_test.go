@@ -1,29 +1,74 @@
-package service
+package spnego
 
 import (
 	"bytes"
+	"crypto/rand"
 	"encoding/hex"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
-	"math/rand"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"sync"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/goidentity.v3"
 	"gopkg.in/jcmturner/gokrb5.v6/client"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/nametype"
+	"gopkg.in/jcmturner/gokrb5.v6/config"
 	"gopkg.in/jcmturner/gokrb5.v6/keytab"
-	"gopkg.in/jcmturner/gokrb5.v6/messages"
+	"gopkg.in/jcmturner/gokrb5.v6/service"
 	"gopkg.in/jcmturner/gokrb5.v6/testdata"
-	"gopkg.in/jcmturner/gokrb5.v6/types"
 )
+
+func TestClient_SetSPNEGOHeader(t *testing.T) {
+	if os.Getenv("INTEGRATION") != "1" {
+		t.Skip("Skipping integration test")
+	}
+	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	kt, _ := keytab.Parse(b)
+	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	addr := os.Getenv("TEST_KDC_ADDR")
+	if addr == "" {
+		addr = testdata.TEST_KDC_ADDR
+	}
+	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
+	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
+	cl.WithConfig(c)
+
+	err := cl.Login()
+	if err != nil {
+		t.Fatalf("error on AS_REQ: %v\n", err)
+	}
+	url := os.Getenv("TEST_HTTP_URL")
+	if url == "" {
+		url = testdata.TEST_HTTP_URL
+	}
+	paths := []string{
+		"/modkerb/index.html",
+		"/modgssapi/index.html",
+	}
+	for _, p := range paths {
+		r, _ := http.NewRequest("GET", url+p, nil)
+		httpResp, err := http.DefaultClient.Do(r)
+		if err != nil {
+			t.Fatalf("%s request error: %v\n", url+p, err)
+		}
+		assert.Equal(t, http.StatusUnauthorized, httpResp.StatusCode, "Status code in response to client with no SPNEGO not as expected")
+		err = SetSPNEGOHeader(&cl, r, "HTTP/host.test.gokrb5")
+		if err != nil {
+			t.Fatalf("error setting client SPNEGO header: %v", err)
+		}
+		httpResp, err = http.DefaultClient.Do(r)
+		if err != nil {
+			t.Fatalf("%s request error: %v\n", url+p, err)
+		}
+		assert.Equal(t, http.StatusOK, httpResp.StatusCode, "Status code in response to client SPNEGO request not as expected")
+	}
+}
 
 func TestService_SPNEGOKRB_NoAuthHeader(t *testing.T) {
 	s := httpServer()
@@ -38,37 +83,20 @@ func TestService_SPNEGOKRB_NoAuthHeader(t *testing.T) {
 }
 
 func TestService_SPNEGOKRB_ValidUser(t *testing.T) {
+	if os.Getenv("INTEGRATION") != "1" {
+		t.Skip("Skipping integration test")
+	}
+
 	s := httpServer()
 	defer s.Close()
+	r, _ := http.NewRequest("GET", s.URL, nil)
 
 	cl := getClient()
-	sname := types.PrincipalName{
-		NameType:   nametype.KRB_NT_PRINCIPAL,
-		NameString: []string{"HTTP", "host.test.gokrb5"},
-	}
-	b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
-	kt, _ := keytab.Parse(b)
-	st := time.Now().UTC()
-	tkt, sessionKey, err := messages.NewTicket(cl.Credentials.CName, cl.Credentials.Realm,
-		sname, "TEST.GOKRB5",
-		types.NewKrbFlags(),
-		kt,
-		18,
-		1,
-		st,
-		st,
-		st.Add(time.Duration(24)*time.Hour),
-		st.Add(time.Duration(48)*time.Hour),
-	)
+	err := SetSPNEGOHeader(&cl, r, "HTTP/host.tet.gokrb5")
 	if err != nil {
-		t.Fatalf("Error getting test ticket: %v", err)
+		t.Fatalf("error setting client's SPNEGO header: %v", err)
 	}
 
-	r, _ := http.NewRequest("GET", s.URL, nil)
-	err = client.SetSPNEGOHeader(*cl.Credentials, tkt, sessionKey, r)
-	if err != nil {
-		t.Fatalf("Error setting client SPNEGO header: %v", err)
-	}
 	httpResp, err := http.DefaultClient.Do(r)
 	if err != nil {
 		t.Fatalf("Request error: %v\n", err)
@@ -77,36 +105,18 @@ func TestService_SPNEGOKRB_ValidUser(t *testing.T) {
 }
 
 func TestService_SPNEGOKRB_Replay(t *testing.T) {
+	if os.Getenv("INTEGRATION") != "1" {
+		t.Skip("Skipping integration test")
+	}
+
 	s := httpServer()
 	defer s.Close()
+	r1, _ := http.NewRequest("GET", s.URL, nil)
 
 	cl := getClient()
-	sname := types.PrincipalName{
-		NameType:   nametype.KRB_NT_PRINCIPAL,
-		NameString: []string{"HTTP", "host.test.gokrb5"},
-	}
-	b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
-	kt, _ := keytab.Parse(b)
-	st := time.Now().UTC()
-	tkt, sessionKey, err := messages.NewTicket(cl.Credentials.CName, cl.Credentials.Realm,
-		sname, "TEST.GOKRB5",
-		types.NewKrbFlags(),
-		kt,
-		18,
-		1,
-		st,
-		st,
-		st.Add(time.Duration(24)*time.Hour),
-		st.Add(time.Duration(48)*time.Hour),
-	)
+	err := SetSPNEGOHeader(&cl, r1, "HTTP/host.tet.gokrb5")
 	if err != nil {
-		t.Fatalf("Error getting test ticket: %v", err)
-	}
-
-	r1, _ := http.NewRequest("GET", s.URL, nil)
-	err = client.SetSPNEGOHeader(*cl.Credentials, tkt, sessionKey, r1)
-	if err != nil {
-		t.Fatalf("Error setting client SPNEGO header: %v", err)
+		t.Fatalf("error setting client's SPNEGO header: %v", err)
 	}
 
 	// First request with this ticket should be accepted
@@ -124,25 +134,11 @@ func TestService_SPNEGOKRB_Replay(t *testing.T) {
 	assert.Equal(t, http.StatusUnauthorized, httpResp.StatusCode, "Status code in response to client with no SPNEGO not as expected. Expected a replay to be detected.")
 
 	// Form a 2nd ticket
-	st = time.Now().UTC()
-	tkt2, sessionKey2, err := messages.NewTicket(cl.Credentials.CName, cl.Credentials.Realm,
-		sname, "TEST.GOKRB5",
-		types.NewKrbFlags(),
-		kt,
-		18,
-		1,
-		st,
-		st,
-		st.Add(time.Duration(24)*time.Hour),
-		st.Add(time.Duration(48)*time.Hour),
-	)
-	if err != nil {
-		t.Fatalf("Error getting test ticket: %v", err)
-	}
 	r2, _ := http.NewRequest("GET", s.URL, nil)
-	err = client.SetSPNEGOHeader(*cl.Credentials, tkt2, sessionKey2, r2)
+
+	err = SetSPNEGOHeader(&cl, r2, "HTTP/host.tet.gokrb5")
 	if err != nil {
-		t.Fatalf("Error setting client SPNEGO header: %v", err)
+		t.Fatalf("error setting client's SPNEGO header: %v", err)
 	}
 
 	// First use of 2nd ticket should be accepted
@@ -168,58 +164,25 @@ func TestService_SPNEGOKRB_Replay(t *testing.T) {
 }
 
 func TestService_SPNEGOKRB_ReplayCache_Concurrency(t *testing.T) {
+	if os.Getenv("INTEGRATION") != "1" {
+		t.Skip("Skipping integration test")
+	}
+
 	s := httpServer()
 	defer s.Close()
+	r1, _ := http.NewRequest("GET", s.URL, nil)
 
 	cl := getClient()
-	sname := types.PrincipalName{
-		NameType:   nametype.KRB_NT_PRINCIPAL,
-		NameString: []string{"HTTP", "host.test.gokrb5"},
-	}
-	b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
-	kt, _ := keytab.Parse(b)
-	st := time.Now().UTC()
-	tkt, sessionKey, err := messages.NewTicket(cl.Credentials.CName, cl.Credentials.Realm,
-		sname, "TEST.GOKRB5",
-		types.NewKrbFlags(),
-		kt,
-		18,
-		1,
-		st,
-		st,
-		st.Add(time.Duration(24)*time.Hour),
-		st.Add(time.Duration(48)*time.Hour),
-	)
+	err := SetSPNEGOHeader(&cl, r1, "HTTP/host.tet.gokrb5")
 	if err != nil {
-		t.Fatalf("Error getting test ticket: %v", err)
+		t.Fatalf("error setting client's SPNEGO header: %v", err)
 	}
 
-	r1, _ := http.NewRequest("GET", s.URL, nil)
-	err = client.SetSPNEGOHeader(*cl.Credentials, tkt, sessionKey, r1)
-	if err != nil {
-		t.Fatalf("Error setting client SPNEGO header: %v", err)
-	}
-
-	// Form a 2nd ticket
-	st = time.Now().UTC()
-	tkt2, sessionKey2, err := messages.NewTicket(cl.Credentials.CName, cl.Credentials.Realm,
-		sname, "TEST.GOKRB5",
-		types.NewKrbFlags(),
-		kt,
-		18,
-		1,
-		st,
-		st,
-		st.Add(time.Duration(24)*time.Hour),
-		st.Add(time.Duration(48)*time.Hour),
-	)
-	if err != nil {
-		t.Fatalf("Error getting test ticket: %v", err)
-	}
 	r2, _ := http.NewRequest("GET", s.URL, nil)
-	err = client.SetSPNEGOHeader(*cl.Credentials, tkt2, sessionKey2, r2)
+
+	err = SetSPNEGOHeader(&cl, r2, "HTTP/host.tet.gokrb5")
 	if err != nil {
-		t.Fatalf("Error setting client SPNEGO header: %v", err)
+		t.Fatalf("error setting client's SPNEGO header: %v", err)
 	}
 
 	// Concurrent 1st requests should be OK
@@ -241,31 +204,12 @@ func TestService_SPNEGOKRB_ReplayCache_Concurrency(t *testing.T) {
 }
 
 func TestService_SPNEGOKRB_Upload(t *testing.T) {
+	if os.Getenv("INTEGRATION") != "1" {
+		t.Skip("Skipping integration test")
+	}
+
 	s := httpServer()
 	defer s.Close()
-
-	cl := getClient()
-	sname := types.PrincipalName{
-		NameType:   nametype.KRB_NT_PRINCIPAL,
-		NameString: []string{"HTTP", "host.test.gokrb5"},
-	}
-	b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
-	kt, _ := keytab.Parse(b)
-	st := time.Now().UTC()
-	tkt, sessionKey, err := messages.NewTicket(cl.Credentials.CName, cl.Credentials.Realm,
-		sname, "TEST.GOKRB5",
-		types.NewKrbFlags(),
-		kt,
-		18,
-		1,
-		st,
-		st,
-		st.Add(time.Duration(24)*time.Hour),
-		st.Add(time.Duration(48)*time.Hour),
-	)
-	if err != nil {
-		t.Fatalf("Error getting test ticket: %v", err)
-	}
 
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
@@ -285,10 +229,13 @@ func TestService_SPNEGOKRB_Upload(t *testing.T) {
 	bodyWriter.Close()
 
 	r, _ := http.NewRequest("POST", s.URL, bodyBuf)
-	err = client.SetSPNEGOHeader(*cl.Credentials, tkt, sessionKey, r)
+
+	cl := getClient()
+	err = SetSPNEGOHeader(&cl, r, "HTTP/host.tet.gokrb5")
 	if err != nil {
-		t.Fatalf("Error setting client SPNEGO header: %v", err)
+		t.Fatalf("error setting client's SPNEGO header: %v", err)
 	}
+
 	r.Header.Set("Content-Type", bodyWriter.FormDataContentType())
 	httpResp, err := http.DefaultClient.Do(r)
 	if err != nil {
@@ -312,8 +259,7 @@ func httpServer() *httptest.Server {
 	b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	th := http.HandlerFunc(testAppHandler)
-	c := NewConfig(kt)
-	s := httptest.NewServer(SPNEGOKRB5Authenticate(th, c, l))
+	s := httptest.NewServer(SPNEGOKRB5Authenticate(th, &kt, service.Logger(l)))
 	return s
 }
 
@@ -345,4 +291,13 @@ func testAppHandler(w http.ResponseWriter, r *http.Request) {
 		ctx.Value(CTXKeyCredentials).(goidentity.Identity).UserName(),
 		ctx.Value(CTXKeyCredentials).(goidentity.Identity).Domain())
 	return
+}
+
+func getClient() client.Client {
+	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	kt, _ := keytab.Parse(b)
+	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
+	cl.WithConfig(c)
+	return cl
 }
