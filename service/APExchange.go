@@ -1,89 +1,46 @@
 package service
 
 import (
-	"fmt"
 	"time"
 
 	"gopkg.in/jcmturner/gokrb5.v6/credentials"
 	"gopkg.in/jcmturner/gokrb5.v6/iana/errorcode"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/flags"
-	"gopkg.in/jcmturner/gokrb5.v6/krberror"
 	"gopkg.in/jcmturner/gokrb5.v6/messages"
-	"gopkg.in/jcmturner/gokrb5.v6/types"
 )
 
 // ValidateAPREQ validates an AP_REQ sent to the service. Returns a boolean for if the AP_REQ is valid and the client's principal name and realm.
-func ValidateAPREQ(APReq messages.APReq, sa SPNEGOAuthenticator) (bool, credentials.Credentials, error) {
-	var creds credentials.Credentials
-	err := APReq.Ticket.DecryptEncPart(sa.Config.Keytab, sa.Config.ServicePrincipal)
-	if err != nil {
-		return false, creds, krberror.Errorf(err, krberror.DecryptingError, "error decrypting encpart of service ticket provided")
-	}
-	a, err := APReq.DecryptAuthenticator(APReq.Ticket.DecryptedEncPart.Key)
-	if err != nil {
-		return false, creds, krberror.Errorf(err, krberror.DecryptingError, "error extracting authenticator")
-	}
-	// Check CName in Authenticator is the same as that in the ticket
-	if !a.CName.Equal(APReq.Ticket.DecryptedEncPart.CName) {
-		err := messages.NewKRBError(APReq.Ticket.SName, APReq.Ticket.Realm, errorcode.KRB_AP_ERR_BADMATCH, "CName in Authenticator does not match that in service ticket")
-		return false, creds, err
-	}
-	if len(APReq.Ticket.DecryptedEncPart.CAddr) > 0 {
-		//The addresses in the ticket (if any) are then
-		//searched for an address matching the operating-system reported
-		//address of the client.  If no match is found or the server insists on
-		//ticket addresses but none are present in the ticket, the
-		//KRB_AP_ERR_BADADDR error is returned.
-		h, err := types.GetHostAddress(sa.ClientAddr)
-		if err != nil {
-			err := messages.NewKRBError(APReq.Ticket.SName, APReq.Ticket.Realm, errorcode.KRB_AP_ERR_BADADDR, err.Error())
-			return false, creds, err
-		}
-		if !types.HostAddressesContains(APReq.Ticket.DecryptedEncPart.CAddr, h) {
-			err := messages.NewKRBError(APReq.Ticket.SName, APReq.Ticket.Realm, errorcode.KRB_AP_ERR_BADADDR, "Client address not within the list contained in the service ticket")
-			return false, creds, err
-		}
-	} else if sa.Config.RequireHostAddr {
-		err := messages.NewKRBError(APReq.Ticket.SName, APReq.Ticket.Realm, errorcode.KRB_AP_ERR_BADADDR, "ticket does not contain HostAddress values required")
+func ValidateAPREQ(APReq messages.APReq, s *Settings) (bool, *credentials.Credentials, error) {
+	var creds *credentials.Credentials
+
+	// Hardcode 5 min max skew. May want to make this configurable
+	d := time.Duration(5) * time.Minute
+
+	ok, err := APReq.Verify(s.Keytab, s.spn.GetPrincipalNameString(), d, s.cAddr)
+	if err != nil || !ok {
 		return false, creds, err
 	}
 
-	// Check the clock skew between the client and the service server
-	ct := a.CTime.Add(time.Duration(a.Cusec) * time.Microsecond)
-	t := time.Now().UTC()
-	// Hardcode 5 min max skew. May want to make this configurable
-	d := time.Duration(5) * time.Minute
-	if t.Sub(ct) > d || ct.Sub(t) > d {
-		err := messages.NewKRBError(APReq.Ticket.SName, APReq.Ticket.Realm, errorcode.KRB_AP_ERR_SKEW, fmt.Sprintf("Clock skew with client too large. Greater than %v seconds", d))
-		return false, creds, err
+	if s.RequireHostAddr() && len(APReq.Ticket.DecryptedEncPart.CAddr) < 1 {
+		return false, creds,
+			messages.NewKRBError(APReq.Ticket.SName, APReq.Ticket.Realm, errorcode.KRB_AP_ERR_BADADDR, "ticket does not contain HostAddress values required")
 	}
 
 	// Check for replay
 	rc := GetReplayCache(d)
-	if rc.IsReplay(APReq.Ticket.SName, a) {
-		err := messages.NewKRBError(APReq.Ticket.SName, APReq.Ticket.Realm, errorcode.KRB_AP_ERR_REPEAT, "Replay detected")
-		return false, creds, err
+	if rc.IsReplay(APReq.Ticket.SName, APReq.Authenticator) {
+		return false, creds,
+			messages.NewKRBError(APReq.Ticket.SName, APReq.Ticket.Realm, errorcode.KRB_AP_ERR_REPEAT, "replay detected")
 	}
 
-	// Check for future tickets or invalid tickets
-	if APReq.Ticket.DecryptedEncPart.StartTime.Sub(t) > d || types.IsFlagSet(&APReq.Ticket.DecryptedEncPart.Flags, flags.Invalid) {
-		err := messages.NewKRBError(APReq.Ticket.SName, APReq.Ticket.Realm, errorcode.KRB_AP_ERR_TKT_NYV, "Service ticket provided is not yet valid")
-		return false, creds, err
-	}
-
-	// Check for expired ticket
-	if t.Sub(APReq.Ticket.DecryptedEncPart.EndTime) > d {
-		err := messages.NewKRBError(APReq.Ticket.SName, APReq.Ticket.Realm, errorcode.KRB_AP_ERR_TKT_EXPIRED, "Service ticket provided has expired")
-		return false, creds, err
-	}
-	creds = credentials.NewCredentialsFromPrincipal(a.CName, a.CRealm)
-	creds.SetAuthTime(t)
+	c := credentials.NewCredentialsFromPrincipal(APReq.Authenticator.CName, APReq.Authenticator.CRealm)
+	creds = &c
+	creds.SetAuthTime(time.Now().UTC())
 	creds.SetAuthenticated(true)
 	creds.SetValidUntil(APReq.Ticket.DecryptedEncPart.EndTime)
 
 	//PAC decoding
-	if !sa.Config.DisablePACDecoding {
-		isPAC, pac, err := APReq.Ticket.GetPACType(sa.Config.Keytab, sa.Config.ServicePrincipal)
+	if !s.disablePACDecoding {
+		isPAC, pac, err := APReq.Ticket.GetPACType(*s.Keytab, s.spn.GetPrincipalNameString())
 		if isPAC && err != nil {
 			return false, creds, err
 		}

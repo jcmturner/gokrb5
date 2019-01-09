@@ -101,7 +101,7 @@ func TestMICChallengeChecksumVerification(t *testing.T) {
 	var mt MICToken
 	mt.Unmarshal(challenge, true)
 	mt.Payload, _ = hex.DecodeString(testMICPayload)
-	challengeOk, cErr := mt.VerifyChecksum(getSessionKey(), acceptorSign)
+	challengeOk, cErr := mt.Verify(getSessionKey(), acceptorSign)
 	assert.Nil(t, cErr, "Error occurred during checksum verification.")
 	assert.True(t, challengeOk, "Checksum verification failed.")
 }
@@ -112,7 +112,7 @@ func TestMICResponseChecksumVerification(t *testing.T) {
 	var mt MICToken
 	mt.Unmarshal(reply, false)
 	mt.Payload, _ = hex.DecodeString(testMICPayload)
-	replyOk, rErr := mt.VerifyChecksum(getSessionKey(), initiatorSign)
+	replyOk, rErr := mt.Verify(getSessionKey(), initiatorSign)
 	assert.Nil(t, rErr, "Error occurred during checksum verification.")
 	assert.True(t, replyOk, "Checksum verification failed.")
 }
@@ -124,7 +124,7 @@ func TestMICChecksumVerificationFailure(t *testing.T) {
 	mt.Unmarshal(challenge, true)
 
 	// Test a failure with the correct key but wrong keyusage:
-	challengeOk, cErr := mt.VerifyChecksum(getSessionKey(), initiatorSign)
+	challengeOk, cErr := mt.Verify(getSessionKey(), initiatorSign)
 	assert.NotNil(t, cErr, "Expected error did not occur.")
 	assert.False(t, challengeOk, "Checksum verification succeeded when it should have failed.")
 
@@ -134,7 +134,7 @@ func TestMICChecksumVerificationFailure(t *testing.T) {
 		KeyValue: wrongKeyVal,
 	}
 	// Test a failure with the wrong key but correct keyusage:
-	wrongKeyOk, wkErr := mt.VerifyChecksum(badKey, acceptorSign)
+	wrongKeyOk, wkErr := mt.Verify(badKey, acceptorSign)
 	assert.NotNil(t, wkErr, "Expected error did not occur.")
 	assert.False(t, wrongKeyOk, "Checksum verification succeeded when it should have failed.")
 }
