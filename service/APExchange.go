@@ -15,7 +15,11 @@ func ValidateAPREQ(APReq messages.APReq, s *Settings) (bool, *credentials.Creden
 	// Hardcode 5 min max skew. May want to make this configurable
 	d := time.Duration(5) * time.Minute
 
-	ok, err := APReq.Verify(s.Keytab, s.spn.GetPrincipalNameString(), d, s.cAddr)
+	var spnStr string
+	if len(s.spn.NameString) > 0 {
+		spnStr = s.spn.GetPrincipalNameString()
+	}
+	ok, err := APReq.Verify(s.Keytab, spnStr, d, s.cAddr)
 	if err != nil || !ok {
 		return false, creds, err
 	}
