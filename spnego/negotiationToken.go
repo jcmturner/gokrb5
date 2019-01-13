@@ -245,11 +245,9 @@ func (n *NegTokenResp) Verify() (bool, gssapi.Status) {
 		}
 		// Verify the mechtoken
 		return mt.Verify()
-	} else {
-		return false, gssapi.Status{Code: gssapi.StatusBadMech, Message: "no supported mechanism specified in negotiation"}
 	}
-	//TODO
-	return true, gssapi.Status{Code: gssapi.StatusComplete}
+	return false, gssapi.Status{Code: gssapi.StatusBadMech, Message: "no supported mechanism specified in negotiation"}
+	//TODO review
 }
 
 // State returns the negotiation state of the negotiation response.

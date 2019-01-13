@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 
@@ -88,69 +87,53 @@ func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, options ...fu
 			spnego = SPNEGOService(kt, o...)
 		} else {
 			spnego = SPNEGOService(kt, options...)
-			if spnego.serviceSettings.Logger() != nil {
-				spnego.serviceSettings.Logger().Printf("SPNEGO could not parse client address: %v", err)
-			}
+			spnego.Log("%s - SPNEGO could not parse client address: %v", r.RemoteAddr, err)
 		}
 
 		b, err := base64.StdEncoding.DecodeString(s[1])
 		if err != nil {
-			if spnego.serviceSettings.Logger() != nil {
-				spnego.serviceSettings.Logger().Printf("SPNEGO error in base64 decoding negotiation header: %v", err)
-			}
-			negotiateKRB5MechType(w)
+			spnegoNegotiateKRB5MechType(spnego, w, "%s - SPNEGO error in base64 decoding negotiation header: %v", r.RemoteAddr, err)
 		}
 		var st SPNEGOToken
 		err = st.Unmarshal(b)
 		if err != nil {
-			if spnego.serviceSettings.Logger() != nil {
-				spnego.serviceSettings.Logger().Printf("SPNEGO error in unmarshaling SPNEGO token: %v", err)
-			}
-			negotiateKRB5MechType(w)
+			spnegoNegotiateKRB5MechType(spnego, w, "%s - SPNEGO error in unmarshaling SPNEGO token: %v", r.RemoteAddr, err)
 		}
 
 		authed, ctx, status := spnego.AcceptSecContext(&st)
 		if status.Code != gssapi.StatusComplete && status.Code != gssapi.StatusContinueNeeded {
-			rejectSPNEGO(w, spnego.serviceSettings.Logger(), fmt.Sprintf("%s - SPNEGO validation error: %v", r.RemoteAddr, status))
+			spnegoResponseReject(spnego, w, "%s - SPNEGO validation error: %v", r.RemoteAddr, status)
 		}
 		if status.Code == gssapi.StatusContinueNeeded {
-			negotiateKRB5MechType(w)
+			spnegoNegotiateKRB5MechType(spnego, w, "%s - SPNEGO GSS-API continue needed", r.RemoteAddr)
 		}
 		if authed {
 			id := ctx.Value(CTXKeyCredentials).(goidentity.Identity)
 			rctx := r.Context()
 			rctx = context.WithValue(rctx, CTXKeyCredentials, id)
 			rctx = context.WithValue(rctx, CTXKeyAuthenticated, ctx.Value(CTXKeyAuthenticated))
-			if spnego.serviceSettings.Logger() != nil {
-				spnego.serviceSettings.Logger().Printf("%v %s@%s - SPNEGO authentication succeeded", r.RemoteAddr, id.UserName(), id.Domain())
-			}
-			spnegoResponseAcceptCompleted(w)
+			spnegoResponseAcceptCompleted(spnego, w, "%s %s@%s - SPNEGO authentication succeeded", r.RemoteAddr, id.UserName(), id.Domain())
 			inner.ServeHTTP(w, r.WithContext(ctx))
 		} else {
-			rejectSPNEGO(w, spnego.serviceSettings.Logger(), fmt.Sprintf("%v - SPNEGO Kerberos authentication failed: %v", r.RemoteAddr, err))
+			spnegoResponseReject(spnego, w, "%s - SPNEGO Kerberos authentication failed", r.RemoteAddr)
 		}
 		return
 	})
 }
 
-func negotiateKRB5MechType(w http.ResponseWriter) {
+func spnegoNegotiateKRB5MechType(s *SPNEGO, w http.ResponseWriter, format string, v ...interface{}) {
+	s.Log(format, v...)
 	w.Header().Set(HTTPHeaderAuthResponse, spnegoNegTokenRespIncompleteKRB5)
 	http.Error(w, UnauthorizedMsg, http.StatusUnauthorized)
 }
 
-// Set the headers for a rejected SPNEGO negotiation and return an unauthorized status code.
-func rejectSPNEGO(w http.ResponseWriter, l *log.Logger, logMsg string) {
-	if l != nil {
-		l.Println(logMsg)
-	}
-	spnegoResponseReject(w)
-}
-
-func spnegoResponseReject(w http.ResponseWriter) {
+func spnegoResponseReject(s *SPNEGO, w http.ResponseWriter, format string, v ...interface{}) {
+	s.Log(format, v...)
 	w.Header().Set(HTTPHeaderAuthResponse, spnegoNegTokenRespReject)
 	http.Error(w, UnauthorizedMsg, http.StatusUnauthorized)
 }
 
-func spnegoResponseAcceptCompleted(w http.ResponseWriter) {
+func spnegoResponseAcceptCompleted(s *SPNEGO, w http.ResponseWriter, format string, v ...interface{}) {
+	s.Log(format, v...)
 	w.Header().Set(HTTPHeaderAuthResponse, spnegoNegTokenRespKRBAcceptCompleted)
 }

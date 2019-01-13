@@ -92,6 +92,12 @@ func (s *SPNEGO) AcceptSecContext(ct gssapi.ContextToken) (bool, context.Context
 	return ok, ctx, status
 }
 
+func (s *SPNEGO) Log(format string, v ...interface{}) {
+	if s.serviceSettings.Logger() != nil {
+		s.serviceSettings.Logger().Printf(format, v...)
+	}
+}
+
 // SPNEGOToken is a GSS-API context token
 type SPNEGOToken struct {
 	Init         bool
