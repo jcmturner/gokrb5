@@ -13,6 +13,7 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v6/client"
 	"gopkg.in/jcmturner/gokrb5.v6/config"
 	"gopkg.in/jcmturner/gokrb5.v6/keytab"
+	"gopkg.in/jcmturner/gokrb5.v6/spnego"
 	"gopkg.in/jcmturner/gokrb5.v6/testdata"
 )
 
@@ -77,7 +78,7 @@ func main() {
 		panic(err)
 	}
 	// Apply the client's auth headers to the request
-	err = cl.SetSPNEGOHeader(r, "HTTP/host.test.gokrb5")
+	err = spnego.SetSPNEGOHeader(&cl, r, "HTTP/host.test.gokrb5")
 	if err != nil {
 		panic(err)
 	}

@@ -12,6 +12,7 @@ import (
 	goidentity "gopkg.in/jcmturner/goidentity.v3"
 	"gopkg.in/jcmturner/gokrb5.v6/keytab"
 	"gopkg.in/jcmturner/gokrb5.v6/service"
+	"gopkg.in/jcmturner/gokrb5.v6/spnego"
 	"gopkg.in/jcmturner/gokrb5.v6/testdata"
 )
 
@@ -33,8 +34,7 @@ func main() {
 
 	// Set up handler mappings wrapping in the SPNEGOKRB5Authenticate handler wrapper
 	mux := http.NewServeMux()
-	c := service.NewConfig(kt)
-	mux.Handle("/", service.SPNEGOKRB5Authenticate(th, c, l))
+	mux.Handle("/", spnego.SPNEGOKRB5Authenticate(th, &kt, service.Logger(l)))
 
 	// Start up the web server
 	log.Fatal(http.ListenAndServe(port, mux))
@@ -44,7 +44,7 @@ func main() {
 func testAppHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	ctx := r.Context()
-	creds := ctx.Value(service.CTXKeyCredentials).(goidentity.Identity)
+	creds := ctx.Value(spnego.CTXKeyCredentials).(goidentity.Identity)
 	fmt.Fprintf(w,
 		`<html>
 <h1>GOKRB5 Handler</h1>
