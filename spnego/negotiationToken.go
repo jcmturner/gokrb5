@@ -47,6 +47,7 @@ NegTokenResp ::= SEQUENCE {
 }
 */
 
+// Negotiation state values.
 const (
 	NegStateAcceptCompleted  NegState = 0
 	NegStateAcceptIncomplete NegState = 1
@@ -169,6 +170,7 @@ func (n *NegTokenInit) Verify() (bool, gssapi.Status) {
 	return false, gssapi.Status{Code: gssapi.StatusBadMech, Message: "no supported mechanism specified in negotiation"}
 }
 
+// Context returns the SPNEGO context which will contain any verify user identity information.
 func (n *NegTokenInit) Context() context.Context {
 	if n.mechToken != nil {
 		mt, ok := n.mechToken.(*KRB5Token)
@@ -255,6 +257,7 @@ func (n *NegTokenResp) State() NegState {
 	return NegState(n.NegState)
 }
 
+// Context returns the SPNEGO context which will contain any verify user identity information.
 func (n *NegTokenResp) Context() context.Context {
 	if n.mechToken != nil {
 		mt, ok := n.mechToken.(*KRB5Token)

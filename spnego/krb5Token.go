@@ -150,13 +150,14 @@ func (m *KRB5Token) IsKRBError() bool {
 	return false
 }
 
+// Context returns the KRB5 token's context which will contain any verify user identity information.
 func (m *KRB5Token) Context() context.Context {
 	return m.context
 }
 
 // NewKRB5TokenAPREQ creates a new KRB5 token with AP_REQ
-// TODO consider providing the SPN rather than the specific tkt and key and get these from the krb client.
 func NewKRB5TokenAPREQ(cl *client.Client, s *service.Settings, tkt messages.Ticket, sessionKey types.EncryptionKey, GSSAPIFlags []int, APOptions []int) (KRB5Token, error) {
+	// TODO consider providing the SPN rather than the specific tkt and key and get these from the krb client.
 	var m KRB5Token
 	m.OID = gssapi.OID(gssapi.OIDKRB5)
 	m.settings = s
