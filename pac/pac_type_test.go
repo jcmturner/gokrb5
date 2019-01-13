@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/gokrb5.v6/keytab"
 	"gopkg.in/jcmturner/gokrb5.v6/testdata"
+	"gopkg.in/jcmturner/gokrb5.v6/types"
 )
 
 func TestPACTypeValidate(t *testing.T) {
@@ -25,7 +26,8 @@ func TestPACTypeValidate(t *testing.T) {
 
 	b, _ = hex.DecodeString(testdata.SYSHTTP_KEYTAB)
 	kt, _ := keytab.Parse(b)
-	key, err := kt.GetEncryptionKey([]string{"sysHTTP"}, "TEST.GOKRB5", 2, 18)
+	pn, _ := types.ParseSPNString("sysHTTP")
+	key, err := kt.GetEncryptionKey(pn, "TEST.GOKRB5", 2, 18)
 	if err != nil {
 		t.Fatalf("Error getting key: %v", err)
 	}

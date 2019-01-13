@@ -50,13 +50,13 @@ type ContextToken interface {
 
 type Mechanism interface {
 	OID() asn1.ObjectIdentifier
-	AcquireCred() error                                              //ASExchange - Client Side
-	InitSecContext() (ContextToken, error)                           //TGSExchnage builds AP_REQ to go into ContextToken to send to service - Client Side
-	AcceptSecContext(ct ContextToken) (bool, context.Context, error) //verifies the AP_REQ
-	MIC() MICToken                                                   //  apply integrity check, receive as token separate from message
-	VerifyMIC(mt MICToken)                                           //validate integrity check token along with message
-	Wrap(msg []byte) WrapToken                                       //  sign, optionally encrypt, encapsulate
-	Unwrap(wt WrapToken) []byte                                      //decapsulate, decrypt if needed, validate integrity check
+	AcquireCred() error                                               //ASExchange - Client Side
+	InitSecContext() (ContextToken, error)                            //TGSExchnage builds AP_REQ to go into ContextToken to send to service - Client Side
+	AcceptSecContext(ct ContextToken) (bool, context.Context, Status) //verifies the token server side
+	MIC() MICToken                                                    //  apply integrity check, receive as token separate from message
+	VerifyMIC(mt MICToken)                                            //validate integrity check token along with message
+	Wrap(msg []byte) WrapToken                                        //  sign, optionally encrypt, encapsulate
+	Unwrap(wt WrapToken) []byte                                       //decapsulate, decrypt if needed, validate integrity check
 }
 
 type OIDName string
