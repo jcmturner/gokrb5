@@ -115,8 +115,8 @@ func (m *KRB5Token) Verify() (bool, gssapi.Status) {
 		return true, gssapi.Status{Code: gssapi.StatusComplete}
 	case TOK_ID_KRB_AP_REP:
 		// Client side
-		// TODO how to verify the AP_REP
-		return true, gssapi.Status{Code: gssapi.StatusComplete}
+		// TODO how to verify the AP_REP - not yet implemented
+		return false, gssapi.Status{Code: gssapi.StatusFailure}
 	case TOK_ID_KRB_ERROR:
 		if m.KRBError.MsgType != msgtype.KRB_ERROR {
 			return false, gssapi.Status{Code: gssapi.StatusDefectiveToken, Message: "KRB5_Error token not valid"}

@@ -249,7 +249,6 @@ func (n *NegTokenResp) Verify() (bool, gssapi.Status) {
 		return mt.Verify()
 	}
 	return false, gssapi.Status{Code: gssapi.StatusBadMech, Message: "no supported mechanism specified in negotiation"}
-	//TODO review
 }
 
 // State returns the negotiation state of the negotiation response.
