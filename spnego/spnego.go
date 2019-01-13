@@ -87,11 +87,10 @@ func (s *SPNEGO) AcceptSecContext(ct gssapi.ContextToken) (bool, context.Context
 	// Flags in the NegInit must be used 	t.NegTokenInit.ReqFlags
 	ok, status := t.Verify()
 	ctx = t.Context()
-
-	//TODO
 	return ok, ctx, status
 }
 
+// Log will write to the service's logger if it is configured.
 func (s *SPNEGO) Log(format string, v ...interface{}) {
 	if s.serviceSettings.Logger() != nil {
 		s.serviceSettings.Logger().Printf(format, v...)
@@ -195,6 +194,7 @@ func (s *SPNEGOToken) Verify() (bool, gssapi.Status) {
 	return false, gssapi.Status{Code: gssapi.StatusFailure, Message: "unable to verify SPNEGO token"}
 }
 
+// Context returns the SPNEGO context which will contain any verify user identity information.
 func (s *SPNEGOToken) Context() context.Context {
 	return s.context
 }
