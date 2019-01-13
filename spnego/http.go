@@ -70,8 +70,8 @@ const (
 // SPNEGOKRB5Authenticate is a Kerberos SPNEGO authentication HTTP handler wrapper.
 func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, options ...func(*service.Settings)) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Get the auth header
 		s := strings.SplitN(r.Header.Get(HTTPHeaderAuthRequest), " ", 2)
-
 		if len(s) != 2 || s[0] != HTTPHeaderAuthResponseValueKey {
 			// No Authorization header set so return 401 with WWW-Authenticate Negotiate header
 			w.Header().Set(HTTPHeaderAuthResponse, HTTPHeaderAuthResponseValueKey)
@@ -79,6 +79,7 @@ func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, options ...fu
 			return
 		}
 
+		// Set up the SPNEGO GSS-API mechanism
 		var spnego *SPNEGO
 		h, err := types.GetHostAddress(r.RemoteAddr)
 		if err == nil {
@@ -90,6 +91,7 @@ func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, options ...fu
 			spnego.Log("%s - SPNEGO could not parse client address: %v", r.RemoteAddr, err)
 		}
 
+		// Decode the header into an SPNEGO context token
 		b, err := base64.StdEncoding.DecodeString(s[1])
 		if err != nil {
 			spnegoNegotiateKRB5MechType(spnego, w, "%s - SPNEGO error in base64 decoding negotiation header: %v", r.RemoteAddr, err)
@@ -100,6 +102,7 @@ func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, options ...fu
 			spnegoNegotiateKRB5MechType(spnego, w, "%s - SPNEGO error in unmarshaling SPNEGO token: %v", r.RemoteAddr, err)
 		}
 
+		// Validate the context token
 		authed, ctx, status := spnego.AcceptSecContext(&st)
 		if status.Code != gssapi.StatusComplete && status.Code != gssapi.StatusContinueNeeded {
 			spnegoResponseReject(spnego, w, "%s - SPNEGO validation error: %v", r.RemoteAddr, status)
