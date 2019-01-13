@@ -109,14 +109,12 @@ func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, options ...fu
 			negotiateKRB5MechType(w)
 		}
 
-		authed, ctx, err := spnego.AcceptSecContext(&st)
-		if !authed {
-			st, ok := err.(gssapi.Status)
-			if ok && st.Code == gssapi.StatusContinueNeeded {
-				negotiateKRB5MechType(w)
-			}
-			rejectSPNEGO(w, spnego.serviceSettings.Logger(), fmt.Sprintf("%v - %v", r.RemoteAddr, err))
-
+		authed, ctx, status := spnego.AcceptSecContext(&st)
+		if status.Code != gssapi.StatusComplete && status.Code != gssapi.StatusContinueNeeded {
+			rejectSPNEGO(w, spnego.serviceSettings.Logger(), fmt.Sprintf("%s - SPNEGO validation error: %v", r.RemoteAddr, status))
+		}
+		if status.Code == gssapi.StatusContinueNeeded {
+			negotiateKRB5MechType(w)
 		}
 		if authed {
 			id := ctx.Value(CTXKeyCredentials).(goidentity.Identity)

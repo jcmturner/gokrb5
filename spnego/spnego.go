@@ -67,12 +67,13 @@ func (s *SPNEGO) InitSecContext() (gssapi.ContextToken, error) {
 
 // AcceptSecContext is the GSS-API method for the service to verify the context token provided by the client and
 // establish a context.
-func (s *SPNEGO) AcceptSecContext(ct gssapi.ContextToken) (bool, context.Context, error) {
+func (s *SPNEGO) AcceptSecContext(ct gssapi.ContextToken) (bool, context.Context, gssapi.Status) {
 	var ctx context.Context
 	t, ok := ct.(*SPNEGOToken)
 	if !ok {
-		return false, ctx, errors.New("context token provided was not an SPNEGO token")
+		return false, ctx, gssapi.Status{Code: gssapi.StatusDefectiveToken, Message: "context token provided was not an SPNEGO token"}
 	}
+	t.settings = s.serviceSettings
 	var oid asn1.ObjectIdentifier
 	if t.Init {
 		oid = t.NegTokenInit.MechTypes[0]
@@ -81,13 +82,13 @@ func (s *SPNEGO) AcceptSecContext(ct gssapi.ContextToken) (bool, context.Context
 		oid = t.NegTokenResp.SupportedMech
 	}
 	if !(oid.Equal(gssapi.OID(gssapi.OIDKRB5)) || oid.Equal(gssapi.OID(gssapi.OIDMSLegacyKRB5))) {
-		return false, ctx, errors.New("SPNEGO OID of MechToken is not of type KRB5")
+		return false, ctx, gssapi.Status{Code: gssapi.StatusDefectiveToken, Message: "SPNEGO OID of MechToken is not of type KRB5"}
 	}
 	// Flags in the NegInit must be used 	t.NegTokenInit.ReqFlags
-	ok, status := ct.Verify()
+	ok, status := t.Verify()
 
 	//TODO
-	return true, ctx, status
+	return ok, ctx, status
 }
 
 // SPNEGOToken is a GSS-API context token
@@ -143,24 +144,19 @@ func (s *SPNEGOToken) Unmarshal(b []byte) error {
 		r = b
 	}
 
-	var a asn1.RawValue
-	_, err = asn1.Unmarshal(r, &a)
+	_, nt, err := UnmarshalNegToken(r)
 	if err != nil {
-		return fmt.Errorf("error unmarshalling SPNEGO: %v", err)
+		return err
 	}
-	switch a.Tag {
-	case 0:
-		_, err = asn1.Unmarshal(a.Bytes, &s.NegTokenInit)
-		if err != nil {
-			return fmt.Errorf("error unmarshalling NegotiationToken type %d (Init): %v", a.Tag, err)
-		}
+	switch v := nt.(type) {
+	case NegTokenInit:
 		s.Init = true
-	case 1:
-		_, err = asn1.Unmarshal(a.Bytes, &s.NegTokenResp)
-		if err != nil {
-			return fmt.Errorf("error unmarshalling NegotiationToken type %d (Resp/Targ): %v", a.Tag, err)
-		}
+		s.NegTokenInit = v
+		s.NegTokenInit.settings = s.settings
+	case NegTokenResp:
 		s.Resp = true
+		s.NegTokenResp = v
+		s.NegTokenResp.settings = s.settings
 	default:
 		return errors.New("unknown choice type for NegotiationToken")
 	}
@@ -173,6 +169,7 @@ func (s *SPNEGOToken) Verify() (bool, gssapi.Status) {
 		return false, gssapi.Status{Code: gssapi.StatusDefectiveToken, Message: "invalid SPNEGO token, unclear if NegTokenInit or NegTokenResp"}
 	}
 	if s.Init {
+		s.NegTokenInit.settings = s.settings
 		ok, status := s.NegTokenInit.Verify()
 		if ok {
 			s.context = s.NegTokenInit.Context()
@@ -180,6 +177,7 @@ func (s *SPNEGOToken) Verify() (bool, gssapi.Status) {
 		return ok, status
 	}
 	if s.Resp {
+		s.NegTokenResp.settings = s.settings
 		ok, status := s.NegTokenResp.Verify()
 		if ok {
 			s.context = s.NegTokenResp.Context()

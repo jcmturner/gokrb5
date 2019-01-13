@@ -140,7 +140,7 @@ func (cl *Client) WithPassword(password string) *Client {
 // If a KRBError is not available pass messages.KRBError{} and a key will be returned from the credentials keytab.
 func (cl *Client) Key(etype etype.EType, krberr messages.KRBError) (types.EncryptionKey, error) {
 	if cl.Credentials.HasKeytab() && etype != nil {
-		return cl.Credentials.Keytab.GetEncryptionKey(cl.Credentials.CName.NameString, cl.Credentials.Realm, 0, etype.GetETypeID())
+		return cl.Credentials.Keytab.GetEncryptionKey(cl.Credentials.CName, cl.Credentials.Realm, 0, etype.GetETypeID())
 	} else if cl.Credentials.HasPassword() {
 		if krberr.ErrorCode == errorcode.KDC_ERR_PREAUTH_REQUIRED {
 			var pas types.PADataSequence
