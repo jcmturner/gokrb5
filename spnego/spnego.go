@@ -86,6 +86,7 @@ func (s *SPNEGO) AcceptSecContext(ct gssapi.ContextToken) (bool, context.Context
 	}
 	// Flags in the NegInit must be used 	t.NegTokenInit.ReqFlags
 	ok, status := t.Verify()
+	ctx = t.Context()
 
 	//TODO
 	return ok, ctx, status

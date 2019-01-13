@@ -111,7 +111,7 @@ func (m *KRB5Token) Verify() (bool, gssapi.Status) {
 		}
 		m.context = context.Background()
 		m.context = context.WithValue(m.context, CTXKeyCredentials, creds)
-		m.context = context.WithValue(m.context, CTXKeyAuthenticated, true)
+		m.context = context.WithValue(m.context, CTXKeyAuthenticated, ok)
 		return true, gssapi.Status{Code: gssapi.StatusComplete}
 	case TOK_ID_KRB_AP_REP:
 		// Client side

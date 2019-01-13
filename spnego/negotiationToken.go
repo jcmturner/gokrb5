@@ -144,14 +144,14 @@ func (n *NegTokenInit) Verify() (bool, gssapi.Status) {
 			if n.mechToken == nil && n.MechTokenBytes == nil {
 				return false, gssapi.Status{Code: gssapi.StatusContinueNeeded}
 			}
-			var mt KRB5Token
+			mt := new(KRB5Token)
 			mt.settings = n.settings
 			if n.mechToken == nil {
 				err := mt.Unmarshal(n.MechTokenBytes)
 				if err != nil {
 					return false, gssapi.Status{Code: gssapi.StatusDefectiveToken, Message: err.Error()}
 				}
-				n.mechToken = &mt
+				n.mechToken = mt
 			} else {
 				var ok bool
 				mt, ok = n.mechToken.(*KRB5Token)
@@ -171,7 +171,7 @@ func (n *NegTokenInit) Verify() (bool, gssapi.Status) {
 
 func (n *NegTokenInit) Context() context.Context {
 	if n.mechToken != nil {
-		mt, ok := n.mechToken.(KRB5Token)
+		mt, ok := n.mechToken.(*KRB5Token)
 		if !ok {
 			return nil
 		}
@@ -228,7 +228,7 @@ func (n *NegTokenResp) Verify() (bool, gssapi.Status) {
 		if n.mechToken == nil && n.ResponseToken == nil {
 			return false, gssapi.Status{Code: gssapi.StatusContinueNeeded}
 		}
-		var mt KRB5Token
+		var mt *KRB5Token
 		mt.settings = n.settings
 		if n.mechToken == nil {
 			err := mt.Unmarshal(n.ResponseToken)
@@ -238,7 +238,7 @@ func (n *NegTokenResp) Verify() (bool, gssapi.Status) {
 			n.mechToken = mt
 		} else {
 			var ok bool
-			mt, ok = n.mechToken.(KRB5Token)
+			mt, ok = n.mechToken.(*KRB5Token)
 			if !ok {
 				return false, gssapi.Status{Code: gssapi.StatusDefectiveToken, Message: "MechToken is not a KRB5 token as expected"}
 			}
@@ -259,7 +259,7 @@ func (n *NegTokenResp) State() NegState {
 
 func (n *NegTokenResp) Context() context.Context {
 	if n.mechToken != nil {
-		mt, ok := n.mechToken.(KRB5Token)
+		mt, ok := n.mechToken.(*KRB5Token)
 		if !ok {
 			return nil
 		}
