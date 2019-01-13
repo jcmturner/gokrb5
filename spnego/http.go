@@ -84,8 +84,8 @@ func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, options ...fu
 		h, err := types.GetHostAddress(r.RemoteAddr)
 		if err == nil {
 			// put in this order so that if the user provides a ClientAddress it will override the one here.
-			options = append([]func(*service.Settings){service.ClientAddress(h)}, options...)
-			spnego = SPNEGOService(kt, options...)
+			o := append([]func(*service.Settings){service.ClientAddress(h)}, options...)
+			spnego = SPNEGOService(kt, o...)
 		} else {
 			spnego = SPNEGOService(kt, options...)
 			if spnego.serviceSettings.Logger() != nil {
