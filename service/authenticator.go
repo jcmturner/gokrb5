@@ -13,6 +13,8 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v6/keytab"
 )
 
+//TODO how to provide client settings
+
 // NewKRB5BasicAuthenticator creates a new NewKRB5BasicAuthenticator
 func NewKRB5BasicAuthenticator(headerVal string, kt *keytab.Keytab, krb5conf *config.Config, options ...func(*Settings)) KRB5BasicAuthenticator {
 	s := NewSettings(kt, options...)
@@ -41,8 +43,7 @@ func (a KRB5BasicAuthenticator) Authenticate() (i goidentity.Identity, ok bool, 
 		err = fmt.Errorf("could not parse basic authentication header: %v", err)
 		return
 	}
-	cl := client.NewClientWithPassword(a.username, a.realm, a.password)
-	cl.WithConfig(a.clientConfig)
+	cl := client.NewClientWithPassword(a.username, a.realm, a.password, a.clientConfig)
 	err = cl.Login()
 	if err != nil {
 		// Username and/or password could be wrong

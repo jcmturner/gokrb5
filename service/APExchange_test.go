@@ -361,7 +361,6 @@ func getClient() client.Client {
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
-	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
-	cl.WithConfig(c)
+	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 	return cl
 }

@@ -29,8 +29,7 @@ func TestMultiThreadedClientSession(t *testing.T) {
 		addr = testdata.TEST_KDC_ADDR
 	}
 	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
-	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
-	cl.WithConfig(c)
+	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 	err := cl.Login()
 	if err != nil {
 		t.Fatalf("failed to log in: %v", err)
@@ -80,8 +79,7 @@ func TestClient_AutoRenew_Goroutine(t *testing.T) {
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC_SHORTTICKETS}
 	c.LibDefaults.PreferredPreauthTypes = []int{int(etypeID.DES3_CBC_SHA1_KD)} // a preauth etype the KDC does not support. Test this does not cause renewal to fail.
-	cl := NewClientWithKeytab("testuser2", "TEST.GOKRB5", kt)
-	cl.WithConfig(c)
+	cl := NewClientWithKeytab("testuser2", "TEST.GOKRB5", kt, c)
 
 	err := cl.Login()
 	if err != nil {

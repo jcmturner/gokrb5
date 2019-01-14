@@ -44,8 +44,7 @@ func TestClient_SuccessfulLogin_Keytab(t *testing.T) {
 	}
 	for _, test := range tests {
 		c.Realms[0].KDC = []string{addr + ":" + test}
-		cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
-		cl.WithConfig(c)
+		cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 
 		err := cl.Login()
 		if err != nil {
@@ -69,8 +68,7 @@ func TestClient_SuccessfulLogin_Password(t *testing.T) {
 	}
 	for _, test := range tests {
 		c.Realms[0].KDC = []string{addr + ":" + test}
-		cl := client.NewClientWithPassword("testuser1", "TEST.GOKRB5", "passwordvalue")
-		cl.WithConfig(c)
+		cl := client.NewClientWithPassword("testuser1", "TEST.GOKRB5", "passwordvalue", c)
 
 		err := cl.Login()
 		if err != nil {
@@ -91,8 +89,7 @@ func TestClient_SuccessfulLogin_TCPOnly(t *testing.T) {
 	}
 	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
 	c.LibDefaults.UDPPreferenceLimit = 1
-	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
-	cl.WithConfig(c)
+	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 
 	err := cl.Login()
 	if err != nil {
@@ -124,8 +121,7 @@ func TestClient_ASExchange_TGSExchange_EncTypes_Keytab(t *testing.T) {
 		c.LibDefaults.DefaultTktEnctypeIDs = []int32{etypeID.ETypesByName[test]}
 		c.LibDefaults.DefaultTGSEnctypes = []string{test}
 		c.LibDefaults.DefaultTGSEnctypeIDs = []int32{etypeID.ETypesByName[test]}
-		cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
-		cl.WithConfig(c)
+		cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 
 		err := cl.Login()
 		if err != nil {
@@ -162,8 +158,7 @@ func TestClient_ASExchange_TGSExchange_EncTypes_Password(t *testing.T) {
 		c.LibDefaults.DefaultTktEnctypeIDs = []int32{etypeID.ETypesByName[test]}
 		c.LibDefaults.DefaultTGSEnctypes = []string{test}
 		c.LibDefaults.DefaultTGSEnctypeIDs = []int32{etypeID.ETypesByName[test]}
-		cl := client.NewClientWithPassword("testuser1", "TEST.GOKRB5", "passwordvalue")
-		cl.WithConfig(c)
+		cl := client.NewClientWithPassword("testuser1", "TEST.GOKRB5", "passwordvalue", c)
 
 		err := cl.Login()
 		if err != nil {
@@ -189,8 +184,7 @@ func TestClient_FailedLogin(t *testing.T) {
 		addr = testdata.TEST_KDC_ADDR
 	}
 	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
-	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
-	cl.WithConfig(c)
+	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 
 	err := cl.Login()
 	if err == nil {
@@ -209,8 +203,7 @@ func TestClient_SuccessfulLogin_UserRequiringPreAuth(t *testing.T) {
 		addr = testdata.TEST_KDC_ADDR
 	}
 	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
-	cl := client.NewClientWithKeytab("testuser2", "TEST.GOKRB5", kt)
-	cl.WithConfig(c)
+	cl := client.NewClientWithKeytab("testuser2", "TEST.GOKRB5", kt, c)
 
 	err := cl.Login()
 	if err != nil {
@@ -230,8 +223,7 @@ func TestClient_SuccessfulLogin_UserRequiringPreAuth_TCPOnly(t *testing.T) {
 	}
 	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
 	c.LibDefaults.UDPPreferenceLimit = 1
-	cl := client.NewClientWithKeytab("testuser2", "TEST.GOKRB5", kt)
-	cl.WithConfig(c)
+	cl := client.NewClientWithKeytab("testuser2", "TEST.GOKRB5", kt, c)
 
 	err := cl.Login()
 	if err != nil {
@@ -246,8 +238,7 @@ func TestClient_NetworkTimeout(t *testing.T) {
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	c.Realms[0].KDC = []string{testdata.TEST_KDC_BADADDR + ":88"}
-	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
-	cl.WithConfig(c)
+	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 
 	err := cl.Login()
 	if err == nil {
@@ -266,8 +257,7 @@ func TestClient_GetServiceTicket(t *testing.T) {
 		addr = testdata.TEST_KDC_ADDR
 	}
 	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
-	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
-	cl.WithConfig(c)
+	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 
 	err := cl.Login()
 	if err != nil {
@@ -301,8 +291,7 @@ func TestClient_GetServiceTicket_InvalidSPN(t *testing.T) {
 		addr = testdata.TEST_KDC_ADDR
 	}
 	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
-	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
-	cl.WithConfig(c)
+	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 
 	err := cl.Login()
 	if err != nil {
@@ -325,8 +314,7 @@ func TestClient_GetServiceTicket_OlderKDC(t *testing.T) {
 		addr = testdata.TEST_KDC_ADDR
 	}
 	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC_OLD}
-	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
-	cl.WithConfig(c)
+	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 
 	err := cl.Login()
 	if err != nil {
@@ -352,8 +340,7 @@ func TestMultiThreadedClientUse(t *testing.T) {
 		addr = testdata.TEST_KDC_ADDR
 	}
 	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
-	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
-	cl.WithConfig(c)
+	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 
 	var wg sync.WaitGroup
 	wg.Add(5)
@@ -420,17 +407,16 @@ func TestNewClientFromCCache(t *testing.T) {
 	if err != nil {
 		t.Fatal("error getting test CCache")
 	}
-	cl, err := client.NewClientFromCCache(cc)
-	if err != nil {
-		t.Fatalf("error creating client from CCache: %v", err)
-	}
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
 		addr = testdata.TEST_KDC_ADDR
 	}
 	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
-	cl.WithConfig(c)
+	cl, err := client.NewClientFromCCache(cc, c)
+	if err != nil {
+		t.Fatalf("error creating client from CCache: %v", err)
+	}
 	if ok, err := cl.IsConfigured(); !ok {
 		t.Fatalf("client was not configured from CCache: %v", err)
 	}
@@ -459,12 +445,11 @@ func TestClient_GetServiceTicket_Trusted_Resource_Domain(t *testing.T) {
 	}
 
 	c.LibDefaults.DefaultRealm = "TEST.GOKRB5"
-	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
+	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 	c.LibDefaults.DefaultTktEnctypes = []string{"aes256-cts-hmac-sha1-96"}
 	c.LibDefaults.DefaultTktEnctypeIDs = []int32{etypeID.ETypesByName["aes256-cts-hmac-sha1-96"]}
 	c.LibDefaults.DefaultTGSEnctypes = []string{"aes256-cts-hmac-sha1-96"}
 	c.LibDefaults.DefaultTGSEnctypeIDs = []int32{etypeID.ETypesByName["aes256-cts-hmac-sha1-96"]}
-	cl.WithConfig(c)
 
 	err := cl.Login()
 
@@ -566,11 +551,10 @@ func TestGetServiceTicketFromCCacheTGT(t *testing.T) {
 		addr = testdata.TEST_KDC_ADDR
 	}
 	cfg.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
-	cl, err := client.NewClientFromCCache(c)
+	cl, err := client.NewClientFromCCache(c, cfg)
 	if err != nil {
 		t.Fatalf("error generating client from ccache: %v", err)
 	}
-	cl.WithConfig(cfg)
 	spn := "HTTP/host.test.gokrb5"
 	tkt, key, err := cl.GetServiceTicket(spn)
 	if err != nil {
@@ -619,11 +603,10 @@ func TestGetServiceTicketFromCCacheWithoutKDC(t *testing.T) {
 		t.Errorf("error loading CCache: %v", err)
 	}
 	cfg, _ := config.NewConfigFromString("...")
-	cl, err := client.NewClientFromCCache(c)
+	cl, err := client.NewClientFromCCache(c, cfg)
 	if err != nil {
 		t.Fatalf("error generating client from ccache: %v", err)
 	}
-	cl.WithConfig(cfg)
 	url := os.Getenv("TEST_HTTP_URL")
 	if url == "" {
 		url = testdata.TEST_HTTP_URL
@@ -652,8 +635,7 @@ func TestClient_ChangePasswd(t *testing.T) {
 	}
 	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
 	c.Realms[0].KPasswdServer = []string{addr + ":464"}
-	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
-	cl.WithConfig(c)
+	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 
 	ok, err := cl.ChangePasswd("newpassword")
 	if err != nil {
@@ -661,8 +643,7 @@ func TestClient_ChangePasswd(t *testing.T) {
 	}
 	assert.True(t, ok, "password was not changed")
 
-	cl = client.NewClientWithPassword("testuser1", "TEST.GOKRB5", "newpassword")
-	cl.WithConfig(c)
+	cl = client.NewClientWithPassword("testuser1", "TEST.GOKRB5", "newpassword", c)
 	ok, err = cl.ChangePasswd(testdata.TESTUSER1_PASSWORD)
 	if err != nil {
 		t.Fatalf("error changing password: %v", err)
@@ -681,8 +662,7 @@ func TestClient_Destroy(t *testing.T) {
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC_SHORTTICKETS}
-	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
-	cl.WithConfig(c)
+	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 
 	err := cl.Login()
 	if err != nil {

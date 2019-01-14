@@ -19,7 +19,7 @@ func TestResolveKDC(t *testing.T) {
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	c.LibDefaults.DNSLookupKDC = true
 	var cl Client
-	cl.WithConfig(c)
+	cl.Config = c
 	count, res, err := cl.Config.GetKDCs(c.LibDefaults.DefaultRealm, true)
 	if err != nil {
 		t.Errorf("error resolving KDC via DNS TCP: %v", err)
@@ -64,8 +64,7 @@ func TestClient_Login_DNSKDCs(t *testing.T) {
 
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)
-	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
-	cl.WithConfig(c)
+	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 
 	err := cl.Login()
 	if err != nil {

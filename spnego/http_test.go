@@ -36,8 +36,7 @@ func TestClient_SetSPNEGOHeader(t *testing.T) {
 		addr = testdata.TEST_KDC_ADDR
 	}
 	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
-	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
-	cl.WithConfig(c)
+	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 
 	err := cl.Login()
 	if err != nil {
@@ -304,7 +303,6 @@ func getClient() client.Client {
 	}
 	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
 	c.Realms[0].KPasswdServer = []string{addr + ":464"}
-	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
-	cl.WithConfig(c)
+	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 	return cl
 }
