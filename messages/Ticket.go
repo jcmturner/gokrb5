@@ -196,6 +196,11 @@ func (t *Ticket) DecryptEncPart(keytab keytab.Keytab, sname *types.PrincipalName
 	if err != nil {
 		return NewKRBError(t.SName, t.Realm, errorcode.KRB_AP_ERR_NOKEY, fmt.Sprintf("Could not get key from keytab: %v", err))
 	}
+	return t.Decrypt(key)
+}
+
+// Decrypt decrypts the encrypted part of the ticket using the key provided.
+func (t *Ticket) Decrypt(key types.EncryptionKey) error {
 	b, err := crypto.DecryptEncPart(t.EncPart, key, keyusage.KDC_REP_TICKET)
 	if err != nil {
 		return fmt.Errorf("error decrypting Ticket EncPart: %v", err)

@@ -111,7 +111,7 @@ func (a *APReq) Unmarshal(b []byte) error {
 		return krberror.Errorf(err, krberror.EncodingError, "unmarshal error of AP_REQ")
 	}
 	if m.MsgType != msgtype.KRB_AP_REQ {
-		return krberror.NewErrorf(krberror.KRBMsgError, "message ID does not indicate an AP_REQ. Expected: %v; Actual: %v", msgtype.KRB_AP_REQ, m.MsgType)
+		return NewKRBError(types.PrincipalName{}, "", errorcode.KRB_AP_ERR_MSG_TYPE, errorcode.Lookup(errorcode.KRB_AP_ERR_MSG_TYPE))
 	}
 	a.PVNO = m.PVNO
 	a.MsgType = m.MsgType
@@ -155,14 +155,29 @@ func (a *APReq) Marshal() ([]byte, error) {
 // The service ticket encrypted part and authenticator will be decrypted as part of this operation.
 func (a *APReq) Verify(kt *keytab.Keytab, d time.Duration, cAddr types.HostAddress) (bool, error) {
 	// Decrypt ticket's encrypted part with service key
-	// Because it is possible for the server to be registered in multiple
-	// realms, with different keys in each, the srealm field in the
-	// unencrypted portion of the ticket in the KRB_AP_REQ is used to
-	// specify which secret key the server should use to decrypt that
-	// ticket.The KRB_AP_ERR_NOKEY error code is returned if the server
-	// doesn't have the proper key to decipher the ticket.
-	// The ticket is decrypted using the version of the server's key
-	// specified by the ticket.
+	//TODO decrypt with service's session key from its TGT is use-to-user. Need to figure out how to get TGT.
+	//if types.IsFlagSet(&a.APOptions, flags.APOptionUseSessionKey) {
+	//	//If the USE-SESSION-KEY flag is set in the ap-options field, it indicates to
+	//	//the server that user-to-user authentication is in use, and that the ticket
+	//	//is encrypted in the session key from the server's TGT rather than in the server's secret key.
+	//	err := a.Ticket.Decrypt(tgt.DecryptedEncPart.Key)
+	//	if err != nil {
+	//		return false, krberror.Errorf(err, krberror.DecryptingError, "error decrypting encpart of ticket provided using session key")
+	//	}
+	//} else {
+	//	// Because it is possible for the server to be registered in multiple
+	//	// realms, with different keys in each, the srealm field in the
+	//	// unencrypted portion of the ticket in the KRB_AP_REQ is used to
+	//	// specify which secret key the server should use to decrypt that
+	//	// ticket.The KRB_AP_ERR_NOKEY error code is returned if the server
+	//	// doesn't have the proper key to decipher the ticket.
+	//	// The ticket is decrypted using the version of the server's key
+	//	// specified by the ticket.
+	//	err := a.Ticket.DecryptEncPart(*kt, &a.Ticket.SName)
+	//	if err != nil {
+	//		return false, krberror.Errorf(err, krberror.DecryptingError, "error decrypting encpart of service ticket provided")
+	//	}
+	//}
 	err := a.Ticket.DecryptEncPart(*kt, &a.Ticket.SName)
 	if err != nil {
 		return false, krberror.Errorf(err, krberror.DecryptingError, "error decrypting encpart of service ticket provided")
@@ -187,7 +202,7 @@ func (a *APReq) Verify(kt *keytab.Keytab, d time.Duration, cAddr types.HostAddre
 	// Decrypt authenticator with session key from ticket's encrypted part
 	err = a.DecryptAuthenticator(a.Ticket.DecryptedEncPart.Key)
 	if err != nil {
-		return false, krberror.Errorf(err, krberror.DecryptingError, "error extracting authenticator")
+		return false, NewKRBError(a.Ticket.SName, a.Ticket.Realm, errorcode.KRB_AP_ERR_BAD_INTEGRITY, "could not decrypt authenticator")
 	}
 
 	// Check CName in authenticator is the same as that in the ticket
