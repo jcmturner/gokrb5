@@ -28,16 +28,14 @@ func main() {
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	c.LibDefaults.NoAddresses = true
-	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
-	cl.WithConfig(c)
+	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 	httpRequest(s.URL, cl)
 
 	b, _ = hex.DecodeString(testdata.TESTUSER2_KEYTAB)
 	kt, _ = keytab.Parse(b)
 	c, _ = config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	c.LibDefaults.NoAddresses = true
-	cl = client.NewClientWithKeytab("testuser2", "TEST.GOKRB5", kt)
-	cl.WithConfig(c)
+	cl = client.NewClientWithKeytab("testuser2", "TEST.GOKRB5", kt, c)
 	httpRequest(s.URL, cl)
 }
 

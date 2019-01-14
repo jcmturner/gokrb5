@@ -50,9 +50,6 @@ func main() {
 		panic(err)
 	}
 
-	// Create the client with the keytab
-	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
-
 	// Load the client krb5 config
 	conf, err := config.NewConfigFromString(kRB5CONF)
 	if err != nil {
@@ -62,8 +59,9 @@ func main() {
 	if addr != "" {
 		conf.Realms[0].KDC = []string{addr + ":88"}
 	}
-	// Apply the config to the client
-	cl.WithConfig(conf)
+
+	// Create the client with the keytab
+	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, conf)
 
 	// Log in the client
 	err = cl.Login()

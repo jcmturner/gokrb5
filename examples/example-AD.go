@@ -27,17 +27,13 @@ func main() {
 	b, _ := hex.DecodeString(testdata.TESTUSER1_USERKRB5_AD_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
-	cl := client.NewClientWithKeytab("testuser1", "USER.GOKRB5", kt)
-	cl.WithConfig(c)
-	cl.GoKrb5Conf.DisablePAFXFast = true
+	cl := client.NewClientWithKeytab("testuser1", "USER.GOKRB5", kt, c, client.DisablePAFXFAST(true))
 	httpRequest(s.URL, cl)
 
 	b, _ = hex.DecodeString(testdata.TESTUSER2_USERKRB5_AD_KEYTAB)
 	kt, _ = keytab.Parse(b)
 	c, _ = config.NewConfigFromString(testdata.TEST_KRB5CONF)
-	cl = client.NewClientWithKeytab("testuser2", "USER.GOKRB5", kt)
-	cl.WithConfig(c)
-	cl.GoKrb5Conf.DisablePAFXFast = true
+	cl = client.NewClientWithKeytab("testuser2", "USER.GOKRB5", kt, c, client.DisablePAFXFAST(true))
 	httpRequest(s.URL, cl)
 
 	//httpRequest("http://host.test.gokrb5/index.html")
