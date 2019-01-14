@@ -186,19 +186,13 @@ func MarshalTicketSequence(tkts []Ticket) (asn1.RawValue, error) {
 }
 
 // DecryptEncPart decrypts the encrypted part of the ticket.
-func (t *Ticket) DecryptEncPart(keytab keytab.Keytab, ktprinc string) error {
-	var upn types.PrincipalName
-	realm := t.Realm
-	if ktprinc != "" {
-		var r string
-		upn, r = types.ParseSPNString(ktprinc)
-		if r != "" {
-			realm = r
-		}
-	} else {
-		upn = t.SName
+// The sname argument can be used to specify which service principal's key should be used to decrypt the ticket.
+// If nil is passed as the sname then the service principal specified within the ticket it used.
+func (t *Ticket) DecryptEncPart(keytab keytab.Keytab, sname *types.PrincipalName) error {
+	if sname == nil {
+		sname = &t.SName
 	}
-	key, err := keytab.GetEncryptionKey(upn, realm, t.EncPart.KVNO, t.EncPart.EType)
+	key, err := keytab.GetEncryptionKey(*sname, t.Realm, t.EncPart.KVNO, t.EncPart.EType)
 	if err != nil {
 		return NewKRBError(t.SName, t.Realm, errorcode.KRB_AP_ERR_NOKEY, fmt.Sprintf("Could not get key from keytab: %v", err))
 	}
@@ -216,7 +210,7 @@ func (t *Ticket) DecryptEncPart(keytab keytab.Keytab, ktprinc string) error {
 }
 
 // GetPACType returns a Microsoft PAC that has been extracted from the ticket and processed.
-func (t *Ticket) GetPACType(keytab keytab.Keytab, ktprinc string) (bool, pac.PACType, error) {
+func (t *Ticket) GetPACType(keytab keytab.Keytab, sname *types.PrincipalName) (bool, pac.PACType, error) {
 	var isPAC bool
 	for _, ad := range t.DecryptedEncPart.AuthorizationData {
 		if ad.ADType == adtype.ADIfRelevant {
@@ -232,13 +226,10 @@ func (t *Ticket) GetPACType(keytab keytab.Keytab, ktprinc string) (bool, pac.PAC
 				if err != nil {
 					return isPAC, p, fmt.Errorf("error unmarshaling PAC: %v", err)
 				}
-				var upn types.PrincipalName
-				if ktprinc != "" {
-					upn, _ = types.ParseSPNString(ktprinc)
-				} else {
-					upn = t.SName
+				if sname == nil {
+					sname = &t.SName
 				}
-				key, err := keytab.GetEncryptionKey(upn, t.Realm, t.EncPart.KVNO, t.EncPart.EType)
+				key, err := keytab.GetEncryptionKey(*sname, t.Realm, t.EncPart.KVNO, t.EncPart.EType)
 				if err != nil {
 					return isPAC, p, NewKRBError(t.SName, t.Realm, errorcode.KRB_AP_ERR_NOKEY, fmt.Sprintf("Could not get key from keytab: %v", err))
 				}

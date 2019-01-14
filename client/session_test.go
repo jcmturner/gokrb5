@@ -104,7 +104,7 @@ func TestClient_AutoRenew_Goroutine(t *testing.T) {
 		}
 		b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
 		skt, _ := keytab.Parse(b)
-		tkt.DecryptEncPart(skt, "")
+		tkt.DecryptEncPart(skt, nil)
 		assert.Equal(t, spn, tkt.SName.GetPrincipalNameString())
 		assert.Equal(t, int32(18), key.KeyType)
 		if runtime.NumGoroutine() > n {
