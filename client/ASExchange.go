@@ -29,7 +29,7 @@ func (cl *Client) ASExchange(realm string, ASReq messages.ASReq, referral int) (
 			switch e.ErrorCode {
 			case errorcode.KDC_ERR_PREAUTH_REQUIRED, errorcode.KDC_ERR_PREAUTH_FAILED:
 				// From now on assume this client will need to do this pre-auth and set the PAData
-				cl.GoKrb5Conf.AssumePAEncTimestampRequired = true
+				cl.settings.assumePreAuthentication = true
 				err = setPAData(cl, e, &ASReq)
 				if err != nil {
 					return messages.ASRep{}, krberror.Errorf(err, krberror.KRBMsgError, "AS Exchange Error: failed setting AS_REQ PAData for pre-authentication required")
@@ -70,18 +70,18 @@ func (cl *Client) ASExchange(realm string, ASReq messages.ASReq, referral int) (
 }
 
 func setPAData(cl *Client, krberr messages.KRBError, ASReq *messages.ASReq) error {
-	if !cl.GoKrb5Conf.DisablePAFXFast {
+	if !cl.settings.DisablePAFXFAST() {
 		pa := types.PAData{PADataType: patype.PA_REQ_ENC_PA_REP}
 		ASReq.PAData = append(ASReq.PAData, pa)
 	}
-	if cl.GoKrb5Conf.AssumePAEncTimestampRequired {
+	if cl.settings.AssumePreAuthentication() {
 		paTSb, err := types.GetPAEncTSEncAsnMarshalled()
 		if err != nil {
 			return krberror.Errorf(err, krberror.KRBMsgError, "error creating PAEncTSEnc for Pre-Authentication")
 		}
 		var et etype.EType
 		if krberr.ErrorCode == 0 {
-			etn := cl.GoKrb5Conf.preAuthEType
+			etn := cl.settings.preAuthEType
 			if etn == 0 {
 				etn = int32(cl.Config.LibDefaults.PreferredPreauthTypes[0])
 			}
@@ -96,7 +96,7 @@ func setPAData(cl *Client, krberr messages.KRBError, ASReq *messages.ASReq) erro
 			if err != nil {
 				return krberror.Errorf(err, krberror.EncryptingError, "error getting etype for pre-auth encryption")
 			}
-			cl.GoKrb5Conf.preAuthEType = et.GetETypeID()
+			cl.settings.preAuthEType = et.GetETypeID()
 		}
 		key, err := cl.Key(et, krberr)
 		if err != nil {

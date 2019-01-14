@@ -18,8 +18,7 @@ func TestClient_SuccessfulLogin_AD(t *testing.T) {
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	c.Realms[0].KDC = []string{testdata.TEST_KDC_AD}
-	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
-	cl.WithConfig(c)
+	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 
 	err := cl.Login()
 	if err != nil {
@@ -32,8 +31,7 @@ func TestClient_GetServiceTicket_AD(t *testing.T) {
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	c.Realms[0].KDC = []string{testdata.TEST_KDC_AD}
-	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
-	cl.WithConfig(c)
+	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 
 	err := cl.Login()
 	if err != nil {
@@ -67,9 +65,7 @@ func TestClient_SuccessfulLogin_AD_TRUST_USER_DOMAIN(t *testing.T) {
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	c.Realms[0].KDC = []string{testdata.TEST_KDC_AD_TRUST_USER_DOMAIN}
 	c.LibDefaults.DefaultRealm = "USER.GOKRB5"
-	cl := NewClientWithKeytab("testuser1", "USER.GOKRB5", kt)
-	cl.WithConfig(c)
-	cl.GoKrb5Conf.DisablePAFXFast = true
+	cl := NewClientWithKeytab("testuser1", "USER.GOKRB5", kt, c, DisablePAFXFAST(true))
 
 	err := cl.Login()
 	if err != nil {
@@ -84,13 +80,11 @@ func TestClient_GetServiceTicket_AD_TRUST_USER_DOMAIN(t *testing.T) {
 	c.Realms[0].KDC = []string{testdata.TEST_KDC_AD_TRUST_USER_DOMAIN}
 	c.LibDefaults.DefaultRealm = "USER.GOKRB5"
 	c.LibDefaults.Canonicalize = true
-	cl := NewClientWithKeytab("testuser1", "USER.GOKRB5", kt)
 	c.LibDefaults.DefaultTktEnctypes = []string{"rc4-hmac"}
 	c.LibDefaults.DefaultTktEnctypeIDs = []int32{etypeID.ETypesByName["rc4-hmac"]}
 	c.LibDefaults.DefaultTGSEnctypes = []string{"rc4-hmac"}
 	c.LibDefaults.DefaultTGSEnctypeIDs = []int32{etypeID.ETypesByName["rc4-hmac"]}
-	cl.WithConfig(c)
-	cl.GoKrb5Conf.DisablePAFXFast = true
+	cl := NewClientWithKeytab("testuser1", "USER.GOKRB5", kt, c, DisablePAFXFAST(true))
 
 	err := cl.Login()
 
@@ -127,13 +121,11 @@ func TestClient_GetServiceTicket_AD_USER_DOMAIN(t *testing.T) {
 	c.Realms[0].KDC = []string{testdata.TEST_KDC_AD_TRUST_USER_DOMAIN}
 	c.LibDefaults.DefaultRealm = "USER.GOKRB5"
 	c.LibDefaults.Canonicalize = true
-	cl := NewClientWithKeytab("testuser1", "USER.GOKRB5", kt)
 	c.LibDefaults.DefaultTktEnctypes = []string{"rc4-hmac"}
 	c.LibDefaults.DefaultTktEnctypeIDs = []int32{etypeID.ETypesByName["rc4-hmac"]}
 	c.LibDefaults.DefaultTGSEnctypes = []string{"rc4-hmac"}
 	c.LibDefaults.DefaultTGSEnctypeIDs = []int32{etypeID.ETypesByName["rc4-hmac"]}
-	cl.WithConfig(c)
-	cl.GoKrb5Conf.DisablePAFXFast = true
+	cl := NewClientWithKeytab("testuser1", "USER.GOKRB5", kt, c, DisablePAFXFAST(true))
 
 	err := cl.Login()
 

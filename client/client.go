@@ -22,28 +22,19 @@ import (
 type Client struct {
 	Credentials *credentials.Credentials
 	Config      *config.Config
-	GoKrb5Conf  Config
+	settings    *Settings
 	sessions    *sessions
 	cache       *Cache
 }
 
-// Config struct holds GoKRB5 specific client configurations.
-// Set Disable_PA_FX_FAST to true to force this behaviour off.
-// Set Assume_PA_ENC_TIMESTAMP_Required to send the PA_ENC_TIMESTAMP pro-actively rather than waiting for a KRB_ERROR response from the KDC indicating it is required.
-type Config struct {
-	DisablePAFXFast              bool
-	AssumePAEncTimestampRequired bool
-	preAuthEType                 int32
-}
-
 // NewClientWithPassword creates a new client from a password credential.
 // Set the realm to empty string to use the default realm from config.
-func NewClientWithPassword(username, realm, password string) Client {
+func NewClientWithPassword(username, realm, password string, krb5conf *config.Config, options ...func(*Settings)) Client {
 	creds := credentials.NewCredentials(username, realm)
 	return Client{
 		Credentials: creds.WithPassword(password),
-		Config:      config.NewConfig(),
-		GoKrb5Conf:  Config{},
+		Config:      krb5conf,
+		settings:    newSettings(options...),
 		sessions: &sessions{
 			Entries: make(map[string]*session),
 		},
@@ -52,12 +43,12 @@ func NewClientWithPassword(username, realm, password string) Client {
 }
 
 // NewClientWithKeytab creates a new client from a keytab credential.
-func NewClientWithKeytab(username, realm string, kt keytab.Keytab) Client {
+func NewClientWithKeytab(username, realm string, kt keytab.Keytab, krb5conf *config.Config, options ...func(*Settings)) Client {
 	creds := credentials.NewCredentials(username, realm)
 	return Client{
 		Credentials: creds.WithKeytab(kt),
-		Config:      config.NewConfig(),
-		GoKrb5Conf:  Config{},
+		Config:      krb5conf,
+		settings:    newSettings(options...),
 		sessions: &sessions{
 			Entries: make(map[string]*session),
 		},
@@ -68,11 +59,11 @@ func NewClientWithKeytab(username, realm string, kt keytab.Keytab) Client {
 // NewClientFromCCache create a client from a populated client cache.
 //
 // WARNING: A client created from CCache does not automatically renew TGTs and a failure will occur after the TGT expires.
-func NewClientFromCCache(c credentials.CCache) (Client, error) {
+func NewClientFromCCache(c credentials.CCache, krb5conf *config.Config, options ...func(*Settings)) (Client, error) {
 	cl := Client{
 		Credentials: c.GetClientCredentials(),
-		Config:      config.NewConfig(),
-		GoKrb5Conf:  Config{},
+		Config:      krb5conf,
+		settings:    newSettings(options...),
 		sessions: &sessions{
 			Entries: make(map[string]*session),
 		},
@@ -117,24 +108,6 @@ func NewClientFromCCache(c credentials.CCache) (Client, error) {
 	return cl, nil
 }
 
-// WithConfig sets the Kerberos configuration for the client.
-func (cl *Client) WithConfig(cfg *config.Config) *Client {
-	cl.Config = cfg
-	return cl
-}
-
-// WithKeytab adds a keytab to the client
-func (cl *Client) WithKeytab(kt keytab.Keytab) *Client {
-	cl.Credentials.WithKeytab(kt)
-	return cl
-}
-
-// WithPassword adds a password to the client
-func (cl *Client) WithPassword(password string) *Client {
-	cl.Credentials.WithPassword(password)
-	return cl
-}
-
 // Key returns a key for the client. Preferably from a keytab and then generated from the password.
 // The KRBError would have been returned from the KDC and must be of type KDC_ERR_PREAUTH_REQUIRED.
 // If a KRBError is not available pass messages.KRBError{} and a key will be returned from the credentials keytab.
@@ -155,16 +128,6 @@ func (cl *Client) Key(etype etype.EType, krberr messages.KRBError) (types.Encryp
 		return key, err
 	}
 	return types.EncryptionKey{}, errors.New("credential has neither keytab or password to generate key")
-}
-
-// LoadConfig loads the Kerberos configuration for the client from file path specified.
-func (cl *Client) LoadConfig(cfgPath string) (*Client, error) {
-	cfg, err := config.Load(cfgPath)
-	if err != nil {
-		return cl, err
-	}
-	cl.Config = cfg
-	return cl, nil
 }
 
 // IsConfigured indicates if the client has the values required set.
