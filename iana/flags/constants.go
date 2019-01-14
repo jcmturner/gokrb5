@@ -27,4 +27,10 @@ const (
 	EncTktInSkey           = 28
 	Renew                  = 30
 	Validate               = 31
+
+	// AP Option Flags
+	// 0 Reserved for future use.
+	APOptionUseSessionKey  = 1
+	APOptionMutualRequired = 2
+	// 3-31 Reserved for future use.
 )
