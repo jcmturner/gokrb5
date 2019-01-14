@@ -54,14 +54,14 @@ func (a KRB5BasicAuthenticator) Authenticate() (i goidentity.Identity, ok bool, 
 		err = fmt.Errorf("could not get service ticket: %v", err)
 		return
 	}
-	err = tkt.DecryptEncPart(*a.serviceConfig.Keytab, a.serviceConfig.SPN().GetPrincipalNameString())
+	err = tkt.DecryptEncPart(*a.serviceConfig.Keytab, a.serviceConfig.SPN())
 	if err != nil {
 		err = fmt.Errorf("could not decrypt service ticket: %v", err)
 		return
 	}
 	cl.Credentials.SetAuthTime(time.Now().UTC())
 	cl.Credentials.SetAuthenticated(true)
-	isPAC, pac, err := tkt.GetPACType(*a.serviceConfig.Keytab, a.serviceConfig.SPN().GetPrincipalNameString())
+	isPAC, pac, err := tkt.GetPACType(*a.serviceConfig.Keytab, a.serviceConfig.SPN())
 	if isPAC && err != nil {
 		err = fmt.Errorf("error processing PAC: %v", err)
 		return

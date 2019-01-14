@@ -153,9 +153,17 @@ func (a *APReq) Marshal() ([]byte, error) {
 
 // Verify an AP_REQ using service's keytab, spn and max acceptable clock skew duration.
 // The service ticket encrypted part and authenticator will be decrypted as part of this operation.
-func (a *APReq) Verify(kt *keytab.Keytab, spn string, d time.Duration, cAddr types.HostAddress) (bool, error) {
+func (a *APReq) Verify(kt *keytab.Keytab, d time.Duration, cAddr types.HostAddress) (bool, error) {
 	// Decrypt ticket's encrypted part with service key
-	err := a.Ticket.DecryptEncPart(*kt, spn)
+	// Because it is possible for the server to be registered in multiple
+	// realms, with different keys in each, the srealm field in the
+	// unencrypted portion of the ticket in the KRB_AP_REQ is used to
+	// specify which secret key the server should use to decrypt that
+	// ticket.The KRB_AP_ERR_NOKEY error code is returned if the server
+	// doesn't have the proper key to decipher the ticket.
+	// The ticket is decrypted using the version of the server's key
+	// specified by the ticket.
+	err := a.Ticket.DecryptEncPart(*kt, &a.Ticket.SName)
 	if err != nil {
 		return false, krberror.Errorf(err, krberror.DecryptingError, "error decrypting encpart of service ticket provided")
 	}

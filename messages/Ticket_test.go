@@ -148,7 +148,8 @@ func TestAuthorizationData_GetPACType_GOKRB5TestData(t *testing.T) {
 	}
 	b, _ = hex.DecodeString(testdata.SYSHTTP_KEYTAB)
 	kt, _ := keytab.Parse(b)
-	isPAC, pac, err := tkt.GetPACType(kt, "sysHTTP")
+	sname := types.PrincipalName{NameType: nametype.KRB_NT_PRINCIPAL, NameString: []string{"sysHTTP"}}
+	isPAC, pac, err := tkt.GetPACType(kt, &sname)
 	if err != nil {
 		t.Fatalf("Error getting PAC Type: %v\n", err)
 	}

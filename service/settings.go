@@ -2,6 +2,7 @@ package service
 
 import (
 	"log"
+	"time"
 
 	"gopkg.in/jcmturner/gokrb5.v6/keytab"
 	"gopkg.in/jcmturner/gokrb5.v6/types"
@@ -9,10 +10,11 @@ import (
 
 type Settings struct {
 	Keytab             *keytab.Keytab
-	spn                types.PrincipalName
+	spn                *types.PrincipalName
 	requireHostAddr    bool
 	disablePACDecoding bool
 	cAddr              types.HostAddress
+	maxClockSkew       time.Duration
 	logger             *log.Logger
 }
 
@@ -81,12 +83,29 @@ func (s *Settings) Logger() *log.Logger {
 // SPN used to configure service side with a specific SPN.
 //
 // s := NewSettings(kt, SPN(spn))
-func SPN(spn types.PrincipalName) func(*Settings) {
+func SPN(spn *types.PrincipalName) func(*Settings) {
 	return func(s *Settings) {
 		s.spn = spn
 	}
 }
 
-func (s *Settings) SPN() types.PrincipalName {
+func (s *Settings) SPN() *types.PrincipalName {
 	return s.spn
+}
+
+// MaxClockSkew used to configure service side with the maximum acceptable clock skew
+// between the service and the issue time of kerberos tickets
+//
+// s := NewSettings(kt, MaxClockSkew(d))
+func MaxClockSkew(d time.Duration) func(*Settings) {
+	return func(s *Settings) {
+		s.maxClockSkew = d
+	}
+}
+
+func (s *Settings) MaxClockSkew() time.Duration {
+	if s.maxClockSkew.Nanoseconds() == 0 {
+		return time.Duration(5) * time.Minute
+	}
+	return s.maxClockSkew
 }

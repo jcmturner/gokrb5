@@ -12,10 +12,7 @@ import (
 func ValidateAPREQ(APReq messages.APReq, s *Settings) (bool, *credentials.Credentials, error) {
 	var creds *credentials.Credentials
 
-	// Hardcode 5 min max skew. May want to make this configurable
-	d := time.Duration(5) * time.Minute
-
-	ok, err := APReq.Verify(s.Keytab, s.spn.GetPrincipalNameString(), d, s.cAddr)
+	ok, err := APReq.Verify(s.Keytab, s.MaxClockSkew(), s.ClientAddress())
 	if err != nil || !ok {
 		return false, creds, err
 	}
@@ -26,7 +23,7 @@ func ValidateAPREQ(APReq messages.APReq, s *Settings) (bool, *credentials.Creden
 	}
 
 	// Check for replay
-	rc := GetReplayCache(d)
+	rc := GetReplayCache(time.Duration(5) * time.Minute)
 	if rc.IsReplay(APReq.Ticket.SName, APReq.Authenticator) {
 		return false, creds,
 			messages.NewKRBError(APReq.Ticket.SName, APReq.Ticket.Realm, errorcode.KRB_AP_ERR_REPEAT, "replay detected")
@@ -40,7 +37,7 @@ func ValidateAPREQ(APReq messages.APReq, s *Settings) (bool, *credentials.Creden
 
 	//PAC decoding
 	if !s.disablePACDecoding {
-		isPAC, pac, err := APReq.Ticket.GetPACType(*s.Keytab, s.spn.GetPrincipalNameString())
+		isPAC, pac, err := APReq.Ticket.GetPACType(*s.Keytab, s.SPN())
 		if isPAC && err != nil {
 			return false, creds, err
 		}

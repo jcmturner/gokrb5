@@ -481,7 +481,7 @@ func TestClient_GetServiceTicket_Trusted_Resource_Domain(t *testing.T) {
 
 	b, _ = hex.DecodeString(testdata.SYSHTTP_RESDOM_KEYTAB)
 	skt, _ := keytab.Parse(b)
-	err = tkt.DecryptEncPart(skt, "")
+	err = tkt.DecryptEncPart(skt, nil)
 	if err != nil {
 		t.Errorf("error decrypting ticket with service keytab: %v", err)
 	}

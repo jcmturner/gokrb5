@@ -27,7 +27,8 @@ func SPNEGOClient(cl *client.Client, spn string) *SPNEGO {
 	s := new(SPNEGO)
 	s.client = cl
 	s.spn = spn
-	s.serviceSettings = service.NewSettings(nil, service.SPN(types.NewPrincipalName(nametype.KRB_NT_PRINCIPAL, spn)))
+	sname := types.NewPrincipalName(nametype.KRB_NT_PRINCIPAL, spn)
+	s.serviceSettings = service.NewSettings(nil, service.SPN(&sname))
 	return s
 }
 
