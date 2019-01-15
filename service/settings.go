@@ -24,8 +24,8 @@ type Settings struct {
 func NewSettings(kt *keytab.Keytab, options ...func(*Settings)) *Settings {
 	s := new(Settings)
 	s.Keytab = kt
-	for _, option := range options {
-		option(s)
+	for _, set := range options {
+		set(s)
 	}
 	return s
 }
