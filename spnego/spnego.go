@@ -9,10 +9,8 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v6/asn1tools"
 	"gopkg.in/jcmturner/gokrb5.v6/client"
 	"gopkg.in/jcmturner/gokrb5.v6/gssapi"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/nametype"
 	"gopkg.in/jcmturner/gokrb5.v6/keytab"
 	"gopkg.in/jcmturner/gokrb5.v6/service"
-	"gopkg.in/jcmturner/gokrb5.v6/types"
 )
 
 // SPNEGO implements the GSS-API mechanism for RFC 4178
@@ -27,8 +25,7 @@ func SPNEGOClient(cl *client.Client, spn string) *SPNEGO {
 	s := new(SPNEGO)
 	s.client = cl
 	s.spn = spn
-	sname := types.NewPrincipalName(nametype.KRB_NT_PRINCIPAL, spn)
-	s.serviceSettings = service.NewSettings(nil, service.SPN(&sname))
+	s.serviceSettings = service.NewSettings(nil, service.SName(spn))
 	return s
 }
 
