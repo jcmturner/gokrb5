@@ -6,20 +6,19 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/gokrb5.v6/iana"
-	"gopkg.in/jcmturner/gokrb5.v6/testdata"
+	"gopkg.in/jcmturner/gokrb5.v6/test/testdata"
 )
 
 func TestUnmarshalEncryptedData(t *testing.T) {
 	t.Parallel()
 	var a EncryptedData
-	v := "encode_krb5_enc_data"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5enc_data)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	assert.Equal(t, testdata.TEST_ETYPE, a.EType, "Encrypted data Etype not as expected")
 	assert.Equal(t, iana.PVNO, a.KVNO, "Encrypted data KVNO not as expected")
@@ -29,14 +28,13 @@ func TestUnmarshalEncryptedData(t *testing.T) {
 func TestUnmarshalEncryptedData_MSBsetkvno(t *testing.T) {
 	t.Parallel()
 	var a EncryptedData
-	v := "encode_krb5_enc_data(MSB-setkvno)"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5enc_dataMSBSetkvno)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	assert.Equal(t, testdata.TEST_ETYPE, a.EType, "Encrypted data Etype not as expected")
 	assert.Equal(t, -16777216, a.KVNO, "Encrypted data KVNO not as expected")
@@ -46,14 +44,13 @@ func TestUnmarshalEncryptedData_MSBsetkvno(t *testing.T) {
 func TestUnmarshalEncryptedData_kvno_neg1(t *testing.T) {
 	t.Parallel()
 	var a EncryptedData
-	v := "encode_krb5_enc_data(kvno= -1)"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5enc_dataKVNONegOne)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	assert.Equal(t, testdata.TEST_ETYPE, a.EType, "Encrypted data Etype not as expected")
 	assert.Equal(t, -1, a.KVNO, "Encrypted data KVNO not as expected")
@@ -63,14 +60,13 @@ func TestUnmarshalEncryptedData_kvno_neg1(t *testing.T) {
 func TestUnmarshalEncryptionKey(t *testing.T) {
 	t.Parallel()
 	var a EncryptionKey
-	v := "encode_krb5_keyblock"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5keyblock)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	assert.Equal(t, int32(1), a.KeyType, "Key type not as expected")
 	assert.Equal(t, []byte("12345678"), a.KeyValue, "Key value not as expected")
@@ -79,14 +75,13 @@ func TestUnmarshalEncryptionKey(t *testing.T) {
 func TestMarshalEncryptedData(t *testing.T) {
 	t.Parallel()
 	var a EncryptedData
-	v := "encode_krb5_enc_data"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5enc_data)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	mb, err := a.Marshal()
 	if err != nil {

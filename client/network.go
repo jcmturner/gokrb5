@@ -68,6 +68,7 @@ func (cl *Client) sendToKDC(b []byte, realm string) ([]byte, error) {
 	return rb, nil
 }
 
+// dialKDCTCP establishes a UDP connection to a KDC.
 func dialKDCUDP(count int, kdcs map[int]string) (conn *net.UDPConn, err error) {
 	i := 1
 	for i <= count {
@@ -78,7 +79,10 @@ func dialKDCUDP(count int, kdcs map[int]string) (conn *net.UDPConn, err error) {
 		}
 		conn, err = net.DialUDP("udp", nil, udpAddr)
 		if err == nil {
-			conn.SetDeadline(time.Now().Add(5 * time.Second))
+			err = conn.SetDeadline(time.Now().Add(5 * time.Second))
+			if err != nil {
+				return
+			}
 			return
 		}
 		i++
@@ -87,6 +91,7 @@ func dialKDCUDP(count int, kdcs map[int]string) (conn *net.UDPConn, err error) {
 	return
 }
 
+// dialKDCTCP establishes a TCP connection to a KDC.
 func dialKDCTCP(count int, kdcs map[int]string) (conn *net.TCPConn, err error) {
 	i := 1
 	for i <= count {
@@ -97,7 +102,10 @@ func dialKDCTCP(count int, kdcs map[int]string) (conn *net.TCPConn, err error) {
 		}
 		conn, err = net.DialTCP("tcp", nil, tcpAddr)
 		if err == nil {
-			conn.SetDeadline(time.Now().Add(5 * time.Second))
+			err = conn.SetDeadline(time.Now().Add(5 * time.Second))
+			if err != nil {
+				return
+			}
 			return
 		}
 		i++
@@ -106,7 +114,7 @@ func dialKDCTCP(count int, kdcs map[int]string) (conn *net.TCPConn, err error) {
 	return
 }
 
-// Send the bytes to the KDC over UDP.
+// sendKDCUDP sends bytes to the KDC via UDP.
 func (cl *Client) sendKDCUDP(realm string, b []byte) ([]byte, error) {
 	var r []byte
 	count, kdcs, err := cl.Config.GetKDCs(realm, false)
@@ -124,6 +132,7 @@ func (cl *Client) sendKDCUDP(realm string, b []byte) ([]byte, error) {
 	return checkForKRBError(r)
 }
 
+// sendKDCTCP sends bytes to the KDC via TCP.
 func (cl *Client) sendKDCTCP(realm string, b []byte) ([]byte, error) {
 	var r []byte
 	count, kdcs, err := cl.Config.GetKDCs(realm, true)
@@ -141,7 +150,7 @@ func (cl *Client) sendKDCTCP(realm string, b []byte) ([]byte, error) {
 	return checkForKRBError(rb)
 }
 
-// Send the bytes over UDP.
+// sendUDP sends bytes to connection over UDP.
 func (cl *Client) sendUDP(conn *net.UDPConn, b []byte) ([]byte, error) {
 	var r []byte
 	defer conn.Close()
@@ -161,7 +170,7 @@ func (cl *Client) sendUDP(conn *net.UDPConn, b []byte) ([]byte, error) {
 	return r, nil
 }
 
-// Send the bytes over TCP.
+// sendTCP sends bytes to connection over TCP.
 func (cl *Client) sendTCP(conn *net.TCPConn, b []byte) ([]byte, error) {
 	defer conn.Close()
 	var r []byte
@@ -178,10 +187,13 @@ func (cl *Client) sendTCP(conn *net.TCPConn, b []byte) ([]byte, error) {
 		NB: network byte order == big endian
 	*/
 	var buf bytes.Buffer
-	binary.Write(&buf, binary.BigEndian, uint32(len(b)))
+	err := binary.Write(&buf, binary.BigEndian, uint32(len(b)))
+	if err != nil {
+		return r, err
+	}
 	b = append(buf.Bytes(), b...)
 
-	_, err := conn.Write(b)
+	_, err = conn.Write(b)
 	if err != nil {
 		return r, fmt.Errorf("error sending to KDC (%s): %v", conn.RemoteAddr().String(), err)
 	}
@@ -204,6 +216,7 @@ func (cl *Client) sendTCP(conn *net.TCPConn, b []byte) ([]byte, error) {
 	return rb, nil
 }
 
+// checkForKRBError checks if the response bytes from the KDC are a KRBError.
 func checkForKRBError(b []byte) ([]byte, error) {
 	var KRBErr messages.KRBError
 	if err := KRBErr.Unmarshal(b); err == nil {

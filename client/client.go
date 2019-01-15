@@ -29,12 +29,12 @@ type Client struct {
 
 // NewClientWithPassword creates a new client from a password credential.
 // Set the realm to empty string to use the default realm from config.
-func NewClientWithPassword(username, realm, password string, krb5conf *config.Config, options ...func(*Settings)) Client {
+func NewClientWithPassword(username, realm, password string, krb5conf *config.Config, settings ...func(*Settings)) Client {
 	creds := credentials.NewCredentials(username, realm)
 	return Client{
 		Credentials: creds.WithPassword(password),
 		Config:      krb5conf,
-		settings:    newSettings(options...),
+		settings:    newSettings(settings...),
 		sessions: &sessions{
 			Entries: make(map[string]*session),
 		},
@@ -43,12 +43,12 @@ func NewClientWithPassword(username, realm, password string, krb5conf *config.Co
 }
 
 // NewClientWithKeytab creates a new client from a keytab credential.
-func NewClientWithKeytab(username, realm string, kt keytab.Keytab, krb5conf *config.Config, options ...func(*Settings)) Client {
+func NewClientWithKeytab(username, realm string, kt keytab.Keytab, krb5conf *config.Config, settings ...func(*Settings)) Client {
 	creds := credentials.NewCredentials(username, realm)
 	return Client{
 		Credentials: creds.WithKeytab(kt),
 		Config:      krb5conf,
-		settings:    newSettings(options...),
+		settings:    newSettings(settings...),
 		sessions: &sessions{
 			Entries: make(map[string]*session),
 		},
@@ -59,11 +59,11 @@ func NewClientWithKeytab(username, realm string, kt keytab.Keytab, krb5conf *con
 // NewClientFromCCache create a client from a populated client cache.
 //
 // WARNING: A client created from CCache does not automatically renew TGTs and a failure will occur after the TGT expires.
-func NewClientFromCCache(c credentials.CCache, krb5conf *config.Config, options ...func(*Settings)) (Client, error) {
+func NewClientFromCCache(c credentials.CCache, krb5conf *config.Config, settings ...func(*Settings)) (Client, error) {
 	cl := Client{
 		Credentials: c.GetClientCredentials(),
 		Config:      krb5conf,
-		settings:    newSettings(options...),
+		settings:    newSettings(settings...),
 		sessions: &sessions{
 			Entries: make(map[string]*session),
 		},
@@ -190,7 +190,7 @@ func (cl *Client) Login() error {
 	return nil
 }
 
-// remoteRealmSession returns the session for a realm that the client is not a member of but for which there is a trust
+// realmLogin obtains or renews a TGT and establishes a session for the realm specified.
 func (cl *Client) realmLogin(realm string) error {
 	if realm == cl.Credentials.Realm {
 		return cl.Login()

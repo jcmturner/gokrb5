@@ -27,7 +27,7 @@ const (
 	TOK_ID_KRB_ERROR  = "0300"
 )
 
-// KRB5Token implementation for GSSAPI.
+// KRB5Token context token implementation for GSSAPI.
 type KRB5Token struct {
 	OID      asn1.ObjectIdentifier
 	tokID    []byte
@@ -116,7 +116,7 @@ func (m *KRB5Token) Verify() (bool, gssapi.Status) {
 	case TOK_ID_KRB_AP_REP:
 		// Client side
 		// TODO how to verify the AP_REP - not yet implemented
-		return false, gssapi.Status{Code: gssapi.StatusFailure}
+		return false, gssapi.Status{Code: gssapi.StatusFailure, Message: "verifying an AP_REP is not currently supported by gokrb5"}
 	case TOK_ID_KRB_ERROR:
 		if m.KRBError.MsgType != msgtype.KRB_ERROR {
 			return false, gssapi.Status{Code: gssapi.StatusDefectiveToken, Message: "KRB5_Error token not valid"}

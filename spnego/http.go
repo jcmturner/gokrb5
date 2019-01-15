@@ -68,7 +68,7 @@ const (
 )
 
 // SPNEGOKRB5Authenticate is a Kerberos SPNEGO authentication HTTP handler wrapper.
-func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, options ...func(*service.Settings)) http.Handler {
+func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, settings ...func(*service.Settings)) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Get the auth header
 		s := strings.SplitN(r.Header.Get(HTTPHeaderAuthRequest), " ", 2)
@@ -84,10 +84,10 @@ func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, options ...fu
 		h, err := types.GetHostAddress(r.RemoteAddr)
 		if err == nil {
 			// put in this order so that if the user provides a ClientAddress it will override the one here.
-			o := append([]func(*service.Settings){service.ClientAddress(h)}, options...)
+			o := append([]func(*service.Settings){service.ClientAddress(h)}, settings...)
 			spnego = SPNEGOService(kt, o...)
 		} else {
-			spnego = SPNEGOService(kt, options...)
+			spnego = SPNEGOService(kt, settings...)
 			spnego.Log("%s - SPNEGO could not parse client address: %v", r.RemoteAddr, err)
 		}
 

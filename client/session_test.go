@@ -15,7 +15,7 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v6/iana/etypeID"
 	"gopkg.in/jcmturner/gokrb5.v6/keytab"
 	"gopkg.in/jcmturner/gokrb5.v6/test"
-	"gopkg.in/jcmturner/gokrb5.v6/testdata"
+	"gopkg.in/jcmturner/gokrb5.v6/test/testdata"
 )
 
 func TestMultiThreadedClientSession(t *testing.T) {
