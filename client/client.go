@@ -34,7 +34,7 @@ func NewClientWithPassword(username, realm, password string, krb5conf *config.Co
 	return Client{
 		Credentials: creds.WithPassword(password),
 		Config:      krb5conf,
-		settings:    newSettings(settings...),
+		settings:    NewSettings(settings...),
 		sessions: &sessions{
 			Entries: make(map[string]*session),
 		},
@@ -48,7 +48,7 @@ func NewClientWithKeytab(username, realm string, kt keytab.Keytab, krb5conf *con
 	return Client{
 		Credentials: creds.WithKeytab(kt),
 		Config:      krb5conf,
-		settings:    newSettings(settings...),
+		settings:    NewSettings(settings...),
 		sessions: &sessions{
 			Entries: make(map[string]*session),
 		},
@@ -63,7 +63,7 @@ func NewClientFromCCache(c credentials.CCache, krb5conf *config.Config, settings
 	cl := Client{
 		Credentials: c.GetClientCredentials(),
 		Config:      krb5conf,
-		settings:    newSettings(settings...),
+		settings:    NewSettings(settings...),
 		sessions: &sessions{
 			Entries: make(map[string]*session),
 		},

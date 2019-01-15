@@ -9,10 +9,10 @@ type Settings struct {
 	logger                  *log.Logger
 }
 
-func newSettings(options ...func(*Settings)) *Settings {
+func NewSettings(settings ...func(*Settings)) *Settings {
 	s := new(Settings)
-	for _, option := range options {
-		option(s)
+	for _, set := range settings {
+		set(s)
 	}
 	return s
 }
