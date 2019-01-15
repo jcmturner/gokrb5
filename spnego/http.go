@@ -27,11 +27,11 @@ func SetSPNEGOHeader(cl *client.Client, r *http.Request, spn string) error {
 	s := SPNEGOClient(cl, spn)
 	err := s.AcquireCred()
 	if err != nil {
-		return fmt.Errorf("could not aquire client credenital: %v", err)
+		return fmt.Errorf("could not acquire client credenital: %v", err)
 	}
 	st, err := s.InitSecContext()
 	if err != nil {
-		return fmt.Errorf("could not initalize context: %v", err)
+		return fmt.Errorf("could not initialize context: %v", err)
 	}
 	nb, err := st.Marshal()
 	if err != nil {
@@ -68,7 +68,7 @@ const (
 )
 
 // SPNEGOKRB5Authenticate is a Kerberos SPNEGO authentication HTTP handler wrapper.
-func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, options ...func(*service.Settings)) http.Handler {
+func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, settings ...func(*service.Settings)) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Get the auth header
 		s := strings.SplitN(r.Header.Get(HTTPHeaderAuthRequest), " ", 2)
@@ -84,10 +84,10 @@ func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, options ...fu
 		h, err := types.GetHostAddress(r.RemoteAddr)
 		if err == nil {
 			// put in this order so that if the user provides a ClientAddress it will override the one here.
-			o := append([]func(*service.Settings){service.ClientAddress(h)}, options...)
+			o := append([]func(*service.Settings){service.ClientAddress(h)}, settings...)
 			spnego = SPNEGOService(kt, o...)
 		} else {
-			spnego = SPNEGOService(kt, options...)
+			spnego = SPNEGOService(kt, settings...)
 			spnego.Log("%s - SPNEGO could not parse client address: %v", r.RemoteAddr, err)
 		}
 
@@ -112,9 +112,8 @@ func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, options ...fu
 		}
 		if authed {
 			id := ctx.Value(CTXKeyCredentials).(goidentity.Identity)
-			rctx := r.Context()
-			rctx = context.WithValue(rctx, CTXKeyCredentials, id)
-			rctx = context.WithValue(rctx, CTXKeyAuthenticated, ctx.Value(CTXKeyAuthenticated))
+			context.WithValue(r.Context(), CTXKeyCredentials, id)
+			context.WithValue(r.Context(), CTXKeyAuthenticated, ctx.Value(CTXKeyAuthenticated))
 			spnegoResponseAcceptCompleted(spnego, w, "%s %s@%s - SPNEGO authentication succeeded", r.RemoteAddr, id.UserName(), id.Domain())
 			inner.ServeHTTP(w, r.WithContext(ctx))
 		} else {

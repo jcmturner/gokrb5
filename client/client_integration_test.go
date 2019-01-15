@@ -22,7 +22,7 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v6/keytab"
 	"gopkg.in/jcmturner/gokrb5.v6/spnego"
 	"gopkg.in/jcmturner/gokrb5.v6/test"
-	"gopkg.in/jcmturner/gokrb5.v6/testdata"
+	"gopkg.in/jcmturner/gokrb5.v6/test/testdata"
 	"strings"
 	"sync"
 )
@@ -42,13 +42,13 @@ func TestClient_SuccessfulLogin_Keytab(t *testing.T) {
 		testdata.TEST_KDC_OLD,
 		testdata.TEST_KDC_LASTEST,
 	}
-	for _, test := range tests {
-		c.Realms[0].KDC = []string{addr + ":" + test}
+	for _, tst := range tests {
+		c.Realms[0].KDC = []string{addr + ":" + tst}
 		cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 
 		err := cl.Login()
 		if err != nil {
-			t.Errorf("error on logging in with KDC %s: %v\n", test, err)
+			t.Errorf("error on logging in with KDC %s: %v\n", tst, err)
 		}
 	}
 }
@@ -66,13 +66,13 @@ func TestClient_SuccessfulLogin_Password(t *testing.T) {
 		testdata.TEST_KDC_OLD,
 		testdata.TEST_KDC_LASTEST,
 	}
-	for _, test := range tests {
-		c.Realms[0].KDC = []string{addr + ":" + test}
+	for _, tst := range tests {
+		c.Realms[0].KDC = []string{addr + ":" + tst}
 		cl := client.NewClientWithPassword("testuser1", "TEST.GOKRB5", "passwordvalue", c)
 
 		err := cl.Login()
 		if err != nil {
-			t.Errorf("error on logging in with KDC %s: %v\n", test, err)
+			t.Errorf("error on logging in with KDC %s: %v\n", tst, err)
 		}
 	}
 }
@@ -116,23 +116,23 @@ func TestClient_ASExchange_TGSExchange_EncTypes_Keytab(t *testing.T) {
 		"aes256-cts-hmac-sha384-192",
 		"rc4-hmac",
 	}
-	for _, test := range tests {
-		c.LibDefaults.DefaultTktEnctypes = []string{test}
-		c.LibDefaults.DefaultTktEnctypeIDs = []int32{etypeID.ETypesByName[test]}
-		c.LibDefaults.DefaultTGSEnctypes = []string{test}
-		c.LibDefaults.DefaultTGSEnctypeIDs = []int32{etypeID.ETypesByName[test]}
+	for _, tst := range tests {
+		c.LibDefaults.DefaultTktEnctypes = []string{tst}
+		c.LibDefaults.DefaultTktEnctypeIDs = []int32{etypeID.ETypesByName[tst]}
+		c.LibDefaults.DefaultTGSEnctypes = []string{tst}
+		c.LibDefaults.DefaultTGSEnctypeIDs = []int32{etypeID.ETypesByName[tst]}
 		cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 
 		err := cl.Login()
 		if err != nil {
-			t.Errorf("error on login using enctype %s: %v\n", test, err)
+			t.Errorf("error on login using enctype %s: %v\n", tst, err)
 		}
 		tkt, key, err := cl.GetServiceTicket("HTTP/host.test.gokrb5")
 		if err != nil {
-			t.Errorf("error in TGS exchange using enctype %s: %v", test, err)
+			t.Errorf("error in TGS exchange using enctype %s: %v", tst, err)
 		}
-		assert.Equal(t, "TEST.GOKRB5", tkt.Realm, "Realm in ticket not as expected for %s test", test)
-		assert.Equal(t, etypeID.ETypesByName[test], key.KeyType, "Key is not for enctype %s", test)
+		assert.Equal(t, "TEST.GOKRB5", tkt.Realm, "Realm in ticket not as expected for %s test", tst)
+		assert.Equal(t, etypeID.ETypesByName[tst], key.KeyType, "Key is not for enctype %s", tst)
 	}
 }
 
@@ -153,23 +153,23 @@ func TestClient_ASExchange_TGSExchange_EncTypes_Password(t *testing.T) {
 		"aes256-cts-hmac-sha384-192",
 		"rc4-hmac",
 	}
-	for _, test := range tests {
-		c.LibDefaults.DefaultTktEnctypes = []string{test}
-		c.LibDefaults.DefaultTktEnctypeIDs = []int32{etypeID.ETypesByName[test]}
-		c.LibDefaults.DefaultTGSEnctypes = []string{test}
-		c.LibDefaults.DefaultTGSEnctypeIDs = []int32{etypeID.ETypesByName[test]}
+	for _, tst := range tests {
+		c.LibDefaults.DefaultTktEnctypes = []string{tst}
+		c.LibDefaults.DefaultTktEnctypeIDs = []int32{etypeID.ETypesByName[tst]}
+		c.LibDefaults.DefaultTGSEnctypes = []string{tst}
+		c.LibDefaults.DefaultTGSEnctypeIDs = []int32{etypeID.ETypesByName[tst]}
 		cl := client.NewClientWithPassword("testuser1", "TEST.GOKRB5", "passwordvalue", c)
 
 		err := cl.Login()
 		if err != nil {
-			t.Errorf("error on login using enctype %s: %v\n", test, err)
+			t.Errorf("error on login using enctype %s: %v\n", tst, err)
 		}
 		tkt, key, err := cl.GetServiceTicket("HTTP/host.test.gokrb5")
 		if err != nil {
-			t.Errorf("error in TGS exchange using enctype %s: %v", test, err)
+			t.Errorf("error in TGS exchange using enctype %s: %v", tst, err)
 		}
-		assert.Equal(t, "TEST.GOKRB5", tkt.Realm, "Realm in ticket not as expected for %s test", test)
-		assert.Equal(t, etypeID.ETypesByName[test], key.KeyType, "Key is not for enctype %s", test)
+		assert.Equal(t, "TEST.GOKRB5", tkt.Realm, "Realm in ticket not as expected for %s test", tst)
+		assert.Equal(t, etypeID.ETypesByName[tst], key.KeyType, "Key is not for enctype %s", tst)
 	}
 }
 

@@ -5,15 +5,23 @@ package client
 
 import (
 	"encoding/hex"
+	"log"
+
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/gokrb5.v6/config"
 	"gopkg.in/jcmturner/gokrb5.v6/iana/etypeID"
+	"gopkg.in/jcmturner/gokrb5.v6/iana/nametype"
 	"gopkg.in/jcmturner/gokrb5.v6/keytab"
-	"gopkg.in/jcmturner/gokrb5.v6/testdata"
+	"gopkg.in/jcmturner/gokrb5.v6/test"
+	"gopkg.in/jcmturner/gokrb5.v6/test/testdata"
+	"gopkg.in/jcmturner/gokrb5.v6/types"
+
 	"testing"
 )
 
 func TestClient_SuccessfulLogin_AD(t *testing.T) {
+	test.AD(t)
+
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
@@ -27,6 +35,8 @@ func TestClient_SuccessfulLogin_AD(t *testing.T) {
 }
 
 func TestClient_GetServiceTicket_AD(t *testing.T) {
+	test.AD(t)
+
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
@@ -47,19 +57,25 @@ func TestClient_GetServiceTicket_AD(t *testing.T) {
 
 	b, _ = hex.DecodeString(testdata.SYSHTTP_KEYTAB)
 	skt, _ := keytab.Parse(b)
-	err = tkt.DecryptEncPart(skt, "sysHTTP")
+	sname := types.PrincipalName{NameType: nametype.KRB_NT_PRINCIPAL, NameString: []string{"sysHTTP"}}
+	err = tkt.DecryptEncPart(skt, &sname)
 	if err != nil {
 		t.Errorf("could not decrypt service ticket: %v", err)
 	}
-	isPAC, pac, e := tkt.GetPACType(skt, "sysHTTP")
-	if e != nil {
-		t.Errorf("error getting PAC: %v", e)
+	w := bytes.NewBufferString("")
+	l := log.New(w, "", 0)
+	isPAC, pac, err := tkt.GetPACType(skt, &sname, l)
+	if err != nil {
+		t.Log(w.String())
+		t.Errorf("error getting PAC: %v", err)
 	}
 	assert.True(t, isPAC, "should have PAC")
-	assert.Equal(t, "TEST.GOKRB5", pac.KerbValidationInfo.LogonDomainName.String(), "domain name in PAC not correct")
+	assert.Equal(t, "TEST", pac.KerbValidationInfo.LogonDomainName.String(), "domain name in PAC not correct")
 }
 
 func TestClient_SuccessfulLogin_AD_TRUST_USER_DOMAIN(t *testing.T) {
+	test.AD(t)
+
 	b, _ := hex.DecodeString(testdata.TESTUSER1_USERKRB5_AD_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
@@ -74,6 +90,8 @@ func TestClient_SuccessfulLogin_AD_TRUST_USER_DOMAIN(t *testing.T) {
 }
 
 func TestClient_GetServiceTicket_AD_TRUST_USER_DOMAIN(t *testing.T) {
+	test.AD(t)
+
 	b, _ := hex.DecodeString(testdata.TESTUSER1_USERKRB5_AD_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
@@ -101,12 +119,16 @@ func TestClient_GetServiceTicket_AD_TRUST_USER_DOMAIN(t *testing.T) {
 
 	b, _ = hex.DecodeString(testdata.SYSHTTP_RESGOKRB5_AD_KEYTAB)
 	skt, _ := keytab.Parse(b)
-	err = tkt.DecryptEncPart(skt, "sysHTTP")
+	sname := types.PrincipalName{NameType: nametype.KRB_NT_PRINCIPAL, NameString: []string{"sysHTTP"}}
+	err = tkt.DecryptEncPart(skt, &sname)
 	if err != nil {
 		t.Errorf("error decrypting ticket with service keytab: %v", err)
 	}
-	isPAC, pac, err := tkt.GetPACType(skt, "sysHTTP")
+	w := bytes.NewBufferString("")
+	l := log.New(w, "", 0)
+	isPAC, pac, err := tkt.GetPACType(skt, &sname, l)
 	if err != nil {
+		t.Log(w.String())
 		t.Errorf("error getting PAC: %v", err)
 	}
 	assert.True(t, isPAC, "Did not find PAC in service ticket")
@@ -115,6 +137,8 @@ func TestClient_GetServiceTicket_AD_TRUST_USER_DOMAIN(t *testing.T) {
 }
 
 func TestClient_GetServiceTicket_AD_USER_DOMAIN(t *testing.T) {
+	test.AD(t)
+
 	b, _ := hex.DecodeString(testdata.TESTUSER1_USERKRB5_AD_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
@@ -142,12 +166,16 @@ func TestClient_GetServiceTicket_AD_USER_DOMAIN(t *testing.T) {
 
 	b, _ = hex.DecodeString(testdata.TESTUSER2_USERKRB5_AD_KEYTAB)
 	skt, _ := keytab.Parse(b)
-	err = tkt.DecryptEncPart(skt, "testuser2")
+	sname := types.PrincipalName{NameType: nametype.KRB_NT_PRINCIPAL, NameString: []string{"testuser2"}}
+	err = tkt.DecryptEncPart(skt, &sname)
 	if err != nil {
 		t.Errorf("error decrypting ticket with service keytab: %v", err)
 	}
-	isPAC, pac, err := tkt.GetPACType(skt, "testuser2")
+	w := bytes.NewBufferString("")
+	l := log.New(w, "", 0)
+	isPAC, pac, err := tkt.GetPACType(skt, &sname, l)
 	if err != nil {
+		t.Log(w.String())
 		t.Errorf("error getting PAC: %v", err)
 	}
 	assert.True(t, isPAC, "Did not find PAC in service ticket")

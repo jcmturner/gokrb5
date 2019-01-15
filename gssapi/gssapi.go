@@ -8,12 +8,16 @@ import (
 	"github.com/jcmturner/gofork/encoding/asn1"
 )
 
+// GSS-API OID names
 const (
+	// GSS-API OID names
 	OIDKRB5         OIDName = "KRB5"         // MechType OID for Kerberos 5
 	OIDMSLegacyKRB5 OIDName = "MSLegacyKRB5" // MechType OID for Kerberos 5
 	OIDSPNEGO       OIDName = "SPNEGO"
+)
 
-	// GSS-API status values
+// GSS-API status values
+const (
 	StatusBadBindings = 1 << iota
 	StatusBadMech
 	StatusBadName
@@ -41,6 +45,7 @@ const (
 	StatusGapToken
 )
 
+// ContextToken is an interface for a GSS-API context token.
 type ContextToken interface {
 	Marshal() ([]byte, error)
 	Unmarshal(b []byte) error
@@ -48,9 +53,10 @@ type ContextToken interface {
 	Context() context.Context
 }
 
+// Mechanism is the GSS-API interface for authentication mechanisms.
 type Mechanism interface {
 	OID() asn1.ObjectIdentifier
-	AcquireCred() error                                               //ASExchange - Client Side
+	AcquireCred() error                                               // Client side login (AS exhange for KRB5)
 	InitSecContext() (ContextToken, error)                            //TGSExchnage builds AP_REQ to go into ContextToken to send to service - Client Side
 	AcceptSecContext(ct ContextToken) (bool, context.Context, Status) //verifies the token server side
 	MIC() MICToken                                                    //  apply integrity check, receive as token separate from message
@@ -59,8 +65,10 @@ type Mechanism interface {
 	Unwrap(wt WrapToken) []byte                                       //decapsulate, decrypt if needed, validate integrity check
 }
 
+// OIDName is the type for defined GSS-API OIDs.
 type OIDName string
 
+// OID returns the OID for the provided OID name.
 func OID(o OIDName) asn1.ObjectIdentifier {
 	switch o {
 	case OIDSPNEGO:
@@ -73,11 +81,13 @@ func OID(o OIDName) asn1.ObjectIdentifier {
 	return asn1.ObjectIdentifier{}
 }
 
+// Status is the GSS-API status and implements the error interface.
 type Status struct {
 	Code    int
 	Message string
 }
 
+// Error returns the Status description.
 func (s Status) Error() string {
 	var str string
 	switch s.Code {

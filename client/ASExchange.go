@@ -69,6 +69,7 @@ func (cl *Client) ASExchange(realm string, ASReq messages.ASReq, referral int) (
 	return ASRep, nil
 }
 
+// setPAData adds pre-authentication data to the AS_REQ.
 func setPAData(cl *Client, krberr messages.KRBError, ASReq *messages.ASReq) error {
 	if !cl.settings.DisablePAFXFAST() {
 		pa := types.PAData{PADataType: patype.PA_REQ_ENC_PA_REP}
@@ -119,6 +120,7 @@ func setPAData(cl *Client, krberr messages.KRBError, ASReq *messages.ASReq) erro
 	return nil
 }
 
+// preAuthEType establishes what encryption type to use for pre-authentication from the KRBError returned from the KDC.
 func preAuthEType(krberr messages.KRBError) (etype etype.EType, err error) {
 	//The preferred ordering of the "hint" pre-authentication data that
 	//affect client key selection is: ETYPE-INFO2, followed by ETYPE-INFO,

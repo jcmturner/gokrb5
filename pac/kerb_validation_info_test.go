@@ -6,13 +6,13 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v6/testdata"
+	"gopkg.in/jcmturner/gokrb5.v6/test/testdata"
 	"gopkg.in/jcmturner/rpc.v1/mstypes"
 )
 
 func TestKerbValidationInfo_Unmarshal(t *testing.T) {
 	t.Parallel()
-	b, err := hex.DecodeString(testdata.TestVectors["PAC_Kerb_Validation_Info_MS"])
+	b, err := hex.DecodeString(testdata.MarshaledPAC_Kerb_Validation_Info_MS)
 	if err != nil {
 		t.Fatal("Could not decode test data hex string")
 	}
@@ -113,7 +113,7 @@ func TestKerbValidationInfo_Unmarshal(t *testing.T) {
 	assert.Equal(t, uint8(0), k.ResourceGroupDomainSID.SubAuthorityCount, "ResourceGroupDomainSID not as expected")
 	assert.Equal(t, 0, len(k.ResourceGroupIDs), "ResourceGroupIDs not as expected")
 
-	b, err = hex.DecodeString(testdata.TestVectors["PAC_Kerb_Validation_Info"])
+	b, err = hex.DecodeString(testdata.MarshaledPAC_Kerb_Validation_Info)
 	if err != nil {
 		t.Fatal("Could not decode test data hex string")
 	}
@@ -186,7 +186,7 @@ func TestKerbValidationInfo_Unmarshal(t *testing.T) {
 }
 
 func TestKerbValidationInfo_Unmarshal_DomainTrust(t *testing.T) {
-	b, err := hex.DecodeString(testdata.TestVectors["PAC_Kerb_Validation_Info_Trust"])
+	b, err := hex.DecodeString(testdata.MarshaledPAC_Kerb_Validation_Info_Trust)
 	if err != nil {
 		t.Fatal("Could not decode test data hex string")
 	}

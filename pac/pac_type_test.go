@@ -1,22 +1,23 @@
 package pac
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/gokrb5.v6/keytab"
-	"gopkg.in/jcmturner/gokrb5.v6/testdata"
+	"gopkg.in/jcmturner/gokrb5.v6/test/testdata"
 	"gopkg.in/jcmturner/gokrb5.v6/types"
 )
 
 func TestPACTypeValidate(t *testing.T) {
 	t.Parallel()
-	v := "PAC_AD_WIN2K_PAC"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledPAC_AD_WIN2K_PAC)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	var pac PACType
 	err = pac.Unmarshal(b)
@@ -31,7 +32,9 @@ func TestPACTypeValidate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error getting key: %v", err)
 	}
-	err = pac.ProcessPACInfoBuffers(key)
+	w := bytes.NewBufferString("")
+	l := log.New(w, "", 0)
+	err = pac.ProcessPACInfoBuffers(key, l)
 	if err != nil {
 		t.Fatalf("Processing reference pac error: %v", err)
 	}

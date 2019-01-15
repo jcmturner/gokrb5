@@ -6,22 +6,19 @@ import (
 	"strings"
 	"time"
 
-	goidentity "gopkg.in/jcmturner/goidentity.v3"
+	"gopkg.in/jcmturner/goidentity.v3"
 	"gopkg.in/jcmturner/gokrb5.v6/client"
 	"gopkg.in/jcmturner/gokrb5.v6/config"
 	"gopkg.in/jcmturner/gokrb5.v6/credentials"
-	"gopkg.in/jcmturner/gokrb5.v6/keytab"
 )
 
-//TODO how to provide client settings
-
 // NewKRB5BasicAuthenticator creates a new NewKRB5BasicAuthenticator
-func NewKRB5BasicAuthenticator(headerVal string, kt *keytab.Keytab, krb5conf *config.Config, options ...func(*Settings)) KRB5BasicAuthenticator {
-	s := NewSettings(kt, options...)
+func NewKRB5BasicAuthenticator(headerVal string, krb5conf *config.Config, serviceSettings *Settings, clientSettings *client.Settings) KRB5BasicAuthenticator {
 	return KRB5BasicAuthenticator{
 		BasicHeaderValue: headerVal,
 		clientConfig:     krb5conf,
-		serviceConfig:    s,
+		serviceSettings:  serviceSettings,
+		clientSettings:   clientSettings,
 	}
 }
 
@@ -29,7 +26,8 @@ func NewKRB5BasicAuthenticator(headerVal string, kt *keytab.Keytab, krb5conf *co
 // It takes username and password so can be used for basic authentication.
 type KRB5BasicAuthenticator struct {
 	BasicHeaderValue string
-	serviceConfig    *Settings
+	serviceSettings  *Settings
+	clientSettings   *client.Settings
 	clientConfig     *config.Config
 	realm            string
 	username         string
@@ -50,19 +48,19 @@ func (a KRB5BasicAuthenticator) Authenticate() (i goidentity.Identity, ok bool, 
 		err = fmt.Errorf("error with user credentials during login: %v", err)
 		return
 	}
-	tkt, _, err := cl.GetServiceTicket(a.serviceConfig.SPN().GetPrincipalNameString())
+	tkt, _, err := cl.GetServiceTicket(a.serviceSettings.SName())
 	if err != nil {
 		err = fmt.Errorf("could not get service ticket: %v", err)
 		return
 	}
-	err = tkt.DecryptEncPart(*a.serviceConfig.Keytab, a.serviceConfig.SPN())
+	err = tkt.DecryptEncPart(*a.serviceSettings.Keytab, a.serviceSettings.KeytabPrincipal())
 	if err != nil {
 		err = fmt.Errorf("could not decrypt service ticket: %v", err)
 		return
 	}
 	cl.Credentials.SetAuthTime(time.Now().UTC())
 	cl.Credentials.SetAuthenticated(true)
-	isPAC, pac, err := tkt.GetPACType(*a.serviceConfig.Keytab, a.serviceConfig.SPN())
+	isPAC, pac, err := tkt.GetPACType(*a.serviceSettings.Keytab, a.serviceSettings.KeytabPrincipal(), a.serviceSettings.Logger())
 	if isPAC && err != nil {
 		err = fmt.Errorf("error processing PAC: %v", err)
 		return

@@ -9,21 +9,20 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v6/iana"
 	"gopkg.in/jcmturner/gokrb5.v6/iana/addrtype"
 	"gopkg.in/jcmturner/gokrb5.v6/iana/msgtype"
-	"gopkg.in/jcmturner/gokrb5.v6/testdata"
+	"gopkg.in/jcmturner/gokrb5.v6/test/testdata"
 	"gopkg.in/jcmturner/gokrb5.v6/types"
 )
 
 func TestUnmarshalKRBPriv(t *testing.T) {
 	t.Parallel()
 	var a KRBPriv
-	v := "encode_krb5_priv"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5priv)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	assert.Equal(t, iana.PVNO, a.PVNO, "PVNO not as expected")
 	assert.Equal(t, msgtype.KRB_PRIV, a.MsgType, "Message type not as expected")
@@ -35,14 +34,13 @@ func TestUnmarshalKRBPriv(t *testing.T) {
 func TestUnmarshalEncPrivPart(t *testing.T) {
 	t.Parallel()
 	var a EncKrbPrivPart
-	v := "encode_krb5_enc_priv_part"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5enc_priv_part)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	//Parse the test time value into a time.Time type
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
@@ -60,14 +58,13 @@ func TestUnmarshalEncPrivPart(t *testing.T) {
 func TestUnmarshalEncPrivPart_optionalsNULL(t *testing.T) {
 	t.Parallel()
 	var a EncKrbPrivPart
-	v := "encode_krb5_enc_priv_part(optionalsNULL)"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5enc_priv_partOptionalsNULL)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	assert.Equal(t, "krb5data", string(a.UserData), "User data not as expected")
 	assert.Equal(t, addrtype.IPv4, a.SAddress.AddrType, "SAddress type not as expected")
@@ -77,14 +74,13 @@ func TestUnmarshalEncPrivPart_optionalsNULL(t *testing.T) {
 func TestMarshalKRBPriv(t *testing.T) {
 	t.Parallel()
 	var a KRBPriv
-	v := "encode_krb5_priv"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5priv)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	mb, err := a.Marshal()
 	if err != nil {
@@ -92,14 +88,13 @@ func TestMarshalKRBPriv(t *testing.T) {
 	}
 	assert.Equal(t, b, mb, "marshaled bytes not as expected")
 
-	v = "encode_krb5_enc_priv_part"
-	be, err := hex.DecodeString(testdata.TestVectors[v])
+	be, err := hex.DecodeString(testdata.MarshaledKRB5enc_priv_part)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.DecryptedEncPart.Unmarshal(be)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	mb, err = a.Marshal()
 	if err != nil {
@@ -111,23 +106,21 @@ func TestMarshalKRBPriv(t *testing.T) {
 func TestKRBPriv_EncryptEncPart(t *testing.T) {
 	t.Parallel()
 	var a KRBPriv
-	v := "encode_krb5_priv"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5priv)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
-	v = "encode_krb5_enc_priv_part"
-	b, err = hex.DecodeString(testdata.TestVectors[v])
+	b, err = hex.DecodeString(testdata.MarshaledKRB5enc_priv_part)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.DecryptedEncPart.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	key := types.EncryptionKey{
 		KeyType:  int32(18),

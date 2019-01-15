@@ -12,20 +12,19 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v6/iana/msgtype"
 	"gopkg.in/jcmturner/gokrb5.v6/iana/nametype"
 	"gopkg.in/jcmturner/gokrb5.v6/iana/patype"
-	"gopkg.in/jcmturner/gokrb5.v6/testdata"
+	"gopkg.in/jcmturner/gokrb5.v6/test/testdata"
 )
 
 func TestUnmarshalKDCReqBody(t *testing.T) {
 	t.Parallel()
 	var a KDCReqBody
-	v := "encode_krb5_kdc_req_body"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5kdc_req_body)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	//Parse the test time value into a time.Time type
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
@@ -67,14 +66,13 @@ func TestUnmarshalKDCReqBody(t *testing.T) {
 func TestUnmarshalKDCReqBody_optionalsNULLexceptsecond_ticket(t *testing.T) {
 	t.Parallel()
 	var a KDCReqBody
-	v := "encode_krb5_kdc_req_body(optionalsNULLexceptsecond_ticket)"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5kdc_req_bodyOptionalsNULLexceptsecond_ticket)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	//Parse the test time value into a time.Time type
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
@@ -102,14 +100,13 @@ func TestUnmarshalKDCReqBody_optionalsNULLexceptsecond_ticket(t *testing.T) {
 func TestUnmarshalKDCReqBody_optionalsNULLexceptserver(t *testing.T) {
 	t.Parallel()
 	var a KDCReqBody
-	v := "encode_krb5_kdc_req_body(optionalsNULLexceptserver)"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5kdc_req_bodyOptionalsNULLexceptserver)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	//Parse the test time value into a time.Time type
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
@@ -130,14 +127,13 @@ func TestUnmarshalKDCReqBody_optionalsNULLexceptserver(t *testing.T) {
 func TestUnmarshalASReq(t *testing.T) {
 	t.Parallel()
 	var a ASReq
-	v := "encode_krb5_as_req"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5as_req)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	//Parse the test time value into a time.Time type
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
@@ -186,14 +182,13 @@ func TestUnmarshalASReq(t *testing.T) {
 func TestUnmarshalASReq_optionalsNULLexceptsecond_ticket(t *testing.T) {
 	t.Parallel()
 	var a ASReq
-	v := "encode_krb5_as_req(optionalsNULLexceptsecond_ticket)"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5as_reqOptionalsNULLexceptsecond_ticket)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	//Parse the test time value into a time.Time type
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
@@ -224,14 +219,13 @@ func TestUnmarshalASReq_optionalsNULLexceptsecond_ticket(t *testing.T) {
 func TestUnmarshalASReq_optionalsNULLexceptserver(t *testing.T) {
 	t.Parallel()
 	var a ASReq
-	v := "encode_krb5_as_req(optionalsNULLexceptserver)"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5as_reqOptionalsNULLexceptserver)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	//Parse the test time value into a time.Time type
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
@@ -255,14 +249,13 @@ func TestUnmarshalASReq_optionalsNULLexceptserver(t *testing.T) {
 func TestUnmarshalTGSReq(t *testing.T) {
 	t.Parallel()
 	var a TGSReq
-	v := "encode_krb5_tgs_req"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5tgs_req)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	//Parse the test time value into a time.Time type
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
@@ -311,14 +304,13 @@ func TestUnmarshalTGSReq(t *testing.T) {
 func TestUnmarshalTGSReq_optionalsNULLexceptsecond_ticket(t *testing.T) {
 	t.Parallel()
 	var a TGSReq
-	v := "encode_krb5_tgs_req(optionalsNULLexceptsecond_ticket)"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5tgs_reqOptionalsNULLexceptsecond_ticket)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	//Parse the test time value into a time.Time type
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
@@ -349,14 +341,13 @@ func TestUnmarshalTGSReq_optionalsNULLexceptsecond_ticket(t *testing.T) {
 func TestUnmarshalTGSReq_optionalsNULLexceptserver(t *testing.T) {
 	t.Parallel()
 	var a TGSReq
-	v := "encode_krb5_tgs_req(optionalsNULLexceptserver)"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5tgs_reqOptionalsNULLexceptserver)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	//Parse the test time value into a time.Time type
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
@@ -382,19 +373,18 @@ func TestUnmarshalTGSReq_optionalsNULLexceptserver(t *testing.T) {
 func TestMarshalKDCReqBody(t *testing.T) {
 	t.Parallel()
 	var a KDCReqBody
-	v := "encode_krb5_kdc_req_body"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5kdc_req_body)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	// Marshal and re-unmarshal the result nd then compare
 	mb, err := a.Marshal()
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	assert.Equal(t, b, mb, "Marshal bytes of KDCReqBody not as expected")
 }
@@ -402,14 +392,13 @@ func TestMarshalKDCReqBody(t *testing.T) {
 func TestMarshalASReq(t *testing.T) {
 	t.Parallel()
 	var a ASReq
-	v := "encode_krb5_as_req"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5as_req)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	mb, err := a.Marshal()
 	if err != nil {
@@ -421,14 +410,13 @@ func TestMarshalASReq(t *testing.T) {
 func TestMarshalTGSReq(t *testing.T) {
 	t.Parallel()
 	var a TGSReq
-	v := "encode_krb5_tgs_req"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5tgs_req)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	mb, err := a.Marshal()
 	if err != nil {

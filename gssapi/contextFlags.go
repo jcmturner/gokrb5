@@ -2,6 +2,7 @@ package gssapi
 
 import "github.com/jcmturner/gofork/encoding/asn1"
 
+// GSS-API context flags assigned numbers.
 const (
 	ContextFlagDeleg    = 1
 	ContextFlagMutual   = 2

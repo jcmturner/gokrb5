@@ -8,13 +8,13 @@ import (
 	"time"
 )
 
-// Cache for client tickets.
+// Cache for service tickets held by the client.
 type Cache struct {
 	Entries map[string]CacheEntry
 	mux     sync.RWMutex
 }
 
-// CacheEntry holds details for a client cache entry.
+// CacheEntry holds details for a cache entry.
 type CacheEntry struct {
 	Ticket     messages.Ticket
 	AuthTime   time.Time
@@ -31,7 +31,7 @@ func NewCache() *Cache {
 	}
 }
 
-// GetEntry returns a cache entry that matches the SPN.
+// getEntry returns a cache entry that matches the SPN.
 func (c *Cache) getEntry(spn string) (CacheEntry, bool) {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
@@ -39,7 +39,7 @@ func (c *Cache) getEntry(spn string) (CacheEntry, bool) {
 	return e, ok
 }
 
-// AddEntry adds a ticket to the cache.
+// addEntry adds a ticket to the cache.
 func (c *Cache) addEntry(tkt messages.Ticket, authTime, startTime, endTime, renewTill time.Time, sessionKey types.EncryptionKey) CacheEntry {
 	spn := strings.Join(tkt.SName.NameString, "/")
 	c.mux.Lock()
@@ -55,7 +55,7 @@ func (c *Cache) addEntry(tkt messages.Ticket, authTime, startTime, endTime, rene
 	return c.Entries[spn]
 }
 
-// Clear deletes all the cache entries
+// clear deletes all the cache entries
 func (c *Cache) clear() {
 	c.mux.Lock()
 	defer c.mux.Unlock()

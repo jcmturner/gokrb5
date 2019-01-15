@@ -55,7 +55,7 @@ const (
 	NegStateRequestMIC       NegState = 3
 )
 
-// SPNEGO negotiation state.
+// NegState is a type to indicate the SPNEGO negotiation state.
 type NegState int
 
 // NegTokenInit implements Negotiation Token of type Init.

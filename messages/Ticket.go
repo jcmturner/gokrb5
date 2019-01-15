@@ -3,6 +3,7 @@ package messages
 import (
 	"crypto/rand"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/jcmturner/gofork/encoding/asn1"
@@ -215,13 +216,14 @@ func (t *Ticket) Decrypt(key types.EncryptionKey) error {
 }
 
 // GetPACType returns a Microsoft PAC that has been extracted from the ticket and processed.
-func (t *Ticket) GetPACType(keytab keytab.Keytab, sname *types.PrincipalName) (bool, pac.PACType, error) {
+func (t *Ticket) GetPACType(keytab keytab.Keytab, sname *types.PrincipalName, l *log.Logger) (bool, pac.PACType, error) {
 	var isPAC bool
 	for _, ad := range t.DecryptedEncPart.AuthorizationData {
 		if ad.ADType == adtype.ADIfRelevant {
 			var ad2 types.AuthorizationData
 			err := ad2.Unmarshal(ad.ADData)
 			if err != nil {
+				l.Printf("PAC authorization data could not be unmarshaled: %v", err)
 				continue
 			}
 			if ad2[0].ADType == adtype.ADWin2KPAC {
@@ -238,7 +240,7 @@ func (t *Ticket) GetPACType(keytab keytab.Keytab, sname *types.PrincipalName) (b
 				if err != nil {
 					return isPAC, p, NewKRBError(t.SName, t.Realm, errorcode.KRB_AP_ERR_NOKEY, fmt.Sprintf("Could not get key from keytab: %v", err))
 				}
-				err = p.ProcessPACInfoBuffers(key)
+				err = p.ProcessPACInfoBuffers(key, l)
 				return isPAC, p, err
 			}
 		}

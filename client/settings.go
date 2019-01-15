@@ -2,6 +2,7 @@ package client
 
 import "log"
 
+// Settings holds optional client settings.
 type Settings struct {
 	disablePAFXFast         bool
 	assumePreAuthentication bool
@@ -9,10 +10,11 @@ type Settings struct {
 	logger                  *log.Logger
 }
 
-func newSettings(options ...func(*Settings)) *Settings {
+// NewSettings creates a new client settings struct.
+func NewSettings(settings ...func(*Settings)) *Settings {
 	s := new(Settings)
-	for _, option := range options {
-		option(s)
+	for _, set := range settings {
+		set(s)
 	}
 	return s
 }
@@ -26,6 +28,7 @@ func DisablePAFXFAST(b bool) func(*Settings) {
 	}
 }
 
+// DisablePAFXFAST indicates is the client should disable the use of PA_FX_FAST.
 func (s *Settings) DisablePAFXFAST() bool {
 	return s.disablePAFXFast
 }
@@ -39,6 +42,7 @@ func AssumePreAuthentication(b bool) func(*Settings) {
 	}
 }
 
+// AssumePreAuthentication indicates if the client should proactively assume using pre-authentication.
 func (s *Settings) AssumePreAuthentication() bool {
 	return s.assumePreAuthentication
 }
@@ -52,6 +56,7 @@ func Logger(l *log.Logger) func(*Settings) {
 	}
 }
 
+// Logger returns the client logger instance.
 func (s *Settings) Logger() *log.Logger {
 	return s.logger
 }

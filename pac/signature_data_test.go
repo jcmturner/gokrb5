@@ -6,12 +6,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/gokrb5.v6/iana/chksumtype"
-	"gopkg.in/jcmturner/gokrb5.v6/testdata"
+	"gopkg.in/jcmturner/gokrb5.v6/test/testdata"
 )
 
 func TestPAC_SignatureData_Unmarshal_Server_Signature(t *testing.T) {
 	t.Parallel()
-	b, err := hex.DecodeString(testdata.TestVectors["PAC_Server_Signature"])
+	b, err := hex.DecodeString(testdata.MarshaledPAC_Server_Signature)
 	if err != nil {
 		t.Fatal("Could not decode test data hex string")
 	}
@@ -30,7 +30,7 @@ func TestPAC_SignatureData_Unmarshal_Server_Signature(t *testing.T) {
 
 func TestPAC_SignatureData_Unmarshal_KDC_Signature(t *testing.T) {
 	t.Parallel()
-	b, err := hex.DecodeString(testdata.TestVectors["PAC_KDC_Signature"])
+	b, err := hex.DecodeString(testdata.MarshaledPAC_KDC_Signature)
 	if err != nil {
 		t.Fatal("Could not decode test data hex string")
 	}
