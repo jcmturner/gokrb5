@@ -1,6 +1,3 @@
-// +build adintegration
-// To turn on this test use -tags=integration in go test command
-
 package client
 
 import (
@@ -8,12 +5,18 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/gokrb5.v6/config"
 	"gopkg.in/jcmturner/gokrb5.v6/iana/etypeID"
+	"gopkg.in/jcmturner/gokrb5.v6/iana/nametype"
 	"gopkg.in/jcmturner/gokrb5.v6/keytab"
-	"gopkg.in/jcmturner/gokrb5.v6/testdata"
+	"gopkg.in/jcmturner/gokrb5.v6/test"
+	"gopkg.in/jcmturner/gokrb5.v6/test/testdata"
+	"gopkg.in/jcmturner/gokrb5.v6/types"
+
 	"testing"
 )
 
 func TestClient_SuccessfulLogin_AD(t *testing.T) {
+	test.AD(t)
+
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
@@ -27,6 +30,8 @@ func TestClient_SuccessfulLogin_AD(t *testing.T) {
 }
 
 func TestClient_GetServiceTicket_AD(t *testing.T) {
+	test.AD(t)
+
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
@@ -47,11 +52,12 @@ func TestClient_GetServiceTicket_AD(t *testing.T) {
 
 	b, _ = hex.DecodeString(testdata.SYSHTTP_KEYTAB)
 	skt, _ := keytab.Parse(b)
-	err = tkt.DecryptEncPart(skt, "sysHTTP")
+	sname := types.PrincipalName{NameType: nametype.KRB_NT_PRINCIPAL, NameString: []string{"sysHTTP"}}
+	err = tkt.DecryptEncPart(skt, &sname)
 	if err != nil {
 		t.Errorf("could not decrypt service ticket: %v", err)
 	}
-	isPAC, pac, e := tkt.GetPACType(skt, "sysHTTP")
+	isPAC, pac, e := tkt.GetPACType(skt, &sname)
 	if e != nil {
 		t.Errorf("error getting PAC: %v", e)
 	}
@@ -60,6 +66,8 @@ func TestClient_GetServiceTicket_AD(t *testing.T) {
 }
 
 func TestClient_SuccessfulLogin_AD_TRUST_USER_DOMAIN(t *testing.T) {
+	test.AD(t)
+
 	b, _ := hex.DecodeString(testdata.TESTUSER1_USERKRB5_AD_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
@@ -74,6 +82,8 @@ func TestClient_SuccessfulLogin_AD_TRUST_USER_DOMAIN(t *testing.T) {
 }
 
 func TestClient_GetServiceTicket_AD_TRUST_USER_DOMAIN(t *testing.T) {
+	test.AD(t)
+
 	b, _ := hex.DecodeString(testdata.TESTUSER1_USERKRB5_AD_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
@@ -101,11 +111,12 @@ func TestClient_GetServiceTicket_AD_TRUST_USER_DOMAIN(t *testing.T) {
 
 	b, _ = hex.DecodeString(testdata.SYSHTTP_RESGOKRB5_AD_KEYTAB)
 	skt, _ := keytab.Parse(b)
-	err = tkt.DecryptEncPart(skt, "sysHTTP")
+	sname := types.PrincipalName{NameType: nametype.KRB_NT_PRINCIPAL, NameString: []string{"sysHTTP"}}
+	err = tkt.DecryptEncPart(skt, &sname)
 	if err != nil {
 		t.Errorf("error decrypting ticket with service keytab: %v", err)
 	}
-	isPAC, pac, err := tkt.GetPACType(skt, "sysHTTP")
+	isPAC, pac, err := tkt.GetPACType(skt, &sname)
 	if err != nil {
 		t.Errorf("error getting PAC: %v", err)
 	}
@@ -115,6 +126,8 @@ func TestClient_GetServiceTicket_AD_TRUST_USER_DOMAIN(t *testing.T) {
 }
 
 func TestClient_GetServiceTicket_AD_USER_DOMAIN(t *testing.T) {
+	test.AD(t)
+
 	b, _ := hex.DecodeString(testdata.TESTUSER1_USERKRB5_AD_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
@@ -142,11 +155,12 @@ func TestClient_GetServiceTicket_AD_USER_DOMAIN(t *testing.T) {
 
 	b, _ = hex.DecodeString(testdata.TESTUSER2_USERKRB5_AD_KEYTAB)
 	skt, _ := keytab.Parse(b)
-	err = tkt.DecryptEncPart(skt, "testuser2")
+	sname := types.PrincipalName{NameType: nametype.KRB_NT_PRINCIPAL, NameString: []string{"testuser2"}}
+	err = tkt.DecryptEncPart(skt, &sname)
 	if err != nil {
 		t.Errorf("error decrypting ticket with service keytab: %v", err)
 	}
-	isPAC, pac, err := tkt.GetPACType(skt, "testuser2")
+	isPAC, pac, err := tkt.GetPACType(skt, &sname)
 	if err != nil {
 		t.Errorf("error getting PAC: %v", err)
 	}

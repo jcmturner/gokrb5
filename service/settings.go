@@ -8,9 +8,11 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v6/types"
 )
 
+// Settings defines service side configuration settings.
 type Settings struct {
 	Keytab             *keytab.Keytab
-	spn                *types.PrincipalName
+	ktprinc            *types.PrincipalName
+	sname              string
 	requireHostAddr    bool
 	disablePACDecoding bool
 	cAddr              types.HostAddress
@@ -18,6 +20,7 @@ type Settings struct {
 	logger             *log.Logger
 }
 
+// NewSettings creates a new service Settings.
 func NewSettings(kt *keytab.Keytab, options ...func(*Settings)) *Settings {
 	s := new(Settings)
 	s.Keytab = kt
@@ -36,6 +39,7 @@ func RequireHostAddr(b bool) func(*Settings) {
 	}
 }
 
+// RequireHostAddr indicates if the service should require the host address to be included in the ticket.
 func (s *Settings) RequireHostAddr() bool {
 	return s.requireHostAddr
 }
@@ -50,6 +54,7 @@ func DecodePAC(b bool) func(*Settings) {
 	}
 }
 
+// DecodePAC indicates whether the service should decode any PAC information present in the ticket.
 func (s *Settings) DecodePAC() bool {
 	return !s.disablePACDecoding
 }
@@ -63,6 +68,7 @@ func ClientAddress(h types.HostAddress) func(*Settings) {
 	}
 }
 
+// ClientAddress returns the client host address which has been provided to the service.
 func (s *Settings) ClientAddress() types.HostAddress {
 	return s.cAddr
 }
@@ -76,21 +82,24 @@ func Logger(l *log.Logger) func(*Settings) {
 	}
 }
 
+// Logger returns the logger instances configured for the service. If none is configured nill will be returned.
 func (s *Settings) Logger() *log.Logger {
 	return s.logger
 }
 
-// SPN used to configure service side with a specific SPN.
+// KeytabPrincipal used to override the principal name used to find the key in the keytab.
 //
-// s := NewSettings(kt, SPN(spn))
-func SPN(spn *types.PrincipalName) func(*Settings) {
+// s := NewSettings(kt, KeytabPrincipal("someaccount"))
+func KeytabPrincipal(p string) func(*Settings) {
 	return func(s *Settings) {
-		s.spn = spn
+		pn, _ := types.ParseSPNString(p)
+		s.ktprinc = &pn
 	}
 }
 
-func (s *Settings) SPN() *types.PrincipalName {
-	return s.spn
+// KeytabPrincipal returns the principal name used to find the key in the keytab if it has been overridden.
+func (s *Settings) KeytabPrincipal() *types.PrincipalName {
+	return s.ktprinc
 }
 
 // MaxClockSkew used to configure service side with the maximum acceptable clock skew
@@ -103,9 +112,25 @@ func MaxClockSkew(d time.Duration) func(*Settings) {
 	}
 }
 
+// MaxClockSkew returns the maximum acceptable clock skew between the service and the issue time of kerberos tickets.
+// If none is defined a duration of 5 minutes is returned.
 func (s *Settings) MaxClockSkew() time.Duration {
 	if s.maxClockSkew.Nanoseconds() == 0 {
 		return time.Duration(5) * time.Minute
 	}
 	return s.maxClockSkew
+}
+
+// SName used provide a specific service name to the service settings.
+//
+// s := NewSettings(kt, SName("HTTP/some.service.com"))
+func SName(sname string) func(*Settings) {
+	return func(s *Settings) {
+		s.sname = sname
+	}
+}
+
+// SName returns the specific service name to the service.
+func (s *Settings) SName() string {
+	return s.sname
 }

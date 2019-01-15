@@ -8,20 +8,19 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v6/iana"
 	"gopkg.in/jcmturner/gokrb5.v6/iana/msgtype"
 	"gopkg.in/jcmturner/gokrb5.v6/iana/nametype"
-	"gopkg.in/jcmturner/gokrb5.v6/testdata"
+	"gopkg.in/jcmturner/gokrb5.v6/test/testdata"
 )
 
 func TestUnmarshalAPReq(t *testing.T) {
 	t.Parallel()
 	var a APReq
-	v := "encode_krb5_ap_req"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5ap_req)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	assert.Equal(t, iana.PVNO, a.PVNO, "PVNO not as expected")
 	assert.Equal(t, msgtype.KRB_AP_REQ, a.MsgType, "MsgType is not as expected")
@@ -39,14 +38,13 @@ func TestUnmarshalAPReq(t *testing.T) {
 func TestMarshalAPReq(t *testing.T) {
 	t.Parallel()
 	var a APReq
-	v := "encode_krb5_ap_req"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5ap_req)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	mb, err := a.Marshal()
 	if err != nil {

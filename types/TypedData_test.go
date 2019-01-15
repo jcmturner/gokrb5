@@ -7,20 +7,19 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/gokrb5.v6/iana/patype"
-	"gopkg.in/jcmturner/gokrb5.v6/testdata"
+	"gopkg.in/jcmturner/gokrb5.v6/test/testdata"
 )
 
 func TestUnmarshalTypedData(t *testing.T) {
 	t.Parallel()
 	var a TypedDataSequence
-	v := "encode_krb5_typed_data"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5typed_data)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	assert.Equal(t, 2, len(a), "Number of typed data elements not as expected")
 	for i, d := range a {
