@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"log"
 
 	"gopkg.in/jcmturner/gokrb5.v6/crypto"
 	"gopkg.in/jcmturner/gokrb5.v6/iana/keyusage"
@@ -150,7 +151,7 @@ func (pac *PACType) PACInfoMandatoryBuffers(key types.EncryptionKey) error {
 
 // ProcessPACInfoBuffers processes the PAC Info Buffers.
 // https://msdn.microsoft.com/en-us/library/cc237954.aspx
-func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
+func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey, l *log.Logger) error {
 	for _, buf := range pac.Buffers {
 		p := make([]byte, buf.CBBufferSize, buf.CBBufferSize)
 		copy(p, pac.Data[int(buf.Offset):int(buf.Offset)+int(buf.CBBufferSize)])
@@ -163,7 +164,8 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			var k KerbValidationInfo
 			err := k.Unmarshal(p)
 			if err != nil {
-				return fmt.Errorf("error processing KerbValidationInfo: %v", err)
+				l.Printf("error processing KerbValidationInfo: %v", err)
+				continue
 			}
 			pac.KerbValidationInfo = &k
 		case infoTypeCredentials:
@@ -190,7 +192,8 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			zb, err := k.Unmarshal(p)
 			copy(pac.ZeroSigData[int(buf.Offset):int(buf.Offset)+int(buf.CBBufferSize)], zb)
 			if err != nil {
-				return fmt.Errorf("error processing ServerChecksum: %v", err)
+				l.Printf("could not process ServerChecksum: %v", err)
+				continue
 			}
 			pac.ServerChecksum = &k
 		case infoTypePACKDCSignatureData:
@@ -202,7 +205,8 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			zb, err := k.Unmarshal(p)
 			copy(pac.ZeroSigData[int(buf.Offset):int(buf.Offset)+int(buf.CBBufferSize)], zb)
 			if err != nil {
-				return fmt.Errorf("error processing KDCChecksum: %v", err)
+				l.Printf("could not process KDCChecksum: %v", err)
+				continue
 			}
 			pac.KDCChecksum = &k
 		case infoTypePACClientInfo:
@@ -213,7 +217,8 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			var k ClientInfo
 			err := k.Unmarshal(p)
 			if err != nil {
-				return fmt.Errorf("error processing ClientInfo: %v", err)
+				l.Printf("could not process ClientInfo: %v", err)
+				continue
 			}
 			pac.ClientInfo = &k
 		case infoTypeS4UDelegationInfo:
@@ -224,7 +229,8 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			var k S4UDelegationInfo
 			err := k.Unmarshal(p)
 			if err != nil {
-				return fmt.Errorf("error processing S4U_DelegationInfo: %v", err)
+				l.Printf("could not process S4U_DelegationInfo: %v", err)
+				continue
 			}
 			pac.S4UDelegationInfo = &k
 		case infoTypeUPNDNSInfo:
@@ -235,7 +241,8 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			var k UPNDNSInfo
 			err := k.Unmarshal(p)
 			if err != nil {
-				return fmt.Errorf("error processing UPN_DNSInfo: %v", err)
+				l.Printf("could not process UPN_DNSInfo: %v", err)
+				continue
 			}
 			pac.UPNDNSInfo = &k
 		case infoTypePACClientClaimsInfo:
@@ -246,7 +253,8 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			var k ClientClaimsInfo
 			err := k.Unmarshal(p)
 			if err != nil {
-				return fmt.Errorf("error processing ClientClaimsInfo: %v", err)
+				l.Printf("could not process ClientClaimsInfo: %v", err)
+				continue
 			}
 			pac.ClientClaimsInfo = &k
 		case infoTypePACDeviceInfo:
@@ -257,7 +265,8 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			var k DeviceInfo
 			err := k.Unmarshal(p)
 			if err != nil {
-				return fmt.Errorf("error processing DeviceInfo: %v", err)
+				l.Printf("could not process DeviceInfo: %v", err)
+				continue
 			}
 			pac.DeviceInfo = &k
 		case infoTypePACDeviceClaimsInfo:
@@ -268,7 +277,8 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			var k DeviceClaimsInfo
 			err := k.Unmarshal(p)
 			if err != nil {
-				return fmt.Errorf("error processing DeviceClaimsInfo: %v", err)
+				l.Printf("could not process DeviceClaimsInfo: %v", err)
+				continue
 			}
 			pac.DeviceClaimsInfo = &k
 		}
