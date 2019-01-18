@@ -117,7 +117,7 @@ func (a *APReq) Unmarshal(b []byte) error {
 	a.MsgType = m.MsgType
 	a.APOptions = m.APOptions
 	a.EncryptedAuthenticator = m.EncryptedAuthenticator
-	a.Ticket, err = UnmarshalTicket(m.Ticket.Bytes)
+	a.Ticket, err = unmarshalTicket(m.Ticket.Bytes)
 	if err != nil {
 		return krberror.Errorf(err, krberror.EncodingError, "unmarshaling error of Ticket within AP_REQ")
 	}

@@ -63,7 +63,7 @@ func (cl *Client) ASExchange(realm string, ASReq messages.ASReq, referral int) (
 	if err != nil {
 		return messages.ASRep{}, krberror.Errorf(err, krberror.EncodingError, "AS Exchange Error: failed to process the AS_REP")
 	}
-	if ok, err := ASRep.IsValid(cl.Config, cl.Credentials, ASReq); !ok {
+	if ok, err := ASRep.Verify(cl.Config, cl.Credentials, ASReq); !ok {
 		return messages.ASRep{}, krberror.Errorf(err, krberror.KRBMsgError, "AS Exchange Error: AS_REP is not valid or client password/keytab incorrect")
 	}
 	return ASRep, nil
@@ -99,7 +99,7 @@ func setPAData(cl *Client, krberr messages.KRBError, ASReq *messages.ASReq) erro
 			}
 			cl.settings.preAuthEType = et.GetETypeID()
 		}
-		key, err := cl.Key(et, krberr)
+		key, err := cl.Key(et, &krberr)
 		if err != nil {
 			return krberror.Errorf(err, krberror.EncryptingError, "error getting key from credentials")
 		}

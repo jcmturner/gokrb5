@@ -1,3 +1,4 @@
+// Package spnego implements the Simple and Protected GSSAPI Negotiation Mechanism for Kerberos authentication.
 package spnego
 
 import (

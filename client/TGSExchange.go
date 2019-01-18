@@ -11,7 +11,7 @@ import (
 // TGSExchange performs a TGS exchange to retrieve a ticket to the specified SPN.
 // The ticket retrieved is added to the client's cache.
 func (cl *Client) TGSExchange(spn types.PrincipalName, kdcRealm string, tgt messages.Ticket, sessionKey types.EncryptionKey, renewal bool, referral int) (tgsReq messages.TGSReq, tgsRep messages.TGSRep, err error) {
-	tgsReq, err = messages.NewTGSReq(cl.Credentials.CName, kdcRealm, cl.Config, tgt, sessionKey, spn, renewal)
+	tgsReq, err = messages.NewTGSReq(cl.Credentials.CName(), kdcRealm, cl.Config, tgt, sessionKey, spn, renewal)
 	if err != nil {
 		return tgsReq, tgsRep, krberror.Errorf(err, krberror.KRBMsgError, "TGS Exchange Error: failed to generate a new TGS_REQ")
 	}
@@ -25,7 +25,7 @@ func (cl *Client) TGSExchange(spn types.PrincipalName, kdcRealm string, tgt mess
 		}
 		// Server referral https://tools.ietf.org/html/rfc6806.html#section-8
 		// The TGS Rep contains a TGT for another domain as the service resides in that domain.
-		cl.AddSession(tgsRep.Ticket, tgsRep.DecryptedEncPart)
+		cl.addSession(tgsRep.Ticket, tgsRep.DecryptedEncPart)
 		realm := tgsRep.Ticket.SName.NameString[len(tgsRep.Ticket.SName.NameString)-1]
 		referral++
 		return cl.TGSExchange(spn, realm, tgsRep.Ticket, tgsRep.DecryptedEncPart.Key, false, referral)
@@ -45,16 +45,16 @@ func (cl *Client) TGSREQ(tgsReq messages.TGSReq, kdcRealm string, tgt messages.T
 		}
 		// Server referral https://tools.ietf.org/html/rfc6806.html#section-8
 		// The TGS Rep contains a TGT for another domain as the service resides in that domain.
-		cl.AddSession(tgsRep.Ticket, tgsRep.DecryptedEncPart)
+		cl.addSession(tgsRep.Ticket, tgsRep.DecryptedEncPart)
 		realm := tgsRep.Ticket.SName.NameString[len(tgsRep.Ticket.SName.NameString)-1]
 		referral++
 		if types.IsFlagSet(&tgsReq.ReqBody.KDCOptions, flags.EncTktInSkey) && len(tgsReq.ReqBody.AdditionalTickets) > 0 {
-			tgsReq, err = messages.NewUser2UserTGSReq(cl.Credentials.CName, kdcRealm, cl.Config, tgt, sessionKey, tgsReq.ReqBody.SName, tgsReq.Renewal, tgsReq.ReqBody.AdditionalTickets[0])
+			tgsReq, err = messages.NewUser2UserTGSReq(cl.Credentials.CName(), kdcRealm, cl.Config, tgt, sessionKey, tgsReq.ReqBody.SName, tgsReq.Renewal, tgsReq.ReqBody.AdditionalTickets[0])
 			if err != nil {
 				return tgsReq, tgsRep, err
 			}
 		}
-		tgsReq, err = messages.NewTGSReq(cl.Credentials.CName, kdcRealm, cl.Config, tgt, sessionKey, tgsReq.ReqBody.SName, tgsReq.Renewal)
+		tgsReq, err = messages.NewTGSReq(cl.Credentials.CName(), kdcRealm, cl.Config, tgt, sessionKey, tgsReq.ReqBody.SName, tgsReq.Renewal)
 		if err != nil {
 			return tgsReq, tgsRep, err
 		}
@@ -83,7 +83,7 @@ func (cl *Client) tgsExchange(tgsReq messages.TGSReq, kdcRealm string, sessionKe
 	if err != nil {
 		return tgsRep, krberror.Errorf(err, krberror.EncodingError, "TGS Exchange Error: failed to process the TGS_REP")
 	}
-	if ok, err := tgsRep.IsValid(cl.Config, tgsReq); !ok {
+	if ok, err := tgsRep.Verify(cl.Config, tgsReq); !ok {
 		return tgsRep, krberror.Errorf(err, krberror.EncodingError, "TGS Exchange Error: TGS_REP is not valid")
 	}
 	return

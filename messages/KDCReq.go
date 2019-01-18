@@ -339,7 +339,7 @@ func (k *KDCReqBody) Unmarshal(b []byte) error {
 	k.Addresses = m.Addresses
 	k.EncAuthData = m.EncAuthData
 	if len(m.AdditionalTickets.Bytes) > 0 {
-		k.AdditionalTickets, err = UnmarshalTicketsSequence(m.AdditionalTickets)
+		k.AdditionalTickets, err = unmarshalTicketsSequence(m.AdditionalTickets)
 		if err != nil {
 			return krberror.Errorf(err, krberror.EncodingError, "error unmarshaling additional tickets")
 		}

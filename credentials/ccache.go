@@ -213,9 +213,9 @@ func (c *CCache) GetClientRealm() string {
 // GetClientCredentials returns a Credentials object representing the client of the credentials cache.
 func (c *CCache) GetClientCredentials() *Credentials {
 	return &Credentials{
-		Username: c.DefaultPrincipal.PrincipalName.GetPrincipalNameString(),
-		Realm:    c.GetClientRealm(),
-		CName:    c.DefaultPrincipal.PrincipalName,
+		username: c.DefaultPrincipal.PrincipalName.GetPrincipalNameString(),
+		realm:    c.GetClientRealm(),
+		cname:    c.DefaultPrincipal.PrincipalName,
 	}
 }
 

@@ -13,7 +13,7 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v6/types"
 )
 
-func TestPACTypeValidate(t *testing.T) {
+func TestPACTypeVerify(t *testing.T) {
 	t.Parallel()
 	b, err := hex.DecodeString(testdata.MarshaledPAC_AD_WIN2K_PAC)
 	if err != nil {
@@ -61,7 +61,7 @@ func TestPACTypeValidate(t *testing.T) {
 		{pacInvalidClientInfo},
 	}
 	for i, s := range pacs {
-		v, _ := s.pac.validate(key)
+		v, _ := s.pac.verify(key)
 		assert.False(t, v, fmt.Sprintf("Validation should have failed for test %v", i))
 	}
 
