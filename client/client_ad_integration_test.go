@@ -1,9 +1,7 @@
-// +build adintegration
-// To turn on this test use -tags=integration in go test command
-
 package client
 
 import (
+	"bytes"
 	"encoding/hex"
 	"log"
 
