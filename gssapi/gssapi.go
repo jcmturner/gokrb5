@@ -10,6 +10,7 @@ import (
 
 // GSS-API OID names
 const (
+	// GSS-API OID names
 	OIDKRB5         OIDName = "KRB5"         // MechType OID for Kerberos 5
 	OIDMSLegacyKRB5 OIDName = "MSLegacyKRB5" // MechType OID for Kerberos 5
 	OIDSPNEGO       OIDName = "SPNEGO"
