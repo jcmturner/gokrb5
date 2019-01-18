@@ -37,7 +37,7 @@ func ValidateAPREQ(APReq messages.APReq, s *Settings) (bool, *credentials.Creden
 
 	//PAC decoding
 	if !s.disablePACDecoding {
-		isPAC, pac, err := APReq.Ticket.GetPACType(*s.Keytab, s.KeytabPrincipal())
+		isPAC, pac, err := APReq.Ticket.GetPACType(*s.Keytab, s.KeytabPrincipal(), s.Logger())
 		if isPAC && err != nil {
 			return false, creds, err
 		}
