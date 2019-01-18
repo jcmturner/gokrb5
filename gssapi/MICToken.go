@@ -41,11 +41,11 @@ From RFC 4121, section 4.2.6.1:
 */
 
 const (
-	// When set, this flag indicates the sender is the context acceptor.  When not set, it indicates the sender is the context initiator
+	// MICTokenFlagSentByAcceptor - this flag indicates the sender is the context acceptor.  When not set, it indicates the sender is the context initiator
 	MICTokenFlagSentByAcceptor = 1 << iota
-	// This flag indicates confidentiality is provided for.  It SHALL NOT be set in MIC tokens
+	// MICTokenFlagSentByAcceptor - this flag indicates confidentiality is provided for.  It SHALL NOT be set in MIC tokens
 	MICTokenFlagSealed
-	// A subkey asserted by the context acceptor is used to protect the message
+	// MICTokenFlagAcceptorSubkey - a subkey asserted by the context acceptor is used to protect the message
 	MICTokenFlagAcceptorSubkey
 )
 

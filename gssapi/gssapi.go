@@ -8,13 +8,15 @@ import (
 	"github.com/jcmturner/gofork/encoding/asn1"
 )
 
+// GSS-API OID names
 const (
-	// GSS-API OID names
 	OIDKRB5         OIDName = "KRB5"         // MechType OID for Kerberos 5
 	OIDMSLegacyKRB5 OIDName = "MSLegacyKRB5" // MechType OID for Kerberos 5
 	OIDSPNEGO       OIDName = "SPNEGO"
+)
 
-	// GSS-API status values
+// GSS-API status values
+const (
 	StatusBadBindings = 1 << iota
 	StatusBadMech
 	StatusBadName
