@@ -1,8 +1,10 @@
 package pac
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -30,7 +32,9 @@ func TestPACTypeValidate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error getting key: %v", err)
 	}
-	err = pac.ProcessPACInfoBuffers(key)
+	w := bytes.NewBufferString("")
+	l := log.New(w, "", 0)
+	err = pac.ProcessPACInfoBuffers(key, l)
 	if err != nil {
 		t.Fatalf("Processing reference pac error: %v", err)
 	}
