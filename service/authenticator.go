@@ -60,7 +60,7 @@ func (a KRB5BasicAuthenticator) Authenticate() (i goidentity.Identity, ok bool, 
 	}
 	cl.Credentials.SetAuthTime(time.Now().UTC())
 	cl.Credentials.SetAuthenticated(true)
-	isPAC, pac, err := tkt.GetPACType(*a.serviceSettings.Keytab, a.serviceSettings.KeytabPrincipal())
+	isPAC, pac, err := tkt.GetPACType(*a.serviceSettings.Keytab, a.serviceSettings.KeytabPrincipal(), a.serviceSettings.Logger())
 	if isPAC && err != nil {
 		err = fmt.Errorf("error processing PAC: %v", err)
 		return

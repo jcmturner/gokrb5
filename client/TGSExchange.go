@@ -71,7 +71,7 @@ func (cl *Client) tgsExchange(tgsReq messages.TGSReq, kdcRealm string, sessionKe
 	r, err := cl.sendToKDC(b, kdcRealm)
 	if err != nil {
 		if _, ok := err.(messages.KRBError); ok {
-			return tgsRep, krberror.Errorf(err, krberror.KDCError, "TGS Exchange Error: kerberos error response from KDC")
+			return tgsRep, krberror.Errorf(err, krberror.KDCError, "TGS Exchange Error: kerberos error response from KDC when requesting for %s", tgsReq.ReqBody.SName.GetPrincipalNameString())
 		}
 		return tgsRep, krberror.Errorf(err, krberror.NetworkingError, "TGS Exchange Error: issue sending TGS_REQ to KDC")
 	}

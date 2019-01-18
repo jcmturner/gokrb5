@@ -1,7 +1,10 @@
 package client
 
 import (
+	"bytes"
 	"encoding/hex"
+	"log"
+
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/gokrb5.v6/config"
 	"gopkg.in/jcmturner/gokrb5.v6/iana/etypeID"
@@ -57,12 +60,15 @@ func TestClient_GetServiceTicket_AD(t *testing.T) {
 	if err != nil {
 		t.Errorf("could not decrypt service ticket: %v", err)
 	}
-	isPAC, pac, e := tkt.GetPACType(skt, &sname)
-	if e != nil {
-		t.Errorf("error getting PAC: %v", e)
+	w := bytes.NewBufferString("")
+	l := log.New(w, "", 0)
+	isPAC, pac, err := tkt.GetPACType(skt, &sname, l)
+	if err != nil {
+		t.Log(w.String())
+		t.Errorf("error getting PAC: %v", err)
 	}
 	assert.True(t, isPAC, "should have PAC")
-	assert.Equal(t, "TEST.GOKRB5", pac.KerbValidationInfo.LogonDomainName.String(), "domain name in PAC not correct")
+	assert.Equal(t, "TEST", pac.KerbValidationInfo.LogonDomainName.String(), "domain name in PAC not correct")
 }
 
 func TestClient_SuccessfulLogin_AD_TRUST_USER_DOMAIN(t *testing.T) {
@@ -116,8 +122,11 @@ func TestClient_GetServiceTicket_AD_TRUST_USER_DOMAIN(t *testing.T) {
 	if err != nil {
 		t.Errorf("error decrypting ticket with service keytab: %v", err)
 	}
-	isPAC, pac, err := tkt.GetPACType(skt, &sname)
+	w := bytes.NewBufferString("")
+	l := log.New(w, "", 0)
+	isPAC, pac, err := tkt.GetPACType(skt, &sname, l)
 	if err != nil {
+		t.Log(w.String())
 		t.Errorf("error getting PAC: %v", err)
 	}
 	assert.True(t, isPAC, "Did not find PAC in service ticket")
@@ -160,8 +169,11 @@ func TestClient_GetServiceTicket_AD_USER_DOMAIN(t *testing.T) {
 	if err != nil {
 		t.Errorf("error decrypting ticket with service keytab: %v", err)
 	}
-	isPAC, pac, err := tkt.GetPACType(skt, &sname)
+	w := bytes.NewBufferString("")
+	l := log.New(w, "", 0)
+	isPAC, pac, err := tkt.GetPACType(skt, &sname, l)
 	if err != nil {
+		t.Log(w.String())
 		t.Errorf("error getting PAC: %v", err)
 	}
 	assert.True(t, isPAC, "Did not find PAC in service ticket")

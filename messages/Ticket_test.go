@@ -1,8 +1,10 @@
 package messages
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
+	"log"
 	"testing"
 	"time"
 
@@ -144,9 +146,12 @@ func TestAuthorizationData_GetPACType_GOKRB5TestData(t *testing.T) {
 	b, _ = hex.DecodeString(testdata.SYSHTTP_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	sname := types.PrincipalName{NameType: nametype.KRB_NT_PRINCIPAL, NameString: []string{"sysHTTP"}}
-	isPAC, pac, err := tkt.GetPACType(kt, &sname)
+	w := bytes.NewBufferString("")
+	l := log.New(w, "", 0)
+	isPAC, pac, err := tkt.GetPACType(kt, &sname, l)
 	if err != nil {
-		t.Fatalf("Error getting PAC Type: %v\n", err)
+		t.Log(w.String())
+		t.Errorf("error getting PAC: %v", err)
 	}
 	assert.True(t, isPAC, "PAC should be present")
 	assert.Equal(t, 5, len(pac.Buffers), "Number of buffers not as expected")

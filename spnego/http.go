@@ -27,11 +27,11 @@ func SetSPNEGOHeader(cl *client.Client, r *http.Request, spn string) error {
 	s := SPNEGOClient(cl, spn)
 	err := s.AcquireCred()
 	if err != nil {
-		return fmt.Errorf("could not aquire client credenital: %v", err)
+		return fmt.Errorf("could not acquire client credenital: %v", err)
 	}
 	st, err := s.InitSecContext()
 	if err != nil {
-		return fmt.Errorf("could not initalize context: %v", err)
+		return fmt.Errorf("could not initialize context: %v", err)
 	}
 	nb, err := st.Marshal()
 	if err != nil {
@@ -112,9 +112,8 @@ func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, settings ...f
 		}
 		if authed {
 			id := ctx.Value(CTXKeyCredentials).(goidentity.Identity)
-			rctx := r.Context()
-			rctx = context.WithValue(rctx, CTXKeyCredentials, id)
-			rctx = context.WithValue(rctx, CTXKeyAuthenticated, ctx.Value(CTXKeyAuthenticated))
+			context.WithValue(r.Context(), CTXKeyCredentials, id)
+			context.WithValue(r.Context(), CTXKeyAuthenticated, ctx.Value(CTXKeyAuthenticated))
 			spnegoResponseAcceptCompleted(spnego, w, "%s %s@%s - SPNEGO authentication succeeded", r.RemoteAddr, id.UserName(), id.Domain())
 			inner.ServeHTTP(w, r.WithContext(ctx))
 		} else {
