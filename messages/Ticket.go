@@ -122,14 +122,14 @@ func (t *EncTicketPart) Unmarshal(b []byte) error {
 	return err
 }
 
-// UnmarshalTicket returns a ticket from the bytes provided.
-func UnmarshalTicket(b []byte) (t Ticket, err error) {
-	_, err = asn1.UnmarshalWithParams(b, &t, fmt.Sprintf("application,explicit,tag:%d", asnAppTag.Ticket))
+// unmarshalTicket returns a ticket from the bytes provided.
+func unmarshalTicket(b []byte) (t Ticket, err error) {
+	err = t.Unmarshal(b)
 	return
 }
 
 // UnmarshalTicketsSequence returns a slice of Tickets from a raw ASN1 value.
-func UnmarshalTicketsSequence(in asn1.RawValue) ([]Ticket, error) {
+func unmarshalTicketsSequence(in asn1.RawValue) ([]Ticket, error) {
 	//This is a workaround to a asn1 decoding issue in golang - https://github.com/golang/go/issues/17321. It's not pretty I'm afraid
 	//We pull out raw values from the larger raw value (that is actually the data of the sequence of raw values) and track our position moving along the data.
 	b := in.Bytes
@@ -142,7 +142,7 @@ func UnmarshalTicketsSequence(in asn1.RawValue) ([]Ticket, error) {
 		if err != nil {
 			return nil, fmt.Errorf("unmarshaling sequence of tickets failed getting length of ticket: %v", err)
 		}
-		t, err := UnmarshalTicket(b[p:])
+		t, err := unmarshalTicket(b[p:])
 		if err != nil {
 			return nil, fmt.Errorf("unmarshaling sequence of tickets failed: %v", err)
 		}

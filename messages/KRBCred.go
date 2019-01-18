@@ -69,7 +69,7 @@ func (k *KRBCred) Unmarshal(b []byte) error {
 	k.MsgType = m.MsgType
 	k.EncPart = m.EncPart
 	if len(m.Tickets.Bytes) > 0 {
-		k.Tickets, err = UnmarshalTicketsSequence(m.Tickets)
+		k.Tickets, err = unmarshalTicketsSequence(m.Tickets)
 		if err != nil {
 			return krberror.Errorf(err, krberror.EncodingError, "error unmarshaling tickets within KRB_CRED")
 		}

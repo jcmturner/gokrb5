@@ -102,7 +102,7 @@ func (m *KRB5Token) Unmarshal(b []byte) error {
 func (m *KRB5Token) Verify() (bool, gssapi.Status) {
 	switch hex.EncodeToString(m.tokID) {
 	case TOK_ID_KRB_AP_REQ:
-		ok, creds, err := service.ValidateAPREQ(m.APReq, m.settings)
+		ok, creds, err := service.VerifyAPREQ(m.APReq, m.settings)
 		if err != nil {
 			return false, gssapi.Status{Code: gssapi.StatusDefectiveToken, Message: err.Error()}
 		}
@@ -186,7 +186,7 @@ func NewKRB5TokenAPREQ(cl *client.Client, s *service.Settings, tkt messages.Tick
 // krb5TokenAuthenticator creates a new kerberos authenticator for kerberos MechToken
 func krb5TokenAuthenticator(creds credentials.Credentials, flags []int) (types.Authenticator, error) {
 	//RFC 4121 Section 4.1.1
-	auth, err := types.NewAuthenticator(creds.Realm, creds.CName)
+	auth, err := types.NewAuthenticator(creds.Domain(), creds.CName())
 	if err != nil {
 		return auth, krberror.Errorf(err, krberror.KRBMsgError, "error generating new authenticator")
 	}

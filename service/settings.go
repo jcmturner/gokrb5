@@ -21,10 +21,10 @@ type Settings struct {
 }
 
 // NewSettings creates a new service Settings.
-func NewSettings(kt *keytab.Keytab, options ...func(*Settings)) *Settings {
+func NewSettings(kt *keytab.Keytab, settings ...func(*Settings)) *Settings {
 	s := new(Settings)
 	s.Keytab = kt
-	for _, set := range options {
+	for _, set := range settings {
 		set(s)
 	}
 	return s

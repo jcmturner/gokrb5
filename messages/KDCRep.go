@@ -87,7 +87,7 @@ func (k *ASRep) Unmarshal(b []byte) error {
 		return krberror.NewErrorf(krberror.KRBMsgError, "message ID does not indicate an AS_REP. Expected: %v; Actual: %v", msgtype.KRB_AS_REP, m.MsgType)
 	}
 	//Process the raw ticket within
-	tkt, err := UnmarshalTicket(m.Ticket.Bytes)
+	tkt, err := unmarshalTicket(m.Ticket.Bytes)
 	if err != nil {
 		return krberror.Errorf(err, krberror.EncodingError, "error unmarshaling Ticket within AS_REP")
 	}
@@ -114,7 +114,7 @@ func (k *TGSRep) Unmarshal(b []byte) error {
 		return krberror.NewErrorf(krberror.KRBMsgError, "message ID does not indicate an TGS_REP. Expected: %v; Actual: %v", msgtype.KRB_TGS_REP, m.MsgType)
 	}
 	//Process the raw ticket within
-	tkt, err := UnmarshalTicket(m.Ticket.Bytes)
+	tkt, err := unmarshalTicket(m.Ticket.Bytes)
 	if err != nil {
 		return krberror.Errorf(err, krberror.EncodingError, "error unmarshaling Ticket within TGS_REP")
 	}
@@ -182,7 +182,7 @@ func (k *ASRep) DecryptEncPart(c *credentials.Credentials) (types.EncryptionKey,
 }
 
 // IsValid checks the validity of AS_REP message.
-func (k *ASRep) IsValid(cfg *config.Config, creds *credentials.Credentials, asReq ASReq) (bool, error) {
+func (k *ASRep) Verify(cfg *config.Config, creds *credentials.Credentials, asReq ASReq) (bool, error) {
 	//Ref RFC 4120 Section 3.1.5
 	if k.CName.NameType != asReq.ReqBody.CName.NameType || k.CName.NameString == nil {
 		return false, krberror.NewErrorf(krberror.KRBMsgError, "CName in response does not match what was requested. Requested: %+v; Reply: %+v", asReq.ReqBody.CName, k.CName)
@@ -264,7 +264,7 @@ func (k *TGSRep) DecryptEncPart(key types.EncryptionKey) error {
 }
 
 // IsValid checks the validity of the TGS_REP message.
-func (k *TGSRep) IsValid(cfg *config.Config, tgsReq TGSReq) (bool, error) {
+func (k *TGSRep) Verify(cfg *config.Config, tgsReq TGSReq) (bool, error) {
 	if k.CName.NameType != tgsReq.ReqBody.CName.NameType || k.CName.NameString == nil {
 		return false, krberror.NewErrorf(krberror.KRBMsgError, "CName type in response does not match what was requested. Requested: %+v; Reply: %+v", tgsReq.ReqBody.CName, k.CName)
 	}

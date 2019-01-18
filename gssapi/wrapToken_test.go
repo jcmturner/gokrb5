@@ -118,7 +118,7 @@ func TestChallengeChecksumVerification(t *testing.T) {
 	challenge, _ := hex.DecodeString(testChallengeFromAcceptor)
 	var wt WrapToken
 	wt.Unmarshal(challenge, true)
-	challengeOk, cErr := wt.VerifyCheckSum(getSessionKey(), acceptorSeal)
+	challengeOk, cErr := wt.Verify(getSessionKey(), acceptorSeal)
 	assert.Nil(t, cErr, "Error occurred during checksum verification.")
 	assert.True(t, challengeOk, "Checksum verification failed.")
 }
@@ -128,7 +128,7 @@ func TestResponseChecksumVerification(t *testing.T) {
 	reply, _ := hex.DecodeString(testChallengeReplyFromInitiator)
 	var wt WrapToken
 	wt.Unmarshal(reply, false)
-	replyOk, rErr := wt.VerifyCheckSum(getSessionKey(), initiatorSeal)
+	replyOk, rErr := wt.Verify(getSessionKey(), initiatorSeal)
 	assert.Nil(t, rErr, "Error occurred during checksum verification.")
 	assert.True(t, replyOk, "Checksum verification failed.")
 }
@@ -140,7 +140,7 @@ func TestChecksumVerificationFailure(t *testing.T) {
 	wt.Unmarshal(challenge, true)
 
 	// Test a failure with the correct key but wrong keyusage:
-	challengeOk, cErr := wt.VerifyCheckSum(getSessionKey(), initiatorSeal)
+	challengeOk, cErr := wt.Verify(getSessionKey(), initiatorSeal)
 	assert.NotNil(t, cErr, "Expected error did not occur.")
 	assert.False(t, challengeOk, "Checksum verification succeeded when it should have failed.")
 
@@ -150,7 +150,7 @@ func TestChecksumVerificationFailure(t *testing.T) {
 		KeyValue: wrongKeyVal,
 	}
 	// Test a failure with the wrong key but correct keyusage:
-	wrongKeyOk, wkErr := wt.VerifyCheckSum(badKey, acceptorSeal)
+	wrongKeyOk, wkErr := wt.Verify(badKey, acceptorSeal)
 	assert.NotNil(t, wkErr, "Expected error did not occur.")
 	assert.False(t, wrongKeyOk, "Checksum verification succeeded when it should have failed.")
 }

@@ -71,9 +71,9 @@ func TestCCache_GetClientCredentials(t *testing.T) {
 		NameString: []string{"testuser1"},
 	}
 	cred := c.GetClientCredentials()
-	assert.Equal(t, "TEST.GOKRB5", cred.Realm, "Client realm in credential not as expected")
-	assert.Equal(t, pn, cred.CName, "Client Principal Name not as expected")
-	assert.Equal(t, "testuser1", cred.Username, "Username not as expected")
+	assert.Equal(t, "TEST.GOKRB5", cred.Domain(), "Client realm in credential not as expected")
+	assert.Equal(t, pn, cred.CName(), "Client Principal Name not as expected")
+	assert.Equal(t, "testuser1", cred.UserName(), "Username not as expected")
 }
 
 func TestCCache_GetClientRealm(t *testing.T) {

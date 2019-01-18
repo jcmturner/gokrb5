@@ -19,10 +19,10 @@ const (
 // Contains either a keytab, password or both.
 // Keytabs are used over passwords if both are defined.
 type Credentials struct {
-	Username    string
+	username    string
 	displayName string
-	Realm       string
-	CName       types.PrincipalName
+	realm       string
+	cname       types.PrincipalName
 	Keytab      keytab.Keytab
 	Password    string
 	attributes  map[string]interface{}
@@ -57,11 +57,11 @@ func NewCredentials(username string, realm string) Credentials {
 		uid = "00unique-sess-ions-uuid-unavailable0"
 	}
 	return Credentials{
-		Username:    username,
+		username:    username,
 		displayName: username,
-		Realm:       realm,
-		CName:       types.NewPrincipalName(nametype.KRB_NT_PRINCIPAL, username),
-		Keytab:      keytab.NewKeytab(),
+		realm:       realm,
+		cname:       types.NewPrincipalName(nametype.KRB_NT_PRINCIPAL, username),
+		Keytab:      keytab.New(),
 		attributes:  make(map[string]interface{}),
 		sessionID:   uid,
 	}
@@ -74,11 +74,11 @@ func NewCredentialsFromPrincipal(cname types.PrincipalName, realm string) Creden
 		uid = "00unique-sess-ions-uuid-unavailable0"
 	}
 	return Credentials{
-		Username:        cname.GetPrincipalNameString(),
+		username:        cname.GetPrincipalNameString(),
 		displayName:     cname.GetPrincipalNameString(),
-		Realm:           realm,
-		CName:           cname,
-		Keytab:          keytab.NewKeytab(),
+		realm:           realm,
+		cname:           cname,
+		Keytab:          keytab.New(),
 		attributes:      make(map[string]interface{}),
 		groupMembership: make(map[string]bool),
 		sessionID:       uid,
@@ -136,22 +136,42 @@ func (c *Credentials) SetADCredentials(a ADCredentials) {
 
 // UserName returns the credential's username.
 func (c *Credentials) UserName() string {
-	return c.Username
+	return c.username
 }
 
 // SetUserName sets the username value on the credential.
 func (c *Credentials) SetUserName(s string) {
-	c.Username = s
+	c.username = s
+}
+
+// CName returns the credential's client principal name.
+func (c *Credentials) CName() types.PrincipalName {
+	return c.cname
+}
+
+// SetCName sets the client principal name on the credential.
+func (c *Credentials) SetCName(pn types.PrincipalName) {
+	c.cname = pn
 }
 
 // Domain returns the credential's domain.
 func (c *Credentials) Domain() string {
-	return c.Realm
+	return c.realm
 }
 
 // SetDomain sets the domain value on the credential.
 func (c *Credentials) SetDomain(s string) {
-	c.Realm = s
+	c.realm = s
+}
+
+// Realm returns the credential's realm. Same as the domain.
+func (c *Credentials) Realm() string {
+	return c.Domain()
+}
+
+// SetRealm sets the realm value on the credential. Same as the domain
+func (c *Credentials) SetRealm(s string) {
+	c.SetDomain(s)
 }
 
 // DisplayName returns the credential's display name.

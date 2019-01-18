@@ -85,8 +85,9 @@ func (pac *PACType) Unmarshal(b []byte) (err error) {
 	return nil
 }
 
-// PACInfoMandatoryBuffers processes the mandatory PAC Info Buffers that must be present in the PAC.
-func (pac *PACType) PACInfoMandatoryBuffers(key types.EncryptionKey) error {
+// ProcessPACInfoBuffers processes the PAC Info Buffers.
+// https://msdn.microsoft.com/en-us/library/cc237954.aspx
+func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey, l *log.Logger) error {
 	for _, buf := range pac.Buffers {
 		p := make([]byte, buf.CBBufferSize, buf.CBBufferSize)
 		copy(p, pac.Data[int(buf.Offset):int(buf.Offset)+int(buf.CBBufferSize)])
@@ -102,6 +103,21 @@ func (pac *PACType) PACInfoMandatoryBuffers(key types.EncryptionKey) error {
 				return fmt.Errorf("error processing KerbValidationInfo: %v", err)
 			}
 			pac.KerbValidationInfo = &k
+		case infoTypeCredentials:
+			// Currently PAC parsing is only useful on the service side in gokrb5
+			// The CredentialsInfo are only useful when gokrb5 has implemented RFC4556 and only applied on the client side.
+			// Skipping CredentialsInfo - will be revisited under RFC4556 implementation.
+			continue
+			//if pac.CredentialsInfo != nil {
+			//	//Must ignore subsequent buffers of this type
+			//	continue
+			//}
+			//var k CredentialsInfo
+			//err := k.Unmarshal(p, key) // The encryption key used is the AS reply key only available to the client.
+			//if err != nil {
+			//	return fmt.Errorf("error processing CredentialsInfo: %v", err)
+			//}
+			//pac.CredentialsInfo = &k
 		case infoTypePACServerSignatureData:
 			if pac.ServerChecksum != nil {
 				//Must ignore subsequent buffers of this type
@@ -135,90 +151,6 @@ func (pac *PACType) PACInfoMandatoryBuffers(key types.EncryptionKey) error {
 			err := k.Unmarshal(p)
 			if err != nil {
 				return fmt.Errorf("error processing ClientInfo: %v", err)
-			}
-			pac.ClientInfo = &k
-		default:
-			continue
-		}
-	}
-
-	if ok, err := pac.validate(key); !ok {
-		return err
-	}
-
-	return nil
-}
-
-// ProcessPACInfoBuffers processes the PAC Info Buffers.
-// https://msdn.microsoft.com/en-us/library/cc237954.aspx
-func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey, l *log.Logger) error {
-	for _, buf := range pac.Buffers {
-		p := make([]byte, buf.CBBufferSize, buf.CBBufferSize)
-		copy(p, pac.Data[int(buf.Offset):int(buf.Offset)+int(buf.CBBufferSize)])
-		switch buf.ULType {
-		case infoTypeKerbValidationInfo:
-			if pac.KerbValidationInfo != nil {
-				//Must ignore subsequent buffers of this type
-				continue
-			}
-			var k KerbValidationInfo
-			err := k.Unmarshal(p)
-			if err != nil {
-				l.Printf("error processing KerbValidationInfo: %v", err)
-				continue
-			}
-			pac.KerbValidationInfo = &k
-		case infoTypeCredentials:
-			// Currently PAC parsing is only useful on the service side in gokrb5
-			// The CredentialsInfo are only useful when gokrb5 has implemented RFC4556 and only applied on the client side.
-			// Skipping CredentialsInfo - will be revisited under RFC4556 implementation.
-			continue
-			//if pac.CredentialsInfo != nil {
-			//	//Must ignore subsequent buffers of this type
-			//	continue
-			//}
-			//var k CredentialsInfo
-			//err := k.Unmarshal(p, key) // The encryption key used is the AS reply key only available to the client.
-			//if err != nil {
-			//	return fmt.Errorf("error processing CredentialsInfo: %v", err)
-			//}
-			//pac.CredentialsInfo = &k
-		case infoTypePACServerSignatureData:
-			if pac.ServerChecksum != nil {
-				//Must ignore subsequent buffers of this type
-				continue
-			}
-			var k SignatureData
-			zb, err := k.Unmarshal(p)
-			copy(pac.ZeroSigData[int(buf.Offset):int(buf.Offset)+int(buf.CBBufferSize)], zb)
-			if err != nil {
-				l.Printf("could not process ServerChecksum: %v", err)
-				continue
-			}
-			pac.ServerChecksum = &k
-		case infoTypePACKDCSignatureData:
-			if pac.KDCChecksum != nil {
-				//Must ignore subsequent buffers of this type
-				continue
-			}
-			var k SignatureData
-			zb, err := k.Unmarshal(p)
-			copy(pac.ZeroSigData[int(buf.Offset):int(buf.Offset)+int(buf.CBBufferSize)], zb)
-			if err != nil {
-				l.Printf("could not process KDCChecksum: %v", err)
-				continue
-			}
-			pac.KDCChecksum = &k
-		case infoTypePACClientInfo:
-			if pac.ClientInfo != nil {
-				//Must ignore subsequent buffers of this type
-				continue
-			}
-			var k ClientInfo
-			err := k.Unmarshal(p)
-			if err != nil {
-				l.Printf("could not process ClientInfo: %v", err)
-				continue
 			}
 			pac.ClientInfo = &k
 		case infoTypeS4UDelegationInfo:
@@ -284,14 +216,14 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey, l *log.Logger
 		}
 	}
 
-	if ok, err := pac.validate(key); !ok {
+	if ok, err := pac.verify(key); !ok {
 		return err
 	}
 
 	return nil
 }
 
-func (pac *PACType) validate(key types.EncryptionKey) (bool, error) {
+func (pac *PACType) verify(key types.EncryptionKey) (bool, error) {
 	if pac.KerbValidationInfo == nil {
 		return false, errors.New("PAC Info Buffers does not contain a KerbValidationInfo")
 	}

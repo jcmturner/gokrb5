@@ -245,7 +245,7 @@ To validate the AP_REQ sent by the client on the service side call this method:
 ```go
 import 	"gopkg.in/jcmturner/gokrb5.v6/service"
 s := service.NewSettings(&kt) // kt is a keytab and optional settings can also be provided.
-if ok, creds, err := service.ValidateAPREQ(APReq, s); ok {
+if ok, creds, err := service.VerifyAPREQ(APReq, s); ok {
         // Perform application specific actions
         // creds object has details about the client identity
 }

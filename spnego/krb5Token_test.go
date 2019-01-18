@@ -11,6 +11,7 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v6/credentials"
 	"gopkg.in/jcmturner/gokrb5.v6/gssapi"
 	"gopkg.in/jcmturner/gokrb5.v6/iana/msgtype"
+	"gopkg.in/jcmturner/gokrb5.v6/iana/nametype"
 	"gopkg.in/jcmturner/gokrb5.v6/messages"
 	"gopkg.in/jcmturner/gokrb5.v6/service"
 	"gopkg.in/jcmturner/gokrb5.v6/test/testdata"
@@ -54,7 +55,7 @@ func TestKRB5Token_newAuthenticatorChksum(t *testing.T) {
 func TestKRB5Token_newAuthenticatorWithSubkeyGeneration(t *testing.T) {
 	t.Parallel()
 	creds := credentials.NewCredentials("hftsai", testdata.TEST_REALM)
-	creds.CName.NameString = testdata.TEST_PRINCIPALNAME_NAMESTRING
+	creds.SetCName(types.PrincipalName{NameType: nametype.KRB_NT_PRINCIPAL, NameString: testdata.TEST_PRINCIPALNAME_NAMESTRING})
 	var etypeID int32 = 18
 	keyLen := 32 // etypeID 18 refers to AES256 -> 32 bytes key
 	a, err := krb5TokenAuthenticator(creds, []int{gssapi.ContextFlagInteg, gssapi.ContextFlagConf})
@@ -84,7 +85,7 @@ func TestKRB5Token_newAuthenticatorWithSubkeyGeneration(t *testing.T) {
 func TestKRB5Token_newAuthenticator(t *testing.T) {
 	t.Parallel()
 	creds := credentials.NewCredentials("hftsai", testdata.TEST_REALM)
-	creds.CName.NameString = testdata.TEST_PRINCIPALNAME_NAMESTRING
+	creds.SetCName(types.PrincipalName{NameType: nametype.KRB_NT_PRINCIPAL, NameString: testdata.TEST_PRINCIPALNAME_NAMESTRING})
 	a, err := krb5TokenAuthenticator(creds, []int{gssapi.ContextFlagInteg, gssapi.ContextFlagConf})
 	if err != nil {
 		t.Fatalf("Error creating authenticator: %v", err)
@@ -104,7 +105,7 @@ func TestKRB5Token_newAuthenticator(t *testing.T) {
 func TestNewAPREQKRB5Token_and_Marshal(t *testing.T) {
 	t.Parallel()
 	creds := credentials.NewCredentials("hftsai", testdata.TEST_REALM)
-	creds.CName.NameString = testdata.TEST_PRINCIPALNAME_NAMESTRING
+	creds.SetCName(types.PrincipalName{NameType: nametype.KRB_NT_PRINCIPAL, NameString: testdata.TEST_PRINCIPALNAME_NAMESTRING})
 	cl := client.Client{
 		Credentials: &creds,
 	}
