@@ -414,7 +414,8 @@ func TestNewClientFromCCache(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error decoding test data")
 	}
-	cc, err := credentials.ParseCCache(b)
+	cc := new(credentials.CCache)
+	err = cc.Unmarshal(b)
 	if err != nil {
 		t.Fatal("error getting test CCache")
 	}
@@ -541,7 +542,7 @@ func getServiceTkt() error {
 	return nil
 }
 
-func loadCCache() (credentials.CCache, error) {
+func loadCCache() (*credentials.CCache, error) {
 	usr, _ := user.Current()
 	cpath := "/tmp/krb5cc_" + usr.Uid
 	return credentials.LoadCCache(cpath)
