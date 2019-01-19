@@ -15,25 +15,25 @@ func (cl *Client) TGSExchange(spn types.PrincipalName, kdcRealm string, tgt mess
 	if err != nil {
 		return tgsReq, tgsRep, krberror.Errorf(err, krberror.KRBMsgError, "TGS Exchange Error: failed to generate a new TGS_REQ")
 	}
-	tgsRep, err = cl.tgsExchange(tgsReq, kdcRealm, sessionKey)
-	if err != nil {
-		return
-	}
-	if tgsRep.Ticket.SName.NameString[0] == "krbtgt" && !tgsRep.Ticket.SName.Equal(spn) {
-		if referral > 5 {
-			return tgsReq, tgsRep, krberror.Errorf(err, krberror.KRBMsgError, "maximum number of referrals exceeded")
-		}
-		// Server referral https://tools.ietf.org/html/rfc6806.html#section-8
-		// The TGS Rep contains a TGT for another domain as the service resides in that domain.
-		cl.addSession(tgsRep.Ticket, tgsRep.DecryptedEncPart)
-		realm := tgsRep.Ticket.SName.NameString[len(tgsRep.Ticket.SName.NameString)-1]
-		referral++
-		return cl.TGSExchange(spn, realm, tgsRep.Ticket, tgsRep.DecryptedEncPart.Key, false, referral)
-	}
-	return
+	//tgsRep, err = cl.tgsExchange(tgsReq, kdcRealm, sessionKey)
+	//if err != nil {
+	//	return
+	//}
+	//if tgsRep.Ticket.SName.NameString[0] == "krbtgt" && !tgsRep.Ticket.SName.Equal(spn) {
+	//	if referral > 5 {
+	//		return tgsReq, tgsRep, krberror.Errorf(err, krberror.KRBMsgError, "maximum number of referrals exceeded")
+	//	}
+	//	// Server referral https://tools.ietf.org/html/rfc6806.html#section-8
+	//	// The TGS Rep contains a TGT for another domain as the service resides in that domain.
+	//	cl.addSession(tgsRep.Ticket, tgsRep.DecryptedEncPart)
+	//	realm := tgsRep.Ticket.SName.NameString[len(tgsRep.Ticket.SName.NameString)-1]
+	//	referral++
+	//	return cl.TGSExchange(spn, realm, tgsRep.Ticket, tgsRep.DecryptedEncPart.Key, false, referral)
+	//}
+	return cl.TGSREQ(tgsReq, kdcRealm, tgsRep.Ticket, tgsRep.DecryptedEncPart.Key, referral)
 }
 
-// TGSREQ exchanges the provides TGS_REQ with the KDC to retrieve a TGS_REP
+// TGSREQ exchanges the provided TGS_REQ with the KDC to retrieve a TGS_REP
 func (cl *Client) TGSREQ(tgsReq messages.TGSReq, kdcRealm string, tgt messages.Ticket, sessionKey types.EncryptionKey, referral int) (messages.TGSReq, messages.TGSRep, error) {
 	tgsRep, err := cl.tgsExchange(tgsReq, kdcRealm, sessionKey)
 	if err != nil {
