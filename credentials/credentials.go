@@ -76,8 +76,8 @@ func NewFromPrincipalName(cname types.PrincipalName, realm string) *Credentials 
 		uid = "00unique-sess-ions-uuid-unavailable0"
 	}
 	return &Credentials{
-		username:        cname.GetPrincipalNameString(),
-		displayName:     cname.GetPrincipalNameString(),
+		username:        cname.PrincipalNameString(),
+		displayName:     cname.PrincipalNameString(),
 		realm:           realm,
 		cname:           cname,
 		keytab:          keytab.New(),

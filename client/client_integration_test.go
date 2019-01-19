@@ -268,7 +268,7 @@ func TestClient_GetServiceTicket(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error getting service ticket: %v\n", err)
 	}
-	assert.Equal(t, spn, tkt.SName.GetPrincipalNameString())
+	assert.Equal(t, spn, tkt.SName.PrincipalNameString())
 	assert.Equal(t, int32(18), key.KeyType)
 
 	//Check cache use - should get the same values back again
@@ -325,7 +325,7 @@ func TestClient_GetServiceTicket_OlderKDC(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error getting service ticket: %v\n", err)
 	}
-	assert.Equal(t, spn, tkt.SName.GetPrincipalNameString())
+	assert.Equal(t, spn, tkt.SName.PrincipalNameString())
 	assert.Equal(t, int32(18), key.KeyType)
 }
 
@@ -461,7 +461,7 @@ func TestClient_GetServiceTicket_Trusted_Resource_Domain(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error getting service ticket: %v\n", err)
 	}
-	assert.Equal(t, spn, tkt.SName.GetPrincipalNameString())
+	assert.Equal(t, spn, tkt.SName.PrincipalNameString())
 	assert.Equal(t, etypeID.ETypesByName["aes256-cts-hmac-sha1-96"], key.KeyType)
 
 	b, _ = hex.DecodeString(testdata.SYSHTTP_RESDOM_KEYTAB)
@@ -560,7 +560,7 @@ func TestGetServiceTicketFromCCacheTGT(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error getting service ticket: %v\n", err)
 	}
-	assert.Equal(t, spn, tkt.SName.GetPrincipalNameString())
+	assert.Equal(t, spn, tkt.SName.PrincipalNameString())
 	assert.Equal(t, int32(18), key.KeyType)
 
 	//Check cache use - should get the same values back again

@@ -44,8 +44,8 @@ func (pn PrincipalName) Equal(n PrincipalName) bool {
 	return true
 }
 
-// GetPrincipalNameString returns the PrincipalName in string form.
-func (pn PrincipalName) GetPrincipalNameString() string {
+// PrincipalNameString() returns the PrincipalName in string form.
+func (pn PrincipalName) PrincipalNameString() string {
 	return strings.Join(pn.NameString, "/")
 }
 

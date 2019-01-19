@@ -50,7 +50,7 @@ func TestClient_GetServiceTicket_AD(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error getting service ticket: %v\n", err)
 	}
-	assert.Equal(t, spn, tkt.SName.GetPrincipalNameString())
+	assert.Equal(t, spn, tkt.SName.PrincipalNameString())
 	assert.Equal(t, int32(18), key.KeyType)
 
 	b, _ = hex.DecodeString(testdata.SYSHTTP_KEYTAB)
@@ -112,7 +112,7 @@ func TestClient_GetServiceTicket_AD_TRUST_USER_DOMAIN(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error getting service ticket: %v\n", err)
 	}
-	assert.Equal(t, spn, tkt.SName.GetPrincipalNameString())
+	assert.Equal(t, spn, tkt.SName.PrincipalNameString())
 	assert.Equal(t, etypeID.ETypesByName["rc4-hmac"], key.KeyType)
 
 	b, _ = hex.DecodeString(testdata.SYSHTTP_RESGOKRB5_AD_KEYTAB)
@@ -159,7 +159,7 @@ func TestClient_GetServiceTicket_AD_USER_DOMAIN(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error getting service ticket: %v\n", err)
 	}
-	assert.Equal(t, spn, tkt.SName.GetPrincipalNameString())
+	assert.Equal(t, spn, tkt.SName.PrincipalNameString())
 	//assert.Equal(t, etypeID.ETypesByName["rc4-hmac"], key.KeyType)
 
 	b, _ = hex.DecodeString(testdata.TESTUSER2_USERKRB5_AD_KEYTAB)

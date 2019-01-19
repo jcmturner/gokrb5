@@ -103,7 +103,7 @@ func TestClient_AutoRenew_Goroutine(t *testing.T) {
 		b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
 		skt, _ := keytab.Parse(b)
 		tkt.DecryptEncPart(skt, nil)
-		assert.Equal(t, spn, tkt.SName.GetPrincipalNameString())
+		assert.Equal(t, spn, tkt.SName.PrincipalNameString())
 		assert.Equal(t, int32(18), key.KeyType)
 		if runtime.NumGoroutine() > n {
 			t.Fatalf("number of goroutines is increasing: should not be more than %d, is %d", n, runtime.NumGoroutine())
