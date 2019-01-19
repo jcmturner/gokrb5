@@ -116,7 +116,7 @@ func Load(ktPath string) (kt *Keytab, err error) {
 }
 
 // Marshal keytab into byte slice
-func (kt Keytab) Marshal() ([]byte, error) {
+func (kt *Keytab) Marshal() ([]byte, error) {
 	b := []byte{keytabFirstByte, kt.version}
 	for _, e := range kt.Entries {
 		eb, err := e.marshal(int(kt.version))
@@ -130,7 +130,7 @@ func (kt Keytab) Marshal() ([]byte, error) {
 
 // Write the keytab bytes to io.Writer.
 // Returns the number of bytes written
-func (kt Keytab) Write(w io.Writer) (int, error) {
+func (kt *Keytab) Write(w io.Writer) (int, error) {
 	b, err := kt.Marshal()
 	if err != nil {
 		return 0, fmt.Errorf("error marshaling keytab: %v", err)
