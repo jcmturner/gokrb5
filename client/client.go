@@ -30,7 +30,7 @@ type Client struct {
 // NewClientWithPassword creates a new client from a password credential.
 // Set the realm to empty string to use the default realm from config.
 func NewClientWithPassword(username, realm, password string, krb5conf *config.Config, settings ...func(*Settings)) Client {
-	creds := credentials.NewCredentials(username, realm)
+	creds := credentials.New(username, realm)
 	return Client{
 		Credentials: creds.WithPassword(password),
 		Config:      krb5conf,
@@ -43,8 +43,8 @@ func NewClientWithPassword(username, realm, password string, krb5conf *config.Co
 }
 
 // NewClientWithKeytab creates a new client from a keytab credential.
-func NewClientWithKeytab(username, realm string, kt keytab.Keytab, krb5conf *config.Config, settings ...func(*Settings)) Client {
-	creds := credentials.NewCredentials(username, realm)
+func NewClientWithKeytab(username, realm string, kt *keytab.Keytab, krb5conf *config.Config, settings ...func(*Settings)) Client {
+	creds := credentials.New(username, realm)
 	return Client{
 		Credentials: creds.WithKeytab(kt),
 		Config:      krb5conf,
@@ -115,7 +115,7 @@ func NewClientFromCCache(c credentials.CCache, krb5conf *config.Config, settings
 // the key for pre-authentication from the client's password. If a KRBError is not available, pass nil to this argument.
 func (cl *Client) Key(etype etype.EType, krberr *messages.KRBError) (types.EncryptionKey, error) {
 	if cl.Credentials.HasKeytab() && etype != nil {
-		return cl.Credentials.Keytab.GetEncryptionKey(cl.Credentials.CName(), cl.Credentials.Domain(), 0, etype.GetETypeID())
+		return cl.Credentials.Keytab().GetEncryptionKey(cl.Credentials.CName(), cl.Credentials.Domain(), 0, etype.GetETypeID())
 	} else if cl.Credentials.HasPassword() {
 		if krberr.ErrorCode == errorcode.KDC_ERR_PREAUTH_REQUIRED {
 			var pas types.PADataSequence
@@ -123,10 +123,10 @@ func (cl *Client) Key(etype etype.EType, krberr *messages.KRBError) (types.Encry
 			if err != nil {
 				return types.EncryptionKey{}, fmt.Errorf("could not get PAData from KRBError to generate key from password: %v", err)
 			}
-			key, _, err := crypto.GetKeyFromPassword(cl.Credentials.Password, krberr.CName, krberr.CRealm, etype.GetETypeID(), pas)
+			key, _, err := crypto.GetKeyFromPassword(cl.Credentials.Password(), krberr.CName, krberr.CRealm, etype.GetETypeID(), pas)
 			return key, err
 		}
-		key, _, err := crypto.GetKeyFromPassword(cl.Credentials.Password, cl.Credentials.CName(), cl.Credentials.Domain(), etype.GetETypeID(), types.PADataSequence{})
+		key, _, err := crypto.GetKeyFromPassword(cl.Credentials.Password(), cl.Credentials.CName(), cl.Credentials.Domain(), etype.GetETypeID(), types.PADataSequence{})
 		return key, err
 	}
 	return types.EncryptionKey{}, errors.New("credential has neither keytab or password to generate key")
@@ -225,8 +225,8 @@ func (cl *Client) realmLogin(realm string) error {
 
 // Destroy stops the auto-renewal of all sessions and removes the sessions and cache entries from the client.
 func (cl *Client) Destroy() {
-	creds := credentials.NewCredentials("", "")
+	creds := credentials.New("", "")
 	cl.sessions.destroy()
 	cl.cache.clear()
-	cl.Credentials = &creds
+	cl.Credentials = creds
 }

@@ -29,15 +29,15 @@ func VerifyAPREQ(APReq messages.APReq, s *Settings) (bool, *credentials.Credenti
 			messages.NewKRBError(APReq.Ticket.SName, APReq.Ticket.Realm, errorcode.KRB_AP_ERR_REPEAT, "replay detected")
 	}
 
-	c := credentials.NewCredentialsFromPrincipal(APReq.Authenticator.CName, APReq.Authenticator.CRealm)
-	creds = &c
+	c := credentials.NewFromPrincipalName(APReq.Authenticator.CName, APReq.Authenticator.CRealm)
+	creds = c
 	creds.SetAuthTime(time.Now().UTC())
 	creds.SetAuthenticated(true)
 	creds.SetValidUntil(APReq.Ticket.DecryptedEncPart.EndTime)
 
 	//PAC decoding
 	if !s.disablePACDecoding {
-		isPAC, pac, err := APReq.Ticket.GetPACType(*s.Keytab, s.KeytabPrincipal(), s.Logger())
+		isPAC, pac, err := APReq.Ticket.GetPACType(s.Keytab, s.KeytabPrincipal(), s.Logger())
 		if isPAC && err != nil {
 			return false, creds, err
 		}

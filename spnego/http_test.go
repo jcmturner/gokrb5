@@ -258,7 +258,7 @@ func httpServer() *httptest.Server {
 	b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	th := http.HandlerFunc(testAppHandler)
-	s := httptest.NewServer(SPNEGOKRB5Authenticate(th, &kt, service.Logger(l)))
+	s := httptest.NewServer(SPNEGOKRB5Authenticate(th, kt, service.Logger(l)))
 	return s
 }
 
