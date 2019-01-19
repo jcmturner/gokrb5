@@ -31,7 +31,7 @@ type CCache struct {
 	Version          uint8
 	Header           header
 	DefaultPrincipal principal
-	Credentials      []credential
+	Credentials      []*Credential
 	Path             string
 }
 
@@ -52,7 +52,7 @@ type principal struct {
 	PrincipalName types.PrincipalName
 }
 
-type credential struct {
+type Credential struct {
 	Client       principal
 	Server       principal
 	Key          types.EncryptionKey
@@ -163,7 +163,8 @@ func parsePrincipal(b []byte, p *int, c *CCache, e *binary.ByteOrder) (princ pri
 	return princ
 }
 
-func parseCredential(b []byte, p *int, c *CCache, e *binary.ByteOrder) (cred credential, err error) {
+func parseCredential(b []byte, p *int, c *CCache, e *binary.ByteOrder) (cred *Credential, err error) {
+	cred = new(Credential)
 	cred.Client = parsePrincipal(b, p, c, e)
 	cred.Server = parsePrincipal(b, p, c, e)
 	key := types.EncryptionKey{}
@@ -230,8 +231,8 @@ func (c *CCache) Contains(p types.PrincipalName) bool {
 }
 
 // GetEntry returns a specific credential for the PrincipalName provided.
-func (c *CCache) GetEntry(p types.PrincipalName) (credential, bool) {
-	var cred credential
+func (c *CCache) GetEntry(p types.PrincipalName) (*Credential, bool) {
+	cred := new(Credential)
 	var found bool
 	for i := range c.Credentials {
 		if c.Credentials[i].Server.PrincipalName.Equal(p) {
@@ -247,8 +248,8 @@ func (c *CCache) GetEntry(p types.PrincipalName) (credential, bool) {
 }
 
 // GetEntries filters out configuration entries an returns a slice of credentials.
-func (c *CCache) GetEntries() []credential {
-	var creds []credential
+func (c *CCache) GetEntries() []*Credential {
+	creds := make([]*Credential, 0)
 	for _, cred := range c.Credentials {
 		// Filter out configuration entries
 		if strings.HasPrefix(cred.Server.Realm, "X-CACHECONF") {
