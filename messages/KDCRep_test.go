@@ -250,7 +250,8 @@ func TestUnmarshalASRepDecodeAndDecrypt(t *testing.T) {
 	assert.Equal(t, 0, asRep.EncPart.KVNO, "Encrypted part KVNO not as expected")
 	//t.Log("Finished testing unecrypted parts of AS REP")
 	ktb, _ := hex.DecodeString(testuser1EType18Keytab)
-	kt, err := keytab.Parse(ktb)
+	kt := keytab.New()
+	err = kt.Unmarshal(ktb)
 	if err != nil {
 		t.Fatalf("keytab parse error: %v\n", err)
 	}

@@ -25,13 +25,15 @@ func main() {
 	defer s.Close()
 
 	b, _ := hex.DecodeString(testdata.TESTUSER1_USERKRB5_AD_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	cl := client.NewClientWithKeytab("testuser1", "USER.GOKRB5", kt, c, client.DisablePAFXFAST(true))
 	httpRequest(s.URL, cl)
 
 	b, _ = hex.DecodeString(testdata.TESTUSER2_USERKRB5_AD_KEYTAB)
-	kt, _ = keytab.Parse(b)
+	kt = keytab.New()
+	kt.Unmarshal(b)
 	c, _ = config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	cl = client.NewClientWithKeytab("testuser2", "USER.GOKRB5", kt, c, client.DisablePAFXFAST(true))
 	httpRequest(s.URL, cl)
@@ -63,7 +65,8 @@ func httpRequest(url string, cl *client.Client) {
 func httpServer() *httptest.Server {
 	l := log.New(os.Stderr, "GOKRB5 Service Tests: ", log.Ldate|log.Ltime|log.Lshortfile)
 	b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	th := http.HandlerFunc(testAppHandler)
 	s := httptest.NewServer(spnego.SPNEGOKRB5Authenticate(th, kt, service.Logger(l)))
 	return s

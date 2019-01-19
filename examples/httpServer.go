@@ -27,7 +27,8 @@ func main() {
 
 	// Load the service's keytab
 	b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 
 	// Create the application's specific handler
 	th := http.HandlerFunc(testAppHandler)

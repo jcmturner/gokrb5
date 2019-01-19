@@ -22,7 +22,8 @@ func TestMultiThreadedClientSession(t *testing.T) {
 	test.Integration(t)
 
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
@@ -75,7 +76,8 @@ func TestClient_AutoRenew_Goroutine(t *testing.T) {
 		addr = testdata.TEST_KDC_ADDR
 	}
 	b, _ := hex.DecodeString(testdata.TESTUSER2_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC_SHORTTICKETS}
 	c.LibDefaults.PreferredPreauthTypes = []int{int(etypeID.DES3_CBC_SHA1_KD)} // a preauth etype the KDC does not support. Test this does not cause renewal to fail.
@@ -101,7 +103,8 @@ func TestClient_AutoRenew_Goroutine(t *testing.T) {
 			t.Fatalf("error getting service ticket: %v\n", err)
 		}
 		b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
-		skt, _ := keytab.Parse(b)
+		skt := keytab.New()
+		skt.Unmarshal(b)
 		tkt.DecryptEncPart(skt, nil)
 		assert.Equal(t, spn, tkt.SName.PrincipalNameString())
 		assert.Equal(t, int32(18), key.KeyType)

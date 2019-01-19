@@ -26,7 +26,8 @@ func TestVerifyAPREQ(t *testing.T) {
 		NameString: []string{"HTTP", "host.test.gokrb5"},
 	}
 	b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	st := time.Now().UTC()
 	tkt, sessionKey, err := messages.NewTicket(cl.Credentials.CName(), cl.Credentials.Domain(),
 		sname, "TEST.GOKRB5",
@@ -67,7 +68,8 @@ func TestVerifyAPREQ_KRB_AP_ERR_BADMATCH(t *testing.T) {
 		NameString: []string{"HTTP", "host.test.gokrb5"},
 	}
 	b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	st := time.Now().UTC()
 	tkt, sessionKey, err := messages.NewTicket(cl.Credentials.CName(), cl.Credentials.Domain(),
 		sname, "TEST.GOKRB5",
@@ -117,7 +119,8 @@ func TestVerifyAPREQ_LargeClockSkew(t *testing.T) {
 		NameString: []string{"HTTP", "host.test.gokrb5"},
 	}
 	b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	st := time.Now().UTC()
 	tkt, sessionKey, err := messages.NewTicket(cl.Credentials.CName(), cl.Credentials.Domain(),
 		sname, "TEST.GOKRB5",
@@ -165,7 +168,8 @@ func TestVerifyAPREQ_Replay(t *testing.T) {
 		NameString: []string{"HTTP", "host.test.gokrb5"},
 	}
 	b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	st := time.Now().UTC()
 	tkt, sessionKey, err := messages.NewTicket(cl.Credentials.CName(), cl.Credentials.Domain(),
 		sname, "TEST.GOKRB5",
@@ -213,7 +217,8 @@ func TestVerifyAPREQ_FutureTicket(t *testing.T) {
 		NameString: []string{"HTTP", "host.test.gokrb5"},
 	}
 	b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	st := time.Now().UTC()
 	tkt, sessionKey, err := messages.NewTicket(cl.Credentials.CName(), cl.Credentials.Domain(),
 		sname, "TEST.GOKRB5",
@@ -260,7 +265,8 @@ func TestVerifyAPREQ_InvalidTicket(t *testing.T) {
 		NameString: []string{"HTTP", "host.test.gokrb5"},
 	}
 	b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	st := time.Now().UTC()
 	f := types.NewKrbFlags()
 	types.SetFlag(&f, flags.Invalid)
@@ -308,7 +314,8 @@ func TestVerifyAPREQ_ExpiredTicket(t *testing.T) {
 		NameString: []string{"HTTP", "host.test.gokrb5"},
 	}
 	b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	st := time.Now().UTC()
 	tkt, sessionKey, err := messages.NewTicket(cl.Credentials.CName(), cl.Credentials.Domain(),
 		sname, "TEST.GOKRB5",
@@ -359,7 +366,8 @@ func newTestAuthenticator(creds credentials.Credentials) types.Authenticator {
 
 func getClient() *client.Client {
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 	return cl
