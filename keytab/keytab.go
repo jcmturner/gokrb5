@@ -107,11 +107,12 @@ func newPrincipal() principal {
 
 // Load a Keytab file into a Keytab type.
 func Load(ktPath string) (kt *Keytab, err error) {
-	k, err := ioutil.ReadFile(ktPath)
+	b, err := ioutil.ReadFile(ktPath)
 	if err != nil {
 		return
 	}
-	return Parse(k)
+	err = kt.Unmarshal(b)
+	return
 }
 
 // Marshal keytab into byte slice
@@ -137,20 +138,17 @@ func (kt Keytab) Write(w io.Writer) (int, error) {
 	return w.Write(b)
 }
 
-// Parse byte slice of Keytab data into Keytab type.
-func Parse(b []byte) (kt *Keytab, err error) {
+// Unmarshal byte slice of Keytab data into Keytab type.
+func (kt *Keytab) Unmarshal(b []byte) error {
 	//The first byte of the file always has the value 5
 	if b[0] != keytabFirstByte {
-		err = errors.New("invalid keytab data. First byte does not equal 5")
-		return
+		return errors.New("invalid keytab data. First byte does not equal 5")
 	}
 	//Get keytab version
 	//The 2nd byte contains the version number (1 or 2)
-	kt = new(Keytab)
 	kt.version = b[1]
 	if kt.version != 1 && kt.version != 2 {
-		err = errors.New("invalid keytab data. Keytab version is neither 1 nor 2")
-		return
+		return errors.New("invalid keytab data. Keytab version is neither 1 nor 2")
 	}
 	//Version 1 of the file format uses native byte order for integer representations. Version 2 always uses big-endian byte order
 	var endian binary.ByteOrder
@@ -206,7 +204,7 @@ func Parse(b []byte) (kt *Keytab, err error) {
 		// Read the size of the next entry
 		l = readInt32(b, &n, &endian)
 	}
-	return
+	return nil
 }
 
 func (e entry) marshal(v int) ([]byte, error) {

@@ -9,10 +9,11 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v6/test/testdata"
 )
 
-func TestParse(t *testing.T) {
+func TestUnmarshal(t *testing.T) {
 	t.Parallel()
-	dat, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
-	kt, err := Parse(dat)
+	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	kt := New()
+	err := kt.Unmarshal(b)
 	if err != nil {
 		t.Fatalf("Error parsing keytab data: %v\n", err)
 	}
@@ -30,17 +31,18 @@ func TestParse(t *testing.T) {
 
 func TestMarshal(t *testing.T) {
 	t.Parallel()
-	dat, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
-	kt, err := Parse(dat)
+	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	kt := New()
+	err := kt.Unmarshal(b)
 	if err != nil {
 		t.Fatalf("Error parsing keytab data: %v\n", err)
 	}
-	b, err := kt.Marshal()
+	mb, err := kt.Marshal()
 	if err != nil {
 		t.Fatalf("Error marshaling: %v", err)
 	}
-	assert.Equal(t, dat, b, "Marshaled bytes not the same as input bytes")
-	_, err = Parse(b)
+	assert.Equal(t, b, mb, "Marshaled bytes not the same as input bytes")
+	err = kt.Unmarshal(mb)
 	if err != nil {
 		t.Fatalf("Error parsing marshaled bytes: %v", err)
 	}

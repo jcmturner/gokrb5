@@ -35,7 +35,8 @@ func TestClient_SuccessfulLogin_Keytab(t *testing.T) {
 		addr = testdata.TEST_KDC_ADDR
 	}
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	var tests = []string{
 		testdata.TEST_KDC,
@@ -81,7 +82,8 @@ func TestClient_SuccessfulLogin_TCPOnly(t *testing.T) {
 	test.Integration(t)
 
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
@@ -101,7 +103,8 @@ func TestClient_ASExchange_TGSExchange_EncTypes_Keytab(t *testing.T) {
 	test.Integration(t)
 
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
@@ -177,7 +180,8 @@ func TestClient_FailedLogin(t *testing.T) {
 	test.Integration(t)
 
 	b, _ := hex.DecodeString(testdata.TESTUSER1_WRONGPASSWD)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
@@ -196,7 +200,8 @@ func TestClient_SuccessfulLogin_UserRequiringPreAuth(t *testing.T) {
 	test.Integration(t)
 
 	b, _ := hex.DecodeString(testdata.TESTUSER2_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
@@ -215,7 +220,8 @@ func TestClient_SuccessfulLogin_UserRequiringPreAuth_TCPOnly(t *testing.T) {
 	test.Integration(t)
 
 	b, _ := hex.DecodeString(testdata.TESTUSER2_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
@@ -235,7 +241,8 @@ func TestClient_NetworkTimeout(t *testing.T) {
 	test.Integration(t)
 
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	c.Realms[0].KDC = []string{testdata.TEST_KDC_BADADDR + ":88"}
 	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
@@ -250,7 +257,8 @@ func TestClient_GetServiceTicket(t *testing.T) {
 	test.Integration(t)
 
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
@@ -284,7 +292,8 @@ func TestClient_GetServiceTicket_InvalidSPN(t *testing.T) {
 	test.Integration(t)
 
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
@@ -307,7 +316,8 @@ func TestClient_GetServiceTicket_OlderKDC(t *testing.T) {
 	test.Integration(t)
 
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
@@ -333,7 +343,8 @@ func TestMultiThreadedClientUse(t *testing.T) {
 	test.Integration(t)
 
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
@@ -428,7 +439,8 @@ func TestClient_GetServiceTicket_Trusted_Resource_Domain(t *testing.T) {
 	test.Integration(t)
 
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 
 	addr := os.Getenv("TEST_KDC_ADDR")
@@ -465,7 +477,8 @@ func TestClient_GetServiceTicket_Trusted_Resource_Domain(t *testing.T) {
 	assert.Equal(t, etypeID.ETypesByName["aes256-cts-hmac-sha1-96"], key.KeyType)
 
 	b, _ = hex.DecodeString(testdata.SYSHTTP_RESDOM_KEYTAB)
-	skt, _ := keytab.Parse(b)
+	skt := keytab.New()
+	skt.Unmarshal(b)
 	err = tkt.DecryptEncPart(skt, nil)
 	if err != nil {
 		t.Errorf("error decrypting ticket with service keytab: %v", err)
@@ -627,7 +640,8 @@ func TestClient_ChangePasswd(t *testing.T) {
 	test.Integration(t)
 
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
@@ -659,7 +673,8 @@ func TestClient_Destroy(t *testing.T) {
 		addr = testdata.TEST_KDC_ADDR
 	}
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC_SHORTTICKETS}
 	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)

@@ -21,7 +21,8 @@ func TestClient_SuccessfulLogin_AD(t *testing.T) {
 	test.AD(t)
 
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	c.Realms[0].KDC = []string{testdata.TEST_KDC_AD}
 	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
@@ -36,7 +37,8 @@ func TestClient_GetServiceTicket_AD(t *testing.T) {
 	test.AD(t)
 
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	c.Realms[0].KDC = []string{testdata.TEST_KDC_AD}
 	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
@@ -54,7 +56,8 @@ func TestClient_GetServiceTicket_AD(t *testing.T) {
 	assert.Equal(t, int32(18), key.KeyType)
 
 	b, _ = hex.DecodeString(testdata.SYSHTTP_KEYTAB)
-	skt, _ := keytab.Parse(b)
+	skt := keytab.New()
+	skt.Unmarshal(b)
 	sname := types.PrincipalName{NameType: nametype.KRB_NT_PRINCIPAL, NameString: []string{"sysHTTP"}}
 	err = tkt.DecryptEncPart(skt, &sname)
 	if err != nil {
@@ -75,7 +78,8 @@ func TestClient_SuccessfulLogin_AD_TRUST_USER_DOMAIN(t *testing.T) {
 	test.AD(t)
 
 	b, _ := hex.DecodeString(testdata.TESTUSER1_USERKRB5_AD_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	c.Realms[0].KDC = []string{testdata.TEST_KDC_AD_TRUST_USER_DOMAIN}
 	c.LibDefaults.DefaultRealm = "USER.GOKRB5"
@@ -91,7 +95,8 @@ func TestClient_GetServiceTicket_AD_TRUST_USER_DOMAIN(t *testing.T) {
 	test.AD(t)
 
 	b, _ := hex.DecodeString(testdata.TESTUSER1_USERKRB5_AD_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	c.Realms[0].KDC = []string{testdata.TEST_KDC_AD_TRUST_USER_DOMAIN}
 	c.LibDefaults.DefaultRealm = "USER.GOKRB5"
@@ -116,7 +121,8 @@ func TestClient_GetServiceTicket_AD_TRUST_USER_DOMAIN(t *testing.T) {
 	assert.Equal(t, etypeID.ETypesByName["rc4-hmac"], key.KeyType)
 
 	b, _ = hex.DecodeString(testdata.SYSHTTP_RESGOKRB5_AD_KEYTAB)
-	skt, _ := keytab.Parse(b)
+	skt := keytab.New()
+	skt.Unmarshal(b)
 	sname := types.PrincipalName{NameType: nametype.KRB_NT_PRINCIPAL, NameString: []string{"sysHTTP"}}
 	err = tkt.DecryptEncPart(skt, &sname)
 	if err != nil {
@@ -138,7 +144,8 @@ func TestClient_GetServiceTicket_AD_USER_DOMAIN(t *testing.T) {
 	test.AD(t)
 
 	b, _ := hex.DecodeString(testdata.TESTUSER1_USERKRB5_AD_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	c.Realms[0].KDC = []string{testdata.TEST_KDC_AD_TRUST_USER_DOMAIN}
 	c.LibDefaults.DefaultRealm = "USER.GOKRB5"
@@ -163,7 +170,8 @@ func TestClient_GetServiceTicket_AD_USER_DOMAIN(t *testing.T) {
 	//assert.Equal(t, etypeID.ETypesByName["rc4-hmac"], key.KeyType)
 
 	b, _ = hex.DecodeString(testdata.TESTUSER2_USERKRB5_AD_KEYTAB)
-	skt, _ := keytab.Parse(b)
+	skt := keytab.New()
+	skt.Unmarshal(b)
 	sname := types.PrincipalName{NameType: nametype.KRB_NT_PRINCIPAL, NameString: []string{"testuser2"}}
 	err = tkt.DecryptEncPart(skt, &sname)
 	if err != nil {

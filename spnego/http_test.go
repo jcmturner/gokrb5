@@ -29,7 +29,8 @@ func TestClient_SetSPNEGOHeader(t *testing.T) {
 		t.Skip("Skipping integration test")
 	}
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
@@ -256,7 +257,8 @@ func httpGet(r *http.Request, wg *sync.WaitGroup) {
 func httpServer() *httptest.Server {
 	l := log.New(os.Stderr, "GOKRB5 Service Tests: ", log.Ldate|log.Ltime|log.Lshortfile)
 	b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	th := http.HandlerFunc(testAppHandler)
 	s := httptest.NewServer(SPNEGOKRB5Authenticate(th, kt, service.Logger(l)))
 	return s
@@ -294,7 +296,8 @@ func testAppHandler(w http.ResponseWriter, r *http.Request) {
 
 func getClient() *client.Client {
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	c.LibDefaults.NoAddresses = true
 	addr := os.Getenv("TEST_KDC_ADDR")

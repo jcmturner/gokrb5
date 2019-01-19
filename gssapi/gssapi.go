@@ -56,13 +56,13 @@ type ContextToken interface {
 // Mechanism is the GSS-API interface for authentication mechanisms.
 type Mechanism interface {
 	OID() asn1.ObjectIdentifier
-	AcquireCred() error                                               // Client side login (AS exhange for KRB5)
-	InitSecContext() (ContextToken, error)                            //TGSExchnage builds AP_REQ to go into ContextToken to send to service - Client Side
-	AcceptSecContext(ct ContextToken) (bool, context.Context, Status) //verifies the token server side
-	MIC() MICToken                                                    //  apply integrity check, receive as token separate from message
-	VerifyMIC(mt MICToken)                                            //validate integrity check token along with message
-	Wrap(msg []byte) WrapToken                                        //  sign, optionally encrypt, encapsulate
-	Unwrap(wt WrapToken) []byte                                       //decapsulate, decrypt if needed, validate integrity check
+	AcquireCred() error                                               // client side login (eg. AS exchange for KRB5)
+	InitSecContext() (ContextToken, error)                            // client side initialise with service (eg TGS exchange builds AP_REQ to go into ContextToken to send to service)
+	AcceptSecContext(ct ContextToken) (bool, context.Context, Status) // service verifies the token server side to establish a context
+	MIC() MICToken                                                    // apply integrity check, receive as token separate from message
+	VerifyMIC(mt MICToken)                                            // validate integrity check token along with message
+	Wrap(msg []byte) WrapToken                                        // sign, optionally encrypt, encapsulate
+	Unwrap(wt WrapToken) []byte                                       // decapsulate, decrypt if needed, validate integrity check
 }
 
 // OIDName is the type for defined GSS-API OIDs.

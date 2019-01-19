@@ -45,7 +45,8 @@ func main() {
 	//defer profile.Start(profile.TraceProfile).Stop()
 	// Load the keytab
 	kb, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
-	kt, err := keytab.Parse(kb)
+	kt := keytab.New()
+	err := kt.Unmarshal(kb)
 	if err != nil {
 		panic(err)
 	}

@@ -212,7 +212,7 @@ func (wt *WrapToken) Unmarshal(b []byte, expectFromAcceptor bool) error {
 // Other flags are set to 0, and the RRC and sequence number are initialized to 0.
 // Note that in certain circumstances you may need to provide a sequence number that has been defined earlier.
 // This is currently not supported.
-func NewInitiatorToken(payload []byte, key types.EncryptionKey) (*WrapToken, error) {
+func NewInitiatorWrapToken(payload []byte, key types.EncryptionKey) (*WrapToken, error) {
 	encType, err := crypto.GetEtype(key.KeyType)
 	if err != nil {
 		return nil, err
