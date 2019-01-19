@@ -39,7 +39,7 @@ func main() {
 	httpRequest(s.URL, cl)
 }
 
-func httpRequest(url string, cl client.Client) {
+func httpRequest(url string, cl *client.Client) {
 	l := log.New(os.Stderr, "GOKRB5 Client: ", log.Ldate|log.Ltime|log.Lshortfile)
 
 	err := cl.Login()
@@ -47,7 +47,7 @@ func httpRequest(url string, cl client.Client) {
 		l.Printf("Error on AS_REQ: %v\n", err)
 	}
 	r, _ := http.NewRequest("GET", url, nil)
-	err = spnego.SetSPNEGOHeader(&cl, r, "HTTP/host.test.gokrb5")
+	err = spnego.SetSPNEGOHeader(cl, r, "HTTP/host.test.gokrb5")
 	if err != nil {
 		l.Printf("Error setting client SPNEGO header: %v", err)
 	}
@@ -65,7 +65,7 @@ func httpServer() *httptest.Server {
 	b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	th := http.HandlerFunc(testAppHandler)
-	s := httptest.NewServer(spnego.SPNEGOKRB5Authenticate(th, &kt, service.Logger(l)))
+	s := httptest.NewServer(spnego.SPNEGOKRB5Authenticate(th, kt, service.Logger(l)))
 	return s
 }
 

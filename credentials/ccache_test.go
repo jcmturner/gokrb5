@@ -25,7 +25,7 @@ func TestParse(t *testing.T) {
 	assert.Equal(t, uint16(1), c.Header.fields[0].tag, "Header tag not as expected")
 	assert.Equal(t, uint16(8), c.Header.fields[0].length, "Length of header not as expected")
 	assert.Equal(t, "TEST.GOKRB5", c.DefaultPrincipal.Realm, "Default client principal realm not as expected")
-	assert.Equal(t, "testuser1", c.DefaultPrincipal.PrincipalName.GetPrincipalNameString(), "Default client principaal name not as expected")
+	assert.Equal(t, "testuser1", c.DefaultPrincipal.PrincipalName.PrincipalNameString(), "Default client principaal name not as expected")
 	assert.Equal(t, 3, len(c.Credentials), "Number of credentials not as expected")
 	tgtpn := types.PrincipalName{
 		NameType:   nametype.KRB_NT_SRV_INST,

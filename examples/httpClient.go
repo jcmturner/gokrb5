@@ -76,7 +76,7 @@ func main() {
 		panic(err)
 	}
 	// Apply the client's auth headers to the request
-	err = spnego.SetSPNEGOHeader(&cl, r, "HTTP/host.test.gokrb5")
+	err = spnego.SetSPNEGOHeader(cl, r, "HTTP/host.test.gokrb5")
 	if err != nil {
 		panic(err)
 	}

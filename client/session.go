@@ -176,7 +176,7 @@ func (cl *Client) renewTGT(s *session) error {
 		NameType:   nametype.KRB_NT_SRV_INST,
 		NameString: []string{"krbtgt", realm},
 	}
-	_, tgsRep, err := cl.TGSExchange(spn, cl.Credentials.Domain(), tgt, skey, true, 0)
+	_, tgsRep, err := cl.TGSREQGenerateAndExchange(spn, cl.Credentials.Domain(), tgt, skey, true)
 	if err != nil {
 		return krberror.Errorf(err, krberror.KRBMsgError, "error renewing TGT")
 	}
