@@ -101,7 +101,7 @@ func (c *Credentials) Keytab() *keytab.Keytab {
 
 // HasKeytab queries if the Credentials has a keytab defined.
 func (c *Credentials) HasKeytab() bool {
-	if len(c.keytab.Entries) > 0 {
+	if c.keytab != nil && len(c.keytab.Entries) > 0 {
 		return true
 	}
 	return false
