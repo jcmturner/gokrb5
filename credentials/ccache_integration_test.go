@@ -1,6 +1,3 @@
-// +build integration
-// To turn on this test use -tags=integration in go test command
-
 package credentials
 
 import (
@@ -16,6 +13,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/gokrb5.v6/iana/nametype"
+	"gopkg.in/jcmturner/gokrb5.v6/test"
 	"gopkg.in/jcmturner/gokrb5.v6/test/testdata"
 	"gopkg.in/jcmturner/gokrb5.v6/types"
 )
@@ -126,13 +124,15 @@ func klist() ([]string, error) {
 	return stdout.Lines(), nil
 }
 
-func loadCCache() (CCache, error) {
+func loadCCache() (*CCache, error) {
 	usr, _ := user.Current()
 	cpath := "/tmp/krb5cc_" + usr.Uid
 	return LoadCCache(cpath)
 }
 
 func TestLoadCCache(t *testing.T) {
+	test.Integration(t)
+
 	err := login()
 	if err != nil {
 		t.Fatalf("error logging in with kinit: %v", err)
@@ -147,6 +147,8 @@ func TestLoadCCache(t *testing.T) {
 }
 
 func TestCCacheEntries(t *testing.T) {
+	test.Integration(t)
+
 	err := login()
 	if err != nil {
 		t.Fatalf("error logging in with kinit: %v", err)
