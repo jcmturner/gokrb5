@@ -9,7 +9,6 @@ import (
 )
 
 // TGSExchange performs a TGS exchange to retrieve a ticket to the specified SPN.
-// The ticket retrieved is added to the client's cache.
 func (cl *Client) TGSExchange(spn types.PrincipalName, kdcRealm string, tgt messages.Ticket, sessionKey types.EncryptionKey, renewal bool, referral int) (tgsReq messages.TGSReq, tgsRep messages.TGSRep, err error) {
 	tgsReq, err = messages.NewTGSReq(cl.Credentials.CName(), kdcRealm, cl.Config, tgt, sessionKey, spn, renewal)
 	if err != nil {
@@ -30,7 +29,7 @@ func (cl *Client) TGSExchange(spn types.PrincipalName, kdcRealm string, tgt mess
 	//	referral++
 	//	return cl.TGSExchange(spn, realm, tgsRep.Ticket, tgsRep.DecryptedEncPart.Key, false, referral)
 	//}
-	return cl.TGSREQ(tgsReq, kdcRealm, tgsRep.Ticket, tgsRep.DecryptedEncPart.Key, referral)
+	return cl.TGSREQ(tgsReq, kdcRealm, tgsRep.Ticket, sessionKey, referral)
 }
 
 // TGSREQ exchanges the provided TGS_REQ with the KDC to retrieve a TGS_REP
@@ -86,6 +85,14 @@ func (cl *Client) tgsExchange(tgsReq messages.TGSReq, kdcRealm string, sessionKe
 	if ok, err := tgsRep.Verify(cl.Config, tgsReq); !ok {
 		return tgsRep, krberror.Errorf(err, krberror.EncodingError, "TGS Exchange Error: TGS_REP is not valid")
 	}
+	cl.cache.addEntry(
+		tgsRep.Ticket,
+		tgsRep.DecryptedEncPart.AuthTime,
+		tgsRep.DecryptedEncPart.StartTime,
+		tgsRep.DecryptedEncPart.EndTime,
+		tgsRep.DecryptedEncPart.RenewTill,
+		tgsRep.DecryptedEncPart.Key,
+	)
 	return
 }
 
@@ -106,18 +113,9 @@ func (cl *Client) GetServiceTicket(spn string) (messages.Ticket, types.Encryptio
 	if err != nil {
 		return tkt, skey, err
 	}
-
 	_, tgsRep, err := cl.TGSExchange(princ, realm, tgt, skey, false, 0)
 	if err != nil {
 		return tkt, skey, err
 	}
-	cl.cache.addEntry(
-		tgsRep.Ticket,
-		tgsRep.DecryptedEncPart.AuthTime,
-		tgsRep.DecryptedEncPart.StartTime,
-		tgsRep.DecryptedEncPart.EndTime,
-		tgsRep.DecryptedEncPart.RenewTill,
-		tgsRep.DecryptedEncPart.Key,
-	)
 	return tgsRep.Ticket, tgsRep.DecryptedEncPart.Key, nil
 }
