@@ -164,7 +164,7 @@ func NewKRB5TokenAPREQ(cl *client.Client, s *service.Settings, tkt messages.Tick
 	tb, _ := hex.DecodeString(TOK_ID_KRB_AP_REQ)
 	m.tokID = tb
 
-	auth, err := krb5TokenAuthenticator(*cl.Credentials, GSSAPIFlags)
+	auth, err := krb5TokenAuthenticator(cl.Credentials, GSSAPIFlags)
 	if err != nil {
 		return m, err
 	}
@@ -184,7 +184,7 @@ func NewKRB5TokenAPREQ(cl *client.Client, s *service.Settings, tkt messages.Tick
 }
 
 // krb5TokenAuthenticator creates a new kerberos authenticator for kerberos MechToken
-func krb5TokenAuthenticator(creds credentials.Credentials, flags []int) (types.Authenticator, error) {
+func krb5TokenAuthenticator(creds *credentials.Credentials, flags []int) (types.Authenticator, error) {
 	//RFC 4121 Section 4.1.1
 	auth, err := types.NewAuthenticator(creds.Domain(), creds.CName())
 	if err != nil {

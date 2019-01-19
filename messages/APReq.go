@@ -178,7 +178,7 @@ func (a *APReq) Verify(kt *keytab.Keytab, d time.Duration, cAddr types.HostAddre
 	//		return false, krberror.Errorf(err, krberror.DecryptingError, "error decrypting encpart of service ticket provided")
 	//	}
 	//}
-	err := a.Ticket.DecryptEncPart(*kt, &a.Ticket.SName)
+	err := a.Ticket.DecryptEncPart(kt, &a.Ticket.SName)
 	if err != nil {
 		return false, krberror.Errorf(err, krberror.DecryptingError, "error decrypting encpart of service ticket provided")
 	}

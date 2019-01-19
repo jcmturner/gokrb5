@@ -55,7 +55,7 @@ type TransitedEncoding struct {
 }
 
 // NewTicket creates a new Ticket instance.
-func NewTicket(cname types.PrincipalName, crealm string, sname types.PrincipalName, srealm string, flags asn1.BitString, sktab keytab.Keytab, eTypeID int32, kvno int, authTime, startTime, endTime, renewTill time.Time) (Ticket, types.EncryptionKey, error) {
+func NewTicket(cname types.PrincipalName, crealm string, sname types.PrincipalName, srealm string, flags asn1.BitString, sktab *keytab.Keytab, eTypeID int32, kvno int, authTime, startTime, endTime, renewTill time.Time) (Ticket, types.EncryptionKey, error) {
 	etype, err := crypto.GetEtype(eTypeID)
 	if err != nil {
 		return Ticket{}, types.EncryptionKey{}, krberror.Errorf(err, krberror.EncryptingError, "error getting etype for new ticket")
@@ -189,7 +189,7 @@ func MarshalTicketSequence(tkts []Ticket) (asn1.RawValue, error) {
 // DecryptEncPart decrypts the encrypted part of the ticket.
 // The sname argument can be used to specify which service principal's key should be used to decrypt the ticket.
 // If nil is passed as the sname then the service principal specified within the ticket it used.
-func (t *Ticket) DecryptEncPart(keytab keytab.Keytab, sname *types.PrincipalName) error {
+func (t *Ticket) DecryptEncPart(keytab *keytab.Keytab, sname *types.PrincipalName) error {
 	if sname == nil {
 		sname = &t.SName
 	}
@@ -216,7 +216,7 @@ func (t *Ticket) Decrypt(key types.EncryptionKey) error {
 }
 
 // GetPACType returns a Microsoft PAC that has been extracted from the ticket and processed.
-func (t *Ticket) GetPACType(keytab keytab.Keytab, sname *types.PrincipalName, l *log.Logger) (bool, pac.PACType, error) {
+func (t *Ticket) GetPACType(keytab *keytab.Keytab, sname *types.PrincipalName, l *log.Logger) (bool, pac.PACType, error) {
 	var isPAC bool
 	for _, ad := range t.DecryptedEncPart.AuthorizationData {
 		if ad.ADType == adtype.ADIfRelevant {

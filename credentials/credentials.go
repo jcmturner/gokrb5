@@ -23,10 +23,10 @@ type Credentials struct {
 	displayName string
 	realm       string
 	cname       types.PrincipalName
-	Keytab      keytab.Keytab
-	Password    string
+	keytab      *keytab.Keytab
+	password    string
 	attributes  map[string]interface{}
-	ValidUntil  time.Time
+	validUntil  time.Time
 
 	authenticated   bool
 	human           bool
@@ -51,34 +51,35 @@ type ADCredentials struct {
 }
 
 // NewCredentials creates a new Credentials instance.
-func NewCredentials(username string, realm string) Credentials {
+func New(username string, realm string) *Credentials {
 	uid, err := uuid.GenerateUUID()
 	if err != nil {
 		uid = "00unique-sess-ions-uuid-unavailable0"
 	}
-	return Credentials{
-		username:    username,
-		displayName: username,
-		realm:       realm,
-		cname:       types.NewPrincipalName(nametype.KRB_NT_PRINCIPAL, username),
-		Keytab:      keytab.New(),
-		attributes:  make(map[string]interface{}),
-		sessionID:   uid,
+	return &Credentials{
+		username:        username,
+		displayName:     username,
+		realm:           realm,
+		cname:           types.NewPrincipalName(nametype.KRB_NT_PRINCIPAL, username),
+		keytab:          keytab.New(),
+		attributes:      make(map[string]interface{}),
+		groupMembership: make(map[string]bool),
+		sessionID:       uid,
 	}
 }
 
-// NewCredentialsFromPrincipal creates a new Credentials instance with the user details provides as a PrincipalName type.
-func NewCredentialsFromPrincipal(cname types.PrincipalName, realm string) Credentials {
+// NewFromPrincipalName creates a new Credentials instance with the user details provides as a PrincipalName type.
+func NewFromPrincipalName(cname types.PrincipalName, realm string) *Credentials {
 	uid, err := uuid.GenerateUUID()
 	if err != nil {
 		uid = "00unique-sess-ions-uuid-unavailable0"
 	}
-	return Credentials{
+	return &Credentials{
 		username:        cname.GetPrincipalNameString(),
 		displayName:     cname.GetPrincipalNameString(),
 		realm:           realm,
 		cname:           cname,
-		Keytab:          keytab.New(),
+		keytab:          keytab.New(),
 		attributes:      make(map[string]interface{}),
 		groupMembership: make(map[string]bool),
 		sessionID:       uid,
@@ -86,20 +87,38 @@ func NewCredentialsFromPrincipal(cname types.PrincipalName, realm string) Creden
 }
 
 // WithKeytab sets the Keytab in the Credentials struct.
-func (c *Credentials) WithKeytab(kt keytab.Keytab) *Credentials {
-	c.Keytab = kt
+func (c *Credentials) WithKeytab(kt *keytab.Keytab) *Credentials {
+	c.keytab = kt
 	return c
 }
 
-// WithPassword sets the password in the Credentials struct.
-func (c *Credentials) WithPassword(password string) *Credentials {
-	c.Password = password
-	return c
+// Keytab returns the credential's Keytab.
+func (c *Credentials) Keytab() *keytab.Keytab {
+	return c.keytab
 }
 
 // HasKeytab queries if the Credentials has a keytab defined.
 func (c *Credentials) HasKeytab() bool {
-	if len(c.Keytab.Entries) > 0 {
+	if len(c.keytab.Entries) > 0 {
+		return true
+	}
+	return false
+}
+
+// WithPassword sets the password in the Credentials struct.
+func (c *Credentials) WithPassword(password string) *Credentials {
+	c.password = password
+	return c
+}
+
+// Password returns the credential's password.
+func (c *Credentials) Password() string {
+	return c.password
+}
+
+// HasPassword queries if the Credentials has a password defined.
+func (c *Credentials) HasPassword() bool {
+	if c.password != "" {
 		return true
 	}
 	return false
@@ -107,15 +126,7 @@ func (c *Credentials) HasKeytab() bool {
 
 // SetValidUntil sets the expiry time of the credentials
 func (c *Credentials) SetValidUntil(t time.Time) {
-	c.ValidUntil = t
-}
-
-// HasPassword queries if the Credentials has a password defined.
-func (c *Credentials) HasPassword() bool {
-	if c.Password != "" {
-		return true
-	}
-	return false
+	c.validUntil = t
 }
 
 // SetADCredentials adds ADCredentials attributes to the credentials
@@ -267,7 +278,7 @@ func (c *Credentials) SessionID() string {
 
 // Expired indicates if the credential has expired.
 func (c *Credentials) Expired() bool {
-	if !c.ValidUntil.IsZero() && time.Now().UTC().After(c.ValidUntil) {
+	if !c.validUntil.IsZero() && time.Now().UTC().After(c.validUntil) {
 		return true
 	}
 	return false

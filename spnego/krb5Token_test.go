@@ -54,7 +54,7 @@ func TestKRB5Token_newAuthenticatorChksum(t *testing.T) {
 // Test with explicit subkey generation.
 func TestKRB5Token_newAuthenticatorWithSubkeyGeneration(t *testing.T) {
 	t.Parallel()
-	creds := credentials.NewCredentials("hftsai", testdata.TEST_REALM)
+	creds := credentials.New("hftsai", testdata.TEST_REALM)
 	creds.SetCName(types.PrincipalName{NameType: nametype.KRB_NT_PRINCIPAL, NameString: testdata.TEST_PRINCIPALNAME_NAMESTRING})
 	var etypeID int32 = 18
 	keyLen := 32 // etypeID 18 refers to AES256 -> 32 bytes key
@@ -84,7 +84,7 @@ func TestKRB5Token_newAuthenticatorWithSubkeyGeneration(t *testing.T) {
 // Test without subkey generation.
 func TestKRB5Token_newAuthenticator(t *testing.T) {
 	t.Parallel()
-	creds := credentials.NewCredentials("hftsai", testdata.TEST_REALM)
+	creds := credentials.New("hftsai", testdata.TEST_REALM)
 	creds.SetCName(types.PrincipalName{NameType: nametype.KRB_NT_PRINCIPAL, NameString: testdata.TEST_PRINCIPALNAME_NAMESTRING})
 	a, err := krb5TokenAuthenticator(creds, []int{gssapi.ContextFlagInteg, gssapi.ContextFlagConf})
 	if err != nil {
@@ -104,10 +104,10 @@ func TestKRB5Token_newAuthenticator(t *testing.T) {
 
 func TestNewAPREQKRB5Token_and_Marshal(t *testing.T) {
 	t.Parallel()
-	creds := credentials.NewCredentials("hftsai", testdata.TEST_REALM)
+	creds := credentials.New("hftsai", testdata.TEST_REALM)
 	creds.SetCName(types.PrincipalName{NameType: nametype.KRB_NT_PRINCIPAL, NameString: testdata.TEST_PRINCIPALNAME_NAMESTRING})
 	cl := client.Client{
-		Credentials: &creds,
+		Credentials: creds,
 	}
 
 	var tkt messages.Ticket
