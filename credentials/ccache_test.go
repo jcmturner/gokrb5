@@ -16,7 +16,8 @@ func TestParse(t *testing.T) {
 	if err != nil {
 		t.Fatal("Error decoding test data")
 	}
-	c, err := ParseCCache(b)
+	c := new(CCache)
+	err = c.Unmarshal(b)
 	if err != nil {
 		t.Fatalf("Error parsing cache: %v", err)
 	}
@@ -45,7 +46,8 @@ func TestCCache_GetClientPrincipalName(t *testing.T) {
 	if err != nil {
 		t.Fatal("Error decoding test data")
 	}
-	c, err := ParseCCache(b)
+	c := new(CCache)
+	err = c.Unmarshal(b)
 	if err != nil {
 		t.Fatalf("Error parsing cache: %v", err)
 	}
@@ -62,7 +64,8 @@ func TestCCache_GetClientCredentials(t *testing.T) {
 	if err != nil {
 		t.Fatal("Error decoding test data")
 	}
-	c, err := ParseCCache(b)
+	c := new(CCache)
+	err = c.Unmarshal(b)
 	if err != nil {
 		t.Fatalf("Error parsing cache: %v", err)
 	}
@@ -82,7 +85,8 @@ func TestCCache_GetClientRealm(t *testing.T) {
 	if err != nil {
 		t.Fatal("Error decoding test data")
 	}
-	c, err := ParseCCache(b)
+	c := new(CCache)
+	err = c.Unmarshal(b)
 	if err != nil {
 		t.Fatalf("Error parsing cache: %v", err)
 	}
@@ -95,7 +99,8 @@ func TestCCache_GetEntry(t *testing.T) {
 	if err != nil {
 		t.Fatal("Error decoding test data")
 	}
-	c, err := ParseCCache(b)
+	c := new(CCache)
+	err = c.Unmarshal(b)
 	if err != nil {
 		t.Fatalf("Error parsing cache: %v", err)
 	}
@@ -116,7 +121,8 @@ func TestCCache_GetEntries(t *testing.T) {
 	if err != nil {
 		t.Fatal("Error decoding test data")
 	}
-	c, err := ParseCCache(b)
+	c := new(CCache)
+	err = c.Unmarshal(b)
 	if err != nil {
 		t.Fatalf("Error parsing cache: %v", err)
 	}

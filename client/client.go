@@ -59,7 +59,7 @@ func NewClientWithKeytab(username, realm string, kt *keytab.Keytab, krb5conf *co
 // NewClientFromCCache create a client from a populated client cache.
 //
 // WARNING: A client created from CCache does not automatically renew TGTs and a failure will occur after the TGT expires.
-func NewClientFromCCache(c credentials.CCache, krb5conf *config.Config, settings ...func(*Settings)) (*Client, error) {
+func NewClientFromCCache(c *credentials.CCache, krb5conf *config.Config, settings ...func(*Settings)) (*Client, error) {
 	cl := &Client{
 		Credentials: c.GetClientCredentials(),
 		Config:      krb5conf,
