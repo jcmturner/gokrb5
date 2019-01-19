@@ -57,7 +57,7 @@ func TestClient_SetSPNEGOHeader(t *testing.T) {
 			t.Fatalf("%s request error: %v\n", url+p, err)
 		}
 		assert.Equal(t, http.StatusUnauthorized, httpResp.StatusCode, "Status code in response to client with no SPNEGO not as expected")
-		err = SetSPNEGOHeader(&cl, r, "HTTP/host.test.gokrb5")
+		err = SetSPNEGOHeader(cl, r, "HTTP/host.test.gokrb5")
 		if err != nil {
 			t.Fatalf("error setting client SPNEGO header: %v", err)
 		}
@@ -91,7 +91,7 @@ func TestService_SPNEGOKRB_ValidUser(t *testing.T) {
 	r, _ := http.NewRequest("GET", s.URL, nil)
 
 	cl := getClient()
-	err := SetSPNEGOHeader(&cl, r, "HTTP/host.test.gokrb5")
+	err := SetSPNEGOHeader(cl, r, "HTTP/host.test.gokrb5")
 	if err != nil {
 		t.Fatalf("error setting client's SPNEGO header: %v", err)
 	}
@@ -113,7 +113,7 @@ func TestService_SPNEGOKRB_Replay(t *testing.T) {
 	r1, _ := http.NewRequest("GET", s.URL, nil)
 
 	cl := getClient()
-	err := SetSPNEGOHeader(&cl, r1, "HTTP/host.test.gokrb5")
+	err := SetSPNEGOHeader(cl, r1, "HTTP/host.test.gokrb5")
 	if err != nil {
 		t.Fatalf("error setting client's SPNEGO header: %v", err)
 	}
@@ -135,7 +135,7 @@ func TestService_SPNEGOKRB_Replay(t *testing.T) {
 	// Form a 2nd ticket
 	r2, _ := http.NewRequest("GET", s.URL, nil)
 
-	err = SetSPNEGOHeader(&cl, r2, "HTTP/host.test.gokrb5")
+	err = SetSPNEGOHeader(cl, r2, "HTTP/host.test.gokrb5")
 	if err != nil {
 		t.Fatalf("error setting client's SPNEGO header: %v", err)
 	}
@@ -172,14 +172,14 @@ func TestService_SPNEGOKRB_ReplayCache_Concurrency(t *testing.T) {
 	r1, _ := http.NewRequest("GET", s.URL, nil)
 
 	cl := getClient()
-	err := SetSPNEGOHeader(&cl, r1, "HTTP/host.test.gokrb5")
+	err := SetSPNEGOHeader(cl, r1, "HTTP/host.test.gokrb5")
 	if err != nil {
 		t.Fatalf("error setting client's SPNEGO header: %v", err)
 	}
 
 	r2, _ := http.NewRequest("GET", s.URL, nil)
 
-	err = SetSPNEGOHeader(&cl, r2, "HTTP/host.test.gokrb5")
+	err = SetSPNEGOHeader(cl, r2, "HTTP/host.test.gokrb5")
 	if err != nil {
 		t.Fatalf("error setting client's SPNEGO header: %v", err)
 	}
@@ -230,7 +230,7 @@ func TestService_SPNEGOKRB_Upload(t *testing.T) {
 	r, _ := http.NewRequest("POST", s.URL, bodyBuf)
 
 	cl := getClient()
-	err = SetSPNEGOHeader(&cl, r, "HTTP/host.test.gokrb5")
+	err = SetSPNEGOHeader(cl, r, "HTTP/host.test.gokrb5")
 	if err != nil {
 		t.Fatalf("error setting client's SPNEGO header: %v", err)
 	}
@@ -292,7 +292,7 @@ func testAppHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func getClient() client.Client {
+func getClient() *client.Client {
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)

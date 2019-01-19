@@ -360,7 +360,7 @@ func TestMultiThreadedClientUse(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		go func() {
 			defer wg2.Done()
-			err := spnegoGet(&cl)
+			err := spnegoGet(cl)
 			if err != nil {
 				panic(err)
 			}
@@ -576,7 +576,7 @@ func TestGetServiceTicketFromCCacheTGT(t *testing.T) {
 		url = testdata.TEST_HTTP_URL
 	}
 	r, _ := http.NewRequest("GET", url+"/modgssapi/index.html", nil)
-	err = spnego.SetSPNEGOHeader(&cl, r, "HTTP/host.test.gokrb5")
+	err = spnego.SetSPNEGOHeader(cl, r, "HTTP/host.test.gokrb5")
 	if err != nil {
 		t.Fatalf("error setting client SPNEGO header: %v", err)
 	}
@@ -612,7 +612,7 @@ func TestGetServiceTicketFromCCacheWithoutKDC(t *testing.T) {
 		url = testdata.TEST_HTTP_URL
 	}
 	r, _ := http.NewRequest("GET", url+"/modgssapi/index.html", nil)
-	err = spnego.SetSPNEGOHeader(&cl, r, "HTTP/host.test.gokrb5")
+	err = spnego.SetSPNEGOHeader(cl, r, "HTTP/host.test.gokrb5")
 	if err != nil {
 		t.Fatalf("error setting client SPNEGO header: %v", err)
 	}

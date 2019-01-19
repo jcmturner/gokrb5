@@ -65,6 +65,7 @@ func New(username string, realm string) *Credentials {
 		attributes:      make(map[string]interface{}),
 		groupMembership: make(map[string]bool),
 		sessionID:       uid,
+		human:           true,
 	}
 }
 
@@ -83,6 +84,7 @@ func NewFromPrincipalName(cname types.PrincipalName, realm string) *Credentials 
 		attributes:      make(map[string]interface{}),
 		groupMembership: make(map[string]bool),
 		sessionID:       uid,
+		human:           true,
 	}
 }
 

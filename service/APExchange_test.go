@@ -357,7 +357,7 @@ func newTestAuthenticator(creds credentials.Credentials) types.Authenticator {
 	return auth
 }
 
-func getClient() client.Client {
+func getClient() *client.Client {
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt, _ := keytab.Parse(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
