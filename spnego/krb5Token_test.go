@@ -13,7 +13,6 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v6/iana/msgtype"
 	"gopkg.in/jcmturner/gokrb5.v6/iana/nametype"
 	"gopkg.in/jcmturner/gokrb5.v6/messages"
-	"gopkg.in/jcmturner/gokrb5.v6/service"
 	"gopkg.in/jcmturner/gokrb5.v6/test/testdata"
 	"gopkg.in/jcmturner/gokrb5.v6/types"
 )
@@ -125,8 +124,7 @@ func TestNewAPREQKRB5Token_and_Marshal(t *testing.T) {
 		KeyValue: make([]byte, 32),
 	}
 
-	s := service.NewSettings(nil)
-	mt, err := NewKRB5TokenAPREQ(&cl, s, tkt, key, []int{gssapi.ContextFlagInteg, gssapi.ContextFlagConf}, []int{})
+	mt, err := NewKRB5TokenAPREQ(&cl, tkt, key, []int{gssapi.ContextFlagInteg, gssapi.ContextFlagConf}, []int{})
 	if err != nil {
 		t.Fatalf("Error creating KRB5Token: %v", err)
 	}
