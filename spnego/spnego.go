@@ -53,7 +53,7 @@ func (s *SPNEGO) InitSecContext() (gssapi.ContextToken, error) {
 	if err != nil {
 		return &SPNEGOToken{}, err
 	}
-	negTokenInit, err := NewNegTokenInitKRB5(s.client, s.serviceSettings, tkt, key)
+	negTokenInit, err := NewNegTokenInitKRB5(s.client, tkt, key)
 	if err != nil {
 		return &SPNEGOToken{}, fmt.Errorf("could not create NegTokenInit: %v", err)
 	}
