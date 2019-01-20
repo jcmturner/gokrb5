@@ -8,9 +8,9 @@ import (
 
 // Test enabling environment variable key values.
 const (
-	IntegrationEnvVar    = "INTEGRATION"
-	ADIntegrationEnvVar  = "TESTAD"
-	DNSIntegrationEnvVar = "TESTDNS"
+	IntegrationEnvVar     = "INTEGRATION"
+	ADIntegrationEnvVar   = "TESTAD"
+	PrivIntegrationEnvVar = "TESTPRIVILEGED"
 )
 
 // Integration skips the test unless the integration test environment variable is set.
@@ -27,9 +27,9 @@ func AD(t *testing.T) {
 	}
 }
 
-// DNS skips the test unless the DNS test environment variable is set.
-func DNS(t *testing.T) {
-	if os.Getenv(DNSIntegrationEnvVar) != "1" {
+// Privileged skips the test that require local root privilege.
+func Privileged(t *testing.T) {
+	if os.Getenv(PrivIntegrationEnvVar) != "1" {
 		t.Skip("Skipping DNS integration test")
 	}
 }

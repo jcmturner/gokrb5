@@ -11,7 +11,7 @@ import (
 )
 
 func TestResolveKDC(t *testing.T) {
-	test.DNS(t)
+	test.Privileged(t)
 
 	//ns := os.Getenv("DNSUTILS_OVERRIDE_NS")
 	//if ns == "" {
@@ -53,7 +53,7 @@ func TestResolveKDC(t *testing.T) {
 }
 
 func TestClient_Login_DNSKDCs(t *testing.T) {
-	test.DNS(t)
+	test.Privileged(t)
 
 	//ns := os.Getenv("DNSUTILS_OVERRIDE_NS")
 	//if ns == "" {

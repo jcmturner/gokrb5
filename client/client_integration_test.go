@@ -549,7 +549,7 @@ func loadCCache() (*credentials.CCache, error) {
 }
 
 func TestGetServiceTicketFromCCacheTGT(t *testing.T) {
-	test.Integration(t)
+	test.Privileged(t)
 
 	err := login()
 	if err != nil {
@@ -602,7 +602,7 @@ func TestGetServiceTicketFromCCacheTGT(t *testing.T) {
 }
 
 func TestGetServiceTicketFromCCacheWithoutKDC(t *testing.T) {
-	test.Integration(t)
+	test.Privileged(t)
 
 	err := login()
 	if err != nil {

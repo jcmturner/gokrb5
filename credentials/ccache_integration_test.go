@@ -131,7 +131,7 @@ func loadCCache() (*CCache, error) {
 }
 
 func TestLoadCCache(t *testing.T) {
-	test.Integration(t)
+	test.Privileged(t)
 
 	err := login()
 	if err != nil {
@@ -147,7 +147,7 @@ func TestLoadCCache(t *testing.T) {
 }
 
 func TestCCacheEntries(t *testing.T) {
-	test.Integration(t)
+	test.Privileged(t)
 
 	err := login()
 	if err != nil {
