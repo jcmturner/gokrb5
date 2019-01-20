@@ -156,11 +156,10 @@ func (m *KRB5Token) Context() context.Context {
 }
 
 // NewKRB5TokenAPREQ creates a new KRB5 token with AP_REQ
-func NewKRB5TokenAPREQ(cl *client.Client, s *service.Settings, tkt messages.Ticket, sessionKey types.EncryptionKey, GSSAPIFlags []int, APOptions []int) (KRB5Token, error) {
+func NewKRB5TokenAPREQ(cl *client.Client, tkt messages.Ticket, sessionKey types.EncryptionKey, GSSAPIFlags []int, APOptions []int) (KRB5Token, error) {
 	// TODO consider providing the SPN rather than the specific tkt and key and get these from the krb client.
 	var m KRB5Token
 	m.OID = gssapi.OID(gssapi.OIDKRB5)
-	m.settings = s
 	tb, _ := hex.DecodeString(TOK_ID_KRB_AP_REQ)
 	m.tokID = tb
 
