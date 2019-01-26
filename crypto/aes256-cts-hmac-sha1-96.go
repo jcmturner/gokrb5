@@ -6,11 +6,11 @@ import (
 	"crypto/sha1"
 	"hash"
 
-	"gopkg.in/jcmturner/gokrb5.v6/crypto/common"
-	"gopkg.in/jcmturner/gokrb5.v6/crypto/rfc3961"
-	"gopkg.in/jcmturner/gokrb5.v6/crypto/rfc3962"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/chksumtype"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/etypeID"
+	"gopkg.in/jcmturner/gokrb5.v7/crypto/common"
+	"gopkg.in/jcmturner/gokrb5.v7/crypto/rfc3961"
+	"gopkg.in/jcmturner/gokrb5.v7/crypto/rfc3962"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/chksumtype"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/etypeID"
 )
 
 // RFC 3962
