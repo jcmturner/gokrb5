@@ -53,14 +53,62 @@ type ContextToken interface {
 	Context() context.Context
 }
 
+/*
+CREDENTIAL MANAGEMENT
+
+GSS_Acquire_cred             acquire credentials for use
+GSS_Release_cred             release credentials after use
+GSS_Inquire_cred             display information about credentials
+GSS_Add_cred                 construct credentials incrementally
+GSS_Inquire_cred_by_mech     display per-mechanism credential information
+
+CONTEXT-LEVEL CALLS
+
+GSS_Init_sec_context         initiate outbound security context
+GSS_Accept_sec_context       accept inbound security context
+GSS_Delete_sec_context       flush context when no longer needed
+GSS_Process_context_token    process received control token on context
+GSS_Context_time             indicate validity time remaining on context
+GSS_Inquire_context          display information about context
+GSS_Wrap_size_limit          determine GSS_Wrap token size limit
+GSS_Export_sec_context       transfer context to other process
+GSS_Import_sec_context       import transferred context
+
+PER-MESSAGE CALLS
+
+GSS_GetMIC                   apply integrity check, receive as token separate from message
+GSS_VerifyMIC                validate integrity check token along with message
+GSS_Wrap                     sign, optionally encrypt, encapsulate
+GSS_Unwrap                   decapsulate, decrypt if needed, validate integrity check
+
+SUPPORT CALLS
+
+GSS_Display_status           translate status codes to printable form
+GSS_Indicate_mechs           indicate mech_types supported on local system
+GSS_Compare_name             compare two names for equality
+GSS_Display_name             translate name to printable form
+GSS_Import_name              convert printable name to normalized form
+GSS_Release_name             free storage of normalized-form name
+GSS_Release_buffer           free storage of general GSS-allocated object
+GSS_Release_OID_set          free storage of OID set object
+GSS_Create_empty_OID_set     create empty OID set
+GSS_Add_OID_set_member       add member to OID set
+GSS_Test_OID_set_member      test if OID is member of OID set
+GSS_Inquire_names_for_mech   indicate name types supported by mechanism
+GSS_Inquire_mechs_for_name   indicates mechanisms supporting name type
+GSS_Canonicalize_name        translate name to per-mechanism form
+GSS_Export_name              externalize per-mechanism name
+GSS_Duplicate_name           duplicate name object
+*/
+
 // Mechanism is the GSS-API interface for authentication mechanisms.
 type Mechanism interface {
 	OID() asn1.ObjectIdentifier
-	AcquireCred() error                                               // client side login (eg. AS exchange for KRB5)
-	InitSecContext() (ContextToken, error)                            // client side initialise with service (eg TGS exchange builds AP_REQ to go into ContextToken to send to service)
+	AcquireCred() error                                               // acquire credentials for use (eg. AS exchange for KRB5)
+	InitSecContext() (ContextToken, error)                            // initiate outbound security context (eg TGS exchange builds AP_REQ to go into ContextToken to send to service)
 	AcceptSecContext(ct ContextToken) (bool, context.Context, Status) // service verifies the token server side to establish a context
 	MIC() MICToken                                                    // apply integrity check, receive as token separate from message
-	VerifyMIC(mt MICToken)                                            // validate integrity check token along with message
+	VerifyMIC(mt MICToken) (bool, error)                              // validate integrity check token along with message
 	Wrap(msg []byte) WrapToken                                        // sign, optionally encrypt, encapsulate
 	Unwrap(wt WrapToken) []byte                                       // decapsulate, decrypt if needed, validate integrity check
 }
