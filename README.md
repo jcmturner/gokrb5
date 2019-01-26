@@ -1,7 +1,7 @@
 # gokrb5
 [![Version](https://img.shields.io/github/release/jcmturner/gokrb5.svg)](https://github.com/jcmturner/gokrb5/releases)
 
-[![GoDoc](https://godoc.org/gopkg.in/jcmturner/gokrb5.v6?status.svg)](https://godoc.org/gopkg.in/jcmturner/gokrb5.v6) [![Go Report Card](https://goreportcard.com/badge/gopkg.in/jcmturner/gokrb5.v6)](https://goreportcard.com/report/gopkg.in/jcmturner/gokrb5.v6) [![Build Status](https://travis-ci.org/jcmturner/gokrb5.svg?branch=master)](https://travis-ci.org/jcmturner/gokrb5)
+[![GoDoc](https://godoc.org/gopkg.in/jcmturner/gokrb5.v7?status.svg)](https://godoc.org/gopkg.in/jcmturner/gokrb5.v7) [![Go Report Card](https://goreportcard.com/badge/gopkg.in/jcmturner/gokrb5.v7)](https://goreportcard.com/report/gopkg.in/jcmturner/gokrb5.v7) [![Build Status](https://travis-ci.org/jcmturner/gokrb5.svg?branch=master)](https://travis-ci.org/jcmturner/gokrb5)
 
 #### Go Version Support
 ![Go version](https://img.shields.io/badge/Go-1.11-brightgreen.svg)
