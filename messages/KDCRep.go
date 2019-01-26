@@ -181,7 +181,7 @@ func (k *ASRep) DecryptEncPart(c *credentials.Credentials) (types.EncryptionKey,
 	return key, nil
 }
 
-// IsValid checks the validity of AS_REP message.
+// Verify checks the validity of AS_REP message.
 func (k *ASRep) Verify(cfg *config.Config, creds *credentials.Credentials, asReq ASReq) (bool, error) {
 	//Ref RFC 4120 Section 3.1.5
 	if k.CName.NameType != asReq.ReqBody.CName.NameType || k.CName.NameString == nil {
@@ -263,7 +263,7 @@ func (k *TGSRep) DecryptEncPart(key types.EncryptionKey) error {
 	return nil
 }
 
-// IsValid checks the validity of the TGS_REP message.
+// Verify checks the validity of the TGS_REP message.
 func (k *TGSRep) Verify(cfg *config.Config, tgsReq TGSReq) (bool, error) {
 	if k.CName.NameType != tgsReq.ReqBody.CName.NameType || k.CName.NameString == nil {
 		return false, krberror.NewErrorf(krberror.KRBMsgError, "CName type in response does not match what was requested. Requested: %+v; Reply: %+v", tgsReq.ReqBody.CName, k.CName)

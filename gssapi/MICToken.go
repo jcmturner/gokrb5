@@ -43,7 +43,7 @@ From RFC 4121, section 4.2.6.1:
 const (
 	// MICTokenFlagSentByAcceptor - this flag indicates the sender is the context acceptor.  When not set, it indicates the sender is the context initiator
 	MICTokenFlagSentByAcceptor = 1 << iota
-	// MICTokenFlagSentByAcceptor - this flag indicates confidentiality is provided for.  It SHALL NOT be set in MIC tokens
+	// MICTokenFlagSealed - this flag indicates confidentiality is provided for.  It SHALL NOT be set in MIC tokens
 	MICTokenFlagSealed
 	// MICTokenFlagAcceptorSubkey - a subkey asserted by the context acceptor is used to protect the message
 	MICTokenFlagAcceptorSubkey

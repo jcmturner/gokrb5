@@ -50,7 +50,7 @@ type ADCredentials struct {
 	LogonServer         string
 }
 
-// NewCredentials creates a new Credentials instance.
+// New creates a new Credentials instance.
 func New(username string, realm string) *Credentials {
 	uid, err := uuid.GenerateUUID()
 	if err != nil {

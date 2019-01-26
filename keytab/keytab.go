@@ -41,7 +41,7 @@ type principal struct {
 	NameType      int32
 }
 
-// NewKeytab creates new, empty Keytab type.
+// New creates new, empty Keytab type.
 func New() *Keytab {
 	var e []entry
 	return &Keytab{

@@ -102,7 +102,7 @@ func (wt *WrapToken) Marshal() ([]byte, error) {
 	return bytes, nil
 }
 
-// ComputeAndSetCheckSum uses the passed encryption key and key usage to compute the checksum over the payload and
+// SetCheckSum uses the passed encryption key and key usage to compute the checksum over the payload and
 // the header, and sets the CheckSum field of this WrapToken.
 // If the payload has not been set or the checksum has already been set, an error is returned.
 func (wt *WrapToken) SetCheckSum(key types.EncryptionKey, keyUsage uint32) error {
@@ -150,7 +150,7 @@ func getChecksumHeader(flags byte, senderSeqNum uint64) []byte {
 	return header
 }
 
-// VerifyCheckSum computes the token's checksum with the provided key and usage,
+// Verify computes the token's checksum with the provided key and usage,
 // and compares it to the checksum present in the token.
 // In case of any failure, (false, Err) is returned, with Err an explanatory error.
 func (wt *WrapToken) Verify(key types.EncryptionKey, keyUsage uint32) (bool, error) {
@@ -208,7 +208,7 @@ func (wt *WrapToken) Unmarshal(b []byte, expectFromAcceptor bool) error {
 	return nil
 }
 
-// NewInitiatorToken builds a new initiator token (acceptor flag will be set to 0) and computes the authenticated checksum.
+// NewInitiatorWrapToken builds a new initiator token (acceptor flag will be set to 0) and computes the authenticated checksum.
 // Other flags are set to 0, and the RRC and sequence number are initialized to 0.
 // Note that in certain circumstances you may need to provide a sequence number that has been defined earlier.
 // This is currently not supported.
