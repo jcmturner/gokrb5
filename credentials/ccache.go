@@ -52,6 +52,7 @@ type principal struct {
 	PrincipalName types.PrincipalName
 }
 
+// Credential holds a Kerberos client's ccache credential information.
 type Credential struct {
 	Client       principal
 	Server       principal
@@ -79,7 +80,7 @@ func LoadCCache(cpath string) (*CCache, error) {
 	return c, err
 }
 
-// ParseCCache byte slice of credential cache data into CCache type.
+// Unmarshal a byte slice of credential cache data into CCache type.
 func (c *CCache) Unmarshal(b []byte) error {
 	p := 0
 	//The first byte of the file always has the value 5

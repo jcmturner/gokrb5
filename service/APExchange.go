@@ -8,7 +8,7 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v7/messages"
 )
 
-// ValidateAPREQ validates an AP_REQ sent to the service. Returns a boolean for if the AP_REQ is valid and the client's principal name and realm.
+// VerifyAPREQ verifies an AP_REQ sent to the service. Returns a boolean for if the AP_REQ is valid and the client's principal name and realm.
 func VerifyAPREQ(APReq messages.APReq, s *Settings) (bool, *credentials.Credentials, error) {
 	var creds *credentials.Credentials
 

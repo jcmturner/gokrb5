@@ -44,7 +44,7 @@ func (pn PrincipalName) Equal(n PrincipalName) bool {
 	return true
 }
 
-// PrincipalNameString() returns the PrincipalName in string form.
+// PrincipalNameString returns the PrincipalName in string form.
 func (pn PrincipalName) PrincipalNameString() string {
 	return strings.Join(pn.NameString, "/")
 }
