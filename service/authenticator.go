@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"gopkg.in/jcmturner/goidentity.v3"
+	goidentity "gopkg.in/jcmturner/goidentity.v3"
 	"gopkg.in/jcmturner/gokrb5.v6/client"
 	"gopkg.in/jcmturner/gokrb5.v6/config"
 	"gopkg.in/jcmturner/gokrb5.v6/credentials"
