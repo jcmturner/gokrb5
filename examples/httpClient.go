@@ -10,10 +10,11 @@ import (
 	"os"
 
 	//"github.com/pkg/profile"
-	"gopkg.in/jcmturner/gokrb5.v6/client"
-	"gopkg.in/jcmturner/gokrb5.v6/config"
-	"gopkg.in/jcmturner/gokrb5.v6/keytab"
-	"gopkg.in/jcmturner/gokrb5.v6/testdata"
+	"gopkg.in/jcmturner/gokrb5.v7/client"
+	"gopkg.in/jcmturner/gokrb5.v7/config"
+	"gopkg.in/jcmturner/gokrb5.v7/keytab"
+	"gopkg.in/jcmturner/gokrb5.v7/spnego"
+	"gopkg.in/jcmturner/gokrb5.v7/test/testdata"
 )
 
 const (
@@ -44,13 +45,11 @@ func main() {
 	//defer profile.Start(profile.TraceProfile).Stop()
 	// Load the keytab
 	kb, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
-	kt, err := keytab.Parse(kb)
+	kt := keytab.New()
+	err := kt.Unmarshal(kb)
 	if err != nil {
 		panic(err)
 	}
-
-	// Create the client with the keytab
-	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
 
 	// Load the client krb5 config
 	conf, err := config.NewConfigFromString(kRB5CONF)
@@ -61,8 +60,9 @@ func main() {
 	if addr != "" {
 		conf.Realms[0].KDC = []string{addr + ":88"}
 	}
-	// Apply the config to the client
-	cl.WithConfig(conf)
+
+	// Create the client with the keytab
+	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, conf)
 
 	// Log in the client
 	err = cl.Login()
@@ -77,7 +77,7 @@ func main() {
 		panic(err)
 	}
 	// Apply the client's auth headers to the request
-	err = cl.SetSPNEGOHeader(r, "HTTP/host.test.gokrb5")
+	err = spnego.SetSPNEGOHeader(cl, r, "HTTP/host.test.gokrb5")
 	if err != nil {
 		panic(err)
 	}

@@ -1,12 +1,11 @@
 language: go
 
 go:
-  - 1.9.x
   - 1.10.x
   - 1.11.x
   - master
 
-go_import_path: gopkg.in/jcmturner/gokrb5.v6
+go_import_path: gopkg.in/jcmturner/gokrb5.v7
 
 sudo: required
 
@@ -30,7 +29,7 @@ before_script:
   - sudo sed -i 's/nameserver .*/nameserver 127.0.0.1/g' /etc/resolv.conf
 
 env:
-  - TEST_KDC_ADDR=127.0.0.1 TEST_HTTP_URL="http://host.test.gokrb5" DNSUTILS_OVERRIDE_NS="127.0.0.1:53" DEBIAN_FRONTEND=noninteractive
+  - INTEGRATION=1 TESTPRIVILEGED=1 TEST_KDC_ADDR=127.0.0.1 TEST_HTTP_URL="http://host.test.gokrb5" DNSUTILS_OVERRIDE_NS="127.0.0.1:53" DEBIAN_FRONTEND=noninteractive
 
 script:
   - test -z $(gofmt -s -d -l -e $GO_FILES | tee /dev/fd/2 | xargs | sed 's/\s//g') # Fail if a .go file hasn't been formatted with gofmt

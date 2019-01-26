@@ -6,23 +6,22 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v6/iana"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/addrtype"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/msgtype"
-	"gopkg.in/jcmturner/gokrb5.v6/testdata"
+	"gopkg.in/jcmturner/gokrb5.v7/iana"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/addrtype"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/msgtype"
+	"gopkg.in/jcmturner/gokrb5.v7/test/testdata"
 )
 
 func TestUnmarshalKRBSafe(t *testing.T) {
 	t.Parallel()
 	var a KRBSafe
-	v := "encode_krb5_safe"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5safe)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	//Parse the test time value into a time.Time type
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
@@ -44,14 +43,13 @@ func TestUnmarshalKRBSafe(t *testing.T) {
 func TestUnmarshalKRBSafe_optionalsNULL(t *testing.T) {
 	t.Parallel()
 	var a KRBSafe
-	v := "encode_krb5_safe(optionalsNULL)"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5safeOptionalsNULL)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 
 	assert.Equal(t, iana.PVNO, a.PVNO, "PVNO not as expected")

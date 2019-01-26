@@ -1,14 +1,14 @@
 package client
 
 import (
-	"gopkg.in/jcmturner/gokrb5.v6/crypto"
-	"gopkg.in/jcmturner/gokrb5.v6/crypto/etype"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/errorcode"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/keyusage"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/patype"
-	"gopkg.in/jcmturner/gokrb5.v6/krberror"
-	"gopkg.in/jcmturner/gokrb5.v6/messages"
-	"gopkg.in/jcmturner/gokrb5.v6/types"
+	"gopkg.in/jcmturner/gokrb5.v7/crypto"
+	"gopkg.in/jcmturner/gokrb5.v7/crypto/etype"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/errorcode"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/keyusage"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/patype"
+	"gopkg.in/jcmturner/gokrb5.v7/krberror"
+	"gopkg.in/jcmturner/gokrb5.v7/messages"
+	"gopkg.in/jcmturner/gokrb5.v7/types"
 )
 
 // ASExchange performs an AS exchange for the client to retrieve a TGT.
@@ -29,7 +29,7 @@ func (cl *Client) ASExchange(realm string, ASReq messages.ASReq, referral int) (
 			switch e.ErrorCode {
 			case errorcode.KDC_ERR_PREAUTH_REQUIRED, errorcode.KDC_ERR_PREAUTH_FAILED:
 				// From now on assume this client will need to do this pre-auth and set the PAData
-				cl.GoKrb5Conf.AssumePAEncTimestampRequired = true
+				cl.settings.assumePreAuthentication = true
 				err = setPAData(cl, e, &ASReq)
 				if err != nil {
 					return messages.ASRep{}, krberror.Errorf(err, krberror.KRBMsgError, "AS Exchange Error: failed setting AS_REQ PAData for pre-authentication required")
@@ -63,25 +63,26 @@ func (cl *Client) ASExchange(realm string, ASReq messages.ASReq, referral int) (
 	if err != nil {
 		return messages.ASRep{}, krberror.Errorf(err, krberror.EncodingError, "AS Exchange Error: failed to process the AS_REP")
 	}
-	if ok, err := ASRep.IsValid(cl.Config, cl.Credentials, ASReq); !ok {
+	if ok, err := ASRep.Verify(cl.Config, cl.Credentials, ASReq); !ok {
 		return messages.ASRep{}, krberror.Errorf(err, krberror.KRBMsgError, "AS Exchange Error: AS_REP is not valid or client password/keytab incorrect")
 	}
 	return ASRep, nil
 }
 
+// setPAData adds pre-authentication data to the AS_REQ.
 func setPAData(cl *Client, krberr messages.KRBError, ASReq *messages.ASReq) error {
-	if !cl.GoKrb5Conf.DisablePAFXFast {
+	if !cl.settings.DisablePAFXFAST() {
 		pa := types.PAData{PADataType: patype.PA_REQ_ENC_PA_REP}
 		ASReq.PAData = append(ASReq.PAData, pa)
 	}
-	if cl.GoKrb5Conf.AssumePAEncTimestampRequired {
+	if cl.settings.AssumePreAuthentication() {
 		paTSb, err := types.GetPAEncTSEncAsnMarshalled()
 		if err != nil {
 			return krberror.Errorf(err, krberror.KRBMsgError, "error creating PAEncTSEnc for Pre-Authentication")
 		}
 		var et etype.EType
 		if krberr.ErrorCode == 0 {
-			etn := cl.GoKrb5Conf.preAuthEType
+			etn := cl.settings.preAuthEType
 			if etn == 0 {
 				etn = int32(cl.Config.LibDefaults.PreferredPreauthTypes[0])
 			}
@@ -96,9 +97,9 @@ func setPAData(cl *Client, krberr messages.KRBError, ASReq *messages.ASReq) erro
 			if err != nil {
 				return krberror.Errorf(err, krberror.EncryptingError, "error getting etype for pre-auth encryption")
 			}
-			cl.GoKrb5Conf.preAuthEType = et.GetETypeID()
+			cl.settings.preAuthEType = et.GetETypeID()
 		}
-		key, err := cl.Key(et, krberr)
+		key, err := cl.Key(et, &krberr)
 		if err != nil {
 			return krberror.Errorf(err, krberror.EncryptingError, "error getting key from credentials")
 		}
@@ -119,6 +120,7 @@ func setPAData(cl *Client, krberr messages.KRBError, ASReq *messages.ASReq) erro
 	return nil
 }
 
+// preAuthEType establishes what encryption type to use for pre-authentication from the KRBError returned from the KDC.
 func preAuthEType(krberr messages.KRBError) (etype etype.EType, err error) {
 	//The preferred ordering of the "hint" pre-authentication data that
 	//affect client key selection is: ETYPE-INFO2, followed by ETYPE-INFO,

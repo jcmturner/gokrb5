@@ -6,12 +6,12 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v6/testdata"
+	"gopkg.in/jcmturner/gokrb5.v7/test/testdata"
 )
 
 func TestPAC_ClientInfo_Unmarshal(t *testing.T) {
 	t.Parallel()
-	b, err := hex.DecodeString(testdata.TestVectors["PAC_Client_Info"])
+	b, err := hex.DecodeString(testdata.MarshaledPAC_Client_Info)
 	if err != nil {
 		t.Fatal("Could not decode test data hex string")
 	}

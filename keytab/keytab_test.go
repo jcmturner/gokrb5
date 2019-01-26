@@ -6,17 +6,18 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v6/testdata"
+	"gopkg.in/jcmturner/gokrb5.v7/test/testdata"
 )
 
-func TestParse(t *testing.T) {
+func TestUnmarshal(t *testing.T) {
 	t.Parallel()
-	dat, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
-	kt, err := Parse(dat)
+	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	kt := New()
+	err := kt.Unmarshal(b)
 	if err != nil {
 		t.Fatalf("Error parsing keytab data: %v\n", err)
 	}
-	assert.Equal(t, uint8(2), kt.Version, "Keytab version not as expected")
+	assert.Equal(t, uint8(2), kt.version, "Keytab version not as expected")
 	assert.Equal(t, uint32(1), kt.Entries[0].KVNO, "KVNO not as expected")
 	assert.Equal(t, uint8(1), kt.Entries[0].KVNO8, "KVNO8 not as expected")
 	assert.Equal(t, time.Unix(1505669592, 0), kt.Entries[0].Timestamp, "Timestamp not as expected")
@@ -30,17 +31,18 @@ func TestParse(t *testing.T) {
 
 func TestMarshal(t *testing.T) {
 	t.Parallel()
-	dat, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
-	kt, err := Parse(dat)
+	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	kt := New()
+	err := kt.Unmarshal(b)
 	if err != nil {
 		t.Fatalf("Error parsing keytab data: %v\n", err)
 	}
-	b, err := kt.Marshal()
+	mb, err := kt.Marshal()
 	if err != nil {
 		t.Fatalf("Error marshaling: %v", err)
 	}
-	assert.Equal(t, dat, b, "Marshaled bytes not the same as input bytes")
-	_, err = Parse(b)
+	assert.Equal(t, b, mb, "Marshaled bytes not the same as input bytes")
+	err = kt.Unmarshal(mb)
 	if err != nil {
 		t.Fatalf("Error parsing marshaled bytes: %v", err)
 	}

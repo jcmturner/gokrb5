@@ -6,7 +6,8 @@
 #### Go Version Support
 ![Go version](https://img.shields.io/badge/Go-1.11-brightgreen.svg)
 ![Go version](https://img.shields.io/badge/Go-1.10-brightgreen.svg)
-![Go version](https://img.shields.io/badge/Go-1.9-brightgreen.svg)
+
+gokrb5 may work with other versions of Go but they are not tested.
 
 ### Go Get
 To get the package, execute:
@@ -15,7 +16,7 @@ go get -d gopkg.in/jcmturner/gokrb5.v6/...
 ```
 To import this package, add the following line to your code:
 ```go
-import "gopkg.in/jcmturner/gokrb5.v6/<sub package>"
+import "gopkg.in/jcmturner/gokrb5.v7/<sub package>"
 ```
 
 ## Features
@@ -62,7 +63,7 @@ If you are interested in contributing to gokrb5, great! Please read the [contrib
 The gokrb5 libraries use the same krb5.conf configuration file format as MIT Kerberos, described [here](https://web.mit.edu/kerberos/krb5-latest/doc/admin/conf_files/krb5_conf.html).
 Config instances can be created by loading from a file path or by passing a string, io.Reader or bufio.Scanner to the relevant method:
 ```go
-import "gopkg.in/jcmturner/gokrb5.v6/config"
+import "gopkg.in/jcmturner/gokrb5.v7/config"
 cfg, err := config.Load("/path/to/config/file")
 cfg, err := config.NewConfigFromString(krb5Str) //String must have appropriate newline separations
 cfg, err := config.NewConfigFromReader(reader)
@@ -71,7 +72,7 @@ cfg, err := config.NewConfigFromScanner(scanner)
 ### Keytab files
 Standard keytab files can be read from a file or from a slice of bytes:
 ```go
-import 	"gopkg.in/jcmturner/gokrb5.v6/keytab"
+import 	"gopkg.in/jcmturner/gokrb5.v7/keytab"
 ktFromFile, err := keytab.Load("/path/to/file.keytab")
 ktFromBytes, err := keytab.Parse(b)
 
@@ -80,24 +81,22 @@ ktFromBytes, err := keytab.Parse(b)
 ---
 
 ### Kerberos Client
-Create a client instance with either a password or a keytab:
+**Create** a client instance with either a password or a keytab.
+A configuration must also be passed. Additionally optional additional settings can be provided.
 ```go
-import 	"gopkg.in/jcmturner/gokrb5.v6/client"
-cl := client.NewClientWithPassword("username", "REALM.COM", "password")
-cl := client.NewClientWithKeytab("username", "REALM.COM", kt)
+import 	"gopkg.in/jcmturner/gokrb5.v7/client"
+cl := client.NewClientWithPassword("username", "REALM.COM", "password", cfg)
+cl := client.NewClientWithKeytab("username", "REALM.COM", kt, cfg)
+```
+Optional settings are provided using the functions defined in the ``client/settings.go`` source file.
 
-```
-Provide configuration to the client:
-```go
-cl.WithConfig(cfg)
-```
-Login:
+**Login**:
 ```go
 err := cl.Login()
 ```
 Kerberos Ticket Granting Tickets (TGT) will be automatically renewed unless the client was created from a CCache.
 
-A client can be destroyed with the following method:
+A client can be **destroyed** with the following method:
 ```go
 cl.Destroy()
 ```
@@ -106,9 +105,10 @@ cl.Destroy()
 Active Directory does not commonly support FAST negotiation so you will need to disable this on the client.
 If this is the case you will see this error:
 ```KDC did not respond appropriately to FAST negotiation```
-To resolve this disable PA-FX-Fast on the client before performing Login() with the line below.
+To resolve this disable PA-FX-Fast on the client before performing Login().
+This is done with one of the optional client settings as shown below:
 ```go
-cl.GoKrb5Conf.DisablePAFXFast = true
+cl := client.NewClientWithPassword("username", "REALM.COM", "password", cfg, client.DisablePAFXFAST(true))
 ```
 
 #### Authenticate to a Service
@@ -117,8 +117,7 @@ cl.GoKrb5Conf.DisablePAFXFast = true
 Create the HTTP request object and then call the client's SetSPNEGOHeader method passing the Service Principal Name (SPN) or to auto generate the SPN from the request object pass a null string ""
 ```go
 r, _ := http.NewRequest("GET", "http://host.test.gokrb5/index.html", nil)
-spn := ""
-cl.SetSPNEGOHeader(r, spn)
+err := SetSPNEGOHeader(&cl, r, "") // If "" is provided for the last argument the SPN will be derived from the URL.
 HTTPResp, err := http.DefaultClient.Do(r)
 ```
 
@@ -212,21 +211,27 @@ h := http.HandlerFunc(apphandler)
 ```
 Configure the HTTP handler:
 ```go
-c := service.NewConfig(kt)
-http.Handler("/", service.SPNEGOKRB5Authenticate(h, c, l))
+http.Handler("/", spnego.SPNEGOKRB5Authenticate(h, &kt, service.Logger(l)))
 ```
-The serviceAccountName needs to be defined when using Active Directory where the SPN is mapped to a user account.
-If this is not required it should be set to an empty string "".
+The handler to be wrapped and the keytab are required arguments. 
+Additional optional settings can be provided, such as the logger shown above.
+
+Another example of optional settings may be that when using Active Directory where the SPN is mapped to a user account 
+the keytab may contain an entry for this user account. In this case this should be specified as below with the ``KeytabPrincipal``:
+```go
+http.Handler("/", spnego.SPNEGOKRB5Authenticate(h, &kt, service.Logger(l), service.KeytabPrincipal(pn)))
+```
+
 If authentication succeeds then the request's context will have the following values added so they can be accessed within the application's handler:
-* service.CTXKeyAuthenticated - Boolean indicating if the user is authenticated. Use of this value should also handle that this value may not be set and should assume "false" in that case.
-* service.CTXKeyCredentials - The authenticated user's credentials.
+* spnego.CTXKeyAuthenticated - Boolean indicating if the user is authenticated. Use of this value should also handle that this value may not be set and should assume "false" in that case.
+* spnego.CTXKeyCredentials - The authenticated user's credentials.
 If Microsoft Active Directory is used as the KDC then additional ADCredentials are available in the credentials.Attributes map under the key credentials.AttributeKeyADCredentials. For example the SIDs of the users group membership are available and can be used by your application for authorization.
 
 Access the credentials within your application:
 ```go
 ctx := r.Context()
-if validuser, ok := ctx.Value(service.CTXKeyAuthenticated).(bool); ok && validuser {
-        if creds, ok := ctx.Value(service.CTXKeyCredentials).(goidentity.Identity); ok {
+if validuser, ok := ctx.Value(spnego.CTXKeyAuthenticated).(bool); ok && validuser {
+        if creds, ok := ctx.Value(spnego.CTXKeyCredentials).(goidentity.Identity); ok {
                 if ADCreds, ok := creds.Attributes()[credentials.AttributeKeyADCredentials].(credentials.ADCredentials); ok {
                         // Now access the fields of the ADCredentials struct. For example:
                         groupSids := ADCreds.GroupMembershipSIDs
@@ -239,9 +244,9 @@ if validuser, ok := ctx.Value(service.CTXKeyAuthenticated).(bool); ok && validus
 #### Generic Kerberised Service - Validating Client Details
 To validate the AP_REQ sent by the client on the service side call this method:
 ```go
-import 	"gopkg.in/jcmturner/gokrb5.v6/service"
-a := service.NewSPNEGOAuthenticator(kt)
-if ok, creds, err := service.ValidateAPREQ(mt.APReq, a); ok {
+import 	"gopkg.in/jcmturner/gokrb5.v7/service"
+s := service.NewSettings(&kt) // kt is a keytab and optional settings can also be provided.
+if ok, creds, err := service.VerifyAPREQ(APReq, s); ok {
         // Perform application specific actions
         // creds object has details about the client identity
 }

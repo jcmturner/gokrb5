@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v6/testdata"
+	"gopkg.in/jcmturner/gokrb5.v7/test/testdata"
 	"gopkg.in/jcmturner/rpc.v1/mstypes"
 )
 
@@ -19,7 +19,7 @@ const (
 
 func TestPAC_ClientClaimsInfoStr_Unmarshal(t *testing.T) {
 	t.Parallel()
-	b, err := hex.DecodeString(testdata.TestVectors["PAC_ClientClaimsInfoStr"])
+	b, err := hex.DecodeString(testdata.MarshaledPAC_ClientClaimsInfoStr)
 	if err != nil {
 		t.Fatal("Could not decode test data hex string")
 	}
@@ -40,7 +40,7 @@ func TestPAC_ClientClaimsInfoStr_Unmarshal(t *testing.T) {
 
 func TestPAC_ClientClaimsMultiValueUint_Unmarshal(t *testing.T) {
 	t.Parallel()
-	b, err := hex.DecodeString(testdata.TestVectors["PAC_ClientClaimsInfoMultiUint"])
+	b, err := hex.DecodeString(testdata.MarshaledPAC_ClientClaimsInfoMultiUint)
 	if err != nil {
 		t.Fatal("Could not decode test data hex string")
 	}
@@ -61,7 +61,7 @@ func TestPAC_ClientClaimsMultiValueUint_Unmarshal(t *testing.T) {
 
 func TestPAC_ClientClaimsInt_Unmarshal(t *testing.T) {
 	t.Parallel()
-	b, err := hex.DecodeString(testdata.TestVectors["PAC_ClientClaimsInfoInt"])
+	b, err := hex.DecodeString(testdata.MarshaledPAC_ClientClaimsInfoInt)
 	if err != nil {
 		t.Fatal("Could not decode test data hex string")
 	}
@@ -82,7 +82,7 @@ func TestPAC_ClientClaimsInt_Unmarshal(t *testing.T) {
 
 func TestPAC_ClientClaimsMultiValueStr_Unmarshal(t *testing.T) {
 	t.Parallel()
-	b, err := hex.DecodeString(testdata.TestVectors["PAC_ClientClaimsInfoMultiStr"])
+	b, err := hex.DecodeString(testdata.MarshaledPAC_ClientClaimsInfoMultiStr)
 	if err != nil {
 		t.Fatal("Could not decode test data hex string")
 	}
@@ -104,7 +104,7 @@ func TestPAC_ClientClaimsMultiValueStr_Unmarshal(t *testing.T) {
 func TestPAC_ClientClaimsInfoMultiEntry_Unmarshal(t *testing.T) {
 	// Has an int and a str claim type
 	t.Parallel()
-	b, err := hex.DecodeString(testdata.TestVectors["PAC_ClientClaimsInfoMulti"])
+	b, err := hex.DecodeString(testdata.MarshaledPAC_ClientClaimsInfoMulti)
 	if err != nil {
 		t.Fatal("Could not decode test data hex string")
 	}
@@ -130,7 +130,7 @@ func TestPAC_ClientClaimsInfoMultiEntry_Unmarshal(t *testing.T) {
 // Compressed claims not yet supported.
 //func TestPAC_ClientClaimsInfo_Unmarshal_UnsupportedCompression(t *testing.T) {
 //	t.Parallel()
-//	b, err := hex.DecodeString(testdata.TestVectors["PAC_ClientClaimsInfo_XPRESS_HUFF"])
+//	b, err := hex.DecodeString(testdata.MarshaledPAC_ClientClaimsInfo_XPRESS_HUFF)
 //	if err != nil {
 //		t.Fatal("Could not decode test data hex string")
 //	}

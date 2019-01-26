@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"log"
 
-	"gopkg.in/jcmturner/gokrb5.v6/crypto"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/keyusage"
-	"gopkg.in/jcmturner/gokrb5.v6/types"
+	"gopkg.in/jcmturner/gokrb5.v7/crypto"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/keyusage"
+	"gopkg.in/jcmturner/gokrb5.v7/types"
 	"gopkg.in/jcmturner/rpc.v1/mstypes"
 )
 
@@ -84,73 +85,9 @@ func (pac *PACType) Unmarshal(b []byte) (err error) {
 	return nil
 }
 
-// PACInfoMandatoryBuffers processes the mandatory PAC Info Buffers that must be present in the PAC.
-func (pac *PACType) PACInfoMandatoryBuffers(key types.EncryptionKey) error {
-	for _, buf := range pac.Buffers {
-		p := make([]byte, buf.CBBufferSize, buf.CBBufferSize)
-		copy(p, pac.Data[int(buf.Offset):int(buf.Offset)+int(buf.CBBufferSize)])
-		switch buf.ULType {
-		case infoTypeKerbValidationInfo:
-			if pac.KerbValidationInfo != nil {
-				//Must ignore subsequent buffers of this type
-				continue
-			}
-			var k KerbValidationInfo
-			err := k.Unmarshal(p)
-			if err != nil {
-				return fmt.Errorf("error processing KerbValidationInfo: %v", err)
-			}
-			pac.KerbValidationInfo = &k
-		case infoTypePACServerSignatureData:
-			if pac.ServerChecksum != nil {
-				//Must ignore subsequent buffers of this type
-				continue
-			}
-			var k SignatureData
-			zb, err := k.Unmarshal(p)
-			copy(pac.ZeroSigData[int(buf.Offset):int(buf.Offset)+int(buf.CBBufferSize)], zb)
-			if err != nil {
-				return fmt.Errorf("error processing ServerChecksum: %v", err)
-			}
-			pac.ServerChecksum = &k
-		case infoTypePACKDCSignatureData:
-			if pac.KDCChecksum != nil {
-				//Must ignore subsequent buffers of this type
-				continue
-			}
-			var k SignatureData
-			zb, err := k.Unmarshal(p)
-			copy(pac.ZeroSigData[int(buf.Offset):int(buf.Offset)+int(buf.CBBufferSize)], zb)
-			if err != nil {
-				return fmt.Errorf("error processing KDCChecksum: %v", err)
-			}
-			pac.KDCChecksum = &k
-		case infoTypePACClientInfo:
-			if pac.ClientInfo != nil {
-				//Must ignore subsequent buffers of this type
-				continue
-			}
-			var k ClientInfo
-			err := k.Unmarshal(p)
-			if err != nil {
-				return fmt.Errorf("error processing ClientInfo: %v", err)
-			}
-			pac.ClientInfo = &k
-		default:
-			continue
-		}
-	}
-
-	if ok, err := pac.validate(key); !ok {
-		return err
-	}
-
-	return nil
-}
-
 // ProcessPACInfoBuffers processes the PAC Info Buffers.
 // https://msdn.microsoft.com/en-us/library/cc237954.aspx
-func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
+func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey, l *log.Logger) error {
 	for _, buf := range pac.Buffers {
 		p := make([]byte, buf.CBBufferSize, buf.CBBufferSize)
 		copy(p, pac.Data[int(buf.Offset):int(buf.Offset)+int(buf.CBBufferSize)])
@@ -224,7 +161,8 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			var k S4UDelegationInfo
 			err := k.Unmarshal(p)
 			if err != nil {
-				return fmt.Errorf("error processing S4U_DelegationInfo: %v", err)
+				l.Printf("could not process S4U_DelegationInfo: %v", err)
+				continue
 			}
 			pac.S4UDelegationInfo = &k
 		case infoTypeUPNDNSInfo:
@@ -235,7 +173,8 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			var k UPNDNSInfo
 			err := k.Unmarshal(p)
 			if err != nil {
-				return fmt.Errorf("error processing UPN_DNSInfo: %v", err)
+				l.Printf("could not process UPN_DNSInfo: %v", err)
+				continue
 			}
 			pac.UPNDNSInfo = &k
 		case infoTypePACClientClaimsInfo:
@@ -246,7 +185,8 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			var k ClientClaimsInfo
 			err := k.Unmarshal(p)
 			if err != nil {
-				return fmt.Errorf("error processing ClientClaimsInfo: %v", err)
+				l.Printf("could not process ClientClaimsInfo: %v", err)
+				continue
 			}
 			pac.ClientClaimsInfo = &k
 		case infoTypePACDeviceInfo:
@@ -257,7 +197,8 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			var k DeviceInfo
 			err := k.Unmarshal(p)
 			if err != nil {
-				return fmt.Errorf("error processing DeviceInfo: %v", err)
+				l.Printf("could not process DeviceInfo: %v", err)
+				continue
 			}
 			pac.DeviceInfo = &k
 		case infoTypePACDeviceClaimsInfo:
@@ -268,20 +209,21 @@ func (pac *PACType) ProcessPACInfoBuffers(key types.EncryptionKey) error {
 			var k DeviceClaimsInfo
 			err := k.Unmarshal(p)
 			if err != nil {
-				return fmt.Errorf("error processing DeviceClaimsInfo: %v", err)
+				l.Printf("could not process DeviceClaimsInfo: %v", err)
+				continue
 			}
 			pac.DeviceClaimsInfo = &k
 		}
 	}
 
-	if ok, err := pac.validate(key); !ok {
+	if ok, err := pac.verify(key); !ok {
 		return err
 	}
 
 	return nil
 }
 
-func (pac *PACType) validate(key types.EncryptionKey) (bool, error) {
+func (pac *PACType) verify(key types.EncryptionKey) (bool, error) {
 	if pac.KerbValidationInfo == nil {
 		return false, errors.New("PAC Info Buffers does not contain a KerbValidationInfo")
 	}

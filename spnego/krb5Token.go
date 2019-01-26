@@ -1,51 +1,51 @@
-package gssapi
+package spnego
 
 import (
+	"context"
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
 	"fmt"
 
 	"github.com/jcmturner/gofork/encoding/asn1"
-	"gopkg.in/jcmturner/gokrb5.v6/asn1tools"
-	"gopkg.in/jcmturner/gokrb5.v6/credentials"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/chksumtype"
-	"gopkg.in/jcmturner/gokrb5.v6/krberror"
-	"gopkg.in/jcmturner/gokrb5.v6/messages"
-	"gopkg.in/jcmturner/gokrb5.v6/types"
+	"gopkg.in/jcmturner/gokrb5.v7/asn1tools"
+	"gopkg.in/jcmturner/gokrb5.v7/client"
+	"gopkg.in/jcmturner/gokrb5.v7/credentials"
+	"gopkg.in/jcmturner/gokrb5.v7/gssapi"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/chksumtype"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/msgtype"
+	"gopkg.in/jcmturner/gokrb5.v7/krberror"
+	"gopkg.in/jcmturner/gokrb5.v7/messages"
+	"gopkg.in/jcmturner/gokrb5.v7/service"
+	"gopkg.in/jcmturner/gokrb5.v7/types"
 )
 
-// GSSAPI MechToken IDs and flags.
+// GSSAPI KRB5 MechToken IDs.
 const (
 	TOK_ID_KRB_AP_REQ = "0100"
 	TOK_ID_KRB_AP_REP = "0200"
 	TOK_ID_KRB_ERROR  = "0300"
-
-	GSS_C_DELEG_FLAG    = 1
-	GSS_C_MUTUAL_FLAG   = 2
-	GSS_C_REPLAY_FLAG   = 4
-	GSS_C_SEQUENCE_FLAG = 8
-	GSS_C_CONF_FLAG     = 16
-	GSS_C_INTEG_FLAG    = 32
 )
 
-// MechToken implementation for GSSAPI.
-type MechToken struct {
+// KRB5Token context token implementation for GSSAPI.
+type KRB5Token struct {
 	OID      asn1.ObjectIdentifier
-	TokID    []byte
+	tokID    []byte
 	APReq    messages.APReq
 	APRep    messages.APRep
 	KRBError messages.KRBError
+	settings *service.Settings
+	context  context.Context
 }
 
-// Marshal a MechToken into a slice of bytes.
-func (m *MechToken) Marshal() ([]byte, error) {
+// Marshal a KRB5Token into a slice of bytes.
+func (m *KRB5Token) Marshal() ([]byte, error) {
 	// Create the header
 	b, _ := asn1.Marshal(m.OID)
-	b = append(b, m.TokID...)
+	b = append(b, m.tokID...)
 	var tb []byte
 	var err error
-	switch hex.EncodeToString(m.TokID) {
+	switch hex.EncodeToString(m.tokID) {
 	case TOK_ID_KRB_AP_REQ:
 		tb, err = m.APReq.Marshal()
 		if err != nil {
@@ -63,73 +63,107 @@ func (m *MechToken) Marshal() ([]byte, error) {
 	return asn1tools.AddASNAppTag(b, 0), nil
 }
 
-// Unmarshal a MechToken.
-func (m *MechToken) Unmarshal(b []byte) error {
+// Unmarshal a KRB5Token.
+func (m *KRB5Token) Unmarshal(b []byte) error {
 	var oid asn1.ObjectIdentifier
 	r, err := asn1.UnmarshalWithParams(b, &oid, fmt.Sprintf("application,explicit,tag:%v", 0))
 	if err != nil {
-		return fmt.Errorf("error unmarshalling MechToken OID: %v", err)
+		return fmt.Errorf("error unmarshalling KRB5Token OID: %v", err)
 	}
 	m.OID = oid
-	m.TokID = r[0:2]
-	switch hex.EncodeToString(m.TokID) {
+	m.tokID = r[0:2]
+	switch hex.EncodeToString(m.tokID) {
 	case TOK_ID_KRB_AP_REQ:
 		var a messages.APReq
 		err = a.Unmarshal(r[2:])
 		if err != nil {
-			return fmt.Errorf("error unmarshalling MechToken AP_REQ: %v", err)
+			return fmt.Errorf("error unmarshalling KRB5Token AP_REQ: %v", err)
 		}
 		m.APReq = a
 	case TOK_ID_KRB_AP_REP:
 		var a messages.APRep
 		err = a.Unmarshal(r[2:])
 		if err != nil {
-			return fmt.Errorf("error unmarshalling MechToken AP_REP: %v", err)
+			return fmt.Errorf("error unmarshalling KRB5Token AP_REP: %v", err)
 		}
 		m.APRep = a
 	case TOK_ID_KRB_ERROR:
 		var a messages.KRBError
 		err = a.Unmarshal(r[2:])
 		if err != nil {
-			return fmt.Errorf("error unmarshalling MechToken KRBError: %v", err)
+			return fmt.Errorf("error unmarshalling KRB5Token KRBError: %v", err)
 		}
 		m.KRBError = a
 	}
 	return nil
 }
 
+// Verify a KRB5Token.
+func (m *KRB5Token) Verify() (bool, gssapi.Status) {
+	switch hex.EncodeToString(m.tokID) {
+	case TOK_ID_KRB_AP_REQ:
+		ok, creds, err := service.VerifyAPREQ(m.APReq, m.settings)
+		if err != nil {
+			return false, gssapi.Status{Code: gssapi.StatusDefectiveToken, Message: err.Error()}
+		}
+		if !ok {
+			return false, gssapi.Status{Code: gssapi.StatusDefectiveCredential, Message: "KRB5_AP_REQ token not valid"}
+		}
+		m.context = context.Background()
+		m.context = context.WithValue(m.context, CTXKeyCredentials, creds)
+		m.context = context.WithValue(m.context, CTXKeyAuthenticated, ok)
+		return true, gssapi.Status{Code: gssapi.StatusComplete}
+	case TOK_ID_KRB_AP_REP:
+		// Client side
+		// TODO how to verify the AP_REP - not yet implemented
+		return false, gssapi.Status{Code: gssapi.StatusFailure, Message: "verifying an AP_REP is not currently supported by gokrb5"}
+	case TOK_ID_KRB_ERROR:
+		if m.KRBError.MsgType != msgtype.KRB_ERROR {
+			return false, gssapi.Status{Code: gssapi.StatusDefectiveToken, Message: "KRB5_Error token not valid"}
+		}
+		return true, gssapi.Status{Code: gssapi.StatusUnavailable}
+	}
+	return false, gssapi.Status{Code: gssapi.StatusDefectiveToken, Message: "unknown TOK_ID in KRB5 token"}
+}
+
 // IsAPReq tests if the MechToken contains an AP_REQ.
-func (m *MechToken) IsAPReq() bool {
-	if hex.EncodeToString(m.TokID) == TOK_ID_KRB_AP_REQ {
+func (m *KRB5Token) IsAPReq() bool {
+	if hex.EncodeToString(m.tokID) == TOK_ID_KRB_AP_REQ {
 		return true
 	}
 	return false
 }
 
 // IsAPRep tests if the MechToken contains an AP_REP.
-func (m *MechToken) IsAPRep() bool {
-	if hex.EncodeToString(m.TokID) == TOK_ID_KRB_AP_REP {
+func (m *KRB5Token) IsAPRep() bool {
+	if hex.EncodeToString(m.tokID) == TOK_ID_KRB_AP_REP {
 		return true
 	}
 	return false
 }
 
 // IsKRBError tests if the MechToken contains an KRB_ERROR.
-func (m *MechToken) IsKRBError() bool {
-	if hex.EncodeToString(m.TokID) == TOK_ID_KRB_ERROR {
+func (m *KRB5Token) IsKRBError() bool {
+	if hex.EncodeToString(m.tokID) == TOK_ID_KRB_ERROR {
 		return true
 	}
 	return false
 }
 
-// NewAPREQMechToken creates new Kerberos AP_REQ MechToken.
-func NewAPREQMechToken(creds credentials.Credentials, tkt messages.Ticket, sessionKey types.EncryptionKey, GSSAPIFlags []int, APOptions []int) (MechToken, error) {
-	var m MechToken
-	m.OID = MechTypeOIDKRB5
-	tb, _ := hex.DecodeString(TOK_ID_KRB_AP_REQ)
-	m.TokID = tb
+// Context returns the KRB5 token's context which will contain any verify user identity information.
+func (m *KRB5Token) Context() context.Context {
+	return m.context
+}
 
-	auth, err := NewAuthenticator(creds, GSSAPIFlags)
+// NewKRB5TokenAPREQ creates a new KRB5 token with AP_REQ
+func NewKRB5TokenAPREQ(cl *client.Client, tkt messages.Ticket, sessionKey types.EncryptionKey, GSSAPIFlags []int, APOptions []int) (KRB5Token, error) {
+	// TODO consider providing the SPN rather than the specific tkt and key and get these from the krb client.
+	var m KRB5Token
+	m.OID = gssapi.OID(gssapi.OIDKRB5)
+	tb, _ := hex.DecodeString(TOK_ID_KRB_AP_REQ)
+	m.tokID = tb
+
+	auth, err := krb5TokenAuthenticator(cl.Credentials, GSSAPIFlags)
 	if err != nil {
 		return m, err
 	}
@@ -148,10 +182,10 @@ func NewAPREQMechToken(creds credentials.Credentials, tkt messages.Ticket, sessi
 	return m, nil
 }
 
-// NewAuthenticator creates a new kerberos authenticator for kerberos MechToken
-func NewAuthenticator(creds credentials.Credentials, flags []int) (types.Authenticator, error) {
+// krb5TokenAuthenticator creates a new kerberos authenticator for kerberos MechToken
+func krb5TokenAuthenticator(creds *credentials.Credentials, flags []int) (types.Authenticator, error) {
 	//RFC 4121 Section 4.1.1
-	auth, err := types.NewAuthenticator(creds.Realm, creds.CName)
+	auth, err := types.NewAuthenticator(creds.Domain(), creds.CName())
 	if err != nil {
 		return auth, krberror.Errorf(err, krberror.KRBMsgError, "error generating new authenticator")
 	}
@@ -167,7 +201,7 @@ func newAuthenticatorChksum(flags []int) []byte {
 	a := make([]byte, 24)
 	binary.LittleEndian.PutUint32(a[:4], 16)
 	for _, i := range flags {
-		if i == GSS_C_DELEG_FLAG {
+		if i == gssapi.ContextFlagDeleg {
 			x := make([]byte, 28-len(a))
 			a = append(a, x...)
 		}

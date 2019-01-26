@@ -3,7 +3,7 @@ package rfc3961
 import (
 	"bytes"
 
-	"gopkg.in/jcmturner/gokrb5.v6/crypto/etype"
+	"gopkg.in/jcmturner/gokrb5.v7/crypto/etype"
 )
 
 const (

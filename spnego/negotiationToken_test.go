@@ -1,4 +1,4 @@
-package gssapi
+package spnego
 
 import (
 	"encoding/hex"
@@ -68,7 +68,7 @@ func TestUnmarshal_negTokenResp(t *testing.T) {
 	assert.False(t, isInit, "Boolean indicating type is negTokenInit is not false")
 	nResp := nt.(NegTokenResp)
 	assert.Equal(t, asn1.Enumerated(0), nResp.NegState)
-	assert.Equal(t, MechTypeOIDKRB5, nResp.SupportedMech, "SupportedMech type not as expected.")
+	assert.Equal(t, asn1.ObjectIdentifier{1, 2, 840, 113554, 1, 2, 2}, nResp.SupportedMech, "SupportedMech type not as expected.")
 }
 
 func TestMarshal_negTokenResp(t *testing.T) {

@@ -7,14 +7,14 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v6/credentials"
-	"gopkg.in/jcmturner/gokrb5.v6/iana"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/etypeID"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/msgtype"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/nametype"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/patype"
-	"gopkg.in/jcmturner/gokrb5.v6/keytab"
-	"gopkg.in/jcmturner/gokrb5.v6/testdata"
+	"gopkg.in/jcmturner/gokrb5.v7/credentials"
+	"gopkg.in/jcmturner/gokrb5.v7/iana"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/etypeID"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/msgtype"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/nametype"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/patype"
+	"gopkg.in/jcmturner/gokrb5.v7/keytab"
+	"gopkg.in/jcmturner/gokrb5.v7/test/testdata"
 )
 
 const (
@@ -28,14 +28,13 @@ const (
 func TestUnmarshalASRep(t *testing.T) {
 	t.Parallel()
 	var a ASRep
-	v := "encode_krb5_as_rep"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5as_rep)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	assert.Equal(t, iana.PVNO, a.PVNO, "PVNO not as expected")
 	assert.Equal(t, msgtype.KRB_AS_REP, a.MsgType, "MsgType not as expected")
@@ -64,14 +63,13 @@ func TestUnmarshalASRep(t *testing.T) {
 func TestUnmarshalASRep_optionalsNULL(t *testing.T) {
 	t.Parallel()
 	var a ASRep
-	v := "encode_krb5_as_rep(optionalsNULL)"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5as_repOptionalsNULL)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	assert.Equal(t, iana.PVNO, a.PVNO, "PVNO not as expected")
 	assert.Equal(t, msgtype.KRB_AS_REP, a.MsgType, "MsgType not as expected")
@@ -96,14 +94,13 @@ func TestUnmarshalASRep_optionalsNULL(t *testing.T) {
 func TestUnmarshalTGSRep(t *testing.T) {
 	t.Parallel()
 	var a TGSRep
-	v := "encode_krb5_tgs_rep"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5tgs_rep)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	assert.Equal(t, iana.PVNO, a.PVNO, "PVNO not as expected")
 	assert.Equal(t, msgtype.KRB_TGS_REP, a.MsgType, "MsgType not as expected")
@@ -132,14 +129,13 @@ func TestUnmarshalTGSRep(t *testing.T) {
 func TestUnmarshalTGSRep_optionalsNULL(t *testing.T) {
 	t.Parallel()
 	var a TGSRep
-	v := "encode_krb5_tgs_rep(optionalsNULL)"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5tgs_repOptionalsNULL)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	assert.Equal(t, iana.PVNO, a.PVNO, "PVNO not as expected")
 	assert.Equal(t, msgtype.KRB_TGS_REP, a.MsgType, "MsgType not as expected")
@@ -164,14 +160,13 @@ func TestUnmarshalTGSRep_optionalsNULL(t *testing.T) {
 func TestUnmarshalEncKDCRepPart(t *testing.T) {
 	t.Parallel()
 	var a EncKDCRepPart
-	v := "encode_krb5_enc_kdc_rep_part"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5enc_kdc_rep_part)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	//Parse the test time value into a time.Time type
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
@@ -203,14 +198,13 @@ func TestUnmarshalEncKDCRepPart(t *testing.T) {
 func TestUnmarshalEncKDCRepPart_optionalsNULL(t *testing.T) {
 	t.Parallel()
 	var a EncKDCRepPart
-	v := "encode_krb5_enc_kdc_rep_part(optionalsNULL)"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5enc_kdc_rep_partOptionalsNULL)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	//Parse the test time value into a time.Time type
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
@@ -256,11 +250,12 @@ func TestUnmarshalASRepDecodeAndDecrypt(t *testing.T) {
 	assert.Equal(t, 0, asRep.EncPart.KVNO, "Encrypted part KVNO not as expected")
 	//t.Log("Finished testing unecrypted parts of AS REP")
 	ktb, _ := hex.DecodeString(testuser1EType18Keytab)
-	kt, err := keytab.Parse(ktb)
+	kt := keytab.New()
+	err = kt.Unmarshal(ktb)
 	if err != nil {
 		t.Fatalf("keytab parse error: %v\n", err)
 	}
-	cred := credentials.NewCredentials(testUser, testRealm)
+	cred := credentials.New(testUser, testRealm)
 	_, err = asRep.DecryptEncPart(cred.WithKeytab(kt))
 	if err != nil {
 		t.Fatalf("Decryption of AS_REP EncPart failed: %v", err)
@@ -301,7 +296,7 @@ func TestUnmarshalASRepDecodeAndDecrypt_withPassword(t *testing.T) {
 	assert.Equal(t, 1, asRep.Ticket.EncPart.KVNO, "Ticket encrypted part KVNO not as expected")
 	assert.Equal(t, etypeID.AES256_CTS_HMAC_SHA1_96, asRep.EncPart.EType, "Etype of encrypted part not as expected")
 	assert.Equal(t, 0, asRep.EncPart.KVNO, "Encrypted part KVNO not as expected")
-	cred := credentials.NewCredentials(testUser, testRealm)
+	cred := credentials.New(testUser, testRealm)
 	_, err = asRep.DecryptEncPart(cred.WithPassword(testUserPassword))
 	if err != nil {
 		t.Fatalf("Decryption of AS_REP EncPart failed: %v", err)

@@ -3,7 +3,7 @@ package types
 import (
 	"strings"
 
-	"gopkg.in/jcmturner/gokrb5.v6/iana/nametype"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/nametype"
 )
 
 // Reference: https://www.ietf.org/rfc/rfc4120.txt
@@ -24,7 +24,7 @@ func NewPrincipalName(ntype int32, spn string) PrincipalName {
 }
 
 // GetSalt returns a salt derived from the PrincipalName.
-func (pn *PrincipalName) GetSalt(realm string) string {
+func (pn PrincipalName) GetSalt(realm string) string {
 	var sb []byte
 	sb = append(sb, realm...)
 	for _, n := range pn.NameString {
@@ -34,7 +34,7 @@ func (pn *PrincipalName) GetSalt(realm string) string {
 }
 
 // Equal tests if the PrincipalName is equal to the one provided.
-func (pn *PrincipalName) Equal(n PrincipalName) bool {
+func (pn PrincipalName) Equal(n PrincipalName) bool {
 	//https://tools.ietf.org/html/rfc4120#section-6.2 - the name type is not significant when checking for equivalence
 	for i, s := range pn.NameString {
 		if n.NameString[i] != s {
@@ -44,8 +44,8 @@ func (pn *PrincipalName) Equal(n PrincipalName) bool {
 	return true
 }
 
-// GetPrincipalNameString returns the PrincipalName in string form.
-func (pn *PrincipalName) GetPrincipalNameString() string {
+// PrincipalNameString() returns the PrincipalName in string form.
+func (pn PrincipalName) PrincipalNameString() string {
 	return strings.Join(pn.NameString, "/")
 }
 

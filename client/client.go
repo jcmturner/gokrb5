@@ -6,44 +6,35 @@ import (
 	"fmt"
 	"time"
 
-	"gopkg.in/jcmturner/gokrb5.v6/config"
-	"gopkg.in/jcmturner/gokrb5.v6/credentials"
-	"gopkg.in/jcmturner/gokrb5.v6/crypto"
-	"gopkg.in/jcmturner/gokrb5.v6/crypto/etype"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/errorcode"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/nametype"
-	"gopkg.in/jcmturner/gokrb5.v6/keytab"
-	"gopkg.in/jcmturner/gokrb5.v6/krberror"
-	"gopkg.in/jcmturner/gokrb5.v6/messages"
-	"gopkg.in/jcmturner/gokrb5.v6/types"
+	"gopkg.in/jcmturner/gokrb5.v7/config"
+	"gopkg.in/jcmturner/gokrb5.v7/credentials"
+	"gopkg.in/jcmturner/gokrb5.v7/crypto"
+	"gopkg.in/jcmturner/gokrb5.v7/crypto/etype"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/errorcode"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/nametype"
+	"gopkg.in/jcmturner/gokrb5.v7/keytab"
+	"gopkg.in/jcmturner/gokrb5.v7/krberror"
+	"gopkg.in/jcmturner/gokrb5.v7/messages"
+	"gopkg.in/jcmturner/gokrb5.v7/types"
 )
 
 // Client side configuration and state.
 type Client struct {
 	Credentials *credentials.Credentials
 	Config      *config.Config
-	GoKrb5Conf  Config
+	settings    *Settings
 	sessions    *sessions
 	cache       *Cache
 }
 
-// Config struct holds GoKRB5 specific client configurations.
-// Set Disable_PA_FX_FAST to true to force this behaviour off.
-// Set Assume_PA_ENC_TIMESTAMP_Required to send the PA_ENC_TIMESTAMP pro-actively rather than waiting for a KRB_ERROR response from the KDC indicating it is required.
-type Config struct {
-	DisablePAFXFast              bool
-	AssumePAEncTimestampRequired bool
-	preAuthEType                 int32
-}
-
 // NewClientWithPassword creates a new client from a password credential.
 // Set the realm to empty string to use the default realm from config.
-func NewClientWithPassword(username, realm, password string) Client {
-	creds := credentials.NewCredentials(username, realm)
-	return Client{
+func NewClientWithPassword(username, realm, password string, krb5conf *config.Config, settings ...func(*Settings)) *Client {
+	creds := credentials.New(username, realm)
+	return &Client{
 		Credentials: creds.WithPassword(password),
-		Config:      config.NewConfig(),
-		GoKrb5Conf:  Config{},
+		Config:      krb5conf,
+		settings:    NewSettings(settings...),
 		sessions: &sessions{
 			Entries: make(map[string]*session),
 		},
@@ -52,12 +43,12 @@ func NewClientWithPassword(username, realm, password string) Client {
 }
 
 // NewClientWithKeytab creates a new client from a keytab credential.
-func NewClientWithKeytab(username, realm string, kt keytab.Keytab) Client {
-	creds := credentials.NewCredentials(username, realm)
-	return Client{
+func NewClientWithKeytab(username, realm string, kt *keytab.Keytab, krb5conf *config.Config, settings ...func(*Settings)) *Client {
+	creds := credentials.New(username, realm)
+	return &Client{
 		Credentials: creds.WithKeytab(kt),
-		Config:      config.NewConfig(),
-		GoKrb5Conf:  Config{},
+		Config:      krb5conf,
+		settings:    NewSettings(settings...),
 		sessions: &sessions{
 			Entries: make(map[string]*session),
 		},
@@ -68,11 +59,11 @@ func NewClientWithKeytab(username, realm string, kt keytab.Keytab) Client {
 // NewClientFromCCache create a client from a populated client cache.
 //
 // WARNING: A client created from CCache does not automatically renew TGTs and a failure will occur after the TGT expires.
-func NewClientFromCCache(c credentials.CCache) (Client, error) {
-	cl := Client{
+func NewClientFromCCache(c *credentials.CCache, krb5conf *config.Config, settings ...func(*Settings)) (*Client, error) {
+	cl := &Client{
 		Credentials: c.GetClientCredentials(),
-		Config:      config.NewConfig(),
-		GoKrb5Conf:  Config{},
+		Config:      krb5conf,
+		settings:    NewSettings(settings...),
 		sessions: &sessions{
 			Entries: make(map[string]*session),
 		},
@@ -117,30 +108,14 @@ func NewClientFromCCache(c credentials.CCache) (Client, error) {
 	return cl, nil
 }
 
-// WithConfig sets the Kerberos configuration for the client.
-func (cl *Client) WithConfig(cfg *config.Config) *Client {
-	cl.Config = cfg
-	return cl
-}
-
-// WithKeytab adds a keytab to the client
-func (cl *Client) WithKeytab(kt keytab.Keytab) *Client {
-	cl.Credentials.WithKeytab(kt)
-	return cl
-}
-
-// WithPassword adds a password to the client
-func (cl *Client) WithPassword(password string) *Client {
-	cl.Credentials.WithPassword(password)
-	return cl
-}
-
-// Key returns a key for the client. Preferably from a keytab and then generated from the password.
-// The KRBError would have been returned from the KDC and must be of type KDC_ERR_PREAUTH_REQUIRED.
-// If a KRBError is not available pass messages.KRBError{} and a key will be returned from the credentials keytab.
-func (cl *Client) Key(etype etype.EType, krberr messages.KRBError) (types.EncryptionKey, error) {
+// Key returns the client's encryption key for the specified encryption type.
+// The key can be retrieved either from the keytab or generated from the client's password.
+// If the client has both a keytab and a password defined the keytab is favoured as the source for the key
+// A KRBError can be passed in the event the KDC returns one of type KDC_ERR_PREAUTH_REQUIRED and is required to derive
+// the key for pre-authentication from the client's password. If a KRBError is not available, pass nil to this argument.
+func (cl *Client) Key(etype etype.EType, krberr *messages.KRBError) (types.EncryptionKey, error) {
 	if cl.Credentials.HasKeytab() && etype != nil {
-		return cl.Credentials.Keytab.GetEncryptionKey(cl.Credentials.CName.NameString, cl.Credentials.Realm, 0, etype.GetETypeID())
+		return cl.Credentials.Keytab().GetEncryptionKey(cl.Credentials.CName(), cl.Credentials.Domain(), 0, etype.GetETypeID())
 	} else if cl.Credentials.HasPassword() {
 		if krberr.ErrorCode == errorcode.KDC_ERR_PREAUTH_REQUIRED {
 			var pas types.PADataSequence
@@ -148,43 +123,33 @@ func (cl *Client) Key(etype etype.EType, krberr messages.KRBError) (types.Encryp
 			if err != nil {
 				return types.EncryptionKey{}, fmt.Errorf("could not get PAData from KRBError to generate key from password: %v", err)
 			}
-			key, _, err := crypto.GetKeyFromPassword(cl.Credentials.Password, krberr.CName, krberr.CRealm, etype.GetETypeID(), pas)
+			key, _, err := crypto.GetKeyFromPassword(cl.Credentials.Password(), krberr.CName, krberr.CRealm, etype.GetETypeID(), pas)
 			return key, err
 		}
-		key, _, err := crypto.GetKeyFromPassword(cl.Credentials.Password, cl.Credentials.CName, cl.Credentials.Realm, etype.GetETypeID(), types.PADataSequence{})
+		key, _, err := crypto.GetKeyFromPassword(cl.Credentials.Password(), cl.Credentials.CName(), cl.Credentials.Domain(), etype.GetETypeID(), types.PADataSequence{})
 		return key, err
 	}
 	return types.EncryptionKey{}, errors.New("credential has neither keytab or password to generate key")
 }
 
-// LoadConfig loads the Kerberos configuration for the client from file path specified.
-func (cl *Client) LoadConfig(cfgPath string) (*Client, error) {
-	cfg, err := config.Load(cfgPath)
-	if err != nil {
-		return cl, err
-	}
-	cl.Config = cfg
-	return cl, nil
-}
-
 // IsConfigured indicates if the client has the values required set.
 func (cl *Client) IsConfigured() (bool, error) {
-	if cl.Credentials.Username == "" {
+	if cl.Credentials.UserName() == "" {
 		return false, errors.New("client does not have a username")
 	}
-	if cl.Credentials.Realm == "" {
+	if cl.Credentials.Domain() == "" {
 		return false, errors.New("client does not have a define realm")
 	}
 	// Client needs to have either a password, keytab or a session already (later when loading from CCache)
 	if !cl.Credentials.HasPassword() && !cl.Credentials.HasKeytab() {
-		authTime, _, _, _, err := cl.sessionTimes(cl.Credentials.Realm)
+		authTime, _, _, _, err := cl.sessionTimes(cl.Credentials.Domain())
 		if err != nil || authTime.IsZero() {
 			return false, errors.New("client has neither a keytab nor a password set and no session")
 		}
 	}
 	if !cl.Config.LibDefaults.DNSLookupKDC {
 		for _, r := range cl.Config.Realms {
-			if r.Realm == cl.Credentials.Realm {
+			if r.Realm == cl.Credentials.Domain() {
 				if len(r.KDC) > 0 {
 					return true, nil
 				}
@@ -200,7 +165,18 @@ func (cl *Client) Login() error {
 	if ok, err := cl.IsConfigured(); !ok {
 		return err
 	}
-	ASReq, err := messages.NewASReqForTGT(cl.Credentials.Realm, cl.Config, cl.Credentials.CName)
+	if !cl.Credentials.HasPassword() && !cl.Credentials.HasKeytab() {
+		_, endTime, _, _, err := cl.sessionTimes(cl.Credentials.Domain())
+		if err != nil {
+			return krberror.Errorf(err, krberror.KRBMsgError, "no user credentials available and error getting any existing session")
+		}
+		if time.Now().UTC().After(endTime) {
+			return krberror.NewKrberror(krberror.KRBMsgError, "cannot login, no user credentials available and no valid existing session")
+		}
+		// no credentials but there is a session with tgt already
+		return nil
+	}
+	ASReq, err := messages.NewASReqForTGT(cl.Credentials.Domain(), cl.Config, cl.Credentials.CName())
 	if err != nil {
 		return krberror.Errorf(err, krberror.KRBMsgError, "error generating new AS_REQ")
 	}
@@ -208,27 +184,27 @@ func (cl *Client) Login() error {
 	if err != nil {
 		return krberror.Errorf(err, krberror.KRBMsgError, "failed setting AS_REQ PAData")
 	}
-	ASRep, err := cl.ASExchange(cl.Credentials.Realm, ASReq, 0)
+	ASRep, err := cl.ASExchange(cl.Credentials.Domain(), ASReq, 0)
 	if err != nil {
 		return err
 	}
-	cl.AddSession(ASRep.Ticket, ASRep.DecryptedEncPart)
+	cl.addSession(ASRep.Ticket, ASRep.DecryptedEncPart)
 	return nil
 }
 
-// remoteRealmSession returns the session for a realm that the client is not a member of but for which there is a trust
+// realmLogin obtains or renews a TGT and establishes a session for the realm specified.
 func (cl *Client) realmLogin(realm string) error {
-	if realm == cl.Credentials.Realm {
+	if realm == cl.Credentials.Domain() {
 		return cl.Login()
 	}
-	_, endTime, _, _, err := cl.sessionTimes(cl.Credentials.Realm)
+	_, endTime, _, _, err := cl.sessionTimes(cl.Credentials.Domain())
 	if err != nil || time.Now().UTC().After(endTime) {
 		err := cl.Login()
 		if err != nil {
 			return fmt.Errorf("could not get valid TGT for client's realm: %v", err)
 		}
 	}
-	tgt, skey, err := cl.sessionTGT(cl.Credentials.Realm)
+	tgt, skey, err := cl.sessionTGT(cl.Credentials.Domain())
 	if err != nil {
 		return err
 	}
@@ -238,19 +214,19 @@ func (cl *Client) realmLogin(realm string) error {
 		NameString: []string{"krbtgt", realm},
 	}
 
-	_, tgsRep, err := cl.TGSExchange(spn, cl.Credentials.Realm, tgt, skey, false, 0)
+	_, tgsRep, err := cl.TGSREQGenerateAndExchange(spn, cl.Credentials.Domain(), tgt, skey, false)
 	if err != nil {
 		return err
 	}
-	cl.AddSession(tgsRep.Ticket, tgsRep.DecryptedEncPart)
+	cl.addSession(tgsRep.Ticket, tgsRep.DecryptedEncPart)
 
 	return nil
 }
 
 // Destroy stops the auto-renewal of all sessions and removes the sessions and cache entries from the client.
 func (cl *Client) Destroy() {
-	creds := credentials.NewCredentials("", "")
+	creds := credentials.New("", "")
 	cl.sessions.destroy()
 	cl.cache.clear()
-	cl.Credentials = &creds
+	cl.Credentials = creds
 }

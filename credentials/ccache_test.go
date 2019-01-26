@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/nametype"
-	"gopkg.in/jcmturner/gokrb5.v6/testdata"
-	"gopkg.in/jcmturner/gokrb5.v6/types"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/nametype"
+	"gopkg.in/jcmturner/gokrb5.v7/test/testdata"
+	"gopkg.in/jcmturner/gokrb5.v7/types"
 )
 
 func TestParse(t *testing.T) {
@@ -16,7 +16,8 @@ func TestParse(t *testing.T) {
 	if err != nil {
 		t.Fatal("Error decoding test data")
 	}
-	c, err := ParseCCache(b)
+	c := new(CCache)
+	err = c.Unmarshal(b)
 	if err != nil {
 		t.Fatalf("Error parsing cache: %v", err)
 	}
@@ -25,7 +26,7 @@ func TestParse(t *testing.T) {
 	assert.Equal(t, uint16(1), c.Header.fields[0].tag, "Header tag not as expected")
 	assert.Equal(t, uint16(8), c.Header.fields[0].length, "Length of header not as expected")
 	assert.Equal(t, "TEST.GOKRB5", c.DefaultPrincipal.Realm, "Default client principal realm not as expected")
-	assert.Equal(t, "testuser1", c.DefaultPrincipal.PrincipalName.GetPrincipalNameString(), "Default client principaal name not as expected")
+	assert.Equal(t, "testuser1", c.DefaultPrincipal.PrincipalName.PrincipalNameString(), "Default client principaal name not as expected")
 	assert.Equal(t, 3, len(c.Credentials), "Number of credentials not as expected")
 	tgtpn := types.PrincipalName{
 		NameType:   nametype.KRB_NT_SRV_INST,
@@ -45,7 +46,8 @@ func TestCCache_GetClientPrincipalName(t *testing.T) {
 	if err != nil {
 		t.Fatal("Error decoding test data")
 	}
-	c, err := ParseCCache(b)
+	c := new(CCache)
+	err = c.Unmarshal(b)
 	if err != nil {
 		t.Fatalf("Error parsing cache: %v", err)
 	}
@@ -62,7 +64,8 @@ func TestCCache_GetClientCredentials(t *testing.T) {
 	if err != nil {
 		t.Fatal("Error decoding test data")
 	}
-	c, err := ParseCCache(b)
+	c := new(CCache)
+	err = c.Unmarshal(b)
 	if err != nil {
 		t.Fatalf("Error parsing cache: %v", err)
 	}
@@ -71,9 +74,9 @@ func TestCCache_GetClientCredentials(t *testing.T) {
 		NameString: []string{"testuser1"},
 	}
 	cred := c.GetClientCredentials()
-	assert.Equal(t, "TEST.GOKRB5", cred.Realm, "Client realm in credential not as expected")
-	assert.Equal(t, pn, cred.CName, "Client Principal Name not as expected")
-	assert.Equal(t, "testuser1", cred.Username, "Username not as expected")
+	assert.Equal(t, "TEST.GOKRB5", cred.Domain(), "Client realm in credential not as expected")
+	assert.Equal(t, pn, cred.CName(), "Client Principal Name not as expected")
+	assert.Equal(t, "testuser1", cred.UserName(), "Username not as expected")
 }
 
 func TestCCache_GetClientRealm(t *testing.T) {
@@ -82,7 +85,8 @@ func TestCCache_GetClientRealm(t *testing.T) {
 	if err != nil {
 		t.Fatal("Error decoding test data")
 	}
-	c, err := ParseCCache(b)
+	c := new(CCache)
+	err = c.Unmarshal(b)
 	if err != nil {
 		t.Fatalf("Error parsing cache: %v", err)
 	}
@@ -95,7 +99,8 @@ func TestCCache_GetEntry(t *testing.T) {
 	if err != nil {
 		t.Fatal("Error decoding test data")
 	}
-	c, err := ParseCCache(b)
+	c := new(CCache)
+	err = c.Unmarshal(b)
 	if err != nil {
 		t.Fatalf("Error parsing cache: %v", err)
 	}
@@ -116,7 +121,8 @@ func TestCCache_GetEntries(t *testing.T) {
 	if err != nil {
 		t.Fatal("Error decoding test data")
 	}
-	c, err := ParseCCache(b)
+	c := new(CCache)
+	err = c.Unmarshal(b)
 	if err != nil {
 		t.Fatalf("Error parsing cache: %v", err)
 	}

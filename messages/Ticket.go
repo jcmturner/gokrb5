@@ -3,21 +3,22 @@ package messages
 import (
 	"crypto/rand"
 	"fmt"
-	"strings"
+	"log"
 	"time"
 
 	"github.com/jcmturner/gofork/encoding/asn1"
-	"gopkg.in/jcmturner/gokrb5.v6/asn1tools"
-	"gopkg.in/jcmturner/gokrb5.v6/crypto"
-	"gopkg.in/jcmturner/gokrb5.v6/iana"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/adtype"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/asnAppTag"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/errorcode"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/keyusage"
-	"gopkg.in/jcmturner/gokrb5.v6/keytab"
-	"gopkg.in/jcmturner/gokrb5.v6/krberror"
-	"gopkg.in/jcmturner/gokrb5.v6/pac"
-	"gopkg.in/jcmturner/gokrb5.v6/types"
+	"gopkg.in/jcmturner/gokrb5.v7/asn1tools"
+	"gopkg.in/jcmturner/gokrb5.v7/crypto"
+	"gopkg.in/jcmturner/gokrb5.v7/iana"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/adtype"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/asnAppTag"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/errorcode"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/flags"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/keyusage"
+	"gopkg.in/jcmturner/gokrb5.v7/keytab"
+	"gopkg.in/jcmturner/gokrb5.v7/krberror"
+	"gopkg.in/jcmturner/gokrb5.v7/pac"
+	"gopkg.in/jcmturner/gokrb5.v7/types"
 )
 
 // Reference: https://www.ietf.org/rfc/rfc4120.txt
@@ -54,7 +55,7 @@ type TransitedEncoding struct {
 }
 
 // NewTicket creates a new Ticket instance.
-func NewTicket(cname types.PrincipalName, crealm string, sname types.PrincipalName, srealm string, flags asn1.BitString, sktab keytab.Keytab, eTypeID int32, kvno int, authTime, startTime, endTime, renewTill time.Time) (Ticket, types.EncryptionKey, error) {
+func NewTicket(cname types.PrincipalName, crealm string, sname types.PrincipalName, srealm string, flags asn1.BitString, sktab *keytab.Keytab, eTypeID int32, kvno int, authTime, startTime, endTime, renewTill time.Time) (Ticket, types.EncryptionKey, error) {
 	etype, err := crypto.GetEtype(eTypeID)
 	if err != nil {
 		return Ticket{}, types.EncryptionKey{}, krberror.Errorf(err, krberror.EncryptingError, "error getting etype for new ticket")
@@ -82,7 +83,7 @@ func NewTicket(cname types.PrincipalName, crealm string, sname types.PrincipalNa
 		return Ticket{}, types.EncryptionKey{}, krberror.Errorf(err, krberror.EncodingError, "error marshalling ticket encpart")
 	}
 	b = asn1tools.AddASNAppTag(b, asnAppTag.EncTicketPart)
-	skey, err := sktab.GetEncryptionKey(sname.NameString, srealm, kvno, eTypeID)
+	skey, err := sktab.GetEncryptionKey(sname, srealm, kvno, eTypeID)
 	if err != nil {
 		return Ticket{}, types.EncryptionKey{}, krberror.Errorf(err, krberror.EncryptingError, "error getting encryption key for new ticket")
 	}
@@ -121,14 +122,14 @@ func (t *EncTicketPart) Unmarshal(b []byte) error {
 	return err
 }
 
-// UnmarshalTicket returns a ticket from the bytes provided.
-func UnmarshalTicket(b []byte) (t Ticket, err error) {
-	_, err = asn1.UnmarshalWithParams(b, &t, fmt.Sprintf("application,explicit,tag:%d", asnAppTag.Ticket))
+// unmarshalTicket returns a ticket from the bytes provided.
+func unmarshalTicket(b []byte) (t Ticket, err error) {
+	err = t.Unmarshal(b)
 	return
 }
 
 // UnmarshalTicketsSequence returns a slice of Tickets from a raw ASN1 value.
-func UnmarshalTicketsSequence(in asn1.RawValue) ([]Ticket, error) {
+func unmarshalTicketsSequence(in asn1.RawValue) ([]Ticket, error) {
 	//This is a workaround to a asn1 decoding issue in golang - https://github.com/golang/go/issues/17321. It's not pretty I'm afraid
 	//We pull out raw values from the larger raw value (that is actually the data of the sequence of raw values) and track our position moving along the data.
 	b := in.Bytes
@@ -141,7 +142,7 @@ func UnmarshalTicketsSequence(in asn1.RawValue) ([]Ticket, error) {
 		if err != nil {
 			return nil, fmt.Errorf("unmarshaling sequence of tickets failed getting length of ticket: %v", err)
 		}
-		t, err := UnmarshalTicket(b[p:])
+		t, err := unmarshalTicket(b[p:])
 		if err != nil {
 			return nil, fmt.Errorf("unmarshaling sequence of tickets failed: %v", err)
 		}
@@ -186,22 +187,21 @@ func MarshalTicketSequence(tkts []Ticket) (asn1.RawValue, error) {
 }
 
 // DecryptEncPart decrypts the encrypted part of the ticket.
-func (t *Ticket) DecryptEncPart(keytab keytab.Keytab, ktprinc string) error {
-	var upn types.PrincipalName
-	realm := t.Realm
-	if ktprinc != "" {
-		var r string
-		upn, r = types.ParseSPNString(ktprinc)
-		if r != "" {
-			realm = r
-		}
-	} else {
-		upn = t.SName
+// The sname argument can be used to specify which service principal's key should be used to decrypt the ticket.
+// If nil is passed as the sname then the service principal specified within the ticket it used.
+func (t *Ticket) DecryptEncPart(keytab *keytab.Keytab, sname *types.PrincipalName) error {
+	if sname == nil {
+		sname = &t.SName
 	}
-	key, err := keytab.GetEncryptionKey(upn.NameString, realm, t.EncPart.KVNO, t.EncPart.EType)
+	key, err := keytab.GetEncryptionKey(*sname, t.Realm, t.EncPart.KVNO, t.EncPart.EType)
 	if err != nil {
 		return NewKRBError(t.SName, t.Realm, errorcode.KRB_AP_ERR_NOKEY, fmt.Sprintf("Could not get key from keytab: %v", err))
 	}
+	return t.Decrypt(key)
+}
+
+// Decrypt decrypts the encrypted part of the ticket using the key provided.
+func (t *Ticket) Decrypt(key types.EncryptionKey) error {
 	b, err := crypto.DecryptEncPart(t.EncPart, key, keyusage.KDC_REP_TICKET)
 	if err != nil {
 		return fmt.Errorf("error decrypting Ticket EncPart: %v", err)
@@ -216,13 +216,14 @@ func (t *Ticket) DecryptEncPart(keytab keytab.Keytab, ktprinc string) error {
 }
 
 // GetPACType returns a Microsoft PAC that has been extracted from the ticket and processed.
-func (t *Ticket) GetPACType(keytab keytab.Keytab, ktprinc string) (bool, pac.PACType, error) {
+func (t *Ticket) GetPACType(keytab *keytab.Keytab, sname *types.PrincipalName, l *log.Logger) (bool, pac.PACType, error) {
 	var isPAC bool
 	for _, ad := range t.DecryptedEncPart.AuthorizationData {
 		if ad.ADType == adtype.ADIfRelevant {
 			var ad2 types.AuthorizationData
 			err := ad2.Unmarshal(ad.ADData)
 			if err != nil {
+				l.Printf("PAC authorization data could not be unmarshaled: %v", err)
 				continue
 			}
 			if ad2[0].ADType == adtype.ADWin2KPAC {
@@ -232,20 +233,33 @@ func (t *Ticket) GetPACType(keytab keytab.Keytab, ktprinc string) (bool, pac.PAC
 				if err != nil {
 					return isPAC, p, fmt.Errorf("error unmarshaling PAC: %v", err)
 				}
-				var upn []string
-				if ktprinc != "" {
-					upn = strings.Split(ktprinc, "/")
-				} else {
-					upn = t.SName.NameString
+				if sname == nil {
+					sname = &t.SName
 				}
-				key, err := keytab.GetEncryptionKey(upn, t.Realm, t.EncPart.KVNO, t.EncPart.EType)
+				key, err := keytab.GetEncryptionKey(*sname, t.Realm, t.EncPart.KVNO, t.EncPart.EType)
 				if err != nil {
 					return isPAC, p, NewKRBError(t.SName, t.Realm, errorcode.KRB_AP_ERR_NOKEY, fmt.Sprintf("Could not get key from keytab: %v", err))
 				}
-				err = p.ProcessPACInfoBuffers(key)
+				err = p.ProcessPACInfoBuffers(key, l)
 				return isPAC, p, err
 			}
 		}
 	}
 	return isPAC, pac.PACType{}, nil
+}
+
+// Valid checks it the ticket is currently valid. Max duration passed endtime passed in as argument.
+func (t *Ticket) Valid(d time.Duration) (bool, error) {
+	// Check for future tickets or invalid tickets
+	time := time.Now().UTC()
+	if t.DecryptedEncPart.StartTime.Sub(time) > d || types.IsFlagSet(&t.DecryptedEncPart.Flags, flags.Invalid) {
+		return false, NewKRBError(t.SName, t.Realm, errorcode.KRB_AP_ERR_TKT_NYV, "service ticket provided is not yet valid")
+	}
+
+	// Check for expired ticket
+	if time.Sub(t.DecryptedEncPart.EndTime) > d {
+		return false, NewKRBError(t.SName, t.Realm, errorcode.KRB_AP_ERR_TKT_EXPIRED, "service ticket provided has expired")
+	}
+
+	return true, nil
 }

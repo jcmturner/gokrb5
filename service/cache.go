@@ -2,7 +2,7 @@
 package service
 
 import (
-	"gopkg.in/jcmturner/gokrb5.v6/types"
+	"gopkg.in/jcmturner/gokrb5.v7/types"
 	"sync"
 	"time"
 )
@@ -52,7 +52,7 @@ type replayCacheEntry struct {
 func (c *Cache) getClientEntries(cname types.PrincipalName) (clientEntries, bool) {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
-	ce, ok := c.entries[cname.GetPrincipalNameString()]
+	ce, ok := c.entries[cname.PrincipalNameString()]
 	return ce, ok
 }
 
@@ -105,7 +105,7 @@ func (c *Cache) AddEntry(sname types.PrincipalName, a types.Authenticator) {
 	} else {
 		c.mux.Lock()
 		defer c.mux.Unlock()
-		c.entries[a.CName.GetPrincipalNameString()] = clientEntries{
+		c.entries[a.CName.PrincipalNameString()] = clientEntries{
 			replayMap: map[time.Time]replayCacheEntry{
 				ct: {
 					presentedTime: time.Now().UTC(),

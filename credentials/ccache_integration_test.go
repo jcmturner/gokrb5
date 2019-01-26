@@ -1,6 +1,3 @@
-// +build integration
-// To turn on this test use -tags=integration in go test command
-
 package credentials
 
 import (
@@ -15,9 +12,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/nametype"
-	"gopkg.in/jcmturner/gokrb5.v6/testdata"
-	"gopkg.in/jcmturner/gokrb5.v6/types"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/nametype"
+	"gopkg.in/jcmturner/gokrb5.v7/test"
+	"gopkg.in/jcmturner/gokrb5.v7/test/testdata"
+	"gopkg.in/jcmturner/gokrb5.v7/types"
 )
 
 const (
@@ -126,13 +124,15 @@ func klist() ([]string, error) {
 	return stdout.Lines(), nil
 }
 
-func loadCCache() (CCache, error) {
+func loadCCache() (*CCache, error) {
 	usr, _ := user.Current()
 	cpath := "/tmp/krb5cc_" + usr.Uid
 	return LoadCCache(cpath)
 }
 
 func TestLoadCCache(t *testing.T) {
+	test.Privileged(t)
+
 	err := login()
 	if err != nil {
 		t.Fatalf("error logging in with kinit: %v", err)
@@ -142,11 +142,13 @@ func TestLoadCCache(t *testing.T) {
 		t.Errorf("error loading CCache: %v", err)
 	}
 	pn := c.GetClientPrincipalName()
-	assert.Equal(t, "testuser1", pn.GetPrincipalNameString(), "principal not as expected")
+	assert.Equal(t, "testuser1", pn.PrincipalNameString(), "principal not as expected")
 	assert.Equal(t, "TEST.GOKRB5", c.GetClientRealm(), "realm not as expected")
 }
 
 func TestCCacheEntries(t *testing.T) {
+	test.Privileged(t)
+
 	err := login()
 	if err != nil {
 		t.Fatalf("error logging in with kinit: %v", err)

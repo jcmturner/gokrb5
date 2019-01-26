@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/nametype"
-	"gopkg.in/jcmturner/gokrb5.v6/testdata"
-	"gopkg.in/jcmturner/gokrb5.v6/types"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/nametype"
+	"gopkg.in/jcmturner/gokrb5.v7/test/testdata"
+	"gopkg.in/jcmturner/gokrb5.v7/types"
 )
 
 func TestChangePasswdData_Marshal(t *testing.T) {
@@ -21,10 +21,9 @@ func TestChangePasswdData_Marshal(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error marshaling change passwd data: %v\n", err)
 	}
-	v := "ChangePasswdData"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledChangePasswdData)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	assert.Equal(t, b, chpwdb, "marshaled bytes of change passwd data not as expected")
 }

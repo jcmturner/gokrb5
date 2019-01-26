@@ -10,7 +10,7 @@ import (
 	"unsafe"
 
 	"github.com/jcmturner/gofork/encoding/asn1"
-	"gopkg.in/jcmturner/gokrb5.v6/types"
+	"gopkg.in/jcmturner/gokrb5.v7/types"
 )
 
 const (
@@ -31,7 +31,7 @@ type CCache struct {
 	Version          uint8
 	Header           header
 	DefaultPrincipal principal
-	Credentials      []credential
+	Credentials      []*Credential
 	Path             string
 }
 
@@ -52,7 +52,7 @@ type principal struct {
 	PrincipalName types.PrincipalName
 }
 
-type credential struct {
+type Credential struct {
 	Client       principal
 	Server       principal
 	Key          types.EncryptionKey
@@ -69,33 +69,29 @@ type credential struct {
 }
 
 // LoadCCache loads a credential cache file into a CCache type.
-func LoadCCache(cpath string) (CCache, error) {
-	k, err := ioutil.ReadFile(cpath)
+func LoadCCache(cpath string) (*CCache, error) {
+	c := new(CCache)
+	b, err := ioutil.ReadFile(cpath)
 	if err != nil {
-		return CCache{}, err
+		return c, err
 	}
-	c, err := ParseCCache(k)
-	c.Path = cpath
+	err = c.Unmarshal(b)
 	return c, err
 }
 
 // ParseCCache byte slice of credential cache data into CCache type.
-func ParseCCache(b []byte) (c CCache, err error) {
+func (c *CCache) Unmarshal(b []byte) error {
 	p := 0
 	//The first byte of the file always has the value 5
 	if int8(b[p]) != 5 {
-		err = errors.New("Invalid credential cache data. First byte does not equal 5")
-		return
+		return errors.New("Invalid credential cache data. First byte does not equal 5")
 	}
 	p++
 	//Get credential cache version
 	//The second byte contains the version number (1 to 4)
 	c.Version = b[p]
 	if c.Version < 1 || c.Version > 4 {
-		err = errors.New("Invalid credential cache data. Keytab version is not within 1 to 4")
-		if err != nil {
-			return
-		}
+		return errors.New("Invalid credential cache data. Keytab version is not within 1 to 4")
 	}
 	p++
 	//Version 1 or 2 of the file format uses native byte order for integer representations. Versions 3 & 4 always uses big-endian byte order
@@ -105,21 +101,20 @@ func ParseCCache(b []byte) (c CCache, err error) {
 		endian = binary.LittleEndian
 	}
 	if c.Version == 4 {
-		err = parseHeader(b, &p, &c, &endian)
+		err := parseHeader(b, &p, c, &endian)
 		if err != nil {
-			return
+			return err
 		}
 	}
-	c.DefaultPrincipal = parsePrincipal(b, &p, &c, &endian)
+	c.DefaultPrincipal = parsePrincipal(b, &p, c, &endian)
 	for p < len(b) {
-		cred, e := parseCredential(b, &p, &c, &endian)
-		if e != nil {
-			err = e
-			return
+		cred, err := parseCredential(b, &p, c, &endian)
+		if err != nil {
+			return err
 		}
 		c.Credentials = append(c.Credentials, cred)
 	}
-	return
+	return nil
 }
 
 func parseHeader(b []byte, p *int, c *CCache, e *binary.ByteOrder) error {
@@ -163,7 +158,8 @@ func parsePrincipal(b []byte, p *int, c *CCache, e *binary.ByteOrder) (princ pri
 	return princ
 }
 
-func parseCredential(b []byte, p *int, c *CCache, e *binary.ByteOrder) (cred credential, err error) {
+func parseCredential(b []byte, p *int, c *CCache, e *binary.ByteOrder) (cred *Credential, err error) {
+	cred = new(Credential)
 	cred.Client = parsePrincipal(b, p, c, e)
 	cred.Server = parsePrincipal(b, p, c, e)
 	key := types.EncryptionKey{}
@@ -213,9 +209,9 @@ func (c *CCache) GetClientRealm() string {
 // GetClientCredentials returns a Credentials object representing the client of the credentials cache.
 func (c *CCache) GetClientCredentials() *Credentials {
 	return &Credentials{
-		Username: c.DefaultPrincipal.PrincipalName.GetPrincipalNameString(),
-		Realm:    c.GetClientRealm(),
-		CName:    c.DefaultPrincipal.PrincipalName,
+		username: c.DefaultPrincipal.PrincipalName.PrincipalNameString(),
+		realm:    c.GetClientRealm(),
+		cname:    c.DefaultPrincipal.PrincipalName,
 	}
 }
 
@@ -230,8 +226,8 @@ func (c *CCache) Contains(p types.PrincipalName) bool {
 }
 
 // GetEntry returns a specific credential for the PrincipalName provided.
-func (c *CCache) GetEntry(p types.PrincipalName) (credential, bool) {
-	var cred credential
+func (c *CCache) GetEntry(p types.PrincipalName) (*Credential, bool) {
+	cred := new(Credential)
 	var found bool
 	for i := range c.Credentials {
 		if c.Credentials[i].Server.PrincipalName.Equal(p) {
@@ -247,8 +243,8 @@ func (c *CCache) GetEntry(p types.PrincipalName) (credential, bool) {
 }
 
 // GetEntries filters out configuration entries an returns a slice of credentials.
-func (c *CCache) GetEntries() []credential {
-	var creds []credential
+func (c *CCache) GetEntries() []*Credential {
+	creds := make([]*Credential, 0)
 	for _, cred := range c.Credentials {
 		// Filter out configuration entries
 		if strings.HasPrefix(cred.Server.Realm, "X-CACHECONF") {

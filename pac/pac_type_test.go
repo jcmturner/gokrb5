@@ -1,21 +1,23 @@
 package pac
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v6/keytab"
-	"gopkg.in/jcmturner/gokrb5.v6/testdata"
+	"gopkg.in/jcmturner/gokrb5.v7/keytab"
+	"gopkg.in/jcmturner/gokrb5.v7/test/testdata"
+	"gopkg.in/jcmturner/gokrb5.v7/types"
 )
 
-func TestPACTypeValidate(t *testing.T) {
+func TestPACTypeVerify(t *testing.T) {
 	t.Parallel()
-	v := "PAC_AD_WIN2K_PAC"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledPAC_AD_WIN2K_PAC)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	var pac PACType
 	err = pac.Unmarshal(b)
@@ -24,12 +26,16 @@ func TestPACTypeValidate(t *testing.T) {
 	}
 
 	b, _ = hex.DecodeString(testdata.SYSHTTP_KEYTAB)
-	kt, _ := keytab.Parse(b)
-	key, err := kt.GetEncryptionKey([]string{"sysHTTP"}, "TEST.GOKRB5", 2, 18)
+	kt := keytab.New()
+	kt.Unmarshal(b)
+	pn, _ := types.ParseSPNString("sysHTTP")
+	key, err := kt.GetEncryptionKey(pn, "TEST.GOKRB5", 2, 18)
 	if err != nil {
 		t.Fatalf("Error getting key: %v", err)
 	}
-	err = pac.ProcessPACInfoBuffers(key)
+	w := bytes.NewBufferString("")
+	l := log.New(w, "", 0)
+	err = pac.ProcessPACInfoBuffers(key, l)
 	if err != nil {
 		t.Fatalf("Processing reference pac error: %v", err)
 	}
@@ -56,7 +62,7 @@ func TestPACTypeValidate(t *testing.T) {
 		{pacInvalidClientInfo},
 	}
 	for i, s := range pacs {
-		v, _ := s.pac.validate(key)
+		v, _ := s.pac.verify(key)
 		assert.False(t, v, fmt.Sprintf("Validation should have failed for test %v", i))
 	}
 

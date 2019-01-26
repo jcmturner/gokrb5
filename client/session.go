@@ -6,10 +6,10 @@ import (
 	"sync"
 	"time"
 
-	"gopkg.in/jcmturner/gokrb5.v6/iana/nametype"
-	"gopkg.in/jcmturner/gokrb5.v6/krberror"
-	"gopkg.in/jcmturner/gokrb5.v6/messages"
-	"gopkg.in/jcmturner/gokrb5.v6/types"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/nametype"
+	"gopkg.in/jcmturner/gokrb5.v7/krberror"
+	"gopkg.in/jcmturner/gokrb5.v7/messages"
+	"gopkg.in/jcmturner/gokrb5.v7/types"
 )
 
 // sessions hold TGTs and are keyed on the realm name
@@ -71,7 +71,7 @@ type session struct {
 
 // AddSession adds a session for a realm with a TGT to the client's session cache.
 // A goroutine is started to automatically renew the TGT before expiry.
-func (cl *Client) AddSession(tgt messages.Ticket, dep messages.EncKDCRepPart) {
+func (cl *Client) addSession(tgt messages.Ticket, dep messages.EncKDCRepPart) {
 	if strings.ToLower(tgt.SName.NameString[0]) != "krbtgt" {
 		// Not a TGT
 		return
@@ -176,7 +176,7 @@ func (cl *Client) renewTGT(s *session) error {
 		NameType:   nametype.KRB_NT_SRV_INST,
 		NameString: []string{"krbtgt", realm},
 	}
-	_, tgsRep, err := cl.TGSExchange(spn, cl.Credentials.Realm, tgt, skey, true, 0)
+	_, tgsRep, err := cl.TGSREQGenerateAndExchange(spn, cl.Credentials.Domain(), tgt, skey, true)
 	if err != nil {
 		return krberror.Errorf(err, krberror.KRBMsgError, "error renewing TGT")
 	}

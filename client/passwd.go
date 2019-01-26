@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net"
 
-	"gopkg.in/jcmturner/gokrb5.v6/kadmin"
-	"gopkg.in/jcmturner/gokrb5.v6/messages"
+	"gopkg.in/jcmturner/gokrb5.v7/kadmin"
+	"gopkg.in/jcmturner/gokrb5.v7/messages"
 )
 
 // Kpasswd server response codes.
@@ -22,16 +22,16 @@ const (
 
 // ChangePasswd changes the password of the client to the value provided.
 func (cl *Client) ChangePasswd(newPasswd string) (bool, error) {
-	ASReq, err := messages.NewASReqForChgPasswd(cl.Credentials.Realm, cl.Config, cl.Credentials.CName)
+	ASReq, err := messages.NewASReqForChgPasswd(cl.Credentials.Domain(), cl.Config, cl.Credentials.CName())
 	if err != nil {
 		return false, err
 	}
-	ASRep, err := cl.ASExchange(cl.Credentials.Realm, ASReq, 0)
+	ASRep, err := cl.ASExchange(cl.Credentials.Domain(), ASReq, 0)
 	if err != nil {
 		return false, err
 	}
 
-	msg, key, err := kadmin.ChangePasswdMsg(cl.Credentials.CName, cl.Credentials.Realm, newPasswd, ASRep.Ticket, ASRep.DecryptedEncPart.Key)
+	msg, key, err := kadmin.ChangePasswdMsg(cl.Credentials.CName(), cl.Credentials.Domain(), newPasswd, ASRep.Ticket, ASRep.DecryptedEncPart.Key)
 	if err != nil {
 		return false, err
 	}
@@ -50,7 +50,7 @@ func (cl *Client) ChangePasswd(newPasswd string) (bool, error) {
 }
 
 func (cl *Client) sendToKPasswd(msg kadmin.Request) (r kadmin.Reply, err error) {
-	_, kps, err := cl.Config.GetKpasswdServers(cl.Credentials.Realm, true)
+	_, kps, err := cl.Config.GetKpasswdServers(cl.Credentials.Domain(), true)
 	if err != nil {
 		return
 	}

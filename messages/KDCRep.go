@@ -8,16 +8,16 @@ import (
 	"time"
 
 	"github.com/jcmturner/gofork/encoding/asn1"
-	"gopkg.in/jcmturner/gokrb5.v6/config"
-	"gopkg.in/jcmturner/gokrb5.v6/credentials"
-	"gopkg.in/jcmturner/gokrb5.v6/crypto"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/asnAppTag"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/flags"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/keyusage"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/msgtype"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/patype"
-	"gopkg.in/jcmturner/gokrb5.v6/krberror"
-	"gopkg.in/jcmturner/gokrb5.v6/types"
+	"gopkg.in/jcmturner/gokrb5.v7/config"
+	"gopkg.in/jcmturner/gokrb5.v7/credentials"
+	"gopkg.in/jcmturner/gokrb5.v7/crypto"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/asnAppTag"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/flags"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/keyusage"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/msgtype"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/patype"
+	"gopkg.in/jcmturner/gokrb5.v7/krberror"
+	"gopkg.in/jcmturner/gokrb5.v7/types"
 )
 
 type marshalKDCRep struct {
@@ -87,7 +87,7 @@ func (k *ASRep) Unmarshal(b []byte) error {
 		return krberror.NewErrorf(krberror.KRBMsgError, "message ID does not indicate an AS_REP. Expected: %v; Actual: %v", msgtype.KRB_AS_REP, m.MsgType)
 	}
 	//Process the raw ticket within
-	tkt, err := UnmarshalTicket(m.Ticket.Bytes)
+	tkt, err := unmarshalTicket(m.Ticket.Bytes)
 	if err != nil {
 		return krberror.Errorf(err, krberror.EncodingError, "error unmarshaling Ticket within AS_REP")
 	}
@@ -114,7 +114,7 @@ func (k *TGSRep) Unmarshal(b []byte) error {
 		return krberror.NewErrorf(krberror.KRBMsgError, "message ID does not indicate an TGS_REP. Expected: %v; Actual: %v", msgtype.KRB_TGS_REP, m.MsgType)
 	}
 	//Process the raw ticket within
-	tkt, err := UnmarshalTicket(m.Ticket.Bytes)
+	tkt, err := unmarshalTicket(m.Ticket.Bytes)
 	if err != nil {
 		return krberror.Errorf(err, krberror.EncodingError, "error unmarshaling Ticket within TGS_REP")
 	}
@@ -154,13 +154,13 @@ func (k *ASRep) DecryptEncPart(c *credentials.Credentials) (types.EncryptionKey,
 	var key types.EncryptionKey
 	var err error
 	if c.HasKeytab() {
-		key, err = c.Keytab.GetEncryptionKey(k.CName.NameString, k.CRealm, k.EncPart.KVNO, k.EncPart.EType)
+		key, err = c.Keytab().GetEncryptionKey(k.CName, k.CRealm, k.EncPart.KVNO, k.EncPart.EType)
 		if err != nil {
 			return key, krberror.Errorf(err, krberror.DecryptingError, "error decrypting AS_REP encrypted part")
 		}
 	}
 	if c.HasPassword() {
-		key, _, err = crypto.GetKeyFromPassword(c.Password, k.CName, k.CRealm, k.EncPart.EType, k.PAData)
+		key, _, err = crypto.GetKeyFromPassword(c.Password(), k.CName, k.CRealm, k.EncPart.EType, k.PAData)
 		if err != nil {
 			return key, krberror.Errorf(err, krberror.DecryptingError, "error decrypting AS_REP encrypted part")
 		}
@@ -182,7 +182,7 @@ func (k *ASRep) DecryptEncPart(c *credentials.Credentials) (types.EncryptionKey,
 }
 
 // IsValid checks the validity of AS_REP message.
-func (k *ASRep) IsValid(cfg *config.Config, creds *credentials.Credentials, asReq ASReq) (bool, error) {
+func (k *ASRep) Verify(cfg *config.Config, creds *credentials.Credentials, asReq ASReq) (bool, error) {
 	//Ref RFC 4120 Section 3.1.5
 	if k.CName.NameType != asReq.ReqBody.CName.NameType || k.CName.NameString == nil {
 		return false, krberror.NewErrorf(krberror.KRBMsgError, "CName in response does not match what was requested. Requested: %+v; Reply: %+v", asReq.ReqBody.CName, k.CName)
@@ -264,7 +264,7 @@ func (k *TGSRep) DecryptEncPart(key types.EncryptionKey) error {
 }
 
 // IsValid checks the validity of the TGS_REP message.
-func (k *TGSRep) IsValid(cfg *config.Config, tgsReq TGSReq) (bool, error) {
+func (k *TGSRep) Verify(cfg *config.Config, tgsReq TGSReq) (bool, error) {
 	if k.CName.NameType != tgsReq.ReqBody.CName.NameType || k.CName.NameString == nil {
 		return false, krberror.NewErrorf(krberror.KRBMsgError, "CName type in response does not match what was requested. Requested: %+v; Reply: %+v", tgsReq.ReqBody.CName, k.CName)
 	}

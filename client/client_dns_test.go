@@ -1,17 +1,18 @@
-// +build dns
-
 package client
 
 import (
 	"encoding/hex"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v6/config"
-	"gopkg.in/jcmturner/gokrb5.v6/keytab"
-	"gopkg.in/jcmturner/gokrb5.v6/testdata"
+	"gopkg.in/jcmturner/gokrb5.v7/config"
+	"gopkg.in/jcmturner/gokrb5.v7/keytab"
+	"gopkg.in/jcmturner/gokrb5.v7/test"
+	"gopkg.in/jcmturner/gokrb5.v7/test/testdata"
 	"testing"
 )
 
 func TestResolveKDC(t *testing.T) {
+	test.Privileged(t)
+
 	//ns := os.Getenv("DNSUTILS_OVERRIDE_NS")
 	//if ns == "" {
 	//	os.Setenv("DNSUTILS_OVERRIDE_NS", testdata.TEST_NS)
@@ -19,7 +20,7 @@ func TestResolveKDC(t *testing.T) {
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	c.LibDefaults.DNSLookupKDC = true
 	var cl Client
-	cl.WithConfig(c)
+	cl.Config = c
 	count, res, err := cl.Config.GetKDCs(c.LibDefaults.DefaultRealm, true)
 	if err != nil {
 		t.Errorf("error resolving KDC via DNS TCP: %v", err)
@@ -52,6 +53,8 @@ func TestResolveKDC(t *testing.T) {
 }
 
 func TestClient_Login_DNSKDCs(t *testing.T) {
+	test.Privileged(t)
+
 	//ns := os.Getenv("DNSUTILS_OVERRIDE_NS")
 	//if ns == "" {
 	//	os.Setenv("DNSUTILS_OVERRIDE_NS", testdata.TEST_NS)
@@ -63,9 +66,9 @@ func TestClient_Login_DNSKDCs(t *testing.T) {
 	c.Realms = []config.Realm{}
 
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
-	kt, _ := keytab.Parse(b)
-	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt)
-	cl.WithConfig(c)
+	kt := keytab.New()
+	kt.Unmarshal(b)
+	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 
 	err := cl.Login()
 	if err != nil {

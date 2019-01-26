@@ -1,33 +1,34 @@
 package messages
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
+	"log"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v6/iana"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/addrtype"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/adtype"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/nametype"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/trtype"
-	"gopkg.in/jcmturner/gokrb5.v6/keytab"
-	"gopkg.in/jcmturner/gokrb5.v6/testdata"
-	"gopkg.in/jcmturner/gokrb5.v6/types"
+	"gopkg.in/jcmturner/gokrb5.v7/iana"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/addrtype"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/adtype"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/nametype"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/trtype"
+	"gopkg.in/jcmturner/gokrb5.v7/keytab"
+	"gopkg.in/jcmturner/gokrb5.v7/test/testdata"
+	"gopkg.in/jcmturner/gokrb5.v7/types"
 )
 
 func TestUnmarshalTicket(t *testing.T) {
 	t.Parallel()
 	var a Ticket
-	v := "encode_krb5_ticket"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5ticket)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 
 	assert.Equal(t, iana.PVNO, a.TktVNO, "Ticket version number not as expected")
@@ -43,14 +44,13 @@ func TestUnmarshalTicket(t *testing.T) {
 func TestUnmarshalEncTicketPart(t *testing.T) {
 	t.Parallel()
 	var a EncTicketPart
-	v := "encode_krb5_enc_tkt_part"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5enc_tkt_part)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	//Parse the test time value into a time.Time type
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
@@ -81,14 +81,13 @@ func TestUnmarshalEncTicketPart(t *testing.T) {
 func TestUnmarshalEncTicketPart_optionalsNULL(t *testing.T) {
 	t.Parallel()
 	var a EncTicketPart
-	v := "encode_krb5_enc_tkt_part(optionalsNULL)"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5enc_tkt_partOptionalsNULL)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	//Parse the test time value into a time.Time type
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
@@ -108,14 +107,13 @@ func TestUnmarshalEncTicketPart_optionalsNULL(t *testing.T) {
 func TestMarshalTicket(t *testing.T) {
 	t.Parallel()
 	var a Ticket
-	v := "encode_krb5_ticket"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5ticket)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	mb, err := a.Marshal()
 	if err != nil {
@@ -126,10 +124,9 @@ func TestMarshalTicket(t *testing.T) {
 
 func TestAuthorizationData_GetPACType_GOKRB5TestData(t *testing.T) {
 	t.Parallel()
-	v := "PAC_AuthorizationData_GOKRB5"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledPAC_AuthorizationData_GOKRB5)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	var a types.AuthorizationData
 	err = a.Unmarshal(b)
@@ -147,10 +144,15 @@ func TestAuthorizationData_GetPACType_GOKRB5TestData(t *testing.T) {
 		},
 	}
 	b, _ = hex.DecodeString(testdata.SYSHTTP_KEYTAB)
-	kt, _ := keytab.Parse(b)
-	isPAC, pac, err := tkt.GetPACType(kt, "sysHTTP")
+	kt := keytab.New()
+	kt.Unmarshal(b)
+	sname := types.PrincipalName{NameType: nametype.KRB_NT_PRINCIPAL, NameString: []string{"sysHTTP"}}
+	w := bytes.NewBufferString("")
+	l := log.New(w, "", 0)
+	isPAC, pac, err := tkt.GetPACType(kt, &sname, l)
 	if err != nil {
-		t.Fatalf("Error getting PAC Type: %v\n", err)
+		t.Log(w.String())
+		t.Errorf("error getting PAC: %v", err)
 	}
 	assert.True(t, isPAC, "PAC should be present")
 	assert.Equal(t, 5, len(pac.Buffers), "Number of buffers not as expected")

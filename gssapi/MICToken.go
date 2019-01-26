@@ -8,9 +8,9 @@ import (
 	"errors"
 	"fmt"
 
-	"gopkg.in/jcmturner/gokrb5.v6/crypto"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/keyusage"
-	"gopkg.in/jcmturner/gokrb5.v6/types"
+	"gopkg.in/jcmturner/gokrb5.v7/crypto"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/keyusage"
+	"gopkg.in/jcmturner/gokrb5.v7/types"
 )
 
 /*
@@ -41,11 +41,11 @@ From RFC 4121, section 4.2.6.1:
 */
 
 const (
-	// When set, this flag indicates the sender is the context acceptor.  When not set, it indicates the sender is the context initiator
+	// MICTokenFlagSentByAcceptor - this flag indicates the sender is the context acceptor.  When not set, it indicates the sender is the context initiator
 	MICTokenFlagSentByAcceptor = 1 << iota
-	// This flag indicates confidentiality is provided for.  It SHALL NOT be set in MIC tokens
+	// MICTokenFlagSentByAcceptor - this flag indicates confidentiality is provided for.  It SHALL NOT be set in MIC tokens
 	MICTokenFlagSealed
-	// A subkey asserted by the context acceptor is used to protect the message
+	// MICTokenFlagAcceptorSubkey - a subkey asserted by the context acceptor is used to protect the message
 	MICTokenFlagAcceptorSubkey
 )
 
@@ -135,10 +135,10 @@ func (mt *MICToken) getMICChecksumHeader() []byte {
 	return header
 }
 
-// VerifyChecksum computes the token's checksum with the provided key and usage,
+// Verify computes the token's checksum with the provided key and usage,
 // and compares it to the checksum present in the token.
 // In case of any failure, (false, err) is returned, with err an explanatory error.
-func (mt *MICToken) VerifyChecksum(key types.EncryptionKey, keyUsage uint32) (bool, error) {
+func (mt *MICToken) Verify(key types.EncryptionKey, keyUsage uint32) (bool, error) {
 	computed, err := mt.checksum(key, keyUsage)
 	if err != nil {
 		return false, err

@@ -6,22 +6,21 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/adtype"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/nametype"
-	"gopkg.in/jcmturner/gokrb5.v6/testdata"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/adtype"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/nametype"
+	"gopkg.in/jcmturner/gokrb5.v7/test/testdata"
 )
 
 func TestUnmarshalAuthorizationData(t *testing.T) {
 	t.Parallel()
 	var a AuthorizationData
-	v := "encode_krb5_authorization_data"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5authorization_data)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	assert.Equal(t, 2, len(a), "Number of authorization data entries not as expected")
 	for i, entry := range a {
@@ -33,14 +32,13 @@ func TestUnmarshalAuthorizationData(t *testing.T) {
 func TestUnmarshalAuthorizationData_kdcissued(t *testing.T) {
 	t.Parallel()
 	var a ADKDCIssued
-	v := "encode_krb5_ad_kdcissued"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5ad_kdcissued)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	assert.Equal(t, int32(1), a.ADChecksum.CksumType, "Checksum type not as expected")
 	assert.Equal(t, []byte("1234"), a.ADChecksum.Checksum, "Checksum not as expected")

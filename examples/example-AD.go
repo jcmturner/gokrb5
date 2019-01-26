@@ -6,12 +6,13 @@ import (
 	"encoding/hex"
 	"fmt"
 	"gopkg.in/jcmturner/goidentity.v3"
-	"gopkg.in/jcmturner/gokrb5.v6/client"
-	"gopkg.in/jcmturner/gokrb5.v6/config"
-	"gopkg.in/jcmturner/gokrb5.v6/credentials"
-	"gopkg.in/jcmturner/gokrb5.v6/keytab"
-	"gopkg.in/jcmturner/gokrb5.v6/service"
-	"gopkg.in/jcmturner/gokrb5.v6/testdata"
+	"gopkg.in/jcmturner/gokrb5.v7/client"
+	"gopkg.in/jcmturner/gokrb5.v7/config"
+	"gopkg.in/jcmturner/gokrb5.v7/credentials"
+	"gopkg.in/jcmturner/gokrb5.v7/keytab"
+	"gopkg.in/jcmturner/gokrb5.v7/service"
+	"gopkg.in/jcmturner/gokrb5.v7/spnego"
+	"gopkg.in/jcmturner/gokrb5.v7/test/testdata"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -24,25 +25,23 @@ func main() {
 	defer s.Close()
 
 	b, _ := hex.DecodeString(testdata.TESTUSER1_USERKRB5_AD_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
-	cl := client.NewClientWithKeytab("testuser1", "USER.GOKRB5", kt)
-	cl.WithConfig(c)
-	cl.GoKrb5Conf.DisablePAFXFast = true
+	cl := client.NewClientWithKeytab("testuser1", "USER.GOKRB5", kt, c, client.DisablePAFXFAST(true))
 	httpRequest(s.URL, cl)
 
 	b, _ = hex.DecodeString(testdata.TESTUSER2_USERKRB5_AD_KEYTAB)
-	kt, _ = keytab.Parse(b)
+	kt = keytab.New()
+	kt.Unmarshal(b)
 	c, _ = config.NewConfigFromString(testdata.TEST_KRB5CONF)
-	cl = client.NewClientWithKeytab("testuser2", "USER.GOKRB5", kt)
-	cl.WithConfig(c)
-	cl.GoKrb5Conf.DisablePAFXFast = true
+	cl = client.NewClientWithKeytab("testuser2", "USER.GOKRB5", kt, c, client.DisablePAFXFAST(true))
 	httpRequest(s.URL, cl)
 
 	//httpRequest("http://host.test.gokrb5/index.html")
 }
 
-func httpRequest(url string, cl client.Client) {
+func httpRequest(url string, cl *client.Client) {
 	l := log.New(os.Stderr, "GOKRB5 Client: ", log.Ldate|log.Ltime|log.Lshortfile)
 
 	err := cl.Login()
@@ -50,7 +49,7 @@ func httpRequest(url string, cl client.Client) {
 		l.Printf("Error on AS_REQ: %v\n", err)
 	}
 	r, _ := http.NewRequest("GET", url, nil)
-	err = cl.SetSPNEGOHeader(r, "HTTP/host.res.gokrb5")
+	err = spnego.SetSPNEGOHeader(cl, r, "HTTP/host.test.gokrb5")
 	if err != nil {
 		l.Printf("Error setting client SPNEGO header: %v", err)
 	}
@@ -64,21 +63,20 @@ func httpRequest(url string, cl client.Client) {
 }
 
 func httpServer() *httptest.Server {
-	l := log.New(os.Stderr, "GOKRB5 Service: ", log.Ldate|log.Ltime|log.Lshortfile)
-	b, _ := hex.DecodeString(testdata.SYSHTTP_RESGOKRB5_AD_KEYTAB)
-	kt, _ := keytab.Parse(b)
+	l := log.New(os.Stderr, "GOKRB5 Service Tests: ", log.Ldate|log.Ltime|log.Lshortfile)
+	b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
+	kt := keytab.New()
+	kt.Unmarshal(b)
 	th := http.HandlerFunc(testAppHandler)
-	c := service.NewConfig(kt)
-	c.ServicePrincipal = "sysHTTP"
-	s := httptest.NewServer(service.SPNEGOKRB5Authenticate(th, c, l))
+	s := httptest.NewServer(spnego.SPNEGOKRB5Authenticate(th, kt, service.Logger(l)))
 	return s
 }
 
 func testAppHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	fmt.Fprint(w, "<html>\n<p><h1>TEST.GOKRB5 Handler</h1></p>\n")
-	if validuser, ok := ctx.Value(service.CTXKeyAuthenticated).(bool); ok && validuser {
-		if creds, ok := ctx.Value(service.CTXKeyCredentials).(goidentity.Identity); ok {
+	if validuser, ok := ctx.Value(spnego.CTXKeyAuthenticated).(bool); ok && validuser {
+		if creds, ok := ctx.Value(spnego.CTXKeyCredentials).(goidentity.Identity); ok {
 			fmt.Fprintf(w, "<ul><li>Authenticed user: %s</li>\n", creds.UserName())
 			fmt.Fprintf(w, "<li>User's realm: %s</li>\n", creds.Domain())
 			fmt.Fprint(w, "<li>Authz Attributes (Group Memberships):</li><ul>\n")

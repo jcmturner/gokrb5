@@ -7,28 +7,28 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v6/iana"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/adtype"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/nametype"
-	"gopkg.in/jcmturner/gokrb5.v6/testdata"
+	"gopkg.in/jcmturner/gokrb5.v7/iana"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/adtype"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/nametype"
+	"gopkg.in/jcmturner/gokrb5.v7/test/testdata"
 )
 
 func unmarshalAuthenticatorTest(t *testing.T, v string) Authenticator {
 	var a Authenticator
 	//t.Logf("Starting unmarshal tests of %s", v)
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(v)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	return a
 }
 func TestUnmarshalAuthenticator(t *testing.T) {
 	t.Parallel()
-	a := unmarshalAuthenticatorTest(t, "encode_krb5_authenticator")
+	a := unmarshalAuthenticatorTest(t, testdata.MarshaledKRB5authenticator)
 	//Parse the test time value into a time.Time type
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
 
@@ -52,7 +52,7 @@ func TestUnmarshalAuthenticator(t *testing.T) {
 
 func TestUnmarshalAuthenticator_optionalsempty(t *testing.T) {
 	t.Parallel()
-	a := unmarshalAuthenticatorTest(t, "encode_krb5_authenticator(optionalsempty)")
+	a := unmarshalAuthenticatorTest(t, testdata.MarshaledKRB5authenticatorOptionalsEmpty)
 	//Parse the test time value into a time.Time type
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
 
@@ -67,7 +67,7 @@ func TestUnmarshalAuthenticator_optionalsempty(t *testing.T) {
 
 func TestUnmarshalAuthenticator_optionalsNULL(t *testing.T) {
 	t.Parallel()
-	a := unmarshalAuthenticatorTest(t, "encode_krb5_authenticator(optionalsNULL)")
+	a := unmarshalAuthenticatorTest(t, testdata.MarshaledKRB5authenticatorOptionalsNULL)
 	//Parse the test time value into a time.Time type
 	tt, _ := time.Parse(testdata.TEST_TIME_FORMAT, testdata.TEST_TIME)
 
@@ -83,14 +83,13 @@ func TestUnmarshalAuthenticator_optionalsNULL(t *testing.T) {
 func TestMarshalAuthenticator(t *testing.T) {
 	t.Parallel()
 	var a Authenticator
-	v := "encode_krb5_authenticator"
-	b, err := hex.DecodeString(testdata.TestVectors[v])
+	b, err := hex.DecodeString(testdata.MarshaledKRB5authenticator)
 	if err != nil {
-		t.Fatalf("Test vector read error of %s: %v\n", v, err)
+		t.Fatalf("Test vector read error: %v", err)
 	}
 	err = a.Unmarshal(b)
 	if err != nil {
-		t.Fatalf("Unmarshal error of %s: %v\n", v, err)
+		t.Fatalf("Unmarshal error: %v", err)
 	}
 	mb, err := a.Marshal()
 	if err != nil {

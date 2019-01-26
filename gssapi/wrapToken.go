@@ -8,9 +8,9 @@ import (
 	"errors"
 	"fmt"
 
-	"gopkg.in/jcmturner/gokrb5.v6/crypto"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/keyusage"
-	"gopkg.in/jcmturner/gokrb5.v6/types"
+	"gopkg.in/jcmturner/gokrb5.v7/crypto"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/keyusage"
+	"gopkg.in/jcmturner/gokrb5.v7/types"
 )
 
 /*
@@ -105,14 +105,14 @@ func (wt *WrapToken) Marshal() ([]byte, error) {
 // ComputeAndSetCheckSum uses the passed encryption key and key usage to compute the checksum over the payload and
 // the header, and sets the CheckSum field of this WrapToken.
 // If the payload has not been set or the checksum has already been set, an error is returned.
-func (wt *WrapToken) ComputeAndSetCheckSum(key types.EncryptionKey, keyUsage uint32) error {
+func (wt *WrapToken) SetCheckSum(key types.EncryptionKey, keyUsage uint32) error {
 	if wt.Payload == nil {
 		return errors.New("payload has not been set")
 	}
 	if wt.CheckSum != nil {
 		return errors.New("checksum has already been computed")
 	}
-	chkSum, cErr := wt.ComputeCheckSum(key, keyUsage)
+	chkSum, cErr := wt.computeCheckSum(key, keyUsage)
 	if cErr != nil {
 		return cErr
 	}
@@ -126,7 +126,7 @@ func (wt *WrapToken) ComputeAndSetCheckSum(key types.EncryptionKey, keyUsage uin
 // In the context of Kerberos Wrap tokens, mostly keyusage GSSAPI_ACCEPTOR_SEAL (=22)
 // and GSSAPI_INITIATOR_SEAL (=24) will be used.
 // Note: This will NOT update the struct's Checksum field.
-func (wt *WrapToken) ComputeCheckSum(key types.EncryptionKey, keyUsage uint32) ([]byte, error) {
+func (wt *WrapToken) computeCheckSum(key types.EncryptionKey, keyUsage uint32) ([]byte, error) {
 	if wt.Payload == nil {
 		return nil, errors.New("cannot compute checksum with uninitialized payload")
 	}
@@ -153,8 +153,8 @@ func getChecksumHeader(flags byte, senderSeqNum uint64) []byte {
 // VerifyCheckSum computes the token's checksum with the provided key and usage,
 // and compares it to the checksum present in the token.
 // In case of any failure, (false, Err) is returned, with Err an explanatory error.
-func (wt *WrapToken) VerifyCheckSum(key types.EncryptionKey, keyUsage uint32) (bool, error) {
-	computed, cErr := wt.ComputeCheckSum(key, keyUsage)
+func (wt *WrapToken) Verify(key types.EncryptionKey, keyUsage uint32) (bool, error) {
+	computed, cErr := wt.computeCheckSum(key, keyUsage)
 	if cErr != nil {
 		return false, cErr
 	}
@@ -212,7 +212,7 @@ func (wt *WrapToken) Unmarshal(b []byte, expectFromAcceptor bool) error {
 // Other flags are set to 0, and the RRC and sequence number are initialized to 0.
 // Note that in certain circumstances you may need to provide a sequence number that has been defined earlier.
 // This is currently not supported.
-func NewInitiatorToken(payload []byte, key types.EncryptionKey) (*WrapToken, error) {
+func NewInitiatorWrapToken(payload []byte, key types.EncryptionKey) (*WrapToken, error) {
 	encType, err := crypto.GetEtype(key.KeyType)
 	if err != nil {
 		return nil, err
@@ -227,7 +227,7 @@ func NewInitiatorToken(payload []byte, key types.EncryptionKey) (*WrapToken, err
 		Payload:   payload,
 	}
 
-	if err := token.ComputeAndSetCheckSum(key, keyusage.GSSAPI_INITIATOR_SEAL); err != nil {
+	if err := token.SetCheckSum(key, keyusage.GSSAPI_INITIATOR_SEAL); err != nil {
 		return nil, err
 	}
 

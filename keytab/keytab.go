@@ -11,7 +11,7 @@ import (
 	"time"
 	"unsafe"
 
-	"gopkg.in/jcmturner/gokrb5.v6/types"
+	"gopkg.in/jcmturner/gokrb5.v7/types"
 )
 
 const (
@@ -20,7 +20,7 @@ const (
 
 // Keytab struct.
 type Keytab struct {
-	Version uint8
+	version uint8
 	Entries []entry
 }
 
@@ -42,27 +42,27 @@ type principal struct {
 }
 
 // NewKeytab creates new, empty Keytab type.
-func NewKeytab() Keytab {
+func New() *Keytab {
 	var e []entry
-	return Keytab{
-		Version: 0,
+	return &Keytab{
+		version: 0,
 		Entries: e,
 	}
 }
 
 // GetEncryptionKey returns the EncryptionKey from the Keytab for the newest entry with the required kvno, etype and matching principal.
-func (kt *Keytab) GetEncryptionKey(nameString []string, realm string, kvno int, etype int32) (types.EncryptionKey, error) {
+func (kt *Keytab) GetEncryptionKey(princName types.PrincipalName, realm string, kvno int, etype int32) (types.EncryptionKey, error) {
 	var key types.EncryptionKey
 	var t time.Time
 	for _, k := range kt.Entries {
-		if k.Principal.Realm == realm && len(k.Principal.Components) == len(nameString) &&
+		if k.Principal.Realm == realm && len(k.Principal.Components) == len(princName.NameString) &&
 			k.Key.KeyType == etype &&
 			(k.KVNO == uint32(kvno) || kvno == 0) &&
 			k.Timestamp.After(t) {
 
 			p := true
 			for i, n := range k.Principal.Components {
-				if nameString[i] != n {
+				if princName.NameString[i] != n {
 					p = false
 					break
 				}
@@ -74,7 +74,7 @@ func (kt *Keytab) GetEncryptionKey(nameString []string, realm string, kvno int, 
 		}
 	}
 	if len(key.KeyValue) < 1 {
-		return key, fmt.Errorf("matching key not found in keytab. Looking for %v realm: %v kvno: %v etype: %v", nameString, realm, kvno, etype)
+		return key, fmt.Errorf("matching key not found in keytab. Looking for %v realm: %v kvno: %v etype: %v", princName.NameString, realm, kvno, etype)
 	}
 	return key, nil
 }
@@ -106,19 +106,20 @@ func newPrincipal() principal {
 }
 
 // Load a Keytab file into a Keytab type.
-func Load(ktPath string) (kt Keytab, err error) {
-	k, err := ioutil.ReadFile(ktPath)
+func Load(ktPath string) (kt *Keytab, err error) {
+	b, err := ioutil.ReadFile(ktPath)
 	if err != nil {
 		return
 	}
-	return Parse(k)
+	err = kt.Unmarshal(b)
+	return
 }
 
 // Marshal keytab into byte slice
-func (kt Keytab) Marshal() ([]byte, error) {
-	b := []byte{keytabFirstByte, kt.Version}
+func (kt *Keytab) Marshal() ([]byte, error) {
+	b := []byte{keytabFirstByte, kt.version}
 	for _, e := range kt.Entries {
-		eb, err := e.marshal(int(kt.Version))
+		eb, err := e.marshal(int(kt.version))
 		if err != nil {
 			return b, err
 		}
@@ -129,7 +130,7 @@ func (kt Keytab) Marshal() ([]byte, error) {
 
 // Write the keytab bytes to io.Writer.
 // Returns the number of bytes written
-func (kt Keytab) Write(w io.Writer) (int, error) {
+func (kt *Keytab) Write(w io.Writer) (int, error) {
 	b, err := kt.Marshal()
 	if err != nil {
 		return 0, fmt.Errorf("error marshaling keytab: %v", err)
@@ -137,24 +138,22 @@ func (kt Keytab) Write(w io.Writer) (int, error) {
 	return w.Write(b)
 }
 
-// Parse byte slice of Keytab data into Keytab type.
-func Parse(b []byte) (kt Keytab, err error) {
+// Unmarshal byte slice of Keytab data into Keytab type.
+func (kt *Keytab) Unmarshal(b []byte) error {
 	//The first byte of the file always has the value 5
 	if b[0] != keytabFirstByte {
-		err = errors.New("invalid keytab data. First byte does not equal 5")
-		return
+		return errors.New("invalid keytab data. First byte does not equal 5")
 	}
 	//Get keytab version
 	//The 2nd byte contains the version number (1 or 2)
-	kt.Version = b[1]
-	if kt.Version != 1 && kt.Version != 2 {
-		err = errors.New("invalid keytab data. Keytab version is neither 1 nor 2")
-		return
+	kt.version = b[1]
+	if kt.version != 1 && kt.version != 2 {
+		return errors.New("invalid keytab data. Keytab version is neither 1 nor 2")
 	}
 	//Version 1 of the file format uses native byte order for integer representations. Version 2 always uses big-endian byte order
 	var endian binary.ByteOrder
 	endian = binary.BigEndian
-	if kt.Version == 1 && isNativeEndianLittle() {
+	if kt.version == 1 && isNativeEndianLittle() {
 		endian = binary.LittleEndian
 	}
 	/*
@@ -178,7 +177,7 @@ func Parse(b []byte) (kt Keytab, err error) {
 			ke := newKeytabEntry()
 			// p keeps track as to where we are in the byte stream
 			var p int
-			parsePrincipal(eb, &p, &kt, &ke, &endian)
+			parsePrincipal(eb, &p, kt, &ke, &endian)
 			ke.Timestamp = readTimestamp(eb, &p, &endian)
 			ke.KVNO8 = uint8(readInt8(eb, &p, &endian))
 			ke.Key.KeyType = int32(readInt16(eb, &p, &endian))
@@ -205,7 +204,7 @@ func Parse(b []byte) (kt Keytab, err error) {
 		// Read the size of the next entry
 		l = readInt32(b, &n, &endian)
 	}
-	return
+	return nil
 }
 
 func (e entry) marshal(v int) ([]byte, error) {
@@ -250,7 +249,7 @@ func (e entry) marshal(v int) ([]byte, error) {
 // Parse the Keytab bytes of a principal into a Keytab entry's principal.
 func parsePrincipal(b []byte, p *int, kt *Keytab, ke *entry, e *binary.ByteOrder) error {
 	ke.Principal.NumComponents = readInt16(b, p, e)
-	if kt.Version == 1 {
+	if kt.version == 1 {
 		//In version 1 the number of components includes the realm. Minus 1 to make consistent with version 2
 		ke.Principal.NumComponents--
 	}
@@ -260,7 +259,7 @@ func parsePrincipal(b []byte, p *int, kt *Keytab, ke *entry, e *binary.ByteOrder
 		l := readInt16(b, p, e)
 		ke.Principal.Components = append(ke.Principal.Components, string(readBytes(b, p, int(l), e)))
 	}
-	if kt.Version != 1 {
+	if kt.version != 1 {
 		//Name Type is omitted in version 1
 		ke.Principal.NameType = readInt32(b, p, e)
 	}

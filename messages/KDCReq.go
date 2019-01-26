@@ -11,18 +11,18 @@ import (
 	"time"
 
 	"github.com/jcmturner/gofork/encoding/asn1"
-	"gopkg.in/jcmturner/gokrb5.v6/asn1tools"
-	"gopkg.in/jcmturner/gokrb5.v6/config"
-	"gopkg.in/jcmturner/gokrb5.v6/crypto"
-	"gopkg.in/jcmturner/gokrb5.v6/iana"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/asnAppTag"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/flags"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/keyusage"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/msgtype"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/nametype"
-	"gopkg.in/jcmturner/gokrb5.v6/iana/patype"
-	"gopkg.in/jcmturner/gokrb5.v6/krberror"
-	"gopkg.in/jcmturner/gokrb5.v6/types"
+	"gopkg.in/jcmturner/gokrb5.v7/asn1tools"
+	"gopkg.in/jcmturner/gokrb5.v7/config"
+	"gopkg.in/jcmturner/gokrb5.v7/crypto"
+	"gopkg.in/jcmturner/gokrb5.v7/iana"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/asnAppTag"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/flags"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/keyusage"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/msgtype"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/nametype"
+	"gopkg.in/jcmturner/gokrb5.v7/iana/patype"
+	"gopkg.in/jcmturner/gokrb5.v7/krberror"
+	"gopkg.in/jcmturner/gokrb5.v7/types"
 )
 
 type marshalKDCReq struct {
@@ -339,7 +339,7 @@ func (k *KDCReqBody) Unmarshal(b []byte) error {
 	k.Addresses = m.Addresses
 	k.EncAuthData = m.EncAuthData
 	if len(m.AdditionalTickets.Bytes) > 0 {
-		k.AdditionalTickets, err = UnmarshalTicketsSequence(m.AdditionalTickets)
+		k.AdditionalTickets, err = unmarshalTicketsSequence(m.AdditionalTickets)
 		if err != nil {
 			return krberror.Errorf(err, krberror.EncodingError, "error unmarshaling additional tickets")
 		}
