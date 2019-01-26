@@ -1,12 +1,11 @@
 language: go
 
 go:
-  - 1.9.x
   - 1.10.x
   - 1.11.x
   - master
 
-go_import_path: gopkg.in/jcmturner/gokrb5.v6
+go_import_path: gopkg.in/jcmturner/gokrb5.v7
 
 sudo: required
 
