@@ -2,6 +2,7 @@ package keytab
 
 import (
 	"encoding/hex"
+	"os"
 	"testing"
 	"time"
 
@@ -50,7 +51,12 @@ func TestMarshal(t *testing.T) {
 
 func TestLoad(t *testing.T) {
 	t.Parallel()
-	kt, err := Load("test/testdata/testuser1.testtab")
+	f := "test/testdata/testuser1.testtab"
+	dir := os.Getenv("TRAVIS_BUILD_DIR")
+	if dir != "" {
+		f = dir + "/" + f
+	}
+	kt, err := Load(f)
 	if err != nil {
 		t.Fatalf("could not load keytab: %v", err)
 	}
