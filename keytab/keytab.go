@@ -113,7 +113,7 @@ func Load(ktPath string) (*Keytab, error) {
 		return kt, err
 	}
 	err = kt.Unmarshal(b)
-	return kt, nil
+	return kt, err
 }
 
 // Marshal keytab into byte slice
