@@ -106,13 +106,14 @@ func newPrincipal() principal {
 }
 
 // Load a Keytab file into a Keytab type.
-func Load(ktPath string) (kt *Keytab, err error) {
+func Load(ktPath string) (*Keytab, error) {
+	kt := new(Keytab)
 	b, err := ioutil.ReadFile(ktPath)
 	if err != nil {
-		return
+		return kt, err
 	}
 	err = kt.Unmarshal(b)
-	return
+	return kt, nil
 }
 
 // Marshal keytab into byte slice
