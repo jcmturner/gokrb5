@@ -3,6 +3,7 @@ package keytab
 import (
 	"encoding/hex"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -52,9 +53,12 @@ func TestMarshal(t *testing.T) {
 func TestLoad(t *testing.T) {
 	t.Parallel()
 	f := "test/testdata/testuser1.testtab"
+	cwd, _ := os.Getwd()
 	dir := os.Getenv("TRAVIS_BUILD_DIR")
 	if dir != "" {
 		f = dir + "/" + f
+	} else if filepath.Base(cwd) == "keytab" {
+		f = "../" + f
 	}
 	kt, err := Load(f)
 	if err != nil {
