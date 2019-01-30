@@ -12,7 +12,7 @@ gokrb5 may work with other versions of Go but they are not tested.
 ### Go Get
 To get the package, execute:
 ```
-go get -d gopkg.in/jcmturner/gokrb5.v6/...
+go get -d gopkg.in/jcmturner/gokrb5.v7/...
 ```
 To import this package, add the following line to your code:
 ```go
