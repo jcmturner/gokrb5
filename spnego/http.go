@@ -3,8 +3,12 @@ package spnego
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"net/http/cookiejar"
+	"net/url"
 	"strings"
 
 	"gopkg.in/jcmturner/goidentity.v3"
@@ -17,6 +21,117 @@ import (
 )
 
 // Client side functionality //
+
+// Client will negotiate authentication with a server using SPNEGO.
+type Client struct {
+	*http.Client
+	krb5Client *client.Client
+	spn        string
+	reqs       []*http.Request
+}
+
+type redirectErr struct {
+	reqTarget *http.Request
+}
+
+func (e redirectErr) Error() string {
+	return fmt.Sprintf("redirect to %v", e.reqTarget.URL)
+}
+
+// NewClient returns an SPNEGO enabled HTTP client.
+func NewClient(krb5Cl *client.Client, httpCl *http.Client, spn string) *Client {
+	if httpCl == nil {
+		httpCl = http.DefaultClient
+	}
+	// Add a cookie jar if there isn't one
+	if httpCl.Jar == nil {
+		httpCl.Jar, _ = cookiejar.New(nil)
+	}
+	// Add a CheckRedirect function that will execute any functional already defined and then remove
+	f := httpCl.CheckRedirect
+	httpCl.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		if f != nil {
+			err := f(req, via)
+			if err != nil {
+				return err
+			}
+		}
+		return redirectErr{reqTarget: req}
+	}
+	return &Client{
+		Client:     httpCl,
+		krb5Client: krb5Cl,
+		spn:        spn,
+	}
+}
+
+// Do is the SPNEGO enabled HTTP client's equivalent of the http.Client's Do method.
+func (c *Client) Do(req *http.Request) (resp *http.Response, err error) {
+	resp, err = c.Client.Do(req)
+	if err != nil {
+		if ue, ok := err.(*url.Error); ok {
+			if e, ok := ue.Err.(redirectErr); ok {
+				e.reqTarget.Header.Del(HTTPHeaderAuthRequest)
+				c.reqs = append(c.reqs, e.reqTarget)
+				if len(c.reqs) >= 10 {
+					return resp, errors.New("stopped after 10 redirects")
+				}
+				return c.Do(e.reqTarget)
+			}
+			return resp, err
+		}
+	}
+	if respUnauthorizedNegotiate(resp) {
+		err := SetSPNEGOHeader(c.krb5Client, req, c.spn)
+		if err != nil {
+			return resp, err
+		}
+		return c.Do(req)
+	}
+	return resp, err
+}
+
+// Get is the SPNEGO enabled HTTP client's equivalent of the http.Client's Get method.
+func (c *Client) Get(url string) (resp *http.Response, err error) {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	return c.Do(req)
+}
+
+// Post is the SPNEGO enabled HTTP client's equivalent of the http.Client's Post method.
+func (c *Client) Post(url, contentType string, body io.Reader) (resp *http.Response, err error) {
+	req, err := http.NewRequest("POST", url, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", contentType)
+	return c.Do(req)
+}
+
+// PostForm is the SPNEGO enabled HTTP client's equivalent of the http.Client's PostForm method.
+func (c *Client) PostForm(url string, data url.Values) (resp *http.Response, err error) {
+	return c.Post(url, "application/x-www-form-urlencoded", strings.NewReader(data.Encode()))
+}
+
+// Head is the SPNEGO enabled HTTP client's equivalent of the http.Client's Head method.
+func (c *Client) Head(url string) (resp *http.Response, err error) {
+	req, err := http.NewRequest("HEAD", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	return c.Do(req)
+}
+
+func respUnauthorizedNegotiate(resp *http.Response) bool {
+	if resp.StatusCode == http.StatusUnauthorized {
+		if resp.Header.Get(HTTPHeaderAuthResponse) == HTTPHeaderAuthResponseValueKey {
+			return true
+		}
+	}
+	return false
+}
 
 // SetSPNEGOHeader gets the service ticket and sets it as the SPNEGO authorization header on HTTP request object.
 // To auto generate the SPN from the request object pass a null string "".
@@ -38,7 +153,7 @@ func SetSPNEGOHeader(cl *client.Client, r *http.Request, spn string) error {
 		return krberror.Errorf(err, krberror.EncodingError, "could not marshal SPNEGO")
 	}
 	hs := "Negotiate " + base64.StdEncoding.EncodeToString(nb)
-	r.Header.Set("Authorization", hs)
+	r.Header.Set(HTTPHeaderAuthRequest, hs)
 	return nil
 }
 

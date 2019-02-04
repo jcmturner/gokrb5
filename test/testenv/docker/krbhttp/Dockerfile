@@ -3,12 +3,15 @@ MAINTAINER Jonathan Turner <jt@jtnet.co.uk>
 
 EXPOSE 80 443
 ENV LANG C
+ENV KRB5RCACHEDIR=/var/tmp
+ENV KRB5RCACHETYPE=dfl
 ENTRYPOINT ["/usr/sbin/httpd", "-DFOREGROUND"]
 
 RUN yum install -y \
   httpd \
   mod_auth_kerb \
   mod_auth_gssapi \
+  mod_session \
   mod_ssl \
   tcpdump krb5-workstation vim \
   && yum update -y && yum clean all

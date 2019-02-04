@@ -50,21 +50,73 @@ func TestClient_SetSPNEGOHeader(t *testing.T) {
 	paths := []string{
 		"/modkerb/index.html",
 		"/modgssapi/index.html",
+		"/modgssapi", // This issues a redirect which the http client will automatically follow. Could cause a replay issue
 	}
 	for _, p := range paths {
 		r, _ := http.NewRequest("GET", url+p, nil)
-		httpResp, err := http.DefaultClient.Do(r)
+		httpCl := http.DefaultClient
+		httpCl.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+			t.Logf("http client redirect: %+v", *req)
+			return nil
+		}
+		httpResp, err := httpCl.Do(r)
 		if err != nil {
-			t.Fatalf("%s request error: %v\n", url+p, err)
+			t.Fatalf("%s request error: %v", url+p, err)
 		}
 		assert.Equal(t, http.StatusUnauthorized, httpResp.StatusCode, "Status code in response to client with no SPNEGO not as expected")
 		err = SetSPNEGOHeader(cl, r, "HTTP/host.test.gokrb5")
 		if err != nil {
 			t.Fatalf("error setting client SPNEGO header: %v", err)
 		}
+		//t.Logf("Reqeust: %+v\n\n", *r)
 		httpResp, err = http.DefaultClient.Do(r)
 		if err != nil {
 			t.Fatalf("%s request error: %v\n", url+p, err)
+		}
+		assert.Equal(t, http.StatusOK, httpResp.StatusCode, "Status code in response to client SPNEGO request not as expected")
+	}
+}
+
+func TestSPNEGOHTTPClient(t *testing.T) {
+	if os.Getenv("INTEGRATION") != "1" {
+		t.Skip("Skipping integration test")
+	}
+	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	kt := keytab.New()
+	kt.Unmarshal(b)
+	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	addr := os.Getenv("TEST_KDC_ADDR")
+	if addr == "" {
+		addr = testdata.TEST_KDC_ADDR
+	}
+	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
+	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
+
+	err := cl.Login()
+	if err != nil {
+		t.Fatalf("error on AS_REQ: %v\n", err)
+	}
+	url := os.Getenv("TEST_HTTP_URL")
+	if url == "" {
+		url = testdata.TEST_HTTP_URL
+	}
+	// This path issues a redirect which the http client will automatically follow.
+	// It should cause a replay issue if the negInit token is sent in the first instance.
+	paths := []string{
+		"/modgssapi", // This issues a redirect which the http client will automatically follow. Could cause a replay issue
+		"/redirect",
+	}
+	for _, p := range paths {
+		r, _ := http.NewRequest("GET", url+p, nil)
+		httpCl := http.DefaultClient
+		httpCl.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+			t.Logf("http client redirect: %+v", *req)
+			return nil
+		}
+		spnegoCl := NewClient(cl, httpCl, "HTTP/host.test.gokrb5")
+		httpResp, err := spnegoCl.Do(r)
+		if err != nil {
+			t.Fatalf("%s request error: %v", url+p, err)
 		}
 		assert.Equal(t, http.StatusOK, httpResp.StatusCode, "Status code in response to client SPNEGO request not as expected")
 	}
