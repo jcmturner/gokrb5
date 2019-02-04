@@ -50,7 +50,6 @@ func TestClient_SetSPNEGOHeader(t *testing.T) {
 	paths := []string{
 		"/modkerb/index.html",
 		"/modgssapi/index.html",
-		"/modgssapi", // This issues a redirect which the http client will automatically follow. Could cause a replay issue
 	}
 	for _, p := range paths {
 		r, _ := http.NewRequest("GET", url+p, nil)
