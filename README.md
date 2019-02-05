@@ -114,11 +114,15 @@ cl := client.NewClientWithPassword("username", "REALM.COM", "password", cfg, cli
 #### Authenticate to a Service
 
 ##### HTTP SPNEGO
-Create the HTTP request object and then call the client's SetSPNEGOHeader method passing the Service Principal Name (SPN) or to auto generate the SPN from the request object pass a null string ""
+Create the HTTP request object and then create an SPNEGO client and use this to process the request with methods that 
+are the same as on a HTTP client.
+If nil is passed as the HTTP client when creating the SPNEGO client the http.DefaultClient is used.
+When creating the SPNEGO client pass the Service Principal Name (SPN) or auto generate the SPN from the request 
+object by passing a null string "".
 ```go
 r, _ := http.NewRequest("GET", "http://host.test.gokrb5/index.html", nil)
-err := SetSPNEGOHeader(&cl, r, "") // If "" is provided for the last argument the SPN will be derived from the URL.
-HTTPResp, err := http.DefaultClient.Do(r)
+spnegoCl := spngeo.NewClient(cl, nil, "")
+resp, err := spnegoCl.Do(r)
 ```
 
 ##### Generic Kerberos Client
