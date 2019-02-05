@@ -47,7 +47,7 @@ func NewClient(krb5Cl *client.Client, httpCl *http.Client, spn string) *Client {
 	if httpCl.Jar == nil {
 		httpCl.Jar, _ = cookiejar.New(nil)
 	}
-	// Add a CheckRedirect function that will execute any functional already defined and then remove
+	// Add a CheckRedirect function that will execute any functional already defined and then error with a redirectErr
 	f := httpCl.CheckRedirect
 	httpCl.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 		if f != nil {
@@ -71,6 +71,7 @@ func (c *Client) Do(req *http.Request) (resp *http.Response, err error) {
 	if err != nil {
 		if ue, ok := err.(*url.Error); ok {
 			if e, ok := ue.Err.(redirectErr); ok {
+				// Picked up a redirect
 				e.reqTarget.Header.Del(HTTPHeaderAuthRequest)
 				c.reqs = append(c.reqs, e.reqTarget)
 				if len(c.reqs) >= 10 {
@@ -78,8 +79,8 @@ func (c *Client) Do(req *http.Request) (resp *http.Response, err error) {
 				}
 				return c.Do(e.reqTarget)
 			}
-			return resp, err
 		}
+		return resp, err
 	}
 	if respUnauthorizedNegotiate(resp) {
 		err := SetSPNEGOHeader(c.krb5Client, req, c.spn)
