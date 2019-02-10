@@ -36,7 +36,7 @@ const (
 )
 
 func main() {
-	l := log.New(os.Stderr, "GOKRB5 Client: ", log.Ldate|log.Ltime|log.Lshortfile)
+	l := log.New(os.Stderr, "GOKRB5 Client: ", log.LstdFlags)
 
 	//defer profile.Start(profile.TraceProfile).Stop()
 	// Load the keytab
