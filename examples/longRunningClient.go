@@ -36,26 +36,26 @@ const (
 )
 
 func main() {
+	l := log.New(os.Stderr, "GOKRB5 Client: ", log.Ldate|log.Ltime|log.Lshortfile)
+
 	//defer profile.Start(profile.TraceProfile).Stop()
 	// Load the keytab
 	kb, _ := hex.DecodeString(testdata.TESTUSER2_KEYTAB)
 	kt := keytab.New()
 	err := kt.Unmarshal(kb)
 	if err != nil {
-		panic(err)
+		l.Fatalf("could not load client keytab: %v", err)
 	}
 
 	// Load the client krb5 config
 	conf, err := config.NewConfigFromString(kRB5CONF)
 	if err != nil {
-		panic(err)
+		l.Fatalf("could not load krb5.conf: %v", err)
 	}
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr != "" {
 		conf.Realms[0].KDC = []string{addr + ":88"}
 	}
-
-	l := log.New(os.Stderr, "GOKRB5 Client: ", log.Ldate|log.Ltime|log.Lshortfile)
 
 	// Create the client with the keytab
 	cl := client.NewClientWithKeytab("testuser2", "TEST.GOKRB5", kt, conf, client.Logger(l), client.DisablePAFXFAST(true))
