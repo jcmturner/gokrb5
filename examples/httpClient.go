@@ -6,10 +6,10 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 
-	//"github.com/pkg/profile"
 	"gopkg.in/jcmturner/gokrb5.v7/client"
 	"gopkg.in/jcmturner/gokrb5.v7/config"
 	"gopkg.in/jcmturner/gokrb5.v7/keytab"
@@ -42,19 +42,21 @@ const (
 )
 
 func main() {
+	l := log.New(os.Stderr, "GOKRB5 Client: ", log.LstdFlags)
+
 	//defer profile.Start(profile.TraceProfile).Stop()
 	// Load the keytab
-	kb, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	kb, _ := hex.DecodeString(testdata.TESTUSER2_KEYTAB)
 	kt := keytab.New()
 	err := kt.Unmarshal(kb)
 	if err != nil {
-		panic(err)
+		l.Fatalf("could not load client keytab: %v", err)
 	}
 
 	// Load the client krb5 config
 	conf, err := config.NewConfigFromString(kRB5CONF)
 	if err != nil {
-		panic(err)
+		l.Fatalf("could not load krb5.conf: %v", err)
 	}
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr != "" {
@@ -62,34 +64,31 @@ func main() {
 	}
 
 	// Create the client with the keytab
-	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, conf)
+	cl := client.NewClientWithKeytab("testuser2", "TEST.GOKRB5", kt, conf, client.Logger(l), client.DisablePAFXFAST(true))
 
 	// Log in the client
 	err = cl.Login()
 	if err != nil {
-		panic(err)
+		l.Fatalf("could not login client: %v", err)
 	}
 
 	// Form the request
 	url := "http://localhost" + port
 	r, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		panic(err)
-	}
-	// Apply the client's auth headers to the request
-	err = spnego.SetSPNEGOHeader(cl, r, "HTTP/host.test.gokrb5")
-	if err != nil {
-		panic(err)
+		l.Fatalf("could create request: %v", err)
 	}
 
+	spnegoCl := spnego.NewClient(cl, nil, "HTTP/host.test.gokrb5")
+
 	// Make the request
-	resp, err := http.DefaultClient.Do(r)
+	resp, err := spnegoCl.Do(r)
 	if err != nil {
-		panic(err)
+		l.Fatalf("error making request: %v", err)
 	}
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		panic(err)
+		l.Fatalf("error reading response body: %v", err)
 	}
 	fmt.Println(string(b))
 }
