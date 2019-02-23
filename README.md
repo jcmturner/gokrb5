@@ -121,7 +121,7 @@ When creating the SPNEGO client pass the Service Principal Name (SPN) or auto ge
 object by passing a null string "".
 ```go
 r, _ := http.NewRequest("GET", "http://host.test.gokrb5/index.html", nil)
-spnegoCl := spngeo.NewClient(cl, nil, "")
+spnegoCl := spnego.NewClient(cl, nil, "")
 resp, err := spnegoCl.Do(r)
 ```
 
