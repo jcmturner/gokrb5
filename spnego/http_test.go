@@ -112,7 +112,7 @@ func TestSPNEGOHTTPClient(t *testing.T) {
 			t.Logf("http client redirect: %+v", *req)
 			return nil
 		}
-		spnegoCl := NewClient(cl, httpCl, "HTTP/host.test.gokrb5")
+		spnegoCl := NewClient(cl, httpCl, "")
 		httpResp, err := spnegoCl.Do(r)
 		if err != nil {
 			t.Fatalf("%s request error: %v", url+p, err)
