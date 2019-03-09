@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -138,7 +139,12 @@ func respUnauthorizedNegotiate(resp *http.Response) bool {
 // To auto generate the SPN from the request object pass a null string "".
 func SetSPNEGOHeader(cl *client.Client, r *http.Request, spn string) error {
 	if spn == "" {
-		spn = "HTTP/" + strings.SplitN(r.Host, ":", 2)[0]
+		h := strings.TrimSuffix(strings.SplitN(r.Host, ":", 2)[0], ".")
+		name, err := net.LookupCNAME(h)
+		if err == nil {
+			h = strings.TrimSuffix(name, ".")
+		}
+		spn = "HTTP/" + h
 	}
 	s := SPNEGOClient(cl, spn)
 	err := s.AcquireCred()
