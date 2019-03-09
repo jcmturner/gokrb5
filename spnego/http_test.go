@@ -63,7 +63,7 @@ func TestClient_SetSPNEGOHeader(t *testing.T) {
 			t.Fatalf("%s request error: %v", url+p, err)
 		}
 		assert.Equal(t, http.StatusUnauthorized, httpResp.StatusCode, "Status code in response to client with no SPNEGO not as expected")
-		err = SetSPNEGOHeader(cl, r, "HTTP/host.test.gokrb5")
+		err = SetSPNEGOHeader(cl, r, "")
 		if err != nil {
 			t.Fatalf("error setting client SPNEGO header: %v", err)
 		}
