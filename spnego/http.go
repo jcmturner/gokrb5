@@ -145,6 +145,7 @@ func SetSPNEGOHeader(cl *client.Client, r *http.Request, spn string) error {
 			h = strings.TrimSuffix(name, ".")
 		}
 		spn = "HTTP/" + h
+		r.Host = h
 	}
 	cl.Log("using SPN %s", spn)
 	cl.Log("req: %+v", *r)
