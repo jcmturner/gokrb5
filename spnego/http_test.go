@@ -54,21 +54,17 @@ func TestClient_SetSPNEGOHeader(t *testing.T) {
 	for _, p := range paths {
 		url = "http://host.test.gokrb5"
 		r, _ := http.NewRequest("GET", url+p, nil)
-		httpCl := http.DefaultClient
-		httpCl.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-			t.Logf("http client redirect: %+v", *req)
-			return nil
-		}
-		httpResp, err := httpCl.Do(r)
+		httpResp, err := http.DefaultClient.Do(r)
 		if err != nil {
 			t.Fatalf("%s request error: %v", url+p, err)
 		}
 		assert.Equal(t, http.StatusUnauthorized, httpResp.StatusCode, "Status code in response to client with no SPNEGO not as expected")
+
 		err = SetSPNEGOHeader(cl, r, "")
 		if err != nil {
 			t.Fatalf("error setting client SPNEGO header: %v", err)
 		}
-		//t.Logf("Reqeust: %+v\n\n", *r)
+
 		httpResp, err = http.DefaultClient.Do(r)
 		if err != nil {
 			t.Fatalf("%s request error: %v\n", url+p, err)
