@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 	"log"
 	"mime/multipart"
-	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
