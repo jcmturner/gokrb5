@@ -139,9 +139,10 @@ func respUnauthorizedNegotiate(resp *http.Response) bool {
 // To auto generate the SPN from the request object pass a null string "".
 func SetSPNEGOHeader(cl *client.Client, r *http.Request, spn string) error {
 	if spn == "" {
-		h := strings.TrimSuffix(strings.SplitN(r.Host, ":", 2)[0], ".")
+		h := strings.TrimSuffix(strings.SplitN(r.URL.Host, ":", 2)[0], ".")
 		name, err := net.LookupCNAME(h)
 		if err == nil {
+			// Underlyng canonical name should be used for SPN
 			h = strings.TrimSuffix(name, ".")
 		}
 		spn = "HTTP/" + h
