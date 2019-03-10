@@ -52,7 +52,7 @@ func TestClient_SetSPNEGOHeader(t *testing.T) {
 		//"/modgssapi/index.html",
 	}
 	for _, p := range paths {
-		url = "http://host.test.gokrb5"
+		url = "http://cname.test.gokrb5"
 		r, _ := http.NewRequest("GET", url+p, nil)
 		httpResp, err := http.DefaultClient.Do(r)
 		if err != nil {
