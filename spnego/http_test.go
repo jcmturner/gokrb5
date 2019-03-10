@@ -21,13 +21,12 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v7/config"
 	"gopkg.in/jcmturner/gokrb5.v7/keytab"
 	"gopkg.in/jcmturner/gokrb5.v7/service"
+	"gopkg.in/jcmturner/gokrb5.v7/test"
 	"gopkg.in/jcmturner/gokrb5.v7/test/testdata"
 )
 
 func TestClient_SetSPNEGOHeader(t *testing.T) {
-	if os.Getenv("INTEGRATION") != "1" {
-		t.Skip("Skipping integration test")
-	}
+	test.Integration(t)
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt := keytab.New()
 	kt.Unmarshal(b)
@@ -50,7 +49,7 @@ func TestClient_SetSPNEGOHeader(t *testing.T) {
 	}
 	paths := []string{
 		"/modkerb/index.html",
-		"/modgssapi/index.html",
+		//"/modgssapi/index.html",
 	}
 	for _, p := range paths {
 		r, _ := http.NewRequest("GET", url+p, nil)
