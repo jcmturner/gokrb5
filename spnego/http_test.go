@@ -43,33 +43,34 @@ func TestClient_SetSPNEGOHeader(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error on AS_REQ: %v\n", err)
 	}
-	url := os.Getenv("TEST_HTTP_URL")
-	if url == "" {
-		url = testdata.TEST_HTTP_URL
+	urls := []string{
+		"http://cname.test.gokrb5",
+		"http://host.test.gokrb5",
 	}
 	paths := []string{
 		"/modkerb/index.html",
 		//"/modgssapi/index.html",
 	}
-	for _, p := range paths {
-		url = "http://host.test.gokrb5"
-		r, _ := http.NewRequest("GET", url+p, nil)
-		httpResp, err := http.DefaultClient.Do(r)
-		if err != nil {
-			t.Fatalf("%s request error: %v", url+p, err)
-		}
-		assert.Equal(t, http.StatusUnauthorized, httpResp.StatusCode, "Status code in response to client with no SPNEGO not as expected")
+	for _, url := range urls {
+		for _, p := range paths {
+			r, _ := http.NewRequest("GET", url+p, nil)
+			httpResp, err := http.DefaultClient.Do(r)
+			if err != nil {
+				t.Fatalf("%s request error: %v", url+p, err)
+			}
+			assert.Equal(t, http.StatusUnauthorized, httpResp.StatusCode, "Status code in response to client with no SPNEGO not as expected")
 
-		err = SetSPNEGOHeader(cl, r, "")
-		if err != nil {
-			t.Fatalf("error setting client SPNEGO header: %v", err)
-		}
+			err = SetSPNEGOHeader(cl, r, "")
+			if err != nil {
+				t.Fatalf("error setting client SPNEGO header: %v", err)
+			}
 
-		httpResp, err = http.DefaultClient.Do(r)
-		if err != nil {
-			t.Fatalf("%s request error: %v\n", url+p, err)
+			httpResp, err = http.DefaultClient.Do(r)
+			if err != nil {
+				t.Fatalf("%s request error: %v\n", url+p, err)
+			}
+			assert.Equal(t, http.StatusOK, httpResp.StatusCode, "Status code in response to client SPNEGO request not as expected")
 		}
-		assert.Equal(t, http.StatusOK, httpResp.StatusCode, "Status code in response to client SPNEGO request not as expected")
 	}
 }
 
@@ -91,9 +92,9 @@ func TestSPNEGOHTTPClient(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error on AS_REQ: %v\n", err)
 	}
-	url := os.Getenv("TEST_HTTP_URL")
-	if url == "" {
-		url = testdata.TEST_HTTP_URL
+	urls := []string{
+		"http://cname.test.gokrb5",
+		"http://host.test.gokrb5",
 	}
 	// This path issues a redirect which the http client will automatically follow.
 	// It should cause a replay issue if the negInit token is sent in the first instance.
@@ -101,19 +102,21 @@ func TestSPNEGOHTTPClient(t *testing.T) {
 		"/modgssapi", // This issues a redirect which the http client will automatically follow. Could cause a replay issue
 		"/redirect",
 	}
-	for _, p := range paths {
-		r, _ := http.NewRequest("GET", url+p, nil)
-		httpCl := http.DefaultClient
-		httpCl.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-			t.Logf("http client redirect: %+v", *req)
-			return nil
+	for _, url := range urls {
+		for _, p := range paths {
+			r, _ := http.NewRequest("GET", url+p, nil)
+			httpCl := http.DefaultClient
+			httpCl.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+				t.Logf("http client redirect: %+v", *req)
+				return nil
+			}
+			spnegoCl := NewClient(cl, httpCl, "")
+			httpResp, err := spnegoCl.Do(r)
+			if err != nil {
+				t.Fatalf("%s request error: %v", url+p, err)
+			}
+			assert.Equal(t, http.StatusOK, httpResp.StatusCode, "Status code in response to client SPNEGO request not as expected")
 		}
-		spnegoCl := NewClient(cl, httpCl, "")
-		httpResp, err := spnegoCl.Do(r)
-		if err != nil {
-			t.Fatalf("%s request error: %v", url+p, err)
-		}
-		assert.Equal(t, http.StatusOK, httpResp.StatusCode, "Status code in response to client SPNEGO request not as expected")
 	}
 }
 
