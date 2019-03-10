@@ -149,7 +149,6 @@ func SetSPNEGOHeader(cl *client.Client, r *http.Request, spn string) error {
 		r.Host = h
 	}
 	cl.Log("using SPN %s", spn)
-	cl.Log("req: %+v", *r)
 	s := SPNEGOClient(cl, spn)
 	err := s.AcquireCred()
 	if err != nil {
