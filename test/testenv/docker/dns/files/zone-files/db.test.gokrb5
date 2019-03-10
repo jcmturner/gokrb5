@@ -29,3 +29,5 @@ kdc1a	IN	A	<TEST_KDC_ADDR>
 kdc1b	IN	A	<TEST_KDC_ADDR>
 kdc2a	IN	A	<TEST_KDC_ADDR>
 kdc2b	IN	A	<TEST_KDC_ADDR>
+host    IN  A   <TEST_HTTP_ADDR>
+cname   IN  CNAME host

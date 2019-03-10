@@ -4,6 +4,7 @@
 [![GoDoc](https://godoc.org/gopkg.in/jcmturner/gokrb5.v7?status.svg)](https://godoc.org/gopkg.in/jcmturner/gokrb5.v7) [![Go Report Card](https://goreportcard.com/badge/gopkg.in/jcmturner/gokrb5.v7)](https://goreportcard.com/report/gopkg.in/jcmturner/gokrb5.v7) [![Build Status](https://travis-ci.org/jcmturner/gokrb5.svg?branch=master)](https://travis-ci.org/jcmturner/gokrb5)
 
 #### Go Version Support
+![Go version](https://img.shields.io/badge/Go-1.12-brightgreen.svg)
 ![Go version](https://img.shields.io/badge/Go-1.11-brightgreen.svg)
 ![Go version](https://img.shields.io/badge/Go-1.10-brightgreen.svg)
 
