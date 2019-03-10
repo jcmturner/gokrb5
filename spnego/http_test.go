@@ -52,6 +52,7 @@ func TestClient_SetSPNEGOHeader(t *testing.T) {
 		//"/modgssapi/index.html",
 	}
 	for _, p := range paths {
+		url = "http://host.test.gokrb5"
 		r, _ := http.NewRequest("GET", url+p, nil)
 		httpCl := http.DefaultClient
 		httpCl.CheckRedirect = func(req *http.Request, via []*http.Request) error {
@@ -77,9 +78,7 @@ func TestClient_SetSPNEGOHeader(t *testing.T) {
 }
 
 func TestSPNEGOHTTPClient(t *testing.T) {
-	if os.Getenv("INTEGRATION") != "1" {
-		t.Skip("Skipping integration test")
-	}
+	test.Integration(t)
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt := keytab.New()
 	kt.Unmarshal(b)
@@ -135,9 +134,7 @@ func TestService_SPNEGOKRB_NoAuthHeader(t *testing.T) {
 }
 
 func TestService_SPNEGOKRB_ValidUser(t *testing.T) {
-	if os.Getenv("INTEGRATION") != "1" {
-		t.Skip("Skipping integration test")
-	}
+	test.Integration(t)
 
 	s := httpServer()
 	defer s.Close()
@@ -157,9 +154,7 @@ func TestService_SPNEGOKRB_ValidUser(t *testing.T) {
 }
 
 func TestService_SPNEGOKRB_Replay(t *testing.T) {
-	if os.Getenv("INTEGRATION") != "1" {
-		t.Skip("Skipping integration test")
-	}
+	test.Integration(t)
 
 	s := httpServer()
 	defer s.Close()
@@ -216,9 +211,7 @@ func TestService_SPNEGOKRB_Replay(t *testing.T) {
 }
 
 func TestService_SPNEGOKRB_ReplayCache_Concurrency(t *testing.T) {
-	if os.Getenv("INTEGRATION") != "1" {
-		t.Skip("Skipping integration test")
-	}
+	test.Integration(t)
 
 	s := httpServer()
 	defer s.Close()
@@ -256,9 +249,7 @@ func TestService_SPNEGOKRB_ReplayCache_Concurrency(t *testing.T) {
 }
 
 func TestService_SPNEGOKRB_Upload(t *testing.T) {
-	if os.Getenv("INTEGRATION") != "1" {
-		t.Skip("Skipping integration test")
-	}
+	test.Integration(t)
 
 	s := httpServer()
 	defer s.Close()
