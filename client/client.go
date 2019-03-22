@@ -117,7 +117,7 @@ func (cl *Client) Key(etype etype.EType, krberr *messages.KRBError) (types.Encry
 	if cl.Credentials.HasKeytab() && etype != nil {
 		return cl.Credentials.Keytab().GetEncryptionKey(cl.Credentials.CName(), cl.Credentials.Domain(), 0, etype.GetETypeID())
 	} else if cl.Credentials.HasPassword() {
-		if krberr.ErrorCode == errorcode.KDC_ERR_PREAUTH_REQUIRED {
+		if krberr != nil && krberr.ErrorCode == errorcode.KDC_ERR_PREAUTH_REQUIRED {
 			var pas types.PADataSequence
 			err := pas.Unmarshal(krberr.EData)
 			if err != nil {
@@ -179,10 +179,6 @@ func (cl *Client) Login() error {
 	ASReq, err := messages.NewASReqForTGT(cl.Credentials.Domain(), cl.Config, cl.Credentials.CName())
 	if err != nil {
 		return krberror.Errorf(err, krberror.KRBMsgError, "error generating new AS_REQ")
-	}
-	err = setPAData(cl, messages.KRBError{}, &ASReq)
-	if err != nil {
-		return krberror.Errorf(err, krberror.KRBMsgError, "failed setting AS_REQ PAData")
 	}
 	ASRep, err := cl.ASExchange(cl.Credentials.Domain(), ASReq, 0)
 	if err != nil {

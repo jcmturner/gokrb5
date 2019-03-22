@@ -17,6 +17,12 @@ func (cl *Client) ASExchange(realm string, ASReq messages.ASReq, referral int) (
 		return messages.ASRep{}, krberror.Errorf(err, krberror.ConfigError, "AS Exchange cannot be performed")
 	}
 
+	// Set PAData if required
+	err := setPAData(cl, nil, &ASReq)
+	if err != nil {
+		return messages.ASRep{}, krberror.Errorf(err, krberror.KRBMsgError, "AS Exchange Error: issue with setting PAData on AS_REQ")
+	}
+
 	b, err := ASReq.Marshal()
 	if err != nil {
 		return messages.ASRep{}, krberror.Errorf(err, krberror.EncodingError, "AS Exchange Error: failed marshaling AS_REQ")
@@ -30,7 +36,7 @@ func (cl *Client) ASExchange(realm string, ASReq messages.ASReq, referral int) (
 			case errorcode.KDC_ERR_PREAUTH_REQUIRED, errorcode.KDC_ERR_PREAUTH_FAILED:
 				// From now on assume this client will need to do this pre-auth and set the PAData
 				cl.settings.assumePreAuthentication = true
-				err = setPAData(cl, e, &ASReq)
+				err = setPAData(cl, &e, &ASReq)
 				if err != nil {
 					return messages.ASRep{}, krberror.Errorf(err, krberror.KRBMsgError, "AS Exchange Error: failed setting AS_REQ PAData for pre-authentication required")
 				}
@@ -70,7 +76,7 @@ func (cl *Client) ASExchange(realm string, ASReq messages.ASReq, referral int) (
 }
 
 // setPAData adds pre-authentication data to the AS_REQ.
-func setPAData(cl *Client, krberr messages.KRBError, ASReq *messages.ASReq) error {
+func setPAData(cl *Client, krberr *messages.KRBError, ASReq *messages.ASReq) error {
 	if !cl.settings.DisablePAFXFAST() {
 		pa := types.PAData{PADataType: patype.PA_REQ_ENC_PA_REP}
 		ASReq.PAData = append(ASReq.PAData, pa)
@@ -80,14 +86,14 @@ func setPAData(cl *Client, krberr messages.KRBError, ASReq *messages.ASReq) erro
 		var et etype.EType
 		var err error
 		var key types.EncryptionKey
-		if krberr.ErrorCode == 0 {
+		if krberr == nil {
+			// This is not in response to an error from the KDC. It is preemptive or renewal
 			// There is no KRB Error that tells us the etype to use
 			etn := cl.settings.preAuthEType // Use the etype that may have previously been negotiated
 			if etn == 0 {
 				etn = int32(cl.Config.LibDefaults.PreferredPreauthTypes[0]) // Resort to config
 			}
-			// This is not in response to an error from the KDC. It is preemptive or renewal
-			et, err = crypto.GetEtype(etn) // Take the first as preference
+			et, err = crypto.GetEtype(etn)
 			if err != nil {
 				return krberror.Errorf(err, krberror.EncryptingError, "error getting etype for pre-auth encryption")
 			}
@@ -102,16 +108,17 @@ func setPAData(cl *Client, krberr messages.KRBError, ASReq *messages.ASReq) erro
 				return krberror.Errorf(err, krberror.EncryptingError, "error getting etype for pre-auth encryption")
 			}
 			cl.settings.preAuthEType = et.GetETypeID() // Set the etype that has been defined for potential future use
-			key, err = cl.Key(et, &krberr)
+			key, err = cl.Key(et, krberr)
 			if err != nil {
 				return krberror.Errorf(err, krberror.EncryptingError, "error getting key from credentials")
 			}
 		}
-		// Generate the
+		// Generate the PA data
 		paTSb, err := types.GetPAEncTSEncAsnMarshalled()
 		if err != nil {
 			return krberror.Errorf(err, krberror.KRBMsgError, "error creating PAEncTSEnc for Pre-Authentication")
 		}
+		//TODO (theme: KVNO from keytab) the kvno should not be hard coded to 1 as this hampers troubleshooting.
 		paEncTS, err := crypto.GetEncryptedData(paTSb, key, keyusage.AS_REQ_PA_ENC_TIMESTAMP, 1)
 		if err != nil {
 			return krberror.Errorf(err, krberror.EncryptingError, "error encrypting pre-authentication timestamp")
@@ -137,7 +144,7 @@ func setPAData(cl *Client, krberr messages.KRBError, ASReq *messages.ASReq) erro
 }
 
 // preAuthEType establishes what encryption type to use for pre-authentication from the KRBError returned from the KDC.
-func preAuthEType(krberr messages.KRBError) (etype etype.EType, err error) {
+func preAuthEType(krberr *messages.KRBError) (etype etype.EType, err error) {
 	//The preferred ordering of the "hint" pre-authentication data that
 	//affect client key selection is: ETYPE-INFO2, followed by ETYPE-INFO,
 	//followed by PW-SALT.
