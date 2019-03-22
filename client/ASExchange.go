@@ -81,13 +81,13 @@ func setPAData(cl *Client, krberr messages.KRBError, ASReq *messages.ASReq) erro
 		var err error
 		var key types.EncryptionKey
 		if krberr.ErrorCode == 0 {
+			// This is not in response to an error from the KDC. It is preemptive or renewal
 			// There is no KRB Error that tells us the etype to use
 			etn := cl.settings.preAuthEType // Use the etype that may have previously been negotiated
 			if etn == 0 {
 				etn = int32(cl.Config.LibDefaults.PreferredPreauthTypes[0]) // Resort to config
 			}
-			// This is not in response to an error from the KDC. It is preemptive or renewal
-			et, err = crypto.GetEtype(etn) // Take the first as preference
+			et, err = crypto.GetEtype(etn)
 			if err != nil {
 				return krberror.Errorf(err, krberror.EncryptingError, "error getting etype for pre-auth encryption")
 			}
@@ -107,11 +107,12 @@ func setPAData(cl *Client, krberr messages.KRBError, ASReq *messages.ASReq) erro
 				return krberror.Errorf(err, krberror.EncryptingError, "error getting key from credentials")
 			}
 		}
-		// Generate the
+		// Generate the PA data
 		paTSb, err := types.GetPAEncTSEncAsnMarshalled()
 		if err != nil {
 			return krberror.Errorf(err, krberror.KRBMsgError, "error creating PAEncTSEnc for Pre-Authentication")
 		}
+		//TODO (theme: KVNO from keytab) the kvno should not be hard coded to 1 as this hampers troubleshooting.
 		paEncTS, err := crypto.GetEncryptedData(paTSb, key, keyusage.AS_REQ_PA_ENC_TIMESTAMP, 1)
 		if err != nil {
 			return krberror.Errorf(err, krberror.EncryptingError, "error encrypting pre-authentication timestamp")

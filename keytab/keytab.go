@@ -52,6 +52,7 @@ func New() *Keytab {
 
 // GetEncryptionKey returns the EncryptionKey from the Keytab for the newest entry with the required kvno, etype and matching principal.
 func (kt *Keytab) GetEncryptionKey(princName types.PrincipalName, realm string, kvno int, etype int32) (types.EncryptionKey, error) {
+	//TODO (theme: KVNO from keytab) this function should return the kvno too
 	var key types.EncryptionKey
 	var t time.Time
 	for _, k := range kt.Entries {
@@ -59,7 +60,6 @@ func (kt *Keytab) GetEncryptionKey(princName types.PrincipalName, realm string, 
 			k.Key.KeyType == etype &&
 			(k.KVNO == uint32(kvno) || kvno == 0) &&
 			k.Timestamp.After(t) {
-
 			p := true
 			for i, n := range k.Principal.Components {
 				if princName.NameString[i] != n {
