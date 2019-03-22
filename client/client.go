@@ -180,10 +180,6 @@ func (cl *Client) Login() error {
 	if err != nil {
 		return krberror.Errorf(err, krberror.KRBMsgError, "error generating new AS_REQ")
 	}
-	err = setPAData(cl, messages.KRBError{}, &ASReq)
-	if err != nil {
-		return krberror.Errorf(err, krberror.KRBMsgError, "failed setting AS_REQ PAData")
-	}
 	ASRep, err := cl.ASExchange(cl.Credentials.Domain(), ASReq, 0)
 	if err != nil {
 		return err
