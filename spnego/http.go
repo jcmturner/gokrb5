@@ -237,10 +237,11 @@ func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, settings ...f
 		}
 		if authed {
 			id := ctx.Value(CTXKeyCredentials).(goidentity.Identity)
-			context.WithValue(r.Context(), CTXKeyCredentials, id)
-			context.WithValue(r.Context(), CTXKeyAuthenticated, ctx.Value(CTXKeyAuthenticated))
+			requestCtx := r.Context()
+			requestCtx = context.WithValue(requestCtx, CTXKeyCredentials, id)
+			requestCtx = context.WithValue(requestCtx, CTXKeyAuthenticated, ctx.Value(CTXKeyAuthenticated))
 			spnegoResponseAcceptCompleted(spnego, w, "%s %s@%s - SPNEGO authentication succeeded", r.RemoteAddr, id.UserName(), id.Domain())
-			inner.ServeHTTP(w, r.WithContext(ctx))
+			inner.ServeHTTP(w, r.WithContext(requestCtx))
 		} else {
 			spnegoResponseReject(spnego, w, "%s - SPNEGO Kerberos authentication failed", r.RemoteAddr)
 		}
