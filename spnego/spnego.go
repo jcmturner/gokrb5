@@ -139,6 +139,15 @@ func (s *SPNEGOToken) Unmarshal(b []byte) error {
 		if err != nil {
 			return fmt.Errorf("not a valid SPNEGO token: %v", err)
 		}
+		// If OID is a KRB5 OID, wrap in a SPNEGO token
+		if oid.Equal(gssapi.OID(gssapi.OIDKRB5)) {
+			s.Init = true
+			s.NegTokenInit = NegTokenInit{
+				MechTypes:      []asn1.ObjectIdentifier{gssapi.OID(gssapi.OIDKRB5)},
+				MechTokenBytes: b,
+			}
+			return nil
+		}
 		// Check the OID is the SPNEGO OID value
 		SPNEGOOID := gssapi.OID(gssapi.OIDSPNEGO)
 		if !oid.Equal(SPNEGOOID) {
