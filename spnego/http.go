@@ -217,15 +217,6 @@ const (
 // SPNEGOKRB5Authenticate is a Kerberos SPNEGO authentication HTTP handler wrapper.
 func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, settings ...func(*service.Settings)) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Get the auth header
-		s := strings.SplitN(r.Header.Get(HTTPHeaderAuthRequest), " ", 2)
-		if len(s) != 2 || s[0] != HTTPHeaderAuthResponseValueKey {
-			// No Authorization header set so return 401 with WWW-Authenticate Negotiate header
-			w.Header().Set(HTTPHeaderAuthResponse, HTTPHeaderAuthResponseValueKey)
-			http.Error(w, UnauthorizedMsg, http.StatusUnauthorized)
-			return
-		}
-
 		// Set up the SPNEGO GSS-API mechanism
 		var spnego *SPNEGO
 		h, err := types.GetHostAddress(r.RemoteAddr)
@@ -236,6 +227,26 @@ func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, settings ...f
 		} else {
 			spnego = SPNEGOService(kt, settings...)
 			spnego.Log("%s - SPNEGO could not parse client address: %v", r.RemoteAddr, err)
+		}
+
+		// Check if there is a session manager and if there is an already established session for this client
+		if sm := spnego.serviceSettings.SessionManager(); sm != nil {
+			hasSession, id := sm.Get(r)
+			if hasSession {
+				// there is an established session so bypass auth and serve
+				spnego.Log("%s - SPNEGO request served under session %s", r.RemoteAddr, id)
+				inner.ServeHTTP(w, r)
+				return
+			}
+		}
+
+		// Get the auth header
+		s := strings.SplitN(r.Header.Get(HTTPHeaderAuthRequest), " ", 2)
+		if len(s) != 2 || s[0] != HTTPHeaderAuthResponseValueKey {
+			// No Authorization header set so return 401 with WWW-Authenticate Negotiate header
+			w.Header().Set(HTTPHeaderAuthResponse, HTTPHeaderAuthResponseValueKey)
+			http.Error(w, UnauthorizedMsg, http.StatusUnauthorized)
+			return
 		}
 
 		// Decode the header into an SPNEGO context token
@@ -262,8 +273,16 @@ func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, settings ...f
 			requestCtx := r.Context()
 			requestCtx = context.WithValue(requestCtx, CTXKeyCredentials, id)
 			requestCtx = context.WithValue(requestCtx, CTXKeyAuthenticated, ctx.Value(CTXKeyAuthenticated))
+			if sm := spnego.serviceSettings.SessionManager(); sm != nil {
+				err = sm.New(r)
+				if err != nil {
+					spnegoInternalServerError(spnego, w, "SPNEGO could not create new session: %v", err)
+					return
+				}
+			}
 			spnegoResponseAcceptCompleted(spnego, w, "%s %s@%s - SPNEGO authentication succeeded", r.RemoteAddr, id.UserName(), id.Domain())
 			inner.ServeHTTP(w, r.WithContext(requestCtx))
+			return
 		} else {
 			spnegoResponseReject(spnego, w, "%s - SPNEGO Kerberos authentication failed", r.RemoteAddr)
 		}
@@ -286,4 +305,9 @@ func spnegoResponseReject(s *SPNEGO, w http.ResponseWriter, format string, v ...
 func spnegoResponseAcceptCompleted(s *SPNEGO, w http.ResponseWriter, format string, v ...interface{}) {
 	s.Log(format, v...)
 	w.Header().Set(HTTPHeaderAuthResponse, spnegoNegTokenRespKRBAcceptCompleted)
+}
+
+func spnegoInternalServerError(s *SPNEGO, w http.ResponseWriter, format string, v ...interface{}) {
+	s.Log(format, v...)
+	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 }

@@ -2,6 +2,7 @@ package service
 
 import (
 	"log"
+	"net/http"
 	"time"
 
 	"gopkg.in/jcmturner/gokrb5.v7/keytab"
@@ -18,6 +19,12 @@ type Settings struct {
 	cAddr              types.HostAddress
 	maxClockSkew       time.Duration
 	logger             *log.Logger
+	sessionMgr         SessionMgr
+}
+
+type SessionMgr interface {
+	New(r *http.Request) error
+	Get(r *http.Request) (hasSession bool, sessionID string)
 }
 
 // NewSettings creates a new service Settings.
@@ -133,4 +140,18 @@ func SName(sname string) func(*Settings) {
 // SName returns the specific service name to the service.
 func (s *Settings) SName() string {
 	return s.sname
+}
+
+// SessionManager configures a session manager to estalbish sessions with clients to avoid excessive authentication challenges.
+//
+// s := NewSettings(kt, SessionManager(sm))
+func SessionManager(sm SessionMgr) func(*Settings) {
+	return func(s *Settings) {
+		s.sessionMgr = sm
+	}
+}
+
+// SessionManager returns any configured session manager.
+func (s *Settings) SessionManager() SessionMgr {
+	return s.sessionMgr
 }
