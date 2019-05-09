@@ -75,11 +75,13 @@ func NewClient(krb5Cl *client.Client, httpCl *http.Client, spn string) *Client {
 
 // Do is the SPNEGO enabled HTTP client's equivalent of the http.Client's Do method.
 func (c *Client) Do(req *http.Request) (resp *http.Response, err error) {
-	// Use a tee reader to capture any body sent in case we have to replay it again
 	var body bytes.Buffer
-	teeR := io.TeeReader(req.Body, &body)
-	teeRC := teeReadCloser{teeR, req.Body}
-	req.Body = teeRC
+	if req.Body != nil {
+		// Use a tee reader to capture any body sent in case we have to replay it again
+		teeR := io.TeeReader(req.Body, &body)
+		teeRC := teeReadCloser{teeR, req.Body}
+		req.Body = teeRC
+	}
 	resp, err = c.Client.Do(req)
 	if err != nil {
 		if ue, ok := err.(*url.Error); ok {
@@ -90,8 +92,10 @@ func (c *Client) Do(req *http.Request) (resp *http.Response, err error) {
 				if len(c.reqs) >= 10 {
 					return resp, errors.New("stopped after 10 redirects")
 				}
-				// Refresh the body reader so the body can be sent again
-				e.reqTarget.Body = ioutil.NopCloser(&body)
+				if req.Body != nil {
+					// Refresh the body reader so the body can be sent again
+					e.reqTarget.Body = ioutil.NopCloser(&body)
+				}
 				return c.Do(e.reqTarget)
 			}
 		}
@@ -102,8 +106,10 @@ func (c *Client) Do(req *http.Request) (resp *http.Response, err error) {
 		if err != nil {
 			return resp, err
 		}
-		// Refresh the body reader so the body can be sent again
-		req.Body = ioutil.NopCloser(&body)
+		if req.Body != nil {
+			// Refresh the body reader so the body can be sent again
+			req.Body = ioutil.NopCloser(&body)
+		}
 		return c.Do(req)
 	}
 	return resp, err
