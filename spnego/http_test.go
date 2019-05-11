@@ -15,6 +15,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/gorilla/sessions"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/goidentity.v3"
 	"gopkg.in/jcmturner/gokrb5.v7/client"
@@ -293,12 +294,12 @@ func httpGet(r *http.Request, wg *sync.WaitGroup) {
 }
 
 func httpServer() *httptest.Server {
-	l := log.New(os.Stderr, "GOKRB5 Service Tests: ", log.Ldate|log.Ltime|log.Lshortfile)
+	l := log.New(os.Stderr, "GOKRB5 Service Tests: ", log.LstdFlags)
 	b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
 	kt := keytab.New()
 	kt.Unmarshal(b)
 	th := http.HandlerFunc(testAppHandler)
-	s := httptest.NewServer(SPNEGOKRB5Authenticate(th, kt, service.Logger(l)))
+	s := httptest.NewServer(SPNEGOKRB5Authenticate(th, kt, service.Logger(l), service.SessionManager(NewSessionMgr("gokrb5"))))
 	return s
 }
 
@@ -346,4 +347,46 @@ func getClient() *client.Client {
 	c.Realms[0].KPasswdServer = []string{addr + ":464"}
 	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 	return cl
+}
+
+type SessionMgr struct {
+	skey       []byte
+	store      sessions.Store
+	cookieName string
+}
+
+func NewSessionMgr(cookieName string) SessionMgr {
+	skey := make([]byte, 32, 32)
+	_, err := rand.Read(skey)
+	if err != nil {
+		log.Fatalf("could not create session cookie encryption key: %v", err)
+	}
+	return SessionMgr{
+		skey:       skey,
+		store:      sessions.NewCookieStore(skey),
+		cookieName: cookieName,
+	}
+}
+
+func (smgr SessionMgr) Get(r *http.Request) goidentity.Identity {
+	var id goidentity.Identity
+	s, err := smgr.store.Get(r, smgr.cookieName)
+	if err != nil || s == nil {
+		return id
+	}
+	id, ok := s.Values[CTXKeyCredentials].(goidentity.Identity)
+	if !ok {
+		return id
+	}
+	return id
+
+}
+
+func (smgr SessionMgr) New(w http.ResponseWriter, r *http.Request) error {
+	s, err := smgr.store.Get(r, smgr.cookieName)
+	if err != nil {
+		return err
+	}
+	s.Values[CTXKeyCredentials] = r.Context().Value(CTXKeyCredentials)
+	return s.Save(r, w)
 }
