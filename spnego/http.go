@@ -231,10 +231,14 @@ func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, settings ...f
 
 		// Check if there is a session manager and if there is an already established session for this client
 		if sm := spnego.serviceSettings.SessionManager(); sm != nil {
-			hasSession, id := sm.Get(r)
-			if hasSession {
+			id := sm.Get(r)
+			if id != nil && id.Authenticated() {
+				// Add the id obtained from the session to the context
+				requestCtx := r.Context()
+				requestCtx = context.WithValue(requestCtx, CTXKeyCredentials, id)
+				requestCtx = context.WithValue(requestCtx, CTXKeyAuthenticated, id.Authenticated())
 				// there is an established session so bypass auth and serve
-				spnego.Log("%s - SPNEGO request served under session %s", r.RemoteAddr, id)
+				spnego.Log("%s - SPNEGO request served under session %s", r.RemoteAddr, id.SessionID())
 				inner.ServeHTTP(w, r)
 				return
 			}
@@ -274,7 +278,8 @@ func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, settings ...f
 			requestCtx = context.WithValue(requestCtx, CTXKeyCredentials, id)
 			requestCtx = context.WithValue(requestCtx, CTXKeyAuthenticated, ctx.Value(CTXKeyAuthenticated))
 			if sm := spnego.serviceSettings.SessionManager(); sm != nil {
-				err = sm.New(r)
+				// create new session
+				err = sm.New(w, r)
 				if err != nil {
 					spnegoInternalServerError(spnego, w, "SPNEGO could not create new session: %v", err)
 					return

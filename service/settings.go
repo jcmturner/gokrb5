@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"gopkg.in/jcmturner/goidentity.v3"
 	"gopkg.in/jcmturner/gokrb5.v7/keytab"
 	"gopkg.in/jcmturner/gokrb5.v7/types"
 )
@@ -20,11 +21,6 @@ type Settings struct {
 	maxClockSkew       time.Duration
 	logger             *log.Logger
 	sessionMgr         SessionMgr
-}
-
-type SessionMgr interface {
-	New(r *http.Request) error
-	Get(r *http.Request) (hasSession bool, sessionID string)
 }
 
 // NewSettings creates a new service Settings.
@@ -154,4 +150,9 @@ func SessionManager(sm SessionMgr) func(*Settings) {
 // SessionManager returns any configured session manager.
 func (s *Settings) SessionManager() SessionMgr {
 	return s.sessionMgr
+}
+
+type SessionMgr interface {
+	New(w http.ResponseWriter, r *http.Request) error
+	Get(r *http.Request) goidentity.Identity
 }
