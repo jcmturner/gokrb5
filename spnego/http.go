@@ -174,7 +174,7 @@ func SetSPNEGOHeader(cl *client.Client, r *http.Request, spn string) error {
 	s := SPNEGOClient(cl, spn)
 	err := s.AcquireCred()
 	if err != nil {
-		return fmt.Errorf("could not acquire client credenital: %v", err)
+		return fmt.Errorf("could not acquire client credential: %v", err)
 	}
 	st, err := s.InitSecContext()
 	if err != nil {
