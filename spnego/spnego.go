@@ -139,9 +139,11 @@ func (s *SPNEGOToken) Unmarshal(b []byte) error {
 		if err != nil {
 			return fmt.Errorf("not a valid SPNEGO token: %v", err)
 		}
-		// Check the OID is the SPNEGO OID value
+		// Check the OID is the SPNEGO OID value or the Legacy OID value
+		// This is added to support Windows Server 2016 KDCs which still set the
+		// Legacy value, even though it is using the modern negotiation
 		SPNEGOOID := gssapi.OID(gssapi.OIDSPNEGO)
-		if !oid.Equal(SPNEGOOID) {
+		if !(oid.Equal(SPNEGOOID) || oid.Equal(gssapi.OID(gssapi.OIDMSLegacyKRB5))) {
 			return fmt.Errorf("OID %s does not match SPNEGO OID %s", oid.String(), SPNEGOOID.String())
 		}
 	} else {
