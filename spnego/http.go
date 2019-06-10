@@ -14,7 +14,7 @@ import (
 	"net/url"
 	"strings"
 
-	"gopkg.in/jcmturner/goidentity.v3"
+	"gopkg.in/jcmturner/goidentity.v4"
 	"gopkg.in/jcmturner/gokrb5.v7/client"
 	"gopkg.in/jcmturner/gokrb5.v7/gssapi"
 	"gopkg.in/jcmturner/gokrb5.v7/keytab"
@@ -279,7 +279,7 @@ func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, settings ...f
 			requestCtx = context.WithValue(requestCtx, CTXKeyAuthenticated, ctx.Value(CTXKeyAuthenticated))
 			if sm := spnego.serviceSettings.SessionManager(); sm != nil {
 				// create new session
-				err = sm.New(w, r)
+				err = sm.New(w, r, id)
 				if err != nil {
 					spnegoInternalServerError(spnego, w, "SPNEGO could not create new session: %v", err)
 					return

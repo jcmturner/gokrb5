@@ -11,7 +11,7 @@ import (
 	"os"
 
 	"github.com/gorilla/sessions"
-	goidentity "gopkg.in/jcmturner/goidentity.v3"
+	goidentity "gopkg.in/jcmturner/goidentity.v4"
 	"gopkg.in/jcmturner/gokrb5.v7/keytab"
 	"gopkg.in/jcmturner/gokrb5.v7/service"
 	"gopkg.in/jcmturner/gokrb5.v7/spnego"
@@ -55,12 +55,11 @@ func (smgr SessionMgr) Get(r *http.Request) goidentity.Identity {
 
 }
 
-func (smgr SessionMgr) New(w http.ResponseWriter, r *http.Request) error {
+func (smgr SessionMgr) New(w http.ResponseWriter, r *http.Request, id goidentity.Identity) error {
 	s, err := smgr.store.Get(r, smgr.cookieName)
 	if err != nil {
 		return err
 	}
-	s.Values[spnego.CTXKeyCredentials] = r.Context().Value(spnego.CTXKeyCredentials)
 	return s.Save(r, w)
 }
 

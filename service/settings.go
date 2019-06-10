@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"gopkg.in/jcmturner/goidentity.v3"
+	"gopkg.in/jcmturner/goidentity.v4"
 	"gopkg.in/jcmturner/gokrb5.v7/keytab"
 	"gopkg.in/jcmturner/gokrb5.v7/types"
 )
@@ -153,6 +153,6 @@ func (s *Settings) SessionManager() SessionMgr {
 }
 
 type SessionMgr interface {
-	New(w http.ResponseWriter, r *http.Request) error
+	New(w http.ResponseWriter, r *http.Request, id goidentity.Identity) error
 	Get(r *http.Request) goidentity.Identity
 }
