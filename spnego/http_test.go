@@ -382,11 +382,10 @@ func (smgr SessionMgr) Get(r *http.Request) goidentity.Identity {
 
 }
 
-func (smgr SessionMgr) New(w http.ResponseWriter, r *http.Request) error {
+func (smgr SessionMgr) New(w http.ResponseWriter, r *http.Request, id goidentity.Identity) error {
 	s, err := smgr.store.Get(r, smgr.cookieName)
 	if err != nil {
 		return err
 	}
-	s.Values[CTXKeyCredentials] = r.Context().Value(CTXKeyCredentials)
 	return s.Save(r, w)
 }

@@ -4,6 +4,7 @@ package credentials
 import (
 	"bytes"
 	"encoding/gob"
+	"encoding/json"
 	"time"
 
 	"github.com/hashicorp/go-uuid"
@@ -137,7 +138,15 @@ func (c *Credentials) SetValidUntil(t time.Time) {
 
 // SetADCredentials adds ADCredentials attributes to the credentials
 func (c *Credentials) SetADCredentials(a ADCredentials) {
-	c.SetAttribute(AttributeKeyADCredentials, a)
+	var attr string
+	w := bytes.NewBufferString(attr)
+	enc := json.NewEncoder(w)
+	err := enc.Encode(a)
+	if err != nil {
+		//TODO don't swallow the err
+		return
+	}
+	c.SetAttribute(AttributeKeyADCredentials, attr)
 	if a.FullName != "" {
 		c.SetDisplayName(a.FullName)
 	}
