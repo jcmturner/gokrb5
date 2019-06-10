@@ -2,6 +2,8 @@
 package credentials
 
 import (
+	"bytes"
+	"encoding/gob"
 	"time"
 
 	"github.com/hashicorp/go-uuid"
@@ -25,7 +27,7 @@ type Credentials struct {
 	cname       types.PrincipalName
 	keytab      *keytab.Keytab
 	password    string
-	attributes  map[string]interface{}
+	attributes  map[string]string
 	validUntil  time.Time
 
 	authenticated   bool
@@ -62,7 +64,7 @@ func New(username string, realm string) *Credentials {
 		realm:           realm,
 		cname:           types.NewPrincipalName(nametype.KRB_NT_PRINCIPAL, username),
 		keytab:          keytab.New(),
-		attributes:      make(map[string]interface{}),
+		attributes:      make(map[string]string),
 		groupMembership: make(map[string]bool),
 		sessionID:       uid,
 		human:           true,
@@ -81,7 +83,7 @@ func NewFromPrincipalName(cname types.PrincipalName, realm string) *Credentials 
 		realm:           realm,
 		cname:           cname,
 		keytab:          keytab.New(),
-		attributes:      make(map[string]interface{}),
+		attributes:      make(map[string]string),
 		groupMembership: make(map[string]bool),
 		sessionID:       uid,
 		human:           true,
@@ -289,21 +291,37 @@ func (c *Credentials) Expired() bool {
 }
 
 // Attributes returns the Credentials' attributes map.
-func (c *Credentials) Attributes() map[string]interface{} {
+func (c *Credentials) Attributes() map[string]string {
 	return c.attributes
 }
 
 // SetAttribute sets the value of an attribute.
-func (c *Credentials) SetAttribute(k string, v interface{}) {
+func (c *Credentials) SetAttribute(k string, v string) {
 	c.attributes[k] = v
 }
 
 // SetAttributes replaces the attributes map with the one provided.
-func (c *Credentials) SetAttributes(a map[string]interface{}) {
+func (c *Credentials) SetAttributes(a map[string]string) {
 	c.attributes = a
 }
 
 // RemoveAttribute deletes an attribute from the attribute map that has the key provided.
 func (c *Credentials) RemoveAttribute(k string) {
 	delete(c.attributes, k)
+}
+
+func (c *Credentials) Marshal() ([]byte, error) {
+	buf := new(bytes.Buffer)
+	enc := gob.NewEncoder(buf)
+	err := enc.Encode(c)
+	if err != nil {
+		return []byte{}, err
+	}
+	return buf.Bytes(), nil
+}
+
+func (c *Credentials) Unmarshal(b []byte) error {
+	buf := bytes.NewBuffer(b)
+	dec := gob.NewDecoder(buf)
+	return dec.Decode(c)
 }
