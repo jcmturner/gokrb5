@@ -63,10 +63,12 @@ func (smgr SessionMgr) Get(r *http.Request) goidentity.Identity {
 	if err != nil || s == nil {
 		return id
 	}
-	id, ok := s.Values[spnego.CTXKeyCredentials].(goidentity.Identity)
+	b, ok := s.Values[spnego.CTXKeyCredentials].([]byte)
 	if !ok {
 		return id
 	}
+	var creds credentials.Credentials
+	err = creds.Unmarshal(b)
 	return id
 
 }
@@ -76,6 +78,11 @@ func (smgr SessionMgr) New(w http.ResponseWriter, r *http.Request, id goidentity
 	if err != nil {
 		return err
 	}
+	b, err := id.Marshal()
+	if err != nil {
+		return err
+	}
+	s.Values[spnego.CTXKeyCredentials] = b
 	return s.Save(r, w)
 }
 

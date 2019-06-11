@@ -21,6 +21,7 @@ import (
 	"gopkg.in/jcmturner/goidentity.v4"
 	"gopkg.in/jcmturner/gokrb5.v7/client"
 	"gopkg.in/jcmturner/gokrb5.v7/config"
+	"gopkg.in/jcmturner/gokrb5.v7/credentials"
 	"gopkg.in/jcmturner/gokrb5.v7/keytab"
 	"gopkg.in/jcmturner/gokrb5.v7/service"
 	"gopkg.in/jcmturner/gokrb5.v7/test"
@@ -378,10 +379,12 @@ func (smgr SessionMgr) Get(r *http.Request) goidentity.Identity {
 	if err != nil || s == nil {
 		return id
 	}
-	id, ok := s.Values[CTXKeyCredentials].(goidentity.Identity)
+	b, ok := s.Values[CTXKeyCredentials].([]byte)
 	if !ok {
 		return id
 	}
+	var creds credentials.Credentials
+	err = creds.Unmarshal(b)
 	return id
 
 }
@@ -391,6 +394,10 @@ func (smgr SessionMgr) New(w http.ResponseWriter, r *http.Request, id goidentity
 	if err != nil {
 		return err
 	}
-	s.Values[CTXKeyCredentials] = id
+	b, err := id.Marshal()
+	if err != nil {
+		return err
+	}
+	s.Values[CTXKeyCredentials] = b
 	return s.Save(r, w)
 }
