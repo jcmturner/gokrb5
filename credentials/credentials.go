@@ -22,20 +22,37 @@ const (
 // Contains either a keytab, password or both.
 // Keytabs are used over passwords if both are defined.
 type Credentials struct {
-	username    string
-	displayName string
-	realm       string
-	cname       types.PrincipalName
-	keytab      *keytab.Keytab
-	password    string
-	attributes  map[string]string
-	validUntil  time.Time
-
+	username        string
+	displayName     string
+	realm           string
+	cname           types.PrincipalName
+	keytab          *keytab.Keytab
+	password        string
+	attributes      map[string]string
+	validUntil      time.Time
 	authenticated   bool
 	human           bool
 	authTime        time.Time
 	groupMembership map[string]bool
 	sessionID       string
+}
+
+// marshalCredentials is used to enable marshaling and unmarshaling of credentials
+// without having exported fields on the Credentials struct
+type marshalCredentials struct {
+	Username        string
+	DisplayName     string
+	Realm           string
+	CName           types.PrincipalName
+	Keytab          *keytab.Keytab
+	Password        string
+	Attributes      map[string]string
+	ValidUntil      time.Time
+	Authenticated   bool
+	Human           bool
+	AuthTime        time.Time
+	GroupMembership map[string]bool
+	SessionID       string
 }
 
 // ADCredentials contains information obtained from the PAC.
@@ -322,7 +339,22 @@ func (c *Credentials) RemoveAttribute(k string) {
 func (c *Credentials) Marshal() ([]byte, error) {
 	buf := new(bytes.Buffer)
 	enc := gob.NewEncoder(buf)
-	err := enc.Encode(c)
+	mc := marshalCredentials{
+		Username:        c.username,
+		DisplayName:     c.displayName,
+		Realm:           c.realm,
+		CName:           c.cname,
+		Keytab:          c.keytab,
+		Password:        c.password,
+		Attributes:      c.attributes,
+		ValidUntil:      c.validUntil,
+		Authenticated:   c.authenticated,
+		Human:           c.human,
+		AuthTime:        c.authTime,
+		GroupMembership: c.groupMembership,
+		SessionID:       c.sessionID,
+	}
+	err := enc.Encode(&mc)
 	if err != nil {
 		return []byte{}, err
 	}
@@ -330,7 +362,24 @@ func (c *Credentials) Marshal() ([]byte, error) {
 }
 
 func (c *Credentials) Unmarshal(b []byte) error {
+	mc := new(marshalCredentials)
 	buf := bytes.NewBuffer(b)
 	dec := gob.NewDecoder(buf)
-	return dec.Decode(c)
+	err := dec.Decode(mc)
+	if err != nil {
+		return err
+	}
+	c.username = mc.Username
+	c.displayName = mc.DisplayName
+	c.realm = mc.Realm
+	c.cname = mc.CName
+	c.keytab = mc.Keytab
+	c.password = mc.Password
+	c.attributes = mc.Attributes
+	c.validUntil = mc.ValidUntil
+	c.human = mc.Human
+	c.authTime = mc.AuthTime
+	c.groupMembership = mc.GroupMembership
+	c.sessionID = mc.SessionID
+	return nil
 }
