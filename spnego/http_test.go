@@ -10,6 +10,7 @@ import (
 	"log"
 	"mime/multipart"
 	"net/http"
+	"net/http/cookiejar"
 	"net/http/httptest"
 	"os"
 	"sync"
@@ -275,7 +276,10 @@ func TestService_SPNEGOKRB_Upload(t *testing.T) {
 	r.Header.Set("Content-Type", bodyWriter.FormDataContentType())
 
 	cl := getClient()
-	spnegoCl := NewClient(cl, nil, "HTTP/host.test.gokrb5")
+	cookieJar, _ := cookiejar.New(nil)
+	httpCl := http.DefaultClient
+	httpCl.Jar = cookieJar
+	spnegoCl := NewClient(cl, httpCl, "HTTP/host.test.gokrb5")
 	httpResp, err := spnegoCl.Do(r)
 	if err != nil {
 		t.Fatalf("Request error: %v\n", err)
@@ -387,5 +391,6 @@ func (smgr SessionMgr) New(w http.ResponseWriter, r *http.Request, id goidentity
 	if err != nil {
 		return err
 	}
+	s.Values[goidentity.CTXKey] = id
 	return s.Save(r, w)
 }
