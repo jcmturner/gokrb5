@@ -391,6 +391,6 @@ func (smgr SessionMgr) New(w http.ResponseWriter, r *http.Request, id goidentity
 	if err != nil {
 		return err
 	}
-	s.Values[goidentity.CTXKey] = id
+	s.Values[CTXKeyCredentials] = id
 	return s.Save(r, w)
 }
