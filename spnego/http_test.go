@@ -16,6 +16,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/goidentity.v4"
@@ -361,11 +362,7 @@ type SessionMgr struct {
 }
 
 func NewSessionMgr(cookieName string) SessionMgr {
-	skey := make([]byte, 32, 32)
-	_, err := rand.Read(skey)
-	if err != nil {
-		log.Fatalf("could not create session cookie encryption key: %v", err)
-	}
+	skey := securecookie.GenerateRandomKey(32)
 	return SessionMgr{
 		skey:       skey,
 		store:      sessions.NewCookieStore(skey),
