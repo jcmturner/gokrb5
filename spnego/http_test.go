@@ -129,7 +129,7 @@ func TestService_SPNEGOKRB_NoAuthHeader(t *testing.T) {
 		t.Fatalf("Request error: %v\n", err)
 	}
 	assert.Equal(t, http.StatusUnauthorized, httpResp.StatusCode, "Status code in response to client with no SPNEGO not as expected")
-	assert.Equal(t, "Negotiate", httpResp.Header.Get("WWW-Authenticate"), "Negitation header not set by server.")
+	assert.Equal(t, "Negotiate", httpResp.Header.Get("WWW-Authenticate"), "Negotiation header not set by server.")
 }
 
 func TestService_SPNEGOKRB_ValidUser(t *testing.T) {
