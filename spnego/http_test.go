@@ -16,7 +16,6 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jcmturner/goidentity.v4"
@@ -362,7 +361,7 @@ type SessionMgr struct {
 }
 
 func NewSessionMgr(cookieName string) SessionMgr {
-	skey := securecookie.GenerateRandomKey(32)
+	skey := []byte("thisistestsecret")
 	return SessionMgr{
 		skey:       skey,
 		store:      sessions.NewCookieStore(skey),
@@ -387,7 +386,7 @@ func (smgr SessionMgr) Get(r *http.Request) goidentity.Identity {
 func (smgr SessionMgr) New(w http.ResponseWriter, r *http.Request, id goidentity.Identity) error {
 	s, err := smgr.store.New(r, smgr.cookieName)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not get new session from session manager: %v", err)
 	}
 	b, err := id.Marshal()
 	if err != nil {
