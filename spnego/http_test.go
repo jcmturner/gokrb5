@@ -3,6 +3,7 @@ package spnego
 import (
 	"bytes"
 	"crypto/rand"
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -144,6 +145,36 @@ func TestService_SPNEGOKRB_ValidUser(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error setting client's SPNEGO header: %v", err)
 	}
+
+	httpResp, err := http.DefaultClient.Do(r)
+	if err != nil {
+		t.Fatalf("Request error: %v\n", err)
+	}
+	assert.Equal(t, http.StatusOK, httpResp.StatusCode, "Status code in response to client SPNEGO request not as expected")
+}
+
+func TestService_SPNEGOKRB_ValidUser_KRB5Token(t *testing.T) {
+	test.Integration(t)
+
+	s := httpServer()
+	defer s.Close()
+	r, _ := http.NewRequest("GET", s.URL, nil)
+
+	cl := getClient()
+	sc := SPNEGOClient(cl, "HTTP/host.test.gokrb5")
+	err := sc.AcquireCred()
+	if err != nil {
+		t.Fatalf("could not acquire client credential: %v", err)
+	}
+	st, err := sc.InitSecContext()
+	if err != nil {
+		t.Fatalf("could not initialize context: %v", err)
+	}
+
+	// Use the raw KRB5 context token
+	nb := st.(*SPNEGOToken).NegTokenInit.MechTokenBytes
+	hs := "Negotiate " + base64.StdEncoding.EncodeToString(nb)
+	r.Header.Set(HTTPHeaderAuthRequest, hs)
 
 	httpResp, err := http.DefaultClient.Do(r)
 	if err != nil {

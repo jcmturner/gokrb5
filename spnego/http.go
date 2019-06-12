@@ -14,6 +14,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/jcmturner/gofork/encoding/asn1"
 	"gopkg.in/jcmturner/goidentity.v3"
 	"gopkg.in/jcmturner/gokrb5.v7/client"
 	"gopkg.in/jcmturner/gokrb5.v7/gssapi"
@@ -247,8 +248,18 @@ func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, settings ...f
 		var st SPNEGOToken
 		err = st.Unmarshal(b)
 		if err != nil {
-			spnegoNegotiateKRB5MechType(spnego, w, "%s - SPNEGO error in unmarshaling SPNEGO token: %v", r.RemoteAddr, err)
-			return
+			// Check if this is a raw KRB5 context token
+			var k5t KRB5Token
+			if k5t.Unmarshal(b) != nil {
+				spnegoNegotiateKRB5MechType(spnego, w, "%s - SPNEGO error in unmarshaling SPNEGO token: %v", r.RemoteAddr, err)
+				return
+			}
+			// Wrap it into an SPNEGO context token
+			st.Init = true
+			st.NegTokenInit = NegTokenInit{
+				MechTypes:      []asn1.ObjectIdentifier{k5t.OID},
+				MechTokenBytes: b,
+			}
 		}
 
 		// Validate the context token
