@@ -371,23 +371,21 @@ func NewSessionMgr(cookieName string) SessionMgr {
 }
 
 func (smgr SessionMgr) Get(r *http.Request) goidentity.Identity {
-	var id goidentity.Identity
 	s, err := smgr.store.Get(r, smgr.cookieName)
 	if err != nil || s == nil {
-		return id
+		return nil
 	}
 	b, ok := s.Values[CTXKeyCredentials].([]byte)
 	if !ok {
-		return id
+		return nil
 	}
 	var creds credentials.Credentials
 	err = creds.Unmarshal(b)
-	return id
-
+	return &creds
 }
 
 func (smgr SessionMgr) New(w http.ResponseWriter, r *http.Request, id goidentity.Identity) error {
-	s, err := smgr.store.Get(r, smgr.cookieName)
+	s, err := smgr.store.New(r, smgr.cookieName)
 	if err != nil {
 		return err
 	}
