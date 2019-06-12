@@ -224,6 +224,7 @@ func TestService_SPNEGOKRB_ReplayCache_Concurrency(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error setting client's SPNEGO header: %v", err)
 	}
+	r1h := r1.Header.Get(HTTPHeaderAuthRequest)
 
 	r2, _ := http.NewRequest("GET", s.URL, nil)
 
@@ -231,6 +232,7 @@ func TestService_SPNEGOKRB_ReplayCache_Concurrency(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error setting client's SPNEGO header: %v", err)
 	}
+	r2h := r2.Header.Get(HTTPHeaderAuthRequest)
 
 	// Concurrent 1st requests should be OK
 	var wg sync.WaitGroup
@@ -244,8 +246,12 @@ func TestService_SPNEGOKRB_ReplayCache_Concurrency(t *testing.T) {
 	noReq := 10
 	wg2.Add(noReq * 2)
 	for i := 0; i < noReq; i++ {
-		go httpGet(r1, &wg2)
-		go httpGet(r2, &wg2)
+		rr1, _ := http.NewRequest("GET", s.URL, nil)
+		rr1.Header.Set(HTTPHeaderAuthRequest, r1h)
+		rr2, _ := http.NewRequest("GET", s.URL, nil)
+		rr2.Header.Set(HTTPHeaderAuthRequest, r2h)
+		go httpGet(rr1, &wg2)
+		go httpGet(rr2, &wg2)
 	}
 	wg2.Wait()
 }
