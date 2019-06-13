@@ -3,14 +3,19 @@
 package main
 
 import (
-	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/sessions"
+	"github.com/pkg/errors"
 	"gopkg.in/jcmturner/goidentity.v4"
+	"gopkg.in/jcmturner/gokrb5.v7/keytab"
+	"gopkg.in/jcmturner/gokrb5.v7/service"
 	"gopkg.in/jcmturner/gokrb5.v7/spnego"
+	"gopkg.in/jcmturner/gokrb5.v7/test/testdata"
 )
 
 const (
@@ -38,54 +43,6 @@ func main() {
 	log.Fatal(http.ListenAndServe(port, mux))
 }
 
-type SessionMgr struct {
-	skey       []byte
-	store      sessions.Store
-	cookieName string
-}
-
-func NewSessionMgr(cookieName string) SessionMgr {
-	skey := make([]byte, 32, 32)
-	_, err := rand.Read(skey)
-	if err != nil {
-		log.Fatalf("could not create session cookie encryption key: %v", err)
-	}
-	return SessionMgr{
-		skey:       skey,
-		store:      sessions.NewCookieStore(skey),
-		cookieName: cookieName,
-	}
-}
-
-func (smgr SessionMgr) Get(r *http.Request) goidentity.Identity {
-	var id goidentity.Identity
-	s, err := smgr.store.Get(r, smgr.cookieName)
-	if err != nil || s == nil {
-		return id
-	}
-	b, ok := s.Values[spnego.CTXKeyCredentials].([]byte)
-	if !ok {
-		return id
-	}
-	var creds credentials.Credentials
-	err = creds.Unmarshal(b)
-	return id
-
-}
-
-func (smgr SessionMgr) New(w http.ResponseWriter, r *http.Request, id goidentity.Identity) error {
-	s, err := smgr.store.Get(r, smgr.cookieName)
-	if err != nil {
-		return err
-	}
-	b, err := id.Marshal()
-	if err != nil {
-		return err
-	}
-	s.Values[spnego.CTXKeyCredentials] = b
-	return s.Save(r, w)
-}
-
 // Simple application specific handler
 func testAppHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
@@ -107,4 +64,50 @@ func testAppHandler(w http.ResponseWriter, r *http.Request) {
 		creds.SessionID(),
 	)
 	return
+}
+
+type SessionMgr struct {
+	skey       []byte
+	store      sessions.Store
+	cookieName string
+}
+
+func NewSessionMgr(cookieName string) SessionMgr {
+	skey := []byte("thisistestsecret") // Best practice is to load this key from a secure location.
+	return SessionMgr{
+		skey:       skey,
+		store:      sessions.NewCookieStore(skey),
+		cookieName: cookieName,
+	}
+}
+
+func (smgr SessionMgr) Get(r *http.Request) (service.Session, error) {
+	s, err := smgr.store.Get(r, smgr.cookieName)
+	if err != nil {
+		return nil, err
+	}
+	if s == nil {
+		return nil, errors.New("nil session")
+	}
+	sess := Session(*s)
+	return &sess, nil
+}
+
+func (smgr SessionMgr) New(w http.ResponseWriter, r *http.Request, k string, v []byte) error {
+	s, err := smgr.store.New(r, smgr.cookieName)
+	if err != nil {
+		return fmt.Errorf("could not get new session from session manager: %v", err)
+	}
+	s.Values[k] = v
+	return s.Save(r, w)
+}
+
+type Session sessions.Session
+
+func (s *Session) Get(k string) []byte {
+	b, ok := s.Values[k].([]byte)
+	if !ok {
+		return nil
+	}
+	return b
 }
