@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -21,7 +22,6 @@ import (
 	"gopkg.in/jcmturner/goidentity.v4"
 	"gopkg.in/jcmturner/gokrb5.v7/client"
 	"gopkg.in/jcmturner/gokrb5.v7/config"
-	"gopkg.in/jcmturner/gokrb5.v7/credentials"
 	"gopkg.in/jcmturner/gokrb5.v7/keytab"
 	"gopkg.in/jcmturner/gokrb5.v7/service"
 	"gopkg.in/jcmturner/gokrb5.v7/test"
@@ -375,29 +375,33 @@ func NewSessionMgr(cookieName string) SessionMgr {
 	}
 }
 
-func (smgr SessionMgr) Get(r *http.Request) goidentity.Identity {
+func (smgr SessionMgr) Get(r *http.Request) (service.Session, error) {
 	s, err := smgr.store.Get(r, smgr.cookieName)
-	if err != nil || s == nil {
-		return nil
+	if err != nil {
+		return nil, err
 	}
-	b, ok := s.Values[CTXKeyCredentials].([]byte)
-	if !ok {
-		return nil
+	if s == nil {
+		return nil, errors.New("nil session")
 	}
-	var creds credentials.Credentials
-	err = creds.Unmarshal(b)
-	return &creds
+	sess := Session(*s)
+	return &sess, nil
 }
 
-func (smgr SessionMgr) New(w http.ResponseWriter, r *http.Request, id goidentity.Identity) error {
+func (smgr SessionMgr) New(w http.ResponseWriter, r *http.Request, k string, v []byte) error {
 	s, err := smgr.store.New(r, smgr.cookieName)
 	if err != nil {
 		return fmt.Errorf("could not get new session from session manager: %v", err)
 	}
-	b, err := id.Marshal()
-	if err != nil {
-		return err
-	}
-	s.Values[CTXKeyCredentials] = b
+	s.Values[k] = v
 	return s.Save(r, w)
+}
+
+type Session sessions.Session
+
+func (s *Session) Get(k string) []byte {
+	b, ok := s.Values[k].([]byte)
+	if !ok {
+		return nil
+	}
+	return b
 }

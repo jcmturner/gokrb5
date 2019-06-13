@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	"gopkg.in/jcmturner/goidentity.v4"
 	"gopkg.in/jcmturner/gokrb5.v7/keytab"
 	"gopkg.in/jcmturner/gokrb5.v7/types"
 )
@@ -138,7 +137,7 @@ func (s *Settings) SName() string {
 	return s.sname
 }
 
-// SessionManager configures a session manager to estalbish sessions with clients to avoid excessive authentication challenges.
+// SessionManager configures a session manager to establish sessions with clients to avoid excessive authentication challenges.
 //
 // s := NewSettings(kt, SessionManager(sm))
 func SessionManager(sm SessionMgr) func(*Settings) {
@@ -152,7 +151,18 @@ func (s *Settings) SessionManager() SessionMgr {
 	return s.sessionMgr
 }
 
+// SessionMgr must provide a ways to:
+//
+// - Create new sessions and in the process add a value to the session under the key provided.
+//
+// - Get an existing session
 type SessionMgr interface {
-	New(w http.ResponseWriter, r *http.Request, id goidentity.Identity) error
-	Get(r *http.Request) goidentity.Identity
+	New(w http.ResponseWriter, r *http.Request, k string, v []byte) error
+	Get(r *http.Request) (Session, error)
+}
+
+// Session is a simple interface that has one method to retrieve a serialised value that has been stored under the key
+// provided.
+type Session interface {
+	Get(k string) []byte // get a serialised value from the session
 }

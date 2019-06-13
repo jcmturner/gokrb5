@@ -14,8 +14,8 @@ import (
 	"net/url"
 	"strings"
 
-	"gopkg.in/jcmturner/goidentity.v4"
 	"gopkg.in/jcmturner/gokrb5.v7/client"
+	"gopkg.in/jcmturner/gokrb5.v7/credentials"
 	"gopkg.in/jcmturner/gokrb5.v7/gssapi"
 	"gopkg.in/jcmturner/gokrb5.v7/keytab"
 	"gopkg.in/jcmturner/gokrb5.v7/krberror"
@@ -228,18 +228,16 @@ func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, settings ...f
 		}
 
 		// Check if there is a session manager and if there is an already established session for this client
-		if sm := spnego.serviceSettings.SessionManager(); sm != nil {
-			id := sm.Get(r)
-			if id != nil && id.Authenticated() {
-				// Add the id obtained from the session to the context
-				requestCtx := r.Context()
-				requestCtx = context.WithValue(requestCtx, CTXKeyCredentials, id)
-				requestCtx = context.WithValue(requestCtx, CTXKeyAuthenticated, id.Authenticated())
-				// there is an established session so bypass auth and serve
-				spnego.Log("%s - SPNEGO request served under session %s", r.RemoteAddr, id.SessionID())
-				inner.ServeHTTP(w, r)
-				return
-			}
+		id, err := getSessionCredentials(r, spnego.serviceSettings)
+		if err != nil && id.Authenticated() {
+			// Add the id obtained from the session to the context
+			requestCtx := r.Context()
+			requestCtx = context.WithValue(requestCtx, CTXKeyCredentials, id)
+			requestCtx = context.WithValue(requestCtx, CTXKeyAuthenticated, id.Authenticated())
+			// there is an established session so bypass auth and serve
+			spnego.Log("%s - SPNEGO request served under session %s", r.RemoteAddr, id.SessionID())
+			inner.ServeHTTP(w, r)
+			return
 		}
 
 		// Get the auth header
@@ -271,13 +269,18 @@ func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, settings ...f
 			spnegoNegotiateKRB5MechType(spnego, w, "%s - SPNEGO GSS-API continue needed", r.RemoteAddr)
 		}
 		if authed {
-			id := ctx.Value(CTXKeyCredentials).(goidentity.Identity)
+			id := ctx.Value(CTXKeyCredentials).(credentials.Credentials)
 			requestCtx := r.Context()
 			requestCtx = context.WithValue(requestCtx, CTXKeyCredentials, id)
 			requestCtx = context.WithValue(requestCtx, CTXKeyAuthenticated, ctx.Value(CTXKeyAuthenticated))
 			if sm := spnego.serviceSettings.SessionManager(); sm != nil {
 				// create new session
-				err = sm.New(w, r, id)
+				idb, err := id.Marshal()
+				if err != nil {
+					spnegoInternalServerError(spnego, w, "SPNEGO could not marshal credentials to add to the session: %v", err)
+					return
+				}
+				err = sm.New(w, r, CTXKeyCredentials, idb)
 				if err != nil {
 					spnegoInternalServerError(spnego, w, "SPNEGO could not create new session: %v", err)
 					return
@@ -313,4 +316,25 @@ func spnegoResponseAcceptCompleted(s *SPNEGO, w http.ResponseWriter, format stri
 func spnegoInternalServerError(s *SPNEGO, w http.ResponseWriter, format string, v ...interface{}) {
 	s.Log(format, v...)
 	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+}
+
+func getSessionCredentials(r *http.Request, settings *service.Settings) (credentials.Credentials, error) {
+	var creds credentials.Credentials
+	// Check if there is a session manager and if there is an already established session for this client
+	if sm := settings.SessionManager(); sm != nil {
+		sess, err := sm.Get(r)
+		if err != nil {
+			return creds, fmt.Errorf("%s - SPNEGO error getting session for request: %v", r.RemoteAddr, err)
+		}
+		cb := sess.Get(CTXKeyCredentials)
+		if len(cb) > 0 {
+			return creds, fmt.Errorf("%s - SPNEGO no credentials in session for request", r.RemoteAddr)
+		}
+		err = creds.Unmarshal(cb)
+		if err != nil {
+			return creds, fmt.Errorf("%s - SPNEGO credentials malformed in session: %v", r.RemoteAddr, err)
+		}
+		return creds, nil
+	}
+	return creds, errors.New("no session manager configured")
 }
