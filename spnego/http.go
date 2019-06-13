@@ -269,7 +269,7 @@ func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, settings ...f
 			spnegoNegotiateKRB5MechType(spnego, w, "%s - SPNEGO GSS-API continue needed", r.RemoteAddr)
 		}
 		if authed {
-			id := ctx.Value(CTXKeyCredentials).(credentials.Credentials)
+			id := ctx.Value(CTXKeyCredentials).(*credentials.Credentials)
 			requestCtx := r.Context()
 			requestCtx = context.WithValue(requestCtx, CTXKeyCredentials, id)
 			requestCtx = context.WithValue(requestCtx, CTXKeyAuthenticated, ctx.Value(CTXKeyAuthenticated))
