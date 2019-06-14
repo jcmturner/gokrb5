@@ -4,19 +4,22 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"mime/multipart"
 	"net/http"
+	"net/http/cookiejar"
 	"net/http/httptest"
 	"os"
 	"sync"
 	"testing"
 
+	"github.com/gorilla/sessions"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/goidentity.v3"
+	"gopkg.in/jcmturner/goidentity.v4"
 	"gopkg.in/jcmturner/gokrb5.v7/client"
 	"gopkg.in/jcmturner/gokrb5.v7/config"
 	"gopkg.in/jcmturner/gokrb5.v7/keytab"
@@ -221,6 +224,7 @@ func TestService_SPNEGOKRB_ReplayCache_Concurrency(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error setting client's SPNEGO header: %v", err)
 	}
+	r1h := r1.Header.Get(HTTPHeaderAuthRequest)
 
 	r2, _ := http.NewRequest("GET", s.URL, nil)
 
@@ -228,6 +232,7 @@ func TestService_SPNEGOKRB_ReplayCache_Concurrency(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error setting client's SPNEGO header: %v", err)
 	}
+	r2h := r2.Header.Get(HTTPHeaderAuthRequest)
 
 	// Concurrent 1st requests should be OK
 	var wg sync.WaitGroup
@@ -241,8 +246,12 @@ func TestService_SPNEGOKRB_ReplayCache_Concurrency(t *testing.T) {
 	noReq := 10
 	wg2.Add(noReq * 2)
 	for i := 0; i < noReq; i++ {
-		go httpGet(r1, &wg2)
-		go httpGet(r2, &wg2)
+		rr1, _ := http.NewRequest("GET", s.URL, nil)
+		rr1.Header.Set(HTTPHeaderAuthRequest, r1h)
+		rr2, _ := http.NewRequest("GET", s.URL, nil)
+		rr2.Header.Set(HTTPHeaderAuthRequest, r2h)
+		go httpGet(rr1, &wg2)
+		go httpGet(rr2, &wg2)
 	}
 	wg2.Wait()
 }
@@ -274,7 +283,10 @@ func TestService_SPNEGOKRB_Upload(t *testing.T) {
 	r.Header.Set("Content-Type", bodyWriter.FormDataContentType())
 
 	cl := getClient()
-	spnegoCl := NewClient(cl, nil, "HTTP/host.test.gokrb5")
+	cookieJar, _ := cookiejar.New(nil)
+	httpCl := http.DefaultClient
+	httpCl.Jar = cookieJar
+	spnegoCl := NewClient(cl, httpCl, "HTTP/host.test.gokrb5")
 	httpResp, err := spnegoCl.Do(r)
 	if err != nil {
 		t.Fatalf("Request error: %v\n", err)
@@ -293,12 +305,12 @@ func httpGet(r *http.Request, wg *sync.WaitGroup) {
 }
 
 func httpServer() *httptest.Server {
-	l := log.New(os.Stderr, "GOKRB5 Service Tests: ", log.Ldate|log.Ltime|log.Lshortfile)
+	l := log.New(os.Stderr, "GOKRB5 Service Tests: ", log.LstdFlags)
 	b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
 	kt := keytab.New()
 	kt.Unmarshal(b)
 	th := http.HandlerFunc(testAppHandler)
-	s := httptest.NewServer(SPNEGOKRB5Authenticate(th, kt, service.Logger(l)))
+	s := httptest.NewServer(SPNEGOKRB5Authenticate(th, kt, service.Logger(l), service.SessionManager(NewSessionMgr("gokrb5"))))
 	return s
 }
 
@@ -346,4 +358,50 @@ func getClient() *client.Client {
 	c.Realms[0].KPasswdServer = []string{addr + ":464"}
 	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 	return cl
+}
+
+type SessionMgr struct {
+	skey       []byte
+	store      sessions.Store
+	cookieName string
+}
+
+func NewSessionMgr(cookieName string) SessionMgr {
+	skey := []byte("thisistestsecret")
+	return SessionMgr{
+		skey:       skey,
+		store:      sessions.NewCookieStore(skey),
+		cookieName: cookieName,
+	}
+}
+
+func (smgr SessionMgr) Get(r *http.Request) (service.Session, error) {
+	s, err := smgr.store.Get(r, smgr.cookieName)
+	if err != nil {
+		return nil, err
+	}
+	if s == nil {
+		return nil, errors.New("nil session")
+	}
+	sess := Session(*s)
+	return &sess, nil
+}
+
+func (smgr SessionMgr) New(w http.ResponseWriter, r *http.Request, k string, v []byte) error {
+	s, err := smgr.store.New(r, smgr.cookieName)
+	if err != nil {
+		return fmt.Errorf("could not get new session from session manager: %v", err)
+	}
+	s.Values[k] = v
+	return s.Save(r, w)
+}
+
+type Session sessions.Session
+
+func (s *Session) Get(k string) []byte {
+	b, ok := s.Values[k].([]byte)
+	if !ok {
+		return nil
+	}
+	return b
 }

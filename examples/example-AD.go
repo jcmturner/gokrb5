@@ -4,8 +4,9 @@ package main
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
-	"gopkg.in/jcmturner/goidentity.v3"
+	"gopkg.in/jcmturner/goidentity.v4"
 	"gopkg.in/jcmturner/gokrb5.v7/client"
 	"gopkg.in/jcmturner/gokrb5.v7/config"
 	"gopkg.in/jcmturner/gokrb5.v7/credentials"
@@ -84,19 +85,23 @@ func testAppHandler(w http.ResponseWriter, r *http.Request) {
 				fmt.Fprintf(w, "<li>%v</li>\n", s)
 			}
 			fmt.Fprint(w, "</ul>\n")
-			if ADCreds, ok := creds.Attributes()[credentials.AttributeKeyADCredentials].(credentials.ADCredentials); ok {
-				// Now access the fields of the ADCredentials struct. For example:
-				fmt.Fprintf(w, "<li>EffectiveName: %v</li>\n", ADCreds.EffectiveName)
-				fmt.Fprintf(w, "<li>FullName: %v</li>\n", ADCreds.FullName)
-				fmt.Fprintf(w, "<li>UserID: %v</li>\n", ADCreds.UserID)
-				fmt.Fprintf(w, "<li>PrimaryGroupID: %v</li>\n", ADCreds.PrimaryGroupID)
-				fmt.Fprintf(w, "<li>Group SIDs: %v</li>\n", ADCreds.GroupMembershipSIDs)
-				fmt.Fprintf(w, "<li>LogOnTime: %v</li>\n", ADCreds.LogOnTime)
-				fmt.Fprintf(w, "<li>LogOffTime: %v</li>\n", ADCreds.LogOffTime)
-				fmt.Fprintf(w, "<li>PasswordLastSet: %v</li>\n", ADCreds.PasswordLastSet)
-				fmt.Fprintf(w, "<li>LogonServer: %v</li>\n", ADCreds.LogonServer)
-				fmt.Fprintf(w, "<li>LogonDomainName: %v</li>\n", ADCreds.LogonDomainName)
-				fmt.Fprintf(w, "<li>LogonDomainID: %v</li>\n", ADCreds.LogonDomainID)
+			if ADCredsJSON, ok := creds.Attributes()[credentials.AttributeKeyADCredentials]; ok {
+				ADCreds := new(credentials.ADCredentials)
+				err := json.Unmarshal([]byte(ADCredsJSON), ADCreds)
+				if err == nil {
+					// Now access the fields of the ADCredentials struct. For example:
+					fmt.Fprintf(w, "<li>EffectiveName: %v</li>\n", ADCreds.EffectiveName)
+					fmt.Fprintf(w, "<li>FullName: %v</li>\n", ADCreds.FullName)
+					fmt.Fprintf(w, "<li>UserID: %v</li>\n", ADCreds.UserID)
+					fmt.Fprintf(w, "<li>PrimaryGroupID: %v</li>\n", ADCreds.PrimaryGroupID)
+					fmt.Fprintf(w, "<li>Group SIDs: %v</li>\n", ADCreds.GroupMembershipSIDs)
+					fmt.Fprintf(w, "<li>LogOnTime: %v</li>\n", ADCreds.LogOnTime)
+					fmt.Fprintf(w, "<li>LogOffTime: %v</li>\n", ADCreds.LogOffTime)
+					fmt.Fprintf(w, "<li>PasswordLastSet: %v</li>\n", ADCreds.PasswordLastSet)
+					fmt.Fprintf(w, "<li>LogonServer: %v</li>\n", ADCreds.LogonServer)
+					fmt.Fprintf(w, "<li>LogonDomainName: %v</li>\n", ADCreds.LogonDomainName)
+					fmt.Fprintf(w, "<li>LogonDomainID: %v</li>\n", ADCreds.LogonDomainID)
+				}
 			}
 			fmt.Fprint(w, "</ul>")
 		}
