@@ -108,12 +108,12 @@ func NewClientFromCCache(c *credentials.CCache, krb5conf *config.Config, setting
 	return cl, nil
 }
 
-// Key returns the client's encryption key for the specified encryption type.
+// Key returns the client's encryption key for the specified encryption type and its kvno.
 // The key can be retrieved either from the keytab or generated from the client's password.
 // If the client has both a keytab and a password defined the keytab is favoured as the source for the key
 // A KRBError can be passed in the event the KDC returns one of type KDC_ERR_PREAUTH_REQUIRED and is required to derive
 // the key for pre-authentication from the client's password. If a KRBError is not available, pass nil to this argument.
-func (cl *Client) Key(etype etype.EType, krberr *messages.KRBError) (types.EncryptionKey, error) {
+func (cl *Client) Key(etype etype.EType, krberr *messages.KRBError) (types.EncryptionKey, int, error) {
 	if cl.Credentials.HasKeytab() && etype != nil {
 		return cl.Credentials.Keytab().GetEncryptionKey(cl.Credentials.CName(), cl.Credentials.Domain(), 0, etype.GetETypeID())
 	} else if cl.Credentials.HasPassword() {
@@ -121,15 +121,15 @@ func (cl *Client) Key(etype etype.EType, krberr *messages.KRBError) (types.Encry
 			var pas types.PADataSequence
 			err := pas.Unmarshal(krberr.EData)
 			if err != nil {
-				return types.EncryptionKey{}, fmt.Errorf("could not get PAData from KRBError to generate key from password: %v", err)
+				return types.EncryptionKey{}, 0, fmt.Errorf("could not get PAData from KRBError to generate key from password: %v", err)
 			}
 			key, _, err := crypto.GetKeyFromPassword(cl.Credentials.Password(), krberr.CName, krberr.CRealm, etype.GetETypeID(), pas)
-			return key, err
+			return key, 0, err
 		}
 		key, _, err := crypto.GetKeyFromPassword(cl.Credentials.Password(), cl.Credentials.CName(), cl.Credentials.Domain(), etype.GetETypeID(), types.PADataSequence{})
-		return key, err
+		return key, 0, err
 	}
-	return types.EncryptionKey{}, errors.New("credential has neither keytab or password to generate key")
+	return types.EncryptionKey{}, 0, errors.New("credential has neither keytab or password to generate key")
 }
 
 // IsConfigured indicates if the client has the values required set.
