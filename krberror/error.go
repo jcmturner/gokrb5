@@ -35,8 +35,8 @@ func (e *Krberror) Add(et string, s string) {
 	e.EText = append([]string{fmt.Sprintf("%s: %s", et, s)}, e.EText...)
 }
 
-// NewKrberror creates a new instance of Krberror.
-func NewKrberror(et, s string) Krberror {
+// New creates a new instance of Krberror.
+func New(et, s string) Krberror {
 	return Krberror{
 		RootCause: et,
 		EText:     []string{s},

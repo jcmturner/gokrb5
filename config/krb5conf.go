@@ -32,8 +32,8 @@ type Config struct {
 // WeakETypeList is a list of encryption types that have been deemed weak.
 const WeakETypeList = "des-cbc-crc des-cbc-md4 des-cbc-md5 des-cbc-raw des3-cbc-raw des-hmac-sha1 arcfour-hmac-exp rc4-hmac-exp arcfour-hmac-md5-exp des"
 
-// NewConfig creates a new config struct instance.
-func NewConfig() *Config {
+// New creates a new config struct instance.
+func New() *Config {
 	d := make(DomainRealm)
 	return &Config{
 		LibDefaults: newLibDefaults(),
@@ -523,24 +523,24 @@ func Load(cfgPath string) (*Config, error) {
 	}
 	defer fh.Close()
 	scanner := bufio.NewScanner(fh)
-	return NewConfigFromScanner(scanner)
+	return NewFromScanner(scanner)
 }
 
-// NewConfigFromString creates a new Config struct from a string.
-func NewConfigFromString(s string) (*Config, error) {
+// NewFromString creates a new Config struct from a string.
+func NewFromString(s string) (*Config, error) {
 	reader := strings.NewReader(s)
-	return NewConfigFromReader(reader)
+	return NewFromReader(reader)
 }
 
-// NewConfigFromReader creates a new Config struct from an io.Reader.
-func NewConfigFromReader(r io.Reader) (*Config, error) {
+// NewFromReader creates a new Config struct from an io.Reader.
+func NewFromReader(r io.Reader) (*Config, error) {
 	scanner := bufio.NewScanner(r)
-	return NewConfigFromScanner(scanner)
+	return NewFromScanner(scanner)
 }
 
-// NewConfigFromScanner creates a new Config struct from a bufio.Scanner.
-func NewConfigFromScanner(scanner *bufio.Scanner) (*Config, error) {
-	c := NewConfig()
+// NewFromScanner creates a new Config struct from a bufio.Scanner.
+func NewFromScanner(scanner *bufio.Scanner) (*Config, error) {
+	c := New()
 	var e error
 	sections := make(map[int]string)
 	var sectionLineNum []int
