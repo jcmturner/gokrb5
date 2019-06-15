@@ -102,7 +102,7 @@ func (m *KRB5Token) Unmarshal(b []byte) error {
 func (m *KRB5Token) Verify() (bool, gssapi.Status) {
 	switch hex.EncodeToString(m.tokID) {
 	case TOK_ID_KRB_AP_REQ:
-		ok, creds, err := service.VerifyAPREQ(m.APReq, m.settings)
+		ok, creds, err := service.VerifyAPREQ(&m.APReq, m.settings)
 		if err != nil {
 			return false, gssapi.Status{Code: gssapi.StatusDefectiveToken, Message: err.Error()}
 		}
