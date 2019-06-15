@@ -33,14 +33,14 @@ func TestClient_SetSPNEGOHeader(t *testing.T) {
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt := keytab.New()
 	kt.Unmarshal(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	c, _ := config.NewFromString(testdata.TEST_KRB5CONF)
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
 		addr = testdata.TEST_KDC_ADDR
 	}
 	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
 	l := log.New(os.Stderr, "SPNEGO Client:", log.LstdFlags)
-	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c, client.Logger(l))
+	cl := client.NewWithKeytab("testuser1", "TEST.GOKRB5", kt, c, client.Logger(l))
 
 	err := cl.Login()
 	if err != nil {
@@ -82,14 +82,14 @@ func TestSPNEGOHTTPClient(t *testing.T) {
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt := keytab.New()
 	kt.Unmarshal(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	c, _ := config.NewFromString(testdata.TEST_KRB5CONF)
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
 		addr = testdata.TEST_KDC_ADDR
 	}
 	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
 	l := log.New(os.Stderr, "SPNEGO Client:", log.LstdFlags)
-	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c, client.Logger(l))
+	cl := client.NewWithKeytab("testuser1", "TEST.GOKRB5", kt, c, client.Logger(l))
 
 	err := cl.Login()
 	if err != nil {
@@ -348,7 +348,7 @@ func getClient() *client.Client {
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt := keytab.New()
 	kt.Unmarshal(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	c, _ := config.NewFromString(testdata.TEST_KRB5CONF)
 	c.LibDefaults.NoAddresses = true
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
@@ -356,7 +356,7 @@ func getClient() *client.Client {
 	}
 	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
 	c.Realms[0].KPasswdServer = []string{addr + ":464"}
-	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
+	cl := client.NewWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 	return cl
 }
 

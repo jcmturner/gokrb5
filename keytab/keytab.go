@@ -81,7 +81,7 @@ func (kt *Keytab) GetEncryptionKey(princName types.PrincipalName, realm string, 
 }
 
 // Create a new Keytab entry.
-func newKeytabEntry() entry {
+func newEntry() entry {
 	var b []byte
 	return entry{
 		Principal: newPrincipal(),
@@ -176,7 +176,7 @@ func (kt *Keytab) Unmarshal(b []byte) error {
 			//fmt.Printf("Bytes for entry: %v\n", b[n:n+int(l)])
 			eb := b[n : n+int(l)]
 			n = n + int(l)
-			ke := newKeytabEntry()
+			ke := newEntry()
 			// p keeps track as to where we are in the byte stream
 			var p int
 			parsePrincipal(eb, &p, kt, &ke, &endian)

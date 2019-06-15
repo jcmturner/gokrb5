@@ -381,7 +381,7 @@ func TestLoadWithV4Lines(t *testing.T) {
 
 func TestLoad2(t *testing.T) {
 	t.Parallel()
-	c, err := NewConfigFromString(krb5Conf2)
+	c, err := NewFromString(krb5Conf2)
 	if err != nil {
 		t.Fatalf("Error loading config: %v", err)
 	}
@@ -411,7 +411,7 @@ func TestLoad2(t *testing.T) {
 
 func TestLoadNoBlankLines(t *testing.T) {
 	t.Parallel()
-	c, err := NewConfigFromString(krb5ConfNoBlankLines)
+	c, err := NewFromString(krb5ConfNoBlankLines)
 	if err != nil {
 		t.Fatalf("Error loading config: %v", err)
 	}
@@ -504,7 +504,7 @@ func TestParseDuration(t *testing.T) {
 
 func TestResolveRealm(t *testing.T) {
 	t.Parallel()
-	c, err := NewConfigFromString(krb5Conf)
+	c, err := NewFromString(krb5Conf)
 	if err != nil {
 		t.Fatalf("Error loading config: %v", err)
 	}
