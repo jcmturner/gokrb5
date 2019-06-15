@@ -253,20 +253,24 @@ func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, settings ...f
 		b, err := base64.StdEncoding.DecodeString(s[1])
 		if err != nil {
 			spnegoNegotiateKRB5MechType(spnego, w, "%s - SPNEGO error in base64 decoding negotiation header: %v", r.RemoteAddr, err)
+			return
 		}
 		var st SPNEGOToken
 		err = st.Unmarshal(b)
 		if err != nil {
 			spnegoNegotiateKRB5MechType(spnego, w, "%s - SPNEGO error in unmarshaling SPNEGO token: %v", r.RemoteAddr, err)
+			return
 		}
 
 		// Validate the context token
 		authed, ctx, status := spnego.AcceptSecContext(&st)
 		if status.Code != gssapi.StatusComplete && status.Code != gssapi.StatusContinueNeeded {
 			spnegoResponseReject(spnego, w, "%s - SPNEGO validation error: %v", r.RemoteAddr, status)
+			return
 		}
 		if status.Code == gssapi.StatusContinueNeeded {
 			spnegoNegotiateKRB5MechType(spnego, w, "%s - SPNEGO GSS-API continue needed", r.RemoteAddr)
+			return
 		}
 		if authed {
 			id := ctx.Value(CTXKeyCredentials).(*credentials.Credentials)
@@ -291,8 +295,8 @@ func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, settings ...f
 			return
 		} else {
 			spnegoResponseReject(spnego, w, "%s - SPNEGO Kerberos authentication failed", r.RemoteAddr)
+			return
 		}
-		return
 	})
 }
 
