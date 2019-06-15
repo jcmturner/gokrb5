@@ -1,6 +1,6 @@
+// Package examples provides simple examples of gokrb5 use.
 // +build examples
 
-// Package examples provides simple examples of gokrb5 use.
 package main
 
 import (
