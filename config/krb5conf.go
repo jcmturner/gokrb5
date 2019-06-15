@@ -119,6 +119,10 @@ func newLibDefaults() LibDefaults {
 // Parse the lines of the [libdefaults] section of the configuration into the LibDefaults struct.
 func (l *LibDefaults) parseLines(lines []string) error {
 	for _, line := range lines {
+		//Remove comments after the values
+		if idx := strings.Index(line, "#;"); idx != -1 {
+			line = line[:idx]
+		}
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
@@ -333,6 +337,10 @@ func (r *Realm) parseLines(name string, lines []string) (err error) {
 		if ignore && c > 0 && !strings.Contains(line, "{") && !strings.Contains(line, "}") {
 			continue
 		}
+		//Remove comments after the values
+		if idx := strings.Index(line, "#;"); idx != -1 {
+			line = line[:idx]
+		}
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
@@ -407,6 +415,10 @@ func parseRealms(lines []string) (realms []Realm, err error) {
 	var start int
 	var c int
 	for i, l := range lines {
+		//Remove comments after the values
+		if idx := strings.Index(l, "#;"); idx != -1 {
+			l = l[:idx]
+		}
 		l = strings.TrimSpace(l)
 		if l == "" {
 			continue
