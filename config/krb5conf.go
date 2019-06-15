@@ -120,7 +120,7 @@ func newLibDefaults() LibDefaults {
 func (l *LibDefaults) parseLines(lines []string) error {
 	for _, line := range lines {
 		//Remove comments after the values
-		if idx := strings.Index(line, "#;"); idx != -1 {
+		if idx := strings.IndexAny(line, "#;"); idx != -1 {
 			line = line[:idx]
 		}
 		line = strings.TrimSpace(line)
@@ -338,7 +338,7 @@ func (r *Realm) parseLines(name string, lines []string) (err error) {
 			continue
 		}
 		//Remove comments after the values
-		if idx := strings.Index(line, "#;"); idx != -1 {
+		if idx := strings.IndexAny(line, "#;"); idx != -1 {
 			line = line[:idx]
 		}
 		line = strings.TrimSpace(line)
@@ -416,7 +416,7 @@ func parseRealms(lines []string) (realms []Realm, err error) {
 	var c int
 	for i, l := range lines {
 		//Remove comments after the values
-		if idx := strings.Index(l, "#;"); idx != -1 {
+		if idx := strings.IndexAny(l, "#;"); idx != -1 {
 			l = l[:idx]
 		}
 		l = strings.TrimSpace(l)
@@ -466,6 +466,10 @@ type DomainRealm map[string]string
 // Parse the lines of the [domain_realm] section of the configuration and add to the mapping.
 func (d *DomainRealm) parseLines(lines []string) error {
 	for _, line := range lines {
+		//Remove comments after the values
+		if idx := strings.IndexAny(line, "#;"); idx != -1 {
+			line = line[:idx]
+		}
 		if strings.TrimSpace(line) == "" {
 			continue
 		}
