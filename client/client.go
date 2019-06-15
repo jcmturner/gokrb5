@@ -27,9 +27,9 @@ type Client struct {
 	cache       *Cache
 }
 
-// NewClientWithPassword creates a new client from a password credential.
+// NewWithPassword creates a new client from a password credential.
 // Set the realm to empty string to use the default realm from config.
-func NewClientWithPassword(username, realm, password string, krb5conf *config.Config, settings ...func(*Settings)) *Client {
+func NewWithPassword(username, realm, password string, krb5conf *config.Config, settings ...func(*Settings)) *Client {
 	creds := credentials.New(username, realm)
 	return &Client{
 		Credentials: creds.WithPassword(password),
@@ -42,8 +42,8 @@ func NewClientWithPassword(username, realm, password string, krb5conf *config.Co
 	}
 }
 
-// NewClientWithKeytab creates a new client from a keytab credential.
-func NewClientWithKeytab(username, realm string, kt *keytab.Keytab, krb5conf *config.Config, settings ...func(*Settings)) *Client {
+// NewWithKeytab creates a new client from a keytab credential.
+func NewWithKeytab(username, realm string, kt *keytab.Keytab, krb5conf *config.Config, settings ...func(*Settings)) *Client {
 	creds := credentials.New(username, realm)
 	return &Client{
 		Credentials: creds.WithKeytab(kt),
@@ -56,10 +56,10 @@ func NewClientWithKeytab(username, realm string, kt *keytab.Keytab, krb5conf *co
 	}
 }
 
-// NewClientFromCCache create a client from a populated client cache.
+// NewFromCCache create a client from a populated client cache.
 //
 // WARNING: A client created from CCache does not automatically renew TGTs and a failure will occur after the TGT expires.
-func NewClientFromCCache(c *credentials.CCache, krb5conf *config.Config, settings ...func(*Settings)) (*Client, error) {
+func NewFromCCache(c *credentials.CCache, krb5conf *config.Config, settings ...func(*Settings)) (*Client, error) {
 	cl := &Client{
 		Credentials: c.GetClientCredentials(),
 		Config:      krb5conf,
@@ -171,7 +171,7 @@ func (cl *Client) Login() error {
 			return krberror.Errorf(err, krberror.KRBMsgError, "no user credentials available and error getting any existing session")
 		}
 		if time.Now().UTC().After(endTime) {
-			return krberror.NewKrberror(krberror.KRBMsgError, "cannot login, no user credentials available and no valid existing session")
+			return krberror.New(krberror.KRBMsgError, "cannot login, no user credentials available and no valid existing session")
 		}
 		// no credentials but there is a session with tgt already
 		return nil

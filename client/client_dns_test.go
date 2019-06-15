@@ -17,7 +17,7 @@ func TestResolveKDC(t *testing.T) {
 	//if ns == "" {
 	//	os.Setenv("DNSUTILS_OVERRIDE_NS", testdata.TEST_NS)
 	//}
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	c, _ := config.NewFromString(testdata.TEST_KRB5CONF)
 	c.LibDefaults.DNSLookupKDC = true
 	var cl Client
 	cl.Config = c
@@ -59,7 +59,7 @@ func TestClient_Login_DNSKDCs(t *testing.T) {
 	//if ns == "" {
 	//	os.Setenv("DNSUTILS_OVERRIDE_NS", testdata.TEST_NS)
 	//}
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	c, _ := config.NewFromString(testdata.TEST_KRB5CONF)
 	// Set to lookup KDCs in DNS
 	c.LibDefaults.DNSLookupKDC = true
 	//Blank out the KDCs to ensure they are not being used
@@ -68,7 +68,7 @@ func TestClient_Login_DNSKDCs(t *testing.T) {
 	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
 	kt := keytab.New()
 	kt.Unmarshal(b)
-	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
+	cl := NewWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 
 	err := cl.Login()
 	if err != nil {

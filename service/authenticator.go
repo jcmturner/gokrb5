@@ -41,7 +41,7 @@ func (a KRB5BasicAuthenticator) Authenticate() (i goidentity.Identity, ok bool, 
 		err = fmt.Errorf("could not parse basic authentication header: %v", err)
 		return
 	}
-	cl := client.NewClientWithPassword(a.username, a.realm, a.password, a.clientConfig)
+	cl := client.NewWithPassword(a.username, a.realm, a.password, a.clientConfig)
 	err = cl.Login()
 	if err != nil {
 		// Username and/or password could be wrong
