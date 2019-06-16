@@ -367,7 +367,7 @@ type SessionMgr struct {
 }
 
 func NewSessionMgr(cookieName string) SessionMgr {
-	skey := []byte("thisistestsecret")
+	skey := []byte("thisistestsecret") // Best practice is to load this key from a secure location.
 	return SessionMgr{
 		skey:       skey,
 		store:      sessions.NewCookieStore(skey),
@@ -375,7 +375,7 @@ func NewSessionMgr(cookieName string) SessionMgr {
 	}
 }
 
-func (smgr SessionMgr) Get(r *http.Request) (service.Session, error) {
+func (smgr SessionMgr) Get(r *http.Request, k string) ([]byte, error) {
 	s, err := smgr.store.Get(r, smgr.cookieName)
 	if err != nil {
 		return nil, err
@@ -383,8 +383,11 @@ func (smgr SessionMgr) Get(r *http.Request) (service.Session, error) {
 	if s == nil {
 		return nil, errors.New("nil session")
 	}
-	sess := Session(*s)
-	return &sess, nil
+	b, ok := s.Values[k].([]byte)
+	if !ok {
+		return nil, fmt.Errorf("could not get bytes held in session at %s", k)
+	}
+	return b, nil
 }
 
 func (smgr SessionMgr) New(w http.ResponseWriter, r *http.Request, k string, v []byte) error {
@@ -394,14 +397,4 @@ func (smgr SessionMgr) New(w http.ResponseWriter, r *http.Request, k string, v [
 	}
 	s.Values[k] = v
 	return s.Save(r, w)
-}
-
-type Session sessions.Session
-
-func (s *Session) Get(k string) []byte {
-	b, ok := s.Values[k].([]byte)
-	if !ok {
-		return nil
-	}
-	return b
 }

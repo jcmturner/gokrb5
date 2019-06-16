@@ -326,13 +326,9 @@ func getSessionCredentials(r *http.Request, settings *service.Settings) (credent
 	var creds credentials.Credentials
 	// Check if there is a session manager and if there is an already established session for this client
 	if sm := settings.SessionManager(); sm != nil {
-		sess, err := sm.Get(r)
-		if err != nil {
-			return creds, fmt.Errorf("%s - SPNEGO error getting session for request: %v", r.RemoteAddr, err)
-		}
-		cb := sess.Get(CTXKeyCredentials)
-		if len(cb) > 0 {
-			return creds, fmt.Errorf("%s - SPNEGO no credentials in session for request", r.RemoteAddr)
+		cb, err := sm.Get(r, CTXKeyCredentials)
+		if err != nil || cb == nil || len(cb) < 1 {
+			return creds, fmt.Errorf("%s - SPNEGO error getting session and credentials for request: %v", r.RemoteAddr, err)
 		}
 		err = creds.Unmarshal(cb)
 		if err != nil {
