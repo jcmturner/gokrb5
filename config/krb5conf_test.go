@@ -17,7 +17,7 @@ const (
  admin_server = FILE:/var/log/kerberos/kadmind.log
 
 [libdefaults]
- default_realm = TEST.GOKRB5
+ default_realm = TEST.GOKRB5 ; comment to be ignored
  dns_lookup_realm = false
 
  dns_lookup_kdc = false
@@ -25,24 +25,24 @@ const (
  ;dns_lookup_kdc = true
 #dns_lookup_kdc = true
 ;dns_lookup_kdc = true
- ticket_lifetime = 10h
- forwardable = yes
+ ticket_lifetime = 10h ;comment to be ignored
+ forwardable = yes #comment to be ignored
  default_keytab_name = FILE:/etc/krb5.keytab
 
  default_client_keytab_name = FILE:/home/gokrb5/client.keytab
- default_tkt_enctypes = aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96
+ default_tkt_enctypes = aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 # comment to be ignored
 
 
 [realms]
  TEST.GOKRB5 = {
-  kdc = 10.80.88.88:88
-  kdc = assume.port.num
-  kdc = some.other.port:1234
+  kdc = 10.80.88.88:88 #comment to be ignored
+  kdc = assume.port.num ;comment to be ignored
+  kdc = some.other.port:1234 # comment to be ignored
 
   kdc = 10.80.88.88*
   kdc = 10.1.2.3.4:88
 
-  admin_server = 10.80.88.88:749
+  admin_server = 10.80.88.88:749 ; comment to be ignored
   default_domain = test.gokrb5
  }
  EXAMPLE.COM = {
@@ -58,12 +58,12 @@ const (
 
 
 [domain_realm]
- .test.gokrb5 = TEST.GOKRB5
+ .test.gokrb5 = TEST.GOKRB5 #comment to be ignored
 
- test.gokrb5 = TEST.GOKRB5
+ test.gokrb5 = TEST.GOKRB5 ;comment to be ignored
  
-  .example.com = EXAMPLE.COM
- hostname1.example.com = EXAMPLE.COM
+  .example.com = EXAMPLE.COM # comment to be ignored
+ hostname1.example.com = EXAMPLE.COM ; comment to be ignored
  hostname2.example.com = TEST.GOKRB5
  .testlowercase.org = lowercase.org
 

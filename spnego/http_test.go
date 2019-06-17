@@ -129,7 +129,7 @@ func TestService_SPNEGOKRB_NoAuthHeader(t *testing.T) {
 		t.Fatalf("Request error: %v\n", err)
 	}
 	assert.Equal(t, http.StatusUnauthorized, httpResp.StatusCode, "Status code in response to client with no SPNEGO not as expected")
-	assert.Equal(t, "Negotiate", httpResp.Header.Get("WWW-Authenticate"), "Negitation header not set by server.")
+	assert.Equal(t, "Negotiate", httpResp.Header.Get("WWW-Authenticate"), "Negotiation header not set by server.")
 }
 
 func TestService_SPNEGOKRB_ValidUser(t *testing.T) {
@@ -271,15 +271,11 @@ func TestService_SPNEGOKRB_Upload(t *testing.T) {
 	bodyWriter.Close()
 
 	r, _ := http.NewRequest("POST", s.URL, bodyBuf)
+	r.Header.Set("Content-Type", bodyWriter.FormDataContentType())
 
 	cl := getClient()
-	err = SetSPNEGOHeader(cl, r, "HTTP/host.test.gokrb5")
-	if err != nil {
-		t.Fatalf("error setting client's SPNEGO header: %v", err)
-	}
-
-	r.Header.Set("Content-Type", bodyWriter.FormDataContentType())
-	httpResp, err := http.DefaultClient.Do(r)
+	spnegoCl := NewClient(cl, nil, "HTTP/host.test.gokrb5")
+	httpResp, err := spnegoCl.Do(r)
 	if err != nil {
 		t.Fatalf("Request error: %v\n", err)
 	}

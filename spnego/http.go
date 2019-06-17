@@ -1,11 +1,13 @@
 package spnego
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"net/http/cookiejar"
@@ -39,6 +41,11 @@ func (e redirectErr) Error() string {
 	return fmt.Sprintf("redirect to %v", e.reqTarget.URL)
 }
 
+type teeReadCloser struct {
+	io.Reader
+	io.Closer
+}
+
 // NewClient returns an SPNEGO enabled HTTP client.
 func NewClient(krb5Cl *client.Client, httpCl *http.Client, spn string) *Client {
 	if httpCl == nil {
@@ -68,6 +75,13 @@ func NewClient(krb5Cl *client.Client, httpCl *http.Client, spn string) *Client {
 
 // Do is the SPNEGO enabled HTTP client's equivalent of the http.Client's Do method.
 func (c *Client) Do(req *http.Request) (resp *http.Response, err error) {
+	var body bytes.Buffer
+	if req.Body != nil {
+		// Use a tee reader to capture any body sent in case we have to replay it again
+		teeR := io.TeeReader(req.Body, &body)
+		teeRC := teeReadCloser{teeR, req.Body}
+		req.Body = teeRC
+	}
 	resp, err = c.Client.Do(req)
 	if err != nil {
 		if ue, ok := err.(*url.Error); ok {
@@ -78,6 +92,10 @@ func (c *Client) Do(req *http.Request) (resp *http.Response, err error) {
 				if len(c.reqs) >= 10 {
 					return resp, errors.New("stopped after 10 redirects")
 				}
+				if req.Body != nil {
+					// Refresh the body reader so the body can be sent again
+					e.reqTarget.Body = ioutil.NopCloser(&body)
+				}
 				return c.Do(e.reqTarget)
 			}
 		}
@@ -87,6 +105,10 @@ func (c *Client) Do(req *http.Request) (resp *http.Response, err error) {
 		err := SetSPNEGOHeader(c.krb5Client, req, c.spn)
 		if err != nil {
 			return resp, err
+		}
+		if req.Body != nil {
+			// Refresh the body reader so the body can be sent again
+			req.Body = ioutil.NopCloser(&body)
 		}
 		return c.Do(req)
 	}
@@ -152,7 +174,7 @@ func SetSPNEGOHeader(cl *client.Client, r *http.Request, spn string) error {
 	s := SPNEGOClient(cl, spn)
 	err := s.AcquireCred()
 	if err != nil {
-		return fmt.Errorf("could not acquire client credenital: %v", err)
+		return fmt.Errorf("could not acquire client credential: %v", err)
 	}
 	st, err := s.InitSecContext()
 	if err != nil {
@@ -220,20 +242,24 @@ func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, settings ...f
 		b, err := base64.StdEncoding.DecodeString(s[1])
 		if err != nil {
 			spnegoNegotiateKRB5MechType(spnego, w, "%s - SPNEGO error in base64 decoding negotiation header: %v", r.RemoteAddr, err)
+			return
 		}
 		var st SPNEGOToken
 		err = st.Unmarshal(b)
 		if err != nil {
 			spnegoNegotiateKRB5MechType(spnego, w, "%s - SPNEGO error in unmarshaling SPNEGO token: %v", r.RemoteAddr, err)
+			return
 		}
 
 		// Validate the context token
 		authed, ctx, status := spnego.AcceptSecContext(&st)
 		if status.Code != gssapi.StatusComplete && status.Code != gssapi.StatusContinueNeeded {
 			spnegoResponseReject(spnego, w, "%s - SPNEGO validation error: %v", r.RemoteAddr, status)
+			return
 		}
 		if status.Code == gssapi.StatusContinueNeeded {
 			spnegoNegotiateKRB5MechType(spnego, w, "%s - SPNEGO GSS-API continue needed", r.RemoteAddr)
+			return
 		}
 		if authed {
 			id := ctx.Value(CTXKeyCredentials).(goidentity.Identity)
@@ -244,8 +270,8 @@ func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, settings ...f
 			inner.ServeHTTP(w, r.WithContext(requestCtx))
 		} else {
 			spnegoResponseReject(spnego, w, "%s - SPNEGO Kerberos authentication failed", r.RemoteAddr)
+			return
 		}
-		return
 	})
 }
 
