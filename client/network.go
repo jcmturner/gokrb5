@@ -77,8 +77,7 @@ func dialKDCUDP(count int, kdcs map[int]string) (*net.UDPConn, error) {
 			return nil, fmt.Errorf("error resolving KDC address: %v", err)
 		}
 
-		addr := fmt.Sprintf("%s", udpAddr)
-		conn, err := net.DialTimeout("udp", addr, 5*time.Second)
+		conn, err := net.DialTimeout("udp", upAddr.String(), 5*time.Second)
 		if err == nil {
 			if err := conn.SetDeadline(time.Now().Add(5 * time.Second)); err != nil {
 				return nil, err
@@ -100,8 +99,7 @@ func dialKDCTCP(count int, kdcs map[int]string) (*net.TCPConn, error) {
 			return nil, fmt.Errorf("error resolving KDC address: %v", err)
 		}
 
-		addr := fmt.Sprintf("%s", tcpAddr)
-		conn, err := net.DialTimeout("tcp", addr, 5*time.Second)
+		conn, err := net.DialTimeout("tcp", tcpAddr.String(), 5*time.Second)
 		if err == nil {
 			if err := conn.SetDeadline(time.Now().Add(5 * time.Second)); err != nil {
 				return nil, err
