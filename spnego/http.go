@@ -2,7 +2,6 @@ package spnego
 
 import (
 	"bytes"
-	"context"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -14,6 +13,7 @@ import (
 	"net/url"
 	"strings"
 
+	"gopkg.in/jcmturner/goidentity.v4"
 	"gopkg.in/jcmturner/gokrb5.v7/client"
 	"gopkg.in/jcmturner/gokrb5.v7/credentials"
 	"gopkg.in/jcmturner/gokrb5.v7/gssapi"
@@ -229,14 +229,10 @@ func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, settings ...f
 
 		// Check if there is a session manager and if there is an already established session for this client
 		id, err := getSessionCredentials(r, spnego.serviceSettings)
-		if err != nil && id.Authenticated() {
-			// Add the id obtained from the session to the context
-			requestCtx := r.Context()
-			requestCtx = context.WithValue(requestCtx, CTXKeyCredentials, id)
-			requestCtx = context.WithValue(requestCtx, CTXKeyAuthenticated, id.Authenticated())
-			// there is an established session so bypass auth and serve
+		if err == nil && id.Authenticated() {
+			// There is an established session so bypass auth and serve
 			spnego.Log("%s - SPNEGO request served under session %s", r.RemoteAddr, id.SessionID())
-			inner.ServeHTTP(w, r)
+			inner.ServeHTTP(w, goidentity.AddToHTTPRequestContext(&id, r))
 			return
 		}
 
@@ -274,9 +270,6 @@ func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, settings ...f
 		}
 		if authed {
 			id := ctx.Value(CTXKeyCredentials).(*credentials.Credentials)
-			requestCtx := r.Context()
-			requestCtx = context.WithValue(requestCtx, CTXKeyCredentials, id)
-			requestCtx = context.WithValue(requestCtx, CTXKeyAuthenticated, ctx.Value(CTXKeyAuthenticated))
 			if sm := spnego.serviceSettings.SessionManager(); sm != nil {
 				// create new session
 				idb, err := id.Marshal()
@@ -289,9 +282,10 @@ func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, settings ...f
 					spnegoInternalServerError(spnego, w, "SPNEGO could not create new session: %v", err)
 					return
 				}
+				spnego.Log("%s %s@%s - SPNEGO new session (%s) created", r.RemoteAddr, id.UserName(), id.Domain(), id.SessionID())
 			}
 			spnegoResponseAcceptCompleted(spnego, w, "%s %s@%s - SPNEGO authentication succeeded", r.RemoteAddr, id.UserName(), id.Domain())
-			inner.ServeHTTP(w, r.WithContext(requestCtx))
+			inner.ServeHTTP(w, goidentity.AddToHTTPRequestContext(id, r))
 			return
 		} else {
 			spnegoResponseReject(spnego, w, "%s - SPNEGO Kerberos authentication failed", r.RemoteAddr)

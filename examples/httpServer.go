@@ -1,5 +1,3 @@
-// +build examples
-
 package main
 
 import (
@@ -46,8 +44,7 @@ func main() {
 // Simple application specific handler
 func testAppHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
-	ctx := r.Context()
-	creds := ctx.Value(spnego.CTXKeyCredentials).(goidentity.Identity)
+	creds := goidentity.FromHTTPRequestContext(r)
 	fmt.Fprintf(w,
 		`<html>
 <h1>GOKRB5 Handler</h1>

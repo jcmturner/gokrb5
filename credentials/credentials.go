@@ -377,6 +377,7 @@ func (c *Credentials) Unmarshal(b []byte) error {
 	c.password = mc.Password
 	c.attributes = mc.Attributes
 	c.validUntil = mc.ValidUntil
+	c.authenticated = mc.Authenticated
 	c.human = mc.Human
 	c.authTime = mc.AuthTime
 	c.groupMembership = mc.GroupMembership
