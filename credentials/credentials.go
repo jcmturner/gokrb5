@@ -154,6 +154,7 @@ func (c *Credentials) SetADCredentials(a ADCredentials) {
 	}
 }
 
+// GetADCredentials returns ADCredentials attributes sorted in the credential
 func (c *Credentials) GetADCredentials() ADCredentials {
 	if a, ok := c.attributes[AttributeKeyADCredentials].(ADCredentials); ok {
 		return a
@@ -322,6 +323,7 @@ func (c *Credentials) RemoveAttribute(k string) {
 	delete(c.attributes, k)
 }
 
+// Marshal the Credentials into a byte slice
 func (c *Credentials) Marshal() ([]byte, error) {
 	gob.Register(map[string]interface{}{})
 	buf := new(bytes.Buffer)
@@ -348,6 +350,7 @@ func (c *Credentials) Marshal() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+// Unmarshal a byte slice into Credentials
 func (c *Credentials) Unmarshal(b []byte) error {
 	gob.Register(map[string]interface{}{})
 	mc := new(marshalCredentials)

@@ -6,7 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"gopkg.in/jcmturner/goidentity.v4"
+	"gopkg.in/jcmturner/goidentity.v5"
 	"gopkg.in/jcmturner/gokrb5.v7/client"
 	"gopkg.in/jcmturner/gokrb5.v7/config"
 	"gopkg.in/jcmturner/gokrb5.v7/credentials"
@@ -76,36 +76,33 @@ func httpServer() *httptest.Server {
 func testAppHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	fmt.Fprint(w, "<html>\n<p><h1>TEST.GOKRB5 Handler</h1></p>\n")
-	if validuser, ok := ctx.Value(spnego.CTXKeyAuthenticated).(bool); ok && validuser {
-		if creds, ok := ctx.Value(spnego.CTXKeyCredentials).(goidentity.Identity); ok {
-			fmt.Fprintf(w, "<ul><li>Authenticed user: %s</li>\n", creds.UserName())
-			fmt.Fprintf(w, "<li>User's realm: %s</li>\n", creds.Domain())
-			fmt.Fprint(w, "<li>Authz Attributes (Group Memberships):</li><ul>\n")
-			for _, s := range creds.AuthzAttributes() {
-				fmt.Fprintf(w, "<li>%v</li>\n", s)
-			}
-			fmt.Fprint(w, "</ul>\n")
-			if ADCredsJSON, ok := creds.Attributes()[credentials.AttributeKeyADCredentials]; ok {
-				ADCreds := new(credentials.ADCredentials)
-				err := json.Unmarshal([]byte(ADCredsJSON), ADCreds)
-				if err == nil {
-					// Now access the fields of the ADCredentials struct. For example:
-					fmt.Fprintf(w, "<li>EffectiveName: %v</li>\n", ADCreds.EffectiveName)
-					fmt.Fprintf(w, "<li>FullName: %v</li>\n", ADCreds.FullName)
-					fmt.Fprintf(w, "<li>UserID: %v</li>\n", ADCreds.UserID)
-					fmt.Fprintf(w, "<li>PrimaryGroupID: %v</li>\n", ADCreds.PrimaryGroupID)
-					fmt.Fprintf(w, "<li>Group SIDs: %v</li>\n", ADCreds.GroupMembershipSIDs)
-					fmt.Fprintf(w, "<li>LogOnTime: %v</li>\n", ADCreds.LogOnTime)
-					fmt.Fprintf(w, "<li>LogOffTime: %v</li>\n", ADCreds.LogOffTime)
-					fmt.Fprintf(w, "<li>PasswordLastSet: %v</li>\n", ADCreds.PasswordLastSet)
-					fmt.Fprintf(w, "<li>LogonServer: %v</li>\n", ADCreds.LogonServer)
-					fmt.Fprintf(w, "<li>LogonDomainName: %v</li>\n", ADCreds.LogonDomainName)
-					fmt.Fprintf(w, "<li>LogonDomainID: %v</li>\n", ADCreds.LogonDomainID)
-				}
-			}
-			fmt.Fprint(w, "</ul>")
+	if creds, ok := ctx.Value(spnego.CTXKeyCredentials).(goidentity.Identity); ok && creds.Authenticated() {
+		fmt.Fprintf(w, "<ul><li>Authenticed user: %s</li>\n", creds.UserName())
+		fmt.Fprintf(w, "<li>User's realm: %s</li>\n", creds.Domain())
+		fmt.Fprint(w, "<li>Authz Attributes (Group Memberships):</li><ul>\n")
+		for _, s := range creds.AuthzAttributes() {
+			fmt.Fprintf(w, "<li>%v</li>\n", s)
 		}
-
+		fmt.Fprint(w, "</ul>\n")
+		if ADCredsJSON, ok := creds.Attributes()[credentials.AttributeKeyADCredentials]; ok {
+			ADCreds := new(credentials.ADCredentials)
+			err := json.Unmarshal([]byte(ADCredsJSON), ADCreds)
+			if err == nil {
+				// Now access the fields of the ADCredentials struct. For example:
+				fmt.Fprintf(w, "<li>EffectiveName: %v</li>\n", ADCreds.EffectiveName)
+				fmt.Fprintf(w, "<li>FullName: %v</li>\n", ADCreds.FullName)
+				fmt.Fprintf(w, "<li>UserID: %v</li>\n", ADCreds.UserID)
+				fmt.Fprintf(w, "<li>PrimaryGroupID: %v</li>\n", ADCreds.PrimaryGroupID)
+				fmt.Fprintf(w, "<li>Group SIDs: %v</li>\n", ADCreds.GroupMembershipSIDs)
+				fmt.Fprintf(w, "<li>LogOnTime: %v</li>\n", ADCreds.LogOnTime)
+				fmt.Fprintf(w, "<li>LogOffTime: %v</li>\n", ADCreds.LogOffTime)
+				fmt.Fprintf(w, "<li>PasswordLastSet: %v</li>\n", ADCreds.PasswordLastSet)
+				fmt.Fprintf(w, "<li>LogonServer: %v</li>\n", ADCreds.LogonServer)
+				fmt.Fprintf(w, "<li>LogonDomainName: %v</li>\n", ADCreds.LogonDomainName)
+				fmt.Fprintf(w, "<li>LogonDomainID: %v</li>\n", ADCreds.LogonDomainID)
+			}
+		}
+		fmt.Fprint(w, "</ul>")
 	} else {
 		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprint(w, "Authentication failed")

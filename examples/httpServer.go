@@ -9,7 +9,7 @@ import (
 
 	"github.com/gorilla/sessions"
 	"github.com/pkg/errors"
-	"gopkg.in/jcmturner/goidentity.v4"
+	"gopkg.in/jcmturner/goidentity.v5"
 	"gopkg.in/jcmturner/gokrb5.v7/keytab"
 	"gopkg.in/jcmturner/gokrb5.v7/service"
 	"gopkg.in/jcmturner/gokrb5.v7/spnego"
