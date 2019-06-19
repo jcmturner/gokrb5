@@ -326,6 +326,7 @@ func (c *Credentials) RemoveAttribute(k string) {
 // Marshal the Credentials into a byte slice
 func (c *Credentials) Marshal() ([]byte, error) {
 	gob.Register(map[string]interface{}{})
+	gob.Register(ADCredentials{})
 	buf := new(bytes.Buffer)
 	enc := gob.NewEncoder(buf)
 	mc := marshalCredentials{
@@ -353,6 +354,7 @@ func (c *Credentials) Marshal() ([]byte, error) {
 // Unmarshal a byte slice into Credentials
 func (c *Credentials) Unmarshal(b []byte) error {
 	gob.Register(map[string]interface{}{})
+	gob.Register(ADCredentials{})
 	mc := new(marshalCredentials)
 	buf := bytes.NewBuffer(b)
 	dec := gob.NewDecoder(buf)
