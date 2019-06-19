@@ -337,10 +337,10 @@ func testAppHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.WriteHeader(http.StatusOK)
-	ctx := r.Context()
+	id := goidentity.FromHTTPRequestContext(r)
 	fmt.Fprintf(w, "<html>\nTEST.GOKRB5 Handler\nAuthenticed user: %s\nUser's realm: %s\n</html>",
-		ctx.Value(CTXKeyCredentials).(goidentity.Identity).UserName(),
-		ctx.Value(CTXKeyCredentials).(goidentity.Identity).Domain())
+		id.UserName(),
+		id.Domain())
 	return
 }
 

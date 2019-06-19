@@ -74,9 +74,9 @@ func httpServer() *httptest.Server {
 }
 
 func testAppHandler(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	creds := goidentity.FromHTTPRequestContext(r)
 	fmt.Fprint(w, "<html>\n<p><h1>TEST.GOKRB5 Handler</h1></p>\n")
-	if creds, ok := ctx.Value(spnego.CTXKeyCredentials).(goidentity.Identity); ok && creds.Authenticated() {
+	if creds != nil && creds.Authenticated() {
 		fmt.Fprintf(w, "<ul><li>Authenticed user: %s</li>\n", creds.UserName())
 		fmt.Fprintf(w, "<li>User's realm: %s</li>\n", creds.Domain())
 		fmt.Fprint(w, "<li>Authz Attributes (Group Memberships):</li><ul>\n")

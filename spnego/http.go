@@ -198,8 +198,10 @@ const (
 	spnegoNegTokenRespReject = "Negotiate oQcwBaADCgEC"
 	// spnegoNegTokenRespIncompleteKRB5 - Response token specifying incomplete context and KRB5 as the supported mechtype.
 	spnegoNegTokenRespIncompleteKRB5 = "Negotiate oRQwEqADCgEBoQsGCSqGSIb3EgECAg=="
-	// CTXKeyCredentials is the request context key holding the credentials jcmturner/goidentity/Identity object.
-	CTXKeyCredentials = "github.com/jcmturner/gokrb5/CTXKeyCredentials"
+	// sessionCredentials is the session value key holding the credentials jcmturner/goidentity/Identity object.
+	sessionCredentials = "github.com/jcmturner/gokrb5/sessionCredentials"
+	// ctxCredentials is the SPNEGO context key holding the credentials jcmturner/goidentity/Identity object.
+	ctxCredentials = "github.com/jcmturner/gokrb5/ctxCredentials"
 	// HTTPHeaderAuthRequest is the header that will hold authn/z information.
 	HTTPHeaderAuthRequest = "Authorization"
 	// HTTPHeaderAuthResponse is the header that will hold SPNEGO data from the server.
@@ -253,7 +255,7 @@ func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, settings ...f
 
 		if authed {
 			// Authentication successful; get user's credentials from the context
-			id := ctx.Value(CTXKeyCredentials).(*credentials.Credentials)
+			id := ctx.Value(ctxCredentials).(*credentials.Credentials)
 			// Create a new session if a session manager has been configured
 			err = newSession(spnego, r, w, id)
 			if err != nil {
@@ -300,7 +302,7 @@ func getSessionCredentials(spnego *SPNEGO, r *http.Request) (credentials.Credent
 	var creds credentials.Credentials
 	// Check if there is a session manager and if there is an already established session for this client
 	if sm := spnego.serviceSettings.SessionManager(); sm != nil {
-		cb, err := sm.Get(r, CTXKeyCredentials)
+		cb, err := sm.Get(r, sessionCredentials)
 		if err != nil || cb == nil || len(cb) < 1 {
 			return creds, fmt.Errorf("%s - SPNEGO error getting session and credentials for request: %v", r.RemoteAddr, err)
 		}
@@ -321,7 +323,7 @@ func newSession(spnego *SPNEGO, r *http.Request, w http.ResponseWriter, id *cred
 			spnegoInternalServerError(spnego, w, "SPNEGO could not marshal credentials to add to the session: %v", err)
 			return err
 		}
-		err = sm.New(w, r, CTXKeyCredentials, idb)
+		err = sm.New(w, r, sessionCredentials, idb)
 		if err != nil {
 			spnegoInternalServerError(spnego, w, "SPNEGO could not create new session: %v", err)
 			return err
