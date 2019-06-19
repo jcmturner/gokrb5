@@ -77,7 +77,7 @@ func dialKDCUDP(count int, kdcs map[int]string) (*net.UDPConn, error) {
 			return nil, fmt.Errorf("error resolving KDC address: %v", err)
 		}
 
-		conn, err := net.DialTimeout("udp", upAddr.String(), 5*time.Second)
+		conn, err := net.DialTimeout("udp", udpAddr.String(), 5*time.Second)
 		if err == nil {
 			if err := conn.SetDeadline(time.Now().Add(5 * time.Second)); err != nil {
 				return nil, err
