@@ -142,7 +142,7 @@ func (n *NegTokenInit) Verify() (bool, gssapi.Status) {
 	// Check if supported mechanisms are in the MechTypeList
 	var mtSupported bool
 	for _, m := range n.MechTypes {
-		if m.Equal(gssapi.OID(gssapi.OIDKRB5)) || m.Equal(gssapi.OID(gssapi.OIDMSLegacyKRB5)) {
+		if m.Equal(gssapi.OIDKRB5.OID()) || m.Equal(gssapi.OIDMSLegacyKRB5.OID()) {
 			if n.mechToken == nil && n.MechTokenBytes == nil {
 				return false, gssapi.Status{Code: gssapi.StatusContinueNeeded}
 			}
@@ -233,7 +233,7 @@ func (n *NegTokenResp) Unmarshal(b []byte) error {
 
 // Verify a Resp/Targ negotiation token
 func (n *NegTokenResp) Verify() (bool, gssapi.Status) {
-	if n.SupportedMech.Equal(gssapi.OID(gssapi.OIDKRB5)) || n.SupportedMech.Equal(gssapi.OID(gssapi.OIDMSLegacyKRB5)) {
+	if n.SupportedMech.Equal(gssapi.OIDKRB5.OID()) || n.SupportedMech.Equal(gssapi.OIDMSLegacyKRB5.OID()) {
 		if n.mechToken == nil && n.ResponseToken == nil {
 			return false, gssapi.Status{Code: gssapi.StatusContinueNeeded}
 		}
@@ -332,7 +332,7 @@ func NewNegTokenInitKRB5(cl *client.Client, tkt messages.Ticket, sessionKey type
 		return NegTokenInit{}, fmt.Errorf("error marshalling KRB5 token; %v", err)
 	}
 	return NegTokenInit{
-		MechTypes:      []asn1.ObjectIdentifier{gssapi.OID(gssapi.OIDKRB5)},
+		MechTypes:      []asn1.ObjectIdentifier{gssapi.OIDKRB5.OID()},
 		MechTokenBytes: mtb,
 	}, nil
 }

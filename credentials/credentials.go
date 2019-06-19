@@ -4,7 +4,6 @@ package credentials
 import (
 	"bytes"
 	"encoding/gob"
-	"encoding/json"
 	"time"
 
 	"github.com/hashicorp/go-uuid"
@@ -28,7 +27,7 @@ type Credentials struct {
 	cname           types.PrincipalName
 	keytab          *keytab.Keytab
 	password        string
-	attributes      map[string]string
+	attributes      map[string]interface{}
 	validUntil      time.Time
 	authenticated   bool
 	human           bool
@@ -46,7 +45,7 @@ type marshalCredentials struct {
 	CName           types.PrincipalName
 	Keytab          *keytab.Keytab
 	Password        string
-	Attributes      map[string]string
+	Attributes      map[string]interface{}
 	ValidUntil      time.Time
 	Authenticated   bool
 	Human           bool
@@ -82,7 +81,7 @@ func New(username string, realm string) *Credentials {
 		realm:           realm,
 		cname:           types.NewPrincipalName(nametype.KRB_NT_PRINCIPAL, username),
 		keytab:          keytab.New(),
-		attributes:      make(map[string]string),
+		attributes:      make(map[string]interface{}),
 		groupMembership: make(map[string]bool),
 		sessionID:       uid,
 		human:           true,
@@ -91,21 +90,9 @@ func New(username string, realm string) *Credentials {
 
 // NewFromPrincipalName creates a new Credentials instance with the user details provides as a PrincipalName type.
 func NewFromPrincipalName(cname types.PrincipalName, realm string) *Credentials {
-	uid, err := uuid.GenerateUUID()
-	if err != nil {
-		uid = "00unique-sess-ions-uuid-unavailable0"
-	}
-	return &Credentials{
-		username:        cname.PrincipalNameString(),
-		displayName:     cname.PrincipalNameString(),
-		realm:           realm,
-		cname:           cname,
-		keytab:          keytab.New(),
-		attributes:      make(map[string]string),
-		groupMembership: make(map[string]bool),
-		sessionID:       uid,
-		human:           true,
-	}
+	c := New(cname.PrincipalNameString(), realm)
+	c.cname = cname
+	return c
 }
 
 // WithKeytab sets the Keytab in the Credentials struct.
@@ -155,15 +142,7 @@ func (c *Credentials) SetValidUntil(t time.Time) {
 
 // SetADCredentials adds ADCredentials attributes to the credentials
 func (c *Credentials) SetADCredentials(a ADCredentials) {
-	var attr string
-	w := bytes.NewBufferString(attr)
-	enc := json.NewEncoder(w)
-	err := enc.Encode(a)
-	if err != nil {
-		//TODO don't swallow the err
-		return
-	}
-	c.SetAttribute(AttributeKeyADCredentials, attr)
+	c.SetAttribute(AttributeKeyADCredentials, a)
 	if a.FullName != "" {
 		c.SetDisplayName(a.FullName)
 	}
@@ -173,6 +152,14 @@ func (c *Credentials) SetADCredentials(a ADCredentials) {
 	for i := range a.GroupMembershipSIDs {
 		c.AddAuthzAttribute(a.GroupMembershipSIDs[i])
 	}
+}
+
+// GetADCredentials returns ADCredentials attributes sorted in the credential
+func (c *Credentials) GetADCredentials() ADCredentials {
+	if a, ok := c.attributes[AttributeKeyADCredentials].(ADCredentials); ok {
+		return a
+	}
+	return ADCredentials{}
 }
 
 // Methods to implement goidentity.Identity interface
@@ -317,17 +304,17 @@ func (c *Credentials) Expired() bool {
 }
 
 // Attributes returns the Credentials' attributes map.
-func (c *Credentials) Attributes() map[string]string {
+func (c *Credentials) Attributes() map[string]interface{} {
 	return c.attributes
 }
 
 // SetAttribute sets the value of an attribute.
-func (c *Credentials) SetAttribute(k string, v string) {
+func (c *Credentials) SetAttribute(k string, v interface{}) {
 	c.attributes[k] = v
 }
 
 // SetAttributes replaces the attributes map with the one provided.
-func (c *Credentials) SetAttributes(a map[string]string) {
+func (c *Credentials) SetAttributes(a map[string]interface{}) {
 	c.attributes = a
 }
 
@@ -336,7 +323,10 @@ func (c *Credentials) RemoveAttribute(k string) {
 	delete(c.attributes, k)
 }
 
+// Marshal the Credentials into a byte slice
 func (c *Credentials) Marshal() ([]byte, error) {
+	gob.Register(map[string]interface{}{})
+	gob.Register(ADCredentials{})
 	buf := new(bytes.Buffer)
 	enc := gob.NewEncoder(buf)
 	mc := marshalCredentials{
@@ -361,7 +351,10 @@ func (c *Credentials) Marshal() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+// Unmarshal a byte slice into Credentials
 func (c *Credentials) Unmarshal(b []byte) error {
+	gob.Register(map[string]interface{}{})
+	gob.Register(ADCredentials{})
 	mc := new(marshalCredentials)
 	buf := bytes.NewBuffer(b)
 	dec := gob.NewDecoder(buf)
@@ -377,6 +370,7 @@ func (c *Credentials) Unmarshal(b []byte) error {
 	c.password = mc.Password
 	c.attributes = mc.Attributes
 	c.validUntil = mc.ValidUntil
+	c.authenticated = mc.Authenticated
 	c.human = mc.Human
 	c.authTime = mc.AuthTime
 	c.groupMembership = mc.GroupMembership

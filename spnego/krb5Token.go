@@ -110,8 +110,7 @@ func (m *KRB5Token) Verify() (bool, gssapi.Status) {
 			return false, gssapi.Status{Code: gssapi.StatusDefectiveCredential, Message: "KRB5_AP_REQ token not valid"}
 		}
 		m.context = context.Background()
-		m.context = context.WithValue(m.context, CTXKeyCredentials, creds)
-		m.context = context.WithValue(m.context, CTXKeyAuthenticated, ok)
+		m.context = context.WithValue(m.context, ctxCredentials, creds)
 		return true, gssapi.Status{Code: gssapi.StatusComplete}
 	case TOK_ID_KRB_AP_REP:
 		// Client side
@@ -159,7 +158,7 @@ func (m *KRB5Token) Context() context.Context {
 func NewKRB5TokenAPREQ(cl *client.Client, tkt messages.Ticket, sessionKey types.EncryptionKey, GSSAPIFlags []int, APOptions []int) (KRB5Token, error) {
 	// TODO consider providing the SPN rather than the specific tkt and key and get these from the krb client.
 	var m KRB5Token
-	m.OID = gssapi.OID(gssapi.OIDKRB5)
+	m.OID = gssapi.OIDKRB5.OID()
 	tb, _ := hex.DecodeString(TOK_ID_KRB_AP_REQ)
 	m.tokID = tb
 

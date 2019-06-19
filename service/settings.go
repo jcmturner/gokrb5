@@ -155,14 +155,8 @@ func (s *Settings) SessionManager() SessionMgr {
 //
 // - Create new sessions and in the process add a value to the session under the key provided.
 //
-// - Get an existing session
+// - Get an existing the value in the session under the key provided. Return nil bytes and/or error if there is no session.
 type SessionMgr interface {
 	New(w http.ResponseWriter, r *http.Request, k string, v []byte) error
-	Get(r *http.Request) (Session, error)
-}
-
-// Session is a simple interface that has one method to retrieve a serialised value that has been stored under the key
-// provided.
-type Session interface {
-	Get(k string) []byte // get a serialised value from the session
+	Get(r *http.Request, k string) ([]byte, error)
 }

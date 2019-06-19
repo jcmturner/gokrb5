@@ -19,7 +19,7 @@ import (
 
 	"github.com/gorilla/sessions"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/goidentity.v4"
+	"gopkg.in/jcmturner/goidentity.v5"
 	"gopkg.in/jcmturner/gokrb5.v7/client"
 	"gopkg.in/jcmturner/gokrb5.v7/config"
 	"gopkg.in/jcmturner/gokrb5.v7/keytab"
@@ -158,7 +158,7 @@ func TestService_SPNEGOKRB_ValidUser(t *testing.T) {
 func TestService_SPNEGOKRB_Replay(t *testing.T) {
 	test.Integration(t)
 
-	s := httpServer()
+	s := httpServerWithoutSessionManager()
 	defer s.Close()
 	r1, _ := http.NewRequest("GET", s.URL, nil)
 
@@ -215,7 +215,7 @@ func TestService_SPNEGOKRB_Replay(t *testing.T) {
 func TestService_SPNEGOKRB_ReplayCache_Concurrency(t *testing.T) {
 	test.Integration(t)
 
-	s := httpServer()
+	s := httpServerWithoutSessionManager()
 	defer s.Close()
 	r1, _ := http.NewRequest("GET", s.URL, nil)
 
@@ -304,6 +304,16 @@ func httpGet(r *http.Request, wg *sync.WaitGroup) {
 	http.DefaultClient.Do(r)
 }
 
+func httpServerWithoutSessionManager() *httptest.Server {
+	l := log.New(os.Stderr, "GOKRB5 Service Tests: ", log.LstdFlags)
+	b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
+	kt := keytab.New()
+	kt.Unmarshal(b)
+	th := http.HandlerFunc(testAppHandler)
+	s := httptest.NewServer(SPNEGOKRB5Authenticate(th, kt, service.Logger(l)))
+	return s
+}
+
 func httpServer() *httptest.Server {
 	l := log.New(os.Stderr, "GOKRB5 Service Tests: ", log.LstdFlags)
 	b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
@@ -337,10 +347,10 @@ func testAppHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.WriteHeader(http.StatusOK)
-	ctx := r.Context()
+	id := goidentity.FromHTTPRequestContext(r)
 	fmt.Fprintf(w, "<html>\nTEST.GOKRB5 Handler\nAuthenticed user: %s\nUser's realm: %s\n</html>",
-		ctx.Value(CTXKeyCredentials).(goidentity.Identity).UserName(),
-		ctx.Value(CTXKeyCredentials).(goidentity.Identity).Domain())
+		id.UserName(),
+		id.Domain())
 	return
 }
 
@@ -367,7 +377,7 @@ type SessionMgr struct {
 }
 
 func NewSessionMgr(cookieName string) SessionMgr {
-	skey := []byte("thisistestsecret")
+	skey := []byte("thisistestsecret") // Best practice is to load this key from a secure location.
 	return SessionMgr{
 		skey:       skey,
 		store:      sessions.NewCookieStore(skey),
@@ -375,7 +385,7 @@ func NewSessionMgr(cookieName string) SessionMgr {
 	}
 }
 
-func (smgr SessionMgr) Get(r *http.Request) (service.Session, error) {
+func (smgr SessionMgr) Get(r *http.Request, k string) ([]byte, error) {
 	s, err := smgr.store.Get(r, smgr.cookieName)
 	if err != nil {
 		return nil, err
@@ -383,8 +393,11 @@ func (smgr SessionMgr) Get(r *http.Request) (service.Session, error) {
 	if s == nil {
 		return nil, errors.New("nil session")
 	}
-	sess := Session(*s)
-	return &sess, nil
+	b, ok := s.Values[k].([]byte)
+	if !ok {
+		return nil, fmt.Errorf("could not get bytes held in session at %s", k)
+	}
+	return b, nil
 }
 
 func (smgr SessionMgr) New(w http.ResponseWriter, r *http.Request, k string, v []byte) error {
@@ -394,14 +407,4 @@ func (smgr SessionMgr) New(w http.ResponseWriter, r *http.Request, k string, v [
 	}
 	s.Values[k] = v
 	return s.Save(r, w)
-}
-
-type Session sessions.Session
-
-func (s *Session) Get(k string) []byte {
-	b, ok := s.Values[k].([]byte)
-	if !ok {
-		return nil
-	}
-	return b
 }
