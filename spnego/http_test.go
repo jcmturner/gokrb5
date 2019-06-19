@@ -158,7 +158,7 @@ func TestService_SPNEGOKRB_ValidUser(t *testing.T) {
 func TestService_SPNEGOKRB_Replay(t *testing.T) {
 	test.Integration(t)
 
-	s := httpServer()
+	s := httpServerWithoutSessionManager()
 	defer s.Close()
 	r1, _ := http.NewRequest("GET", s.URL, nil)
 
@@ -215,7 +215,7 @@ func TestService_SPNEGOKRB_Replay(t *testing.T) {
 func TestService_SPNEGOKRB_ReplayCache_Concurrency(t *testing.T) {
 	test.Integration(t)
 
-	s := httpServer()
+	s := httpServerWithoutSessionManager()
 	defer s.Close()
 	r1, _ := http.NewRequest("GET", s.URL, nil)
 
@@ -302,6 +302,16 @@ func TestService_SPNEGOKRB_Upload(t *testing.T) {
 func httpGet(r *http.Request, wg *sync.WaitGroup) {
 	defer wg.Done()
 	http.DefaultClient.Do(r)
+}
+
+func httpServerWithoutSessionManager() *httptest.Server {
+	l := log.New(os.Stderr, "GOKRB5 Service Tests: ", log.LstdFlags)
+	b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
+	kt := keytab.New()
+	kt.Unmarshal(b)
+	th := http.HandlerFunc(testAppHandler)
+	s := httptest.NewServer(SPNEGOKRB5Authenticate(th, kt, service.Logger(l)))
+	return s
 }
 
 func httpServer() *httptest.Server {
