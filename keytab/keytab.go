@@ -11,15 +11,23 @@ import (
 	"time"
 	"unsafe"
 
-	"gopkg.in/jcmturner/gokrb5.v7/types"
+	"github.com/atlassian/gokrb5/types"
 )
 
 const (
 	keytabFirstByte byte = 05
 )
 
-// Keytab struct.
-type Keytab struct {
+type Keytab interface {
+	GetEncryptionKey(princName types.PrincipalName, realm string, kvno int, etype int32) (types.EncryptionKey, error)
+	Marshal() ([]byte, error)
+	Write(w io.Writer) (int, error)
+	Unmarshal(b []byte) error
+	IsPopulated() bool
+}
+
+// KeytabImpl struct.
+type KeytabImpl struct {
 	version uint8
 	Entries []entry
 }
@@ -42,16 +50,16 @@ type principal struct {
 }
 
 // New creates new, empty Keytab type.
-func New() *Keytab {
+func New() Keytab {
 	var e []entry
-	return &Keytab{
+	return &KeytabImpl{
 		version: 0,
 		Entries: e,
 	}
 }
 
 // GetEncryptionKey returns the EncryptionKey from the Keytab for the newest entry with the required kvno, etype and matching principal.
-func (kt *Keytab) GetEncryptionKey(princName types.PrincipalName, realm string, kvno int, etype int32) (types.EncryptionKey, error) {
+func (kt *KeytabImpl) GetEncryptionKey(princName types.PrincipalName, realm string, kvno int, etype int32) (types.EncryptionKey, error) {
 	//TODO (theme: KVNO from keytab) this function should return the kvno too
 	var key types.EncryptionKey
 	var t time.Time
@@ -106,8 +114,8 @@ func newPrincipal() principal {
 }
 
 // Load a Keytab file into a Keytab type.
-func Load(ktPath string) (*Keytab, error) {
-	kt := new(Keytab)
+func Load(ktPath string) (Keytab, error) {
+	kt := new(KeytabImpl)
 	b, err := ioutil.ReadFile(ktPath)
 	if err != nil {
 		return kt, err
@@ -117,7 +125,7 @@ func Load(ktPath string) (*Keytab, error) {
 }
 
 // Marshal keytab into byte slice
-func (kt *Keytab) Marshal() ([]byte, error) {
+func (kt *KeytabImpl) Marshal() ([]byte, error) {
 	b := []byte{keytabFirstByte, kt.version}
 	for _, e := range kt.Entries {
 		eb, err := e.marshal(int(kt.version))
@@ -131,7 +139,7 @@ func (kt *Keytab) Marshal() ([]byte, error) {
 
 // Write the keytab bytes to io.Writer.
 // Returns the number of bytes written
-func (kt *Keytab) Write(w io.Writer) (int, error) {
+func (kt *KeytabImpl) Write(w io.Writer) (int, error) {
 	b, err := kt.Marshal()
 	if err != nil {
 		return 0, fmt.Errorf("error marshaling keytab: %v", err)
@@ -140,7 +148,7 @@ func (kt *Keytab) Write(w io.Writer) (int, error) {
 }
 
 // Unmarshal byte slice of Keytab data into Keytab type.
-func (kt *Keytab) Unmarshal(b []byte) error {
+func (kt *KeytabImpl) Unmarshal(b []byte) error {
 	//The first byte of the file always has the value 5
 	if b[0] != keytabFirstByte {
 		return errors.New("invalid keytab data. First byte does not equal 5")
@@ -208,6 +216,10 @@ func (kt *Keytab) Unmarshal(b []byte) error {
 	return nil
 }
 
+func (k *KeytabImpl) IsPopulated() bool {
+	return len(k.Entries) > 0
+}
+
 func (e entry) marshal(v int) ([]byte, error) {
 	var b []byte
 	pb, err := e.Principal.marshal(v)
@@ -248,7 +260,7 @@ func (e entry) marshal(v int) ([]byte, error) {
 }
 
 // Parse the Keytab bytes of a principal into a Keytab entry's principal.
-func parsePrincipal(b []byte, p *int, kt *Keytab, ke *entry, e *binary.ByteOrder) error {
+func parsePrincipal(b []byte, p *int, kt *KeytabImpl, ke *entry, e *binary.ByteOrder) error {
 	ke.Principal.NumComponents = readInt16(b, p, e)
 	if kt.version == 1 {
 		//In version 1 the number of components includes the realm. Minus 1 to make consistent with version 2
