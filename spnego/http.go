@@ -172,9 +172,12 @@ func SetSPNEGOHeader(cl *client.Client, r *http.Request, spn string) error {
 	}
 	cl.Log("using SPN %s", spn)
 	s := SPNEGOClient(cl, spn)
-	err := s.AcquireCred()
-	if err != nil {
-		return fmt.Errorf("could not acquire client credential: %v", err)
+	// Try to get service ticket for this SPN first
+	if _, _, err := s.client.GetServiceTicket(spn); err != nil {
+		err := s.AcquireCred()
+		if err != nil {
+			return fmt.Errorf("could not acquire client credential: %v", err)
+		}
 	}
 	st, err := s.InitSecContext()
 	if err != nil {
