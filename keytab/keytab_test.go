@@ -1,6 +1,7 @@
 package keytab
 
 import (
+	"encoding/binary"
 	"encoding/hex"
 	"os"
 	"path/filepath"
@@ -91,5 +92,20 @@ func TestLoad(t *testing.T) {
 		if e.KVNO8 == uint8(0) {
 			t.Error("entry kvno8 not as expected")
 		}
+	}
+}
+
+// This test provides inputs to readBytes that previously
+// caused a panic.
+func TestReadBytes(t *testing.T) {
+	var endian binary.ByteOrder
+	endian = binary.BigEndian
+	p := 0
+
+	if _, err := readBytes(nil, &p, 1, &endian); err == nil {
+		t.Fatal("err should be populated because s was given that exceeds array length")
+	}
+	if _, err := readBytes(nil, &p, -1, &endian); err == nil {
+		t.Fatal("err should be given because negative s was given")
 	}
 }
