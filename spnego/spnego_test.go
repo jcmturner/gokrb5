@@ -37,6 +37,21 @@ func TestUnmarshal_SPNEGO_Init(t *testing.T) {
 	assert.NotZero(t, len(s.NegTokenInit.MechTokenBytes), "MechToken is zero in length")
 }
 
+func TestUnMarshal_SPNEGO_Empty(t *testing.T) {
+	sp := new(SPNEGOToken)
+
+	// The following tests are intended to ensure we don't panic.
+	if err := sp.Unmarshal(nil); err == nil {
+		t.Fatal("should have errored, input is absent")
+	}
+	if err := sp.Unmarshal([]byte{}); err == nil {
+		t.Fatal("should have errored, input is empty")
+	}
+	if err := sp.Unmarshal([]byte{1}); err == nil {
+		t.Fatal("should have errored, input is absent")
+	}
+}
+
 func TestUnmarshal_SPNEGO_RespTarg(t *testing.T) {
 	t.Parallel()
 	b, err := hex.DecodeString(testGSSAPIResp)

@@ -1,6 +1,8 @@
 package keytab
 
 import (
+	"encoding/base64"
+	"encoding/binary"
 	"encoding/hex"
 	"os"
 	"path/filepath"
@@ -91,5 +93,54 @@ func TestLoad(t *testing.T) {
 		if e.KVNO8 == uint8(0) {
 			t.Error("entry kvno8 not as expected")
 		}
+	}
+}
+
+// This test provides inputs to readBytes that previously
+// caused a panic.
+func TestReadBytes(t *testing.T) {
+	var endian binary.ByteOrder
+	endian = binary.BigEndian
+	p := 0
+
+	if _, err := readBytes(nil, &p, 1, &endian); err == nil {
+		t.Fatal("err should be populated because s was given that exceeds array length")
+	}
+	if _, err := readBytes(nil, &p, -1, &endian); err == nil {
+		t.Fatal("err should be given because negative s was given")
+	}
+}
+
+func TestUnmarshalPotentialPanics(t *testing.T) {
+	kt := New()
+
+	// Test a good keytab with bad bytes to unmarshal. These should
+	// return errors, but not panic.
+	if err := kt.Unmarshal(nil); err == nil {
+		t.Fatal("should have errored, input is absent")
+	}
+	if err := kt.Unmarshal([]byte{}); err == nil {
+		t.Fatal("should have errored, input is empty")
+	}
+	// Incorrect first byte.
+	if err := kt.Unmarshal([]byte{4}); err == nil {
+		t.Fatal("should have errored, input isn't long enough")
+	}
+	// First byte, but no further content.
+	if err := kt.Unmarshal([]byte{5}); err == nil {
+		t.Fatal("should have errored, input isn't long enough")
+	}
+}
+
+// cxf testing stuff
+func TestBadKeytabs(t *testing.T) {
+	badPayloads := make([]string, 3)
+	badPayloads = append(badPayloads, "BQIwMDAwMDA=")
+	badPayloads = append(badPayloads, "BQIAAAAwAAEACjAwMDAwMDAwMDAAIDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAw")
+	badPayloads = append(badPayloads, "BQKAAAAA")
+	for _, v := range badPayloads {
+		decodedKt, _ := base64.StdEncoding.DecodeString(v)
+		parsedKt := new(Keytab)
+		parsedKt.Unmarshal(decodedKt)
 	}
 }
