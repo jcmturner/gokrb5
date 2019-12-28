@@ -60,6 +60,9 @@ jobs:
           INTEGRATION: 1
           TESTPRIVILEGED: 1
 
+      - name: temp
+        run: cat jt.txt
+
       - name: Tests (32bit)
         run: |
           go test -v ./...
