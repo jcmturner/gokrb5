@@ -1,0 +1,85 @@
+name: gokrb5
+on: [push]
+
+jobs:
+  build:
+    name: Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: [ '1.11.x', '1.12.x', '1.13.x' ]
+      name: Go ${{ matrix.go }} Environment
+      steps:
+        - name: Start integration test dependencies
+          run: |
+            apt-get install -yq krb5-user
+            chmod 666 /etc/krb5.conf
+            docker run -d -h ns.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -e "TEST_KDC_ADDR=127.0.0.1" -e "TEST_HTTP_ADDR=127.0.0.1" -p 53:53 -p 53:53/udp --name dns jcmturner/gokrb5:dns
+            docker run -d -h kdc.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -p 88:88 -p 88:88/udp -p 464:464 -p 464:464/udp --name krb5kdc jcmturner/gokrb5:kdc-centos-default
+            docker run -d -h kdc.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -p 78:88 -p 78:88/udp --name krb5kdc-old jcmturner/gokrb5:kdc-older
+            docker run -d -h kdc.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -p 98:88 -p 98:88/udp --name krb5kdc-latest jcmturner/gokrb5:kdc-latest
+            docker run -d -h kdc.resdom.gokrb5 -v /etc/localtime:/etc/localtime:ro -p 188:88 -p 188:88/udp --name krb5kdc-resdom jcmturner/gokrb5:kdc-resdom
+            docker run -d -h kdc.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -p 58:88 -p 58:88/udp --name krb5kdc-shorttickets jcmturner/gokrb5:kdc-shorttickets
+            docker run -d --add-host host.test.gokrb5:127.0.0.88 -v /etc/localtime:/etc/localtime:ro -p 80:80 -p 443:443 --name gokrb5-http jcmturner/gokrb5:http
+          env:
+            DEBIAN_FRONTEND: noninteractive
+
+        - name: Checkout
+          uses: actions/checkout@master
+
+        - name: Test well formatted with gofmt
+          uses: actions/setup-go@v1
+            with:
+              go-version: ${{ matrix.go }}
+          run: |
+            GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/)
+            test -z $(gofmt -s -d -l -e $GO_FILES | tee /dev/fd/2 | xargs | sed 's/\s//g')
+
+        - name: Get dependencies
+          uses: actions/setup-go@v1
+          with:
+            go-version: ${{ matrix.go }}
+          run: |
+            go get -v -t -d ./...
+
+        - name: Tests
+          uses: actions/setup-go@v1
+          with:
+            go-version: ${{ matrix.go }}
+          run: go test -v -race -tags="integration dns" ./...
+          env:
+            INTEGRATION: 1
+            TESTPRIVILEGED: 1
+            TEST_KDC_ADDR: 127.0.0.1
+            TEST_HTTP_URL: http://cname.test.gokrb5
+            TEST_HTTP_ADDR: 127.0.0.1
+            DNSUTILS_OVERRIDE_NS: 127.0.0.1:53
+
+
+        -name: Tests (32bit)
+           uses: actions/setup-go@v1
+           with:
+             go-version: ${{ matrix.go }}
+           run: |
+             GOARCH=386 go test -v -tags="integration dns" ./...
+           env:
+             GOARCH: 386
+             INTEGRATION: 1
+             TESTPRIVILEGED: 1
+             TEST_KDC_ADDR: 127.0.0.1
+             TEST_HTTP_URL: http://cname.test.gokrb5
+             TEST_HTTP_ADDR: 127.0.0.1
+             DNSUTILS_OVERRIDE_NS: 127.0.0.1:53
+
+        -name: Run Examples
+          uses: actions/setup-go@v1
+            with:
+              go-version: ${{ matrix.go }}
+            run: |
+              go run -tags="examples" examples/example.go
+            env:
+              TEST_KDC_ADDR: 127.0.0.1
+              TEST_HTTP_URL: http://cname.test.gokrb5
+              TEST_HTTP_ADDR: 127.0.0.1
+              DNSUTILS_OVERRIDE_NS: 127.0.0.1:53
+
