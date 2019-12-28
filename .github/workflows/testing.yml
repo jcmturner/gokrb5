@@ -53,7 +53,9 @@ jobs:
           go run -tags="examples" examples/example.go
 
       - name: Tests including integration tests
-        run: go test -v -race ./...
+        run: |
+          go test -v -race ./...
+          echo $?
         env:
           INTEGRATION: 1
           TESTPRIVILEGED: 1
