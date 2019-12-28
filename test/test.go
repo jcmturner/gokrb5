@@ -23,7 +23,8 @@ func Integration(t *testing.T) {
 // AD skips the test unless the AD test environment variable is set.
 func AD(t *testing.T) {
 	if os.Getenv(ADIntegrationEnvVar) != "1" {
-		t.Skip("Skipping AD integration test")
+		t.SkipNow()
+		//t.Skip("Skipping AD integration test")
 	}
 }
 
