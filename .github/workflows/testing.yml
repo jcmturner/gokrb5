@@ -8,6 +8,13 @@ jobs:
     strategy:
       matrix:
         go: [ '1.11.x', '1.12.x', '1.13.x' ]
+    env:
+      INTEGRATION: 1
+      TESTPRIVILEGED: 1
+      TEST_KDC_ADDR: 127.0.0.1
+      TEST_HTTP_URL: http://cname.test.gokrb5
+      TEST_HTTP_ADDR: 127.0.0.1
+      DNSUTILS_OVERRIDE_NS: 127.0.0.1:53
     steps:
       - name: Set up Go ${{ matrix.go }}
         uses: actions/setup-go@v1
@@ -20,7 +27,6 @@ jobs:
       - name: Test well formatted with gofmt
         run: |
           GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/)
-          echo $GO_FILES
           test -z $(gofmt -s -d -l -e $GO_FILES | tee /dev/fd/2 | xargs | sed 's/\s//g')
 
       - name: Get dependencies
@@ -29,7 +35,7 @@ jobs:
 
       - name: Start integration test dependencies
         run: |
-          sudo apt-get install -yq krb5-user
+          sudo apt-get install -yq krb5-user docker.io
           sudo chmod 666 /etc/krb5.conf
           sudo docker run -d -h ns.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -e "TEST_KDC_ADDR=127.0.0.1" -e "TEST_HTTP_ADDR=127.0.0.1" -p 53:53 -p 53:53/udp --name dns jcmturner/gokrb5:dns
           sudo docker run -d -h kdc.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -p 88:88 -p 88:88/udp -p 464:464 -p 464:464/udp --name krb5kdc jcmturner/gokrb5:kdc-centos-default
@@ -44,32 +50,12 @@ jobs:
       - name: Run Examples
         run: |
           go run -tags="examples" examples/example.go
-        env:
-          TEST_KDC_ADDR: 127.0.0.1
-          TEST_HTTP_URL: http://cname.test.gokrb5
-          TEST_HTTP_ADDR: 127.0.0.1
-          DNSUTILS_OVERRIDE_NS: 127.0.0.1:53
 
       - name: Tests
         run: go test -v -race -tags="integration dns" ./...
-        env:
-          INTEGRATION: 1
-          TESTPRIVILEGED: 1
-          TEST_KDC_ADDR: 127.0.0.1
-          TEST_HTTP_URL: http://cname.test.gokrb5
-          TEST_HTTP_ADDR: 127.0.0.1
-          DNSUTILS_OVERRIDE_NS: 127.0.0.1:53
 
       - name: Tests (32bit)
         run: |
           go test -v -tags="integration dns" ./...
         env:
           GOARCH: 386
-          INTEGRATION: 1
-          TESTPRIVILEGED: 1
-          TEST_KDC_ADDR: 127.0.0.1
-          TEST_HTTP_URL: http://cname.test.gokrb5
-          TEST_HTTP_ADDR: 127.0.0.1
-          DNSUTILS_OVERRIDE_NS: 127.0.0.1:53
-
-
