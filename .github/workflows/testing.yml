@@ -9,6 +9,23 @@ jobs:
       matrix:
         go: [ '1.11.x', '1.12.x', '1.13.x' ]
     steps:
+      - name: Set up Go ${{ matrix.go }}
+        uses: actions/setup-go@v1
+        with:
+          go-version: ${{ matrix.go }}
+
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Test well formatted with gofmt
+        run: |
+          GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/)
+          test -z $(gofmt -s -d -l -e $GO_FILES | tee /dev/fd/2 | xargs | sed 's/\s//g')
+
+      - name: Get dependencies
+        run: |
+          go get -v -t -d ./...
+
       - name: Start integration test dependencies
         run: |
           apt-get install -yq krb5-user
@@ -23,28 +40,16 @@ jobs:
         env:
           DEBIAN_FRONTEND: noninteractive
 
-      - name: Checkout
-        uses: actions/checkout@master
-
-      - name: Test well formatted with gofmt
-        uses: actions/setup-go@v1
-        with:
-          go-version: ${{ matrix.go }}
+      - name: Run Examples
         run: |
-          GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/)
-          test -z $(gofmt -s -d -l -e $GO_FILES | tee /dev/fd/2 | xargs | sed 's/\s//g')
-
-      - name: Get dependencies
-        uses: actions/setup-go@v1
-        with:
-          go-version: ${{ matrix.go }}
-        run: |
-          go get -v -t -d ./...
+          go run -tags="examples" examples/example.go
+        env:
+          TEST_KDC_ADDR: 127.0.0.1
+          TEST_HTTP_URL: http://cname.test.gokrb5
+          TEST_HTTP_ADDR: 127.0.0.1
+          DNSUTILS_OVERRIDE_NS: 127.0.0.1:53
 
       - name: Tests
-        uses: actions/setup-go@v1
-        with:
-          go-version: ${{ matrix.go }}
         run: go test -v -race -tags="integration dns" ./...
         env:
           INTEGRATION: 1
@@ -54,13 +59,9 @@ jobs:
           TEST_HTTP_ADDR: 127.0.0.1
           DNSUTILS_OVERRIDE_NS: 127.0.0.1:53
 
-
       - name: Tests (32bit)
-        uses: actions/setup-go@v1
-        with:
-          go-version: ${{ matrix.go }}
         run: |
-           GOARCH=386 go test -v -tags="integration dns" ./...
+          go test -v -tags="integration dns" ./...
         env:
           GOARCH: 386
           INTEGRATION: 1
@@ -70,15 +71,4 @@ jobs:
           TEST_HTTP_ADDR: 127.0.0.1
           DNSUTILS_OVERRIDE_NS: 127.0.0.1:53
 
-      - name: Run Examples
-        uses: actions/setup-go@v1
-        with:
-          go-version: ${{ matrix.go }}
-        run: |
-          go run -tags="examples" examples/example.go
-        env:
-          TEST_KDC_ADDR: 127.0.0.1
-          TEST_HTTP_URL: http://cname.test.gokrb5
-          TEST_HTTP_ADDR: 127.0.0.1
-          DNSUTILS_OVERRIDE_NS: 127.0.0.1:53
 
