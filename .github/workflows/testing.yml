@@ -39,6 +39,12 @@ jobs:
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -yq krb5-user
           sudo chmod 666 /etc/krb5.conf
           sudo docker pull jcmturner/gokrb5:dns
+          sudo docker pull jcmturner/gokrb5:kdc-centos-default
+          sudo docker pull jcmturner/gokrb5:kdc-older
+          sudo docker pull jcmturner/gokrb5:kdc-latest
+          sudo docker pull jcmturner/gokrb5:kdc-resdom
+          sudo docker pull jcmturner/gokrb5:kdc-shorttickets
+          sudo docker pull jcmturner/gokrb5:http
           sudo systemctl disable systemd-resolved.service
           sudo systemctl stop systemd-resolved
           sudo docker run -d -h ns.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -e "TEST_KDC_ADDR=${TEST_KDC_ADDR}" -e "TEST_HTTP_ADDR=${TEST_HTTP_ADDR}" -p 53:53 -p 53:53/udp --name dns jcmturner/gokrb5:dns
