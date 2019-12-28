@@ -29,8 +29,8 @@ jobs:
 
         - name: Test well formatted with gofmt
           uses: actions/setup-go@v1
-            with:
-              go-version: ${{ matrix.go }}
+          with:
+            go-version: ${{ matrix.go }}
           run: |
             GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/)
             test -z $(gofmt -s -d -l -e $GO_FILES | tee /dev/fd/2 | xargs | sed 's/\s//g')
@@ -56,30 +56,30 @@ jobs:
             DNSUTILS_OVERRIDE_NS: 127.0.0.1:53
 
 
-        -name: Tests (32bit)
-           uses: actions/setup-go@v1
-           with:
-             go-version: ${{ matrix.go }}
-           run: |
-             GOARCH=386 go test -v -tags="integration dns" ./...
-           env:
-             GOARCH: 386
-             INTEGRATION: 1
-             TESTPRIVILEGED: 1
-             TEST_KDC_ADDR: 127.0.0.1
-             TEST_HTTP_URL: http://cname.test.gokrb5
-             TEST_HTTP_ADDR: 127.0.0.1
-             DNSUTILS_OVERRIDE_NS: 127.0.0.1:53
-
-        -name: Run Examples
+        - name: Tests (32bit)
           uses: actions/setup-go@v1
-            with:
-              go-version: ${{ matrix.go }}
-            run: |
-              go run -tags="examples" examples/example.go
-            env:
-              TEST_KDC_ADDR: 127.0.0.1
-              TEST_HTTP_URL: http://cname.test.gokrb5
-              TEST_HTTP_ADDR: 127.0.0.1
-              DNSUTILS_OVERRIDE_NS: 127.0.0.1:53
+          with:
+            go-version: ${{ matrix.go }}
+          run: |
+             GOARCH=386 go test -v -tags="integration dns" ./...
+          env:
+            GOARCH: 386
+            INTEGRATION: 1
+            TESTPRIVILEGED: 1
+            TEST_KDC_ADDR: 127.0.0.1
+            TEST_HTTP_URL: http://cname.test.gokrb5
+            TEST_HTTP_ADDR: 127.0.0.1
+            DNSUTILS_OVERRIDE_NS: 127.0.0.1:53
+
+        - name: Run Examples
+          uses: actions/setup-go@v1
+          with:
+            go-version: ${{ matrix.go }}
+          run: |
+            go run -tags="examples" examples/example.go
+          env:
+            TEST_KDC_ADDR: 127.0.0.1
+            TEST_HTTP_URL: http://cname.test.gokrb5
+            TEST_HTTP_ADDR: 127.0.0.1
+            DNSUTILS_OVERRIDE_NS: 127.0.0.1:53
 
