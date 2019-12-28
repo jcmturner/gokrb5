@@ -36,6 +36,7 @@ jobs:
 
       - name: Start integration test dependencies
         run: |
+          cat /etc/resolv.conf
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -yq krb5-user
           sudo chmod 666 /etc/krb5.conf
           sudo docker run -d -h ns.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -e "TEST_KDC_ADDR=${TEST_KDC_ADDR}" -e "TEST_HTTP_ADDR=${TEST_HTTP_ADDR}" -p ${DNSUTILS_OVERRIDE_NS}:53 -p ${DNSUTILS_OVERRIDE_NS}:53/udp --name dns jcmturner/gokrb5:dns
