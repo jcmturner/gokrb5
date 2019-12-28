@@ -9,8 +9,6 @@ jobs:
       matrix:
         go: [ '1.11.x', '1.12.x', '1.13.x' ]
     env:
-      INTEGRATION: 1
-      TESTPRIVILEGED: 1
       TEST_KDC_ADDR: 127.0.0.1
       TEST_HTTP_URL: http://cname.test.gokrb5
       TEST_HTTP_ADDR: 127.0.0.1
@@ -33,11 +31,14 @@ jobs:
         run: |
           go get -v -t -d ./...
 
+      - name: Unit tests
+        run: go test -v -race ./...
+
       - name: Start integration test dependencies
         run: |
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -yq krb5-user
           sudo chmod 666 /etc/krb5.conf
-          sudo docker run -d -h ns.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -e "TEST_KDC_ADDR=127.0.0.1" -e "TEST_HTTP_ADDR=127.0.0.1" -p 53:53 -p 53:53/udp --name dns jcmturner/gokrb5:dns
+          sudo docker run -d -h ns.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -e "TEST_KDC_ADDR=${TEST_KDC_ADDR}" -e "TEST_HTTP_ADDR=${TEST_HTTP_ADDR}" -p 53:53 -p 53:53/udp --name dns jcmturner/gokrb5:dns
           sudo docker run -d -h kdc.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -p 88:88 -p 88:88/udp -p 464:464 -p 464:464/udp --name krb5kdc jcmturner/gokrb5:kdc-centos-default
           sudo docker run -d -h kdc.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -p 78:88 -p 78:88/udp --name krb5kdc-old jcmturner/gokrb5:kdc-older
           sudo docker run -d -h kdc.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -p 98:88 -p 98:88/udp --name krb5kdc-latest jcmturner/gokrb5:kdc-latest
@@ -49,11 +50,14 @@ jobs:
         run: |
           go run -tags="examples" examples/example.go
 
-      - name: Tests
-        run: go test -v -race -tags="integration dns" ./...
+      - name: Tests including integration tests
+        run: go test -v -race ./...
+        env:
+          INTEGRATION: 1
+          TESTPRIVILEGED: 1
 
       - name: Tests (32bit)
         run: |
-          go test -v -tags="integration dns" ./...
+          go test -v ./...
         env:
           GOARCH: 386
