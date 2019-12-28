@@ -21,7 +21,7 @@ jobs:
           go-version: ${{ matrix.go }}
 
       - name: Checkout
-        uses: actions/checkout@master
+        uses: actions/checkout@v2
 
       - name: Test well formatted with gofmt
         run: |
@@ -54,8 +54,8 @@ jobs:
 
       - name: Tests including integration tests
         run: |
-          go test -v -race ./...
-          echo $?
+          go test -v -race ./... | tee jt.txt
+          cat jt.txt
         env:
           INTEGRATION: 1
           TESTPRIVILEGED: 1
