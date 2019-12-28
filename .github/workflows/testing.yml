@@ -12,7 +12,7 @@ jobs:
       TEST_KDC_ADDR: 127.0.0.1
       TEST_HTTP_URL: http://cname.test.gokrb5
       TEST_HTTP_ADDR: 127.0.0.1
-      DNSUTILS_OVERRIDE_NS: 127.0.88.1:53
+      DNSUTILS_OVERRIDE_NS: 127.0.0.53:53
     steps:
       - name: Set up Go ${{ matrix.go }}
         uses: actions/setup-go@v1
