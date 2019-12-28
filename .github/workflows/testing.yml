@@ -37,7 +37,6 @@ jobs:
 
       - name: Start integration test dependencies
         run: |
-          sudo sed -i 's/nameserver .*/nameserver ${DNS_IP}/g' /etc/resolv.conf
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -yq krb5-user
           sudo chmod 666 /etc/krb5.conf
           sudo docker run -d -h ns.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -e "TEST_KDC_ADDR=${TEST_KDC_ADDR}" -e "TEST_HTTP_ADDR=${TEST_HTTP_ADDR}" -p ${DNSUTILS_OVERRIDE_NS}:53 -p ${DNSUTILS_OVERRIDE_NS}:53/udp --name dns jcmturner/gokrb5:dns
@@ -47,6 +46,7 @@ jobs:
           sudo docker run -d -h kdc.resdom.gokrb5 -v /etc/localtime:/etc/localtime:ro -p 188:88 -p 188:88/udp --name krb5kdc-resdom jcmturner/gokrb5:kdc-resdom
           sudo docker run -d -h kdc.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -p 58:88 -p 58:88/udp --name krb5kdc-shorttickets jcmturner/gokrb5:kdc-shorttickets
           sudo docker run -d --add-host host.test.gokrb5:127.0.0.88 -v /etc/localtime:/etc/localtime:ro -p 80:80 -p 443:443 --name gokrb5-http jcmturner/gokrb5:http
+          sudo sed -i 's/nameserver .*/nameserver ${DNS_IP}/g' /etc/resolv.conf
 
       - name: Run Examples
         run: |
