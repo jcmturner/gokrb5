@@ -22,7 +22,7 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v2
-        ref: ${GITHUB_REF]
+          ref: ${GITHUB_REF]
 
       - name: Test well formatted with gofmt
         run: |
@@ -59,9 +59,6 @@ jobs:
         env:
           INTEGRATION: 1
           TESTPRIVILEGED: 1
-
-      - name: temp
-        run: cat jt.txt
 
       - name: Tests (32bit)
         run: |
