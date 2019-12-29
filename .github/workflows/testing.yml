@@ -22,6 +22,7 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v2
+        ref: ${GITHUB_REF]
 
       - name: Test well formatted with gofmt
         run: |
@@ -54,9 +55,7 @@ jobs:
 
       - name: Tests including integration tests
         run: |
-          go test -v -race ./... | tee jt.txt
-          cat jt.txt
-        timeout-minutes: 60
+          go test -v -race ./...
         env:
           INTEGRATION: 1
           TESTPRIVILEGED: 1
