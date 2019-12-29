@@ -81,7 +81,7 @@ func TestClient_SuccessfulLogin_Password(t *testing.T) {
 func TestClient_SuccessfulLogin_TCPOnly(t *testing.T) {
 	test.Integration(t)
 
-	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	b, _ := hex.DecodeString(testdata.TESTUSER2_KEYTAB)
 	kt := keytab.New()
 	kt.Unmarshal(b)
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
