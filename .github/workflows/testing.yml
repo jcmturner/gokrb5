@@ -37,7 +37,7 @@ jobs:
         id: goGet
 
       - name: Unit tests
-        run: go test -v -race ./...
+        run: go test -race ./...
         id: unitTests
 
       - name: Start integration test dependencies
@@ -62,7 +62,7 @@ jobs:
 
       - name: Tests including integration tests
         run: |
-          go test -v -race ./...
+          go test -race ./...
         env:
           INTEGRATION: 1
           TESTPRIVILEGED: 1
@@ -70,7 +70,7 @@ jobs:
 
       - name: Tests (32bit)
         run: |
-          go test -v ./...
+          go test ./...
         env:
           GOARCH: 386
           INTEGRATION: 1
