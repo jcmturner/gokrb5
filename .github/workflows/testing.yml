@@ -51,10 +51,8 @@ jobs:
           sudo docker run -d -h kdc.resdom.gokrb5 -v /etc/localtime:/etc/localtime:ro -p 188:88 -p 188:88/udp --name krb5kdc-resdom jcmturner/gokrb5:kdc-resdom
           sudo docker run -d -h kdc.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -p 58:88 -p 58:88/udp --name krb5kdc-shorttickets jcmturner/gokrb5:kdc-shorttickets
           sudo docker run -d --add-host host.test.gokrb5:127.0.0.88 -v /etc/localtime:/etc/localtime:ro -p 80:80 -p 443:443 --name gokrb5-http jcmturner/gokrb5:http
-          sudo sed -i 's/nameserver .*/nameserver ${DNS_IP}/g' /etc/resolv.conf
+          sudo sed -i 's/nameserver .*/nameserver '${DNS_IP}'/g' /etc/resolv.conf
           cat /etc/resolv.conf
-          sudo ufw status verbose
-          sudo ufw disable
           dig _kerberos._udp.TEST.GOKRB5
         id: intgTestDeps
 
