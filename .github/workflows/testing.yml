@@ -54,10 +54,10 @@ jobs:
           sudo sed -i 's/nameserver .*/nameserver ${DNS_IP}/g' /etc/resolv.conf
         id: intgTestDeps
 
-      - name: Run Examples
-        run: |
-          go run -tags="examples" examples/example.go
-        id: examples
+#      - name: Run Examples
+#        run: |
+#          go run -tags="examples" examples/example.go
+#        id: examples
 
       - name: Tests including integration tests
         run: |
