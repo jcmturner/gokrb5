@@ -54,14 +54,14 @@ jobs:
           sudo sed -i 's/nameserver .*/nameserver ${DNS_IP}/g' /etc/resolv.conf
         id: intgTestDeps
 
-#      - name: Run Examples
-#        run: |
-#          go run -tags="examples" examples/example.go
-#        id: examples
+      - name: Run Examples
+        run: |
+          go run -tags="examples" examples/example.go
+        id: examples
 
       - name: Tests including integration tests
         run: |
-          go test -v -race ./...
+          go test -v -race ./client/...
         env:
           INTEGRATION: 1
           TESTPRIVILEGED: 1
@@ -72,4 +72,6 @@ jobs:
           go test -v ./...
         env:
           GOARCH: 386
+          INTEGRATION: 1
+          TESTPRIVILEGED: 1
         id: test32
