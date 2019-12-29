@@ -22,8 +22,6 @@ func TestUnmarshalAPRep(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unmarshal error: %v", err)
 	}
-	// Undo to test failure of testss
-	assert.Equal(t, 6, a.PVNO, "Test fails. Used to check CI with github actions")
 	assert.Equal(t, iana.PVNO, a.PVNO, "PVNO not as expected")
 	assert.Equal(t, msgtype.KRB_AP_REP, a.MsgType, "MsgType is not as expected")
 	assert.Equal(t, testdata.TEST_ETYPE, a.EncPart.EType, "Ticket encPart etype not as expected")
