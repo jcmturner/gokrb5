@@ -56,6 +56,7 @@ jobs:
         run: |
           go test -v -race ./... | tee jt.txt
           cat jt.txt
+        timeout-minutes: 60
         env:
           INTEGRATION: 1
           TESTPRIVILEGED: 1
