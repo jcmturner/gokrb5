@@ -16,8 +16,7 @@ const (
 // Integration skips the test unless the integration test environment variable is set.
 func Integration(t *testing.T) {
 	if os.Getenv(IntegrationEnvVar) != "1" {
-		t.SkipNow()
-		//t.Skip("Skipping integration test")
+		t.Skip("Skipping integration test")
 	}
 }
 
@@ -25,7 +24,7 @@ func Integration(t *testing.T) {
 func AD(t *testing.T) {
 	if os.Getenv(ADIntegrationEnvVar) != "1" {
 		t.SkipNow()
-		//t.Skip("Skipping AD integration test")
+		t.Skip("Skipping AD integration test")
 	}
 }
 
@@ -33,6 +32,6 @@ func AD(t *testing.T) {
 func Privileged(t *testing.T) {
 	if os.Getenv(PrivIntegrationEnvVar) != "1" {
 		t.SkipNow()
-		//t.Skip("Skipping DNS integration test")
+		t.Skip("Skipping DNS integration test")
 	}
 }

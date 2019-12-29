@@ -29,13 +29,16 @@ jobs:
         run: |
           GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/)
           test -z $(gofmt -s -d -l -e $GO_FILES | tee /dev/fd/2 | xargs | sed 's/\s//g')
+        id: gofmt
 
       - name: Get dependencies
         run: |
           go get -v -t -d ./...
+        id: goGet
 
       - name: Unit tests
         run: go test -v -race ./...
+        id: unitTests
 
       - name: Start integration test dependencies
         run: |
@@ -49,10 +52,12 @@ jobs:
           sudo docker run -d -h kdc.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -p 58:88 -p 58:88/udp --name krb5kdc-shorttickets jcmturner/gokrb5:kdc-shorttickets
           sudo docker run -d --add-host host.test.gokrb5:127.0.0.88 -v /etc/localtime:/etc/localtime:ro -p 80:80 -p 443:443 --name gokrb5-http jcmturner/gokrb5:http
           sudo sed -i 's/nameserver .*/nameserver ${DNS_IP}/g' /etc/resolv.conf
+        id: intgTestDeps
 
       - name: Run Examples
         run: |
           go run -tags="examples" examples/example.go
+        id: examples
 
       - name: Tests including integration tests
         run: |
@@ -60,9 +65,11 @@ jobs:
         env:
           INTEGRATION: 1
           TESTPRIVILEGED: 1
+        id: intgTests
 
       - name: Tests (32bit)
         run: |
           go test -v ./...
         env:
           GOARCH: 386
+        id: test32
