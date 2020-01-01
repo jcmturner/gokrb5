@@ -33,8 +33,8 @@ jobs:
 
       - name: Copy to gopkg.in in GOPATH
         run: |
-          mkdir -p $GOPATH/src/gopkg.in/jcmturner/gokrb5.v7
-          cp -r $GITHUB_WORKSPACE/*  $GOPATH/src/gopkg.in/jcmturner/gokrb5.v7
+          mkdir -p /home/runner/go/src/gopkg.in/jcmturner/gokrb5.v7
+          cp -r $GITHUB_WORKSPACE/*  /home/runner/go/src/gopkg.in/jcmturner/gokrb5.v7
         id: gopkg
 
       - name: Get dependencies
