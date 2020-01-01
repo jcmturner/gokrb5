@@ -31,6 +31,12 @@ jobs:
           test -z $(gofmt -s -d -l -e $GO_FILES | tee /dev/fd/2 | xargs | sed 's/\s//g')
         id: gofmt
 
+      - name: Copy to gopkg.in in GOPATH
+        run: |
+          mkdir -p $GOPATH/src/gopkg.in/jcmturner/gokrb5.v7
+          cp -r $GITHUB_WORKSPACE/*  $GOPATH/src/gopkg.in/jcmturner/gokrb5.v7
+        id: gopkg
+
       - name: Get dependencies
         run: |
           go get -v -t -d ./...
