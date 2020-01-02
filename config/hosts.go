@@ -28,30 +28,32 @@ func (c *Config) GetKDCs(realm string, tcp bool) (int, map[int]string, error) {
 	}
 	count = len(ks)
 
-	if count < 1 {
-		if !c.LibDefaults.DNSLookupKDC {
-			return count, kdcs, fmt.Errorf("no KDCs defined in configuration for realm %s", realm)
-		}
-
-		// Use DNS to resolve kerberos SRV records.
-		proto := "udp"
-		if tcp {
-			proto = "tcp"
-		}
-		c, addrs, err := dnsutils.OrderedSRV("kerberos", proto, realm)
-		if err != nil {
-			return count, kdcs, err
-		}
-		if len(addrs) < 1 {
-			return count, kdcs, fmt.Errorf("no KDC SRV records found for realm %s", realm)
-		}
-		count = c
-		for k, v := range addrs {
-			kdcs[k] = strings.TrimRight(v.Target, ".") + ":" + strconv.Itoa(int(v.Port))
-		}
+	if count > 0 {
+		// Order the kdcs randomly for preference.
+		kdcs = randServOrder(ks)
+		return count, kdcs, nil
 	}
-	// Order the kdcs randomly for preference.
-	kdcs = randServOrder(ks)
+
+	if !c.LibDefaults.DNSLookupKDC {
+		return count, kdcs, fmt.Errorf("no KDCs defined in configuration for realm %s", realm)
+	}
+
+	// Use DNS to resolve kerberos SRV records.
+	proto := "udp"
+	if tcp {
+		proto = "tcp"
+	}
+	index, addrs, err := dnsutils.OrderedSRV("kerberos", proto, realm)
+	if err != nil {
+		return count, kdcs, err
+	}
+	if len(addrs) < 1 {
+		return count, kdcs, fmt.Errorf("no KDC SRV records found for realm %s", realm)
+	}
+	count = index
+	for k, v := range addrs {
+		kdcs[k] = strings.TrimRight(v.Target, ".") + ":" + strconv.Itoa(int(v.Port))
+	}
 	return count, kdcs, nil
 }
 
