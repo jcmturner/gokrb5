@@ -25,14 +25,12 @@ func TestResolveKDC(t *testing.T) {
 	if err != nil {
 		t.Errorf("error resolving KDC via DNS TCP: %v", err)
 	}
-	assert.Equal(t, 5, count, "Number of SRV records not as expected: %v", res)
+	// This should be 1 because for the default realm of TEST.GOKRB5,
+	// only 1 kdc is set.
+	assert.Equal(t, 1, count, "Number of SRV records not as expected: %v", res)
 	assert.Equal(t, count, len(res), "Map size does not match: %v", res)
 	expected := []string{
-		"kdc.test.gokrb5:88",
-		"kdc1a.test.gokrb5:88",
-		"kdc2a.test.gokrb5:88",
-		"kdc1b.test.gokrb5:88",
-		"kdc2b.test.gokrb5:88",
+		"127.0.0.1:88",
 	}
 	for _, s := range expected {
 		var found bool

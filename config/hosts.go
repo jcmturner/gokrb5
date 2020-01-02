@@ -21,10 +21,10 @@ func (c *Config) GetKDCs(realm string, tcp bool) (int, map[int]string, error) {
 	// Get the KDCs from the krb5.conf.
 	var ks []string
 	for _, r := range c.Realms {
-		if r.Realm == realm {
-			ks = r.KDC
-			break
+		if r.Realm != realm {
+			continue
 		}
+		ks = r.KDC
 	}
 	count = len(ks)
 
