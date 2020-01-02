@@ -359,11 +359,11 @@ func readBytes(b []byte, p *int, s int, e *binary.ByteOrder) ([]byte, error) {
 	if s < 0 {
 		return nil, fmt.Errorf("%d cannot be less than zero", s)
 	}
-	i := *p+s
+	i := *p + s
 	if i > len(b) {
 		return nil, fmt.Errorf("%s's length is greater than %d", b, i)
 	}
-	buf := bytes.NewBuffer(b[*p : i])
+	buf := bytes.NewBuffer(b[*p:i])
 	r := make([]byte, s)
 	if err := binary.Read(buf, *e, &r); err != nil {
 		return nil, err
