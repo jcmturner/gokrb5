@@ -5,7 +5,6 @@ import (
 
 	"github.com/jcmturner/gokrb5.v7/config"
 	"github.com/jcmturner/gokrb5.v7/keytab"
-
 )
 
 func TestAssumePreauthentication(t *testing.T) {
