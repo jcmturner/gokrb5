@@ -191,6 +191,7 @@ func (kt *Keytab) Unmarshal(b []byte) error {
 			ke := newKeytabEntry()
 			// p keeps track as to where we are in the byte stream
 			var p int
+			var err error
 			parsePrincipal(eb, &p, kt, &ke, &endian)
 			ke.Timestamp, err = readTimestamp(eb, &p, &endian)
 			if err != nil {
@@ -440,7 +441,9 @@ func readBytes(b []byte, p *int, s int, e *binary.ByteOrder) ([]byte, error) {
 	}
 	buf := bytes.NewBuffer(b[*p:i])
 	r := make([]byte, s)
-	binary.Read(buf, *e, &r)
+	if err := binary.Read(buf, *e, &r); err != nil {
+		return nil, err
+	}
 	*p += s
 	return r, nil
 }
