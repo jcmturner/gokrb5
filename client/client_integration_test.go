@@ -664,6 +664,12 @@ func TestClient_ChangePasswd(t *testing.T) {
 		t.Fatalf("error changing password: %v", err)
 	}
 	assert.True(t, ok, "password was not changed back")
+
+	cl = client.NewClientWithPassword("testuser1", "TEST.GOKRB5", testdata.TESTUSER1_PASSWORD, c)
+	err = cl.Login()
+	if err != nil {
+		t.Fatalf("Could not log back in after reverting password: %v", err)
+	}
 }
 
 func TestClient_Destroy(t *testing.T) {
