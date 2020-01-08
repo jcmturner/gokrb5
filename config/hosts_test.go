@@ -47,6 +47,12 @@ func TestResolveKDC(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	// Store the original value for realms since we'll use them in our
+	// second test.
+	originalRealms := c.Realms
+
+	// For our first test, let's check that we discover the expected
+	// KDCs when they're not provided and we should be looking them up.
 	c.LibDefaults.DNSLookupKDC = true
 	c.Realms = make([]Realm, 0)
 	count, res, err := c.GetKDCs(c.LibDefaults.DefaultRealm, true)
@@ -72,7 +78,11 @@ func TestResolveKDC(t *testing.T) {
 		}
 		assert.True(t, found, "Record %s not found in results", s)
 	}
+
+	// For our second check, verify that when we shouldn't be looking them up,
+	// we get the expected value.
 	c.LibDefaults.DNSLookupKDC = false
+	c.Realms = originalRealms
 	_, res, err = c.GetKDCs(c.LibDefaults.DefaultRealm, true)
 	if err != nil {
 		t.Errorf("error resolving KDCs from config: %v", err)
