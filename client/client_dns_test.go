@@ -19,18 +19,21 @@ func TestResolveKDC(t *testing.T) {
 	//}
 	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
 	c.LibDefaults.DNSLookupKDC = true
+	c.Realms = make([]config.Realm, 0)
 	var cl Client
 	cl.Config = c
 	count, res, err := cl.Config.GetKDCs(c.LibDefaults.DefaultRealm, true)
 	if err != nil {
 		t.Errorf("error resolving KDC via DNS TCP: %v", err)
 	}
-	// This should be 1 because for the default realm of TEST.GOKRB5,
-	// only 1 kdc is set.
-	assert.Equal(t, 1, count, "Number of SRV records not as expected: %v", res)
+	assert.Equal(t, 5, count, "Number of SRV records not as expected: %v", res)
 	assert.Equal(t, count, len(res), "Map size does not match: %v", res)
 	expected := []string{
-		"127.0.0.1:88",
+		"kdc.test.gokrb5:88",
+		"kdc1a.test.gokrb5:88",
+		"kdc2a.test.gokrb5:88",
+		"kdc1b.test.gokrb5:88",
+		"kdc2b.test.gokrb5:88",
 	}
 	for _, s := range expected {
 		var found bool
