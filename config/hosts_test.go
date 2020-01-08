@@ -1,8 +1,6 @@
 package config
 
 import (
-	"io/ioutil"
-	"os"
 	"testing"
 )
 
@@ -21,11 +19,7 @@ func TestConfig_GetKDCsUsesConfiguredKDC(t *testing.T) {
  }
 `
 
-	cf, _ := ioutil.TempFile(os.TempDir(), "TEST-gokrb5-krb5.conf")
-	defer os.Remove(cf.Name())
-	cf.WriteString(krb5ConfWithKDCAndDNSLookupKDC)
-
-	c, err := Load(cf.Name())
+	c, err := NewConfigFromString(krb5ConfWithKDCAndDNSLookupKDC)
 	if err != nil {
 		t.Fatalf("Error loading config: %v", err)
 	}
