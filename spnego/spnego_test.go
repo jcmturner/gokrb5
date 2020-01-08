@@ -48,7 +48,7 @@ func TestUnMarshal_SPNEGO_Empty(t *testing.T) {
 		t.Fatal("should have errored, input is empty")
 	}
 	if err := sp.Unmarshal([]byte{1}); err == nil {
-		t.Fatal("should have errored, input is absent")
+		t.Fatal("should have errored, input is too low")
 	}
 }
 
