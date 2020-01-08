@@ -15,7 +15,7 @@ func TestConfig_GetKDCsUsesConfiguredKDC(t *testing.T) {
 
 [realms]
  TEST.GOKRB5 = {
-  kdc = 10.1.2.3.4:88
+  kdc = kdc2b.test.gokrb5:88
  }
 `
 
@@ -31,7 +31,7 @@ func TestConfig_GetKDCsUsesConfiguredKDC(t *testing.T) {
 	if count != 1 {
 		t.Fatalf("expected 1 but received %d", count)
 	}
-	if kdcs[1] != "10.1.2.3.4:88" {
-		t.Fatalf("expected 10.1.2.3.4:88 but received %s", kdcs[1])
+	if kdcs[1] != "kdc2b.test.gokrb5:88" {
+		t.Fatalf("expected kdc2b.test.gokrb5:88 but received %s", kdcs[1])
 	}
 }
