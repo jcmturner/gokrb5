@@ -1,12 +1,14 @@
 # gokrb5
 [![Version](https://img.shields.io/github/release/jcmturner/gokrb5.svg)](https://github.com/jcmturner/gokrb5/releases)
 
-[![GoDoc](https://godoc.org/gopkg.in/jcmturner/gokrb5.v7?status.svg)](https://godoc.org/gopkg.in/jcmturner/gokrb5.v7) [![Go Report Card](https://goreportcard.com/badge/gopkg.in/jcmturner/gokrb5.v7)](https://goreportcard.com/report/gopkg.in/jcmturner/gokrb5.v7) [![Build Status](https://travis-ci.org/jcmturner/gokrb5.svg?branch=master)](https://travis-ci.org/jcmturner/gokrb5)
+[![GoDoc](https://godoc.org/gopkg.in/jcmturner/gokrb5.v7?status.svg)](https://godoc.org/gopkg.in/jcmturner/gokrb5.v7) [![Go Report Card](https://goreportcard.com/badge/gopkg.in/jcmturner/gokrb5.v7)](https://goreportcard.com/report/gopkg.in/jcmturner/gokrb5.v7) 
+
+[![Build Status](https://github.com/jcmturner/gokrb5/workflows/gokrb5/badge.svg)](https://github.com/jcmturner/gokrb5/actions)
 
 #### Go Version Support
+![Go version](https://img.shields.io/badge/Go-1.13-brightgreen.svg)
 ![Go version](https://img.shields.io/badge/Go-1.12-brightgreen.svg)
 ![Go version](https://img.shields.io/badge/Go-1.11-brightgreen.svg)
-![Go version](https://img.shields.io/badge/Go-1.10-brightgreen.svg)
 
 gokrb5 may work with other versions of Go but they are not tested.
 
