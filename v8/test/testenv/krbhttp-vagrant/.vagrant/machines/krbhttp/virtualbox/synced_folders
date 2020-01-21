@@ -1,0 +1,1 @@
+{"rsync":{"/vagrant":{"type":"rsync","guestpath":"/vagrant","hostpath":"/Users/turnerj/gopath/src/github.com/jcmturner/gokrb5/test/testenv/krbhttp-vagrant","disabled":false,"__vagrantfile":true,"owner":"vagrant","group":"vagrant"}}}

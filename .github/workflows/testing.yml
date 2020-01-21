@@ -1,5 +1,11 @@
-name: gokrb5
-on: [push, pull_request]
+name: tests
+on:
+  push:
+    paths:
+      - '!v[0-9]+'
+  pull_request:
+    paths:
+      - '!v[0-9]+'
 
 jobs:
   build:
@@ -37,13 +43,8 @@ jobs:
           cp -r $GITHUB_WORKSPACE/*  /home/runner/go/src/gopkg.in/jcmturner/gokrb5.v7
         id: gopkg
 
-      - name: Get dependencies
-        run: |
-          go get -v -t -d ./...
-        id: goGet
-
       - name: Unit tests
-        run: go test -race ./...
+        run: go test -race $(go list ./... | grep -v '/v[0-9]+' | grep -v /vendor/)
         id: unitTests
 
       - name: Start integration test dependencies
@@ -62,21 +63,18 @@ jobs:
         id: intgTestDeps
 
       - name: Run Examples
-        run: |
-          go run -tags="examples" examples/example.go
+        run: go run -tags="examples" examples/example.go
         id: examples
 
       - name: Tests including integration tests
-        run: |
-          go test -race ./...
+        run: go test -race $(go list ./... | grep -v '/v[0-9]+' | grep -v /vendor/)
         env:
           INTEGRATION: 1
           TESTPRIVILEGED: 1
         id: intgTests
 
       - name: Tests (32bit)
-        run: |
-          go test ./...
+        run: go test $(go list ./... | grep -v '/v[0-9]+' | grep -v /vendor/)
         env:
           GOARCH: 386
           INTEGRATION: 1
