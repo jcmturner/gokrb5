@@ -39,7 +39,9 @@ jobs:
         id: gofmt
 
       - name: Unit tests
-        run: go test -race ./${GITHUB_WORKFLOW}/...
+        run: |
+	  cd ${GITHUB_WORKFLOW}
+	  go test -race ./...
         id: unitTests
 
       - name: Start integration test dependencies
