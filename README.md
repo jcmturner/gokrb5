@@ -1,5 +1,6 @@
 # gokrb5
 
+
 ## Versions
 
 It is recommended to use the latest version.
@@ -8,11 +9,9 @@ It is recommended to use the latest version.
 
 | Versions | Dependency Management | Import Path | Usage | Godoc | Go Report Card |
 |----------|-----------------------|-------------|-------|-------|----------------|
-| v7 | gopkg.in | import "gopkg.in/jcmturner/gokrb5.v7/<sub package>" | https://github.com/jcmturner/gokrb5/blob/master/USAGE.md | [![GoDoc](https://godoc.org/gopkg.in/jcmturner/gokrb5.v7?status.svg)](https://godoc.org/gopkg.in/jcmturner/gokrb5.v7) | [![Go Report Card](https://goreportcard.com/badge/gopkg.in/jcmturner/gokrb5.v7)](https://goreportcard.com/report/gopkg.in/jcmturner/gokrb5.v7) |
-| v8 | Go modules | import "github.com/jcmturner/gokrb5/v8/<sub package>" | https://github.com/jcmturner/gokrb5/blob/master/v8/USAGE.md | [![GoDoc](https://godoc.org/github.com/jcmturner/gokrb5/v8?status.svg)](https://godoc.org/github.com/jcmturner/gokrb5/v8) | [![Go Report Card](https://goreportcard.com/badge/github.com/jcmturner/gokrb5/v8)](https://goreportcard.com/report/github.com/jcmturner/gokrb5/v8) |
+| [![v7](https://github.com/jcmturner/gokrb5/workflows/gokrb5/badge.svg)](https://github.com/jcmturner/gokrb5/actions?query=workflow%3Agokrb5) | gopkg.in | import "gopkg.in/jcmturner/gokrb5.v7/<sub package>" | [Usage](https://github.com/jcmturner/gokrb5/blob/master/USAGE.md) | [![GoDoc](https://godoc.org/gopkg.in/jcmturner/gokrb5.v7?status.svg)](https://godoc.org/gopkg.in/jcmturner/gokrb5.v7) | [![Go Report Card](https://goreportcard.com/badge/gopkg.in/jcmturner/gokrb5.v7)](https://goreportcard.com/report/gopkg.in/jcmturner/gokrb5.v7) |
+| [![v7](https://github.com/jcmturner/gokrb5/workflows/v8/badge.svg)](https://github.com/jcmturner/gokrb5/actions?query=workflow%3Av8) | Go modules | import "github.com/jcmturner/gokrb5/v8/<sub package>" | [Usage](https://github.com/jcmturner/gokrb5/blob/master/v8/USAGE.md) | [![GoDoc](https://godoc.org/github.com/jcmturner/gokrb5/v8?status.svg)](https://godoc.org/github.com/jcmturner/gokrb5/v8) | [![Go Report Card](https://goreportcard.com/badge/github.com/jcmturner/gokrb5/v8)](https://goreportcard.com/report/github.com/jcmturner/gokrb5/v8) |
 
-
-[![Build Status](https://github.com/jcmturner/gokrb5/workflows/gokrb5/badge.svg)](https://github.com/jcmturner/gokrb5/actions)
 
 #### Go Version Support
 ![Go version](https://img.shields.io/badge/Go-1.13-brightgreen.svg)
