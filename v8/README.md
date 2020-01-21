@@ -5,7 +5,6 @@
 
 [![Build Status](https://github.com/jcmturner/gokrb5/workflows/gokrb5/badge.svg)](https://github.com/jcmturner/gokrb5/actions)
 
-
 #### Go Version Support
 ![Go version](https://img.shields.io/badge/Go-1.13-brightgreen.svg)
 ![Go version](https://img.shields.io/badge/Go-1.12-brightgreen.svg)
