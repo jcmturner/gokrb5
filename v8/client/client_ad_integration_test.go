@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"log"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/jcmturner/gokrb5/v8/config"
 	"github.com/jcmturner/gokrb5/v8/iana/etypeID"
 	"github.com/jcmturner/gokrb5/v8/iana/nametype"
@@ -13,6 +12,7 @@ import (
 	"github.com/jcmturner/gokrb5/v8/test"
 	"github.com/jcmturner/gokrb5/v8/test/testdata"
 	"github.com/jcmturner/gokrb5/v8/types"
+	"github.com/stretchr/testify/assert"
 
 	"testing"
 )

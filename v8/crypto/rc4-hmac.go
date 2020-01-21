@@ -7,11 +7,11 @@ import (
 	"hash"
 	"io"
 
-	"golang.org/x/crypto/md4"
 	"github.com/jcmturner/gokrb5/v8/crypto/rfc3961"
 	"github.com/jcmturner/gokrb5/v8/crypto/rfc4757"
 	"github.com/jcmturner/gokrb5/v8/iana/chksumtype"
 	"github.com/jcmturner/gokrb5/v8/iana/etypeID"
+	"golang.org/x/crypto/md4"
 )
 
 //http://grepcode.com/file/repository.grepcode.com/java/root/jdk/openjdk/8u40-b25/sun/security/krb5/internal/crypto/dk/ArcFourCrypto.java#ArcFourCrypto.encrypt%28byte%5B%5D%2Cint%2Cbyte%5B%5D%2Cbyte%5B%5D%2Cbyte%5B%5D%2Cint%2Cint%29

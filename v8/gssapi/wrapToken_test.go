@@ -5,9 +5,9 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/jcmturner/gokrb5/v8/iana/keyusage"
 	"github.com/jcmturner/gokrb5/v8/types"
+	"github.com/stretchr/testify/assert"
 )
 
 const (

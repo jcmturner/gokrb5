@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/jcmturner/gofork/encoding/asn1"
-	"github.com/stretchr/testify/assert"
 	"github.com/jcmturner/gokrb5/v8/client"
 	"github.com/jcmturner/gokrb5/v8/credentials"
 	"github.com/jcmturner/gokrb5/v8/gssapi"
@@ -15,6 +14,7 @@ import (
 	"github.com/jcmturner/gokrb5/v8/messages"
 	"github.com/jcmturner/gokrb5/v8/test/testdata"
 	"github.com/jcmturner/gokrb5/v8/types"
+	"github.com/stretchr/testify/assert"
 )
 
 const (

@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/jcmturner/gokrb5/v8/iana/adtype"
 	"github.com/jcmturner/gokrb5/v8/iana/nametype"
 	"github.com/jcmturner/gokrb5/v8/test/testdata"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestUnmarshalAuthorizationData(t *testing.T) {

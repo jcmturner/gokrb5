@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/jcmturner/gokrb5/v8/test/testdata"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestUnmarshal(t *testing.T) {

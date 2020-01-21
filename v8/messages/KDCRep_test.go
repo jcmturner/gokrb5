@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/jcmturner/gokrb5/v8/credentials"
 	"github.com/jcmturner/gokrb5/v8/iana"
 	"github.com/jcmturner/gokrb5/v8/iana/etypeID"
@@ -15,6 +14,7 @@ import (
 	"github.com/jcmturner/gokrb5/v8/iana/patype"
 	"github.com/jcmturner/gokrb5/v8/keytab"
 	"github.com/jcmturner/gokrb5/v8/test/testdata"
+	"github.com/stretchr/testify/assert"
 )
 
 const (

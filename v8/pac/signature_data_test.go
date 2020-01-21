@@ -4,9 +4,9 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/jcmturner/gokrb5/v8/iana/chksumtype"
 	"github.com/jcmturner/gokrb5/v8/test/testdata"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestPAC_SignatureData_Unmarshal_Server_Signature(t *testing.T) {

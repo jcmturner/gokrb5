@@ -4,8 +4,8 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/jcmturner/gokrb5/v8/iana/addrtype"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetHostAddress(t *testing.T) {

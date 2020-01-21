@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/jcmturner/gokrb5/v8/client"
 	"github.com/jcmturner/gokrb5/v8/config"
 	"github.com/jcmturner/gokrb5/v8/credentials"
@@ -16,6 +15,7 @@ import (
 	"github.com/jcmturner/gokrb5/v8/messages"
 	"github.com/jcmturner/gokrb5/v8/test/testdata"
 	"github.com/jcmturner/gokrb5/v8/types"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestVerifyAPREQ(t *testing.T) {
