@@ -40,8 +40,8 @@ jobs:
 
       - name: Unit tests
         run: |
-	  cd ${GITHUB_WORKFLOW}
-	  go test -race ./...
+          cd ${GITHUB_WORKFLOW}
+          go test -race ./...
         id: unitTests
 
       - name: Start integration test dependencies
