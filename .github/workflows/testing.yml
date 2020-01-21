@@ -1,4 +1,4 @@
-name: tests
+name: v7
 on:
   push:
     paths:
