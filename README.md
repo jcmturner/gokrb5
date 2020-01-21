@@ -1,7 +1,16 @@
 # gokrb5
+
+## Versions
+
+It is recommended to use the latest version.
+
 [![Version](https://img.shields.io/github/release/jcmturner/gokrb5.svg)](https://github.com/jcmturner/gokrb5/releases)
 
-[![GoDoc](https://godoc.org/gopkg.in/jcmturner/gokrb5.v7?status.svg)](https://godoc.org/gopkg.in/jcmturner/gokrb5.v7) [![Go Report Card](https://goreportcard.com/badge/gopkg.in/jcmturner/gokrb5.v7)](https://goreportcard.com/report/gopkg.in/jcmturner/gokrb5.v7) 
+| Versions | Dependency Management | Import Path | Usage | Godoc | Go Report Card |
+|----------|-----------------------|-------------|-------|-------|----------------|
+| v7 | gopkg.in | import "gopkg.in/jcmturner/gokrb5.v7/<sub package>" | https://github.com/jcmturner/gokrb5/blob/master/USAGE.md | [![GoDoc](https://godoc.org/gopkg.in/jcmturner/gokrb5.v7?status.svg)](https://godoc.org/gopkg.in/jcmturner/gokrb5.v7) | [![Go Report Card](https://goreportcard.com/badge/gopkg.in/jcmturner/gokrb5.v7)](https://goreportcard.com/report/gopkg.in/jcmturner/gokrb5.v7) |
+| v8 | Go modules | import "github.com/jcmturner/gokrb5/v8/<sub package>" | https://github.com/jcmturner/gokrb5/blob/master/v8/USAGE.md | [![GoDoc](https://godoc.org/github.com/jcmturner/gokrb5/v8?status.svg)](https://godoc.org/github.com/jcmturner/gokrb5/v8) | [![Go Report Card](https://goreportcard.com/badge/github.com/jcmturner/gokrb5/v8)](https://goreportcard.com/report/github.com/jcmturner/gokrb5/v8) |
+
 
 [![Build Status](https://github.com/jcmturner/gokrb5/workflows/gokrb5/badge.svg)](https://github.com/jcmturner/gokrb5/actions)
 
@@ -11,16 +20,6 @@
 ![Go version](https://img.shields.io/badge/Go-1.11-brightgreen.svg)
 
 gokrb5 may work with other versions of Go but they are not tested.
-
-### Go Get
-To get the package, execute:
-```
-go get -d gopkg.in/jcmturner/gokrb5.v7/...
-```
-To import this package, add the following line to your code:
-```go
-import "gopkg.in/jcmturner/gokrb5.v7/<sub package>"
-```
 
 ## Features
 * **Pure Go** - no dependency on external libraries 

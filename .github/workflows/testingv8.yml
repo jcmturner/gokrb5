@@ -41,7 +41,6 @@ jobs:
       - name: Unit tests
         run: |
           cd ${GITHUB_WORKFLOW}
-          pwd
           go test -race ./...
         id: unitTests
 
@@ -63,7 +62,6 @@ jobs:
       - name: Run Examples
         run: |
           cd ${GITHUB_WORKFLOW}
-          pwd
           go run -tags="examples" examples/example.go
         id: examples
 
