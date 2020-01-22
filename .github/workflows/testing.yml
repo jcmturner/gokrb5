@@ -2,10 +2,10 @@ name: v7
 on:
   push:
     paths:
-      - '!v[0-9]+'
+      - '!v[0-9]+/**'
   pull_request:
     paths:
-      - '!v[0-9]+'
+      - '!v[0-9]+/**'
 
 jobs:
   build:
