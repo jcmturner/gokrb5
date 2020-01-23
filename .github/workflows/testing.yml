@@ -33,6 +33,8 @@ jobs:
 
       - name: Test well formatted with gofmt
         run: |
+          # Remove major version sub directories
+          find . -maxdepth 1 -type d -regex '\./v[0-9]+' | xargs -i rm -rf {}
           GO_FILES=$(find . -iname '*.go' -type f | grep -v '/v[0-9]+/' | grep -v /vendor/)
           test -z $(gofmt -s -d -l -e $GO_FILES | tee /dev/fd/2 | xargs | sed 's/\s//g')
         id: gofmt
@@ -51,7 +53,6 @@ jobs:
       - name: Unit tests
         run: |
           cd /home/runner/go/src/gopkg.in/jcmturner/gokrb5.v7
-          go list ./... | grep -E -v '/v[0-9]+' | grep -v /vendor/
           go test -race $(go list ./... | grep -E -v '/v[0-9]+' | grep -v /vendor/)
         id: unitTests
 
