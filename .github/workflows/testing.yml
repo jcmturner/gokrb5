@@ -33,7 +33,7 @@ jobs:
 
       - name: Test well formatted with gofmt
         run: |
-          GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/)
+          GO_FILES=$(find . -iname '*.go' -type f | grep -v '/v[0-9]+/' | grep -v /vendor/)
           test -z $(gofmt -s -d -l -e $GO_FILES | tee /dev/fd/2 | xargs | sed 's/\s//g')
         id: gofmt
 
@@ -44,7 +44,10 @@ jobs:
         id: gopkg
 
       - name: Unit tests
-        run: go test -race $(go list ./... | grep -v '/v[0-9]+' | grep -v /vendor/)
+        run: |
+          cd /home/runner/go/src/gopkg.in/jcmturner/gokrb5.v7
+          go list ./... | grep -v '/v[0-9]+/' | grep -v /vendor/
+          go test -race $(go list ./... | grep -v '/v[0-9]+/' | grep -v /vendor/)
         id: unitTests
 
       - name: Start integration test dependencies
