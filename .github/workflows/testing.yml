@@ -46,8 +46,8 @@ jobs:
       - name: Unit tests
         run: |
           cd /home/runner/go/src/gopkg.in/jcmturner/gokrb5.v7
-          go list ./... | grep -v '/v[0-9]+/' | grep -v /vendor/
-          go test -race $(go list ./... | grep -v '/v[0-9]+/' | grep -v /vendor/)
+          go list ./... | grep -E -v '/v[0-9]+/' | grep -v /vendor/
+          go test -race $(go list ./... | grep -E -v '/v[0-9]+/' | grep -v /vendor/)
         id: unitTests
 
       - name: Start integration test dependencies
