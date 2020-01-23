@@ -76,14 +76,18 @@ jobs:
         id: examples
 
       - name: Tests including integration tests
-        run: go test -race $(go list ./... | grep -v '/v[0-9]+' | grep -v /vendor/)
+        run: |
+          cd /home/runner/go/src/gopkg.in/jcmturner/gokrb5.v7
+          go test -race $(go list ./... | grep -E -v '/v[0-9]+' | grep -v /vendor/)
         env:
           INTEGRATION: 1
           TESTPRIVILEGED: 1
         id: intgTests
 
       - name: Tests (32bit)
-        run: go test $(go list ./... | grep -v '/v[0-9]+' | grep -v /vendor/)
+        run: |
+          cd /home/runner/go/src/gopkg.in/jcmturner/gokrb5.v7
+          go test $(go list ./... | grep -E -v '/v[0-9]+' | grep -v /vendor/)
         env:
           GOARCH: 386
           INTEGRATION: 1
