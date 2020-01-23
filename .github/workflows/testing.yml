@@ -43,6 +43,11 @@ jobs:
           cp -r $GITHUB_WORKSPACE/*  /home/runner/go/src/gopkg.in/jcmturner/gokrb5.v7
         id: gopkg
 
+      - name: Get dependencies
+        run: |
+          go get -v -t -d $(go list ./... | grep -E -v '/v[0-9]+')
+        id: goGet
+
       - name: Unit tests
         run: |
           cd /home/runner/go/src/gopkg.in/jcmturner/gokrb5.v7
