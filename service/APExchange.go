@@ -9,7 +9,7 @@ import (
 )
 
 // VerifyAPREQ verifies an AP_REQ sent to the service. Returns a boolean for if the AP_REQ is valid and the client's principal name and realm.
-func VerifyAPREQ(APReq *messages.APReq, s *Settings) (bool, *credentials.Credentials, error) {
+func VerifyAPREQ(APReq messages.APReq, s *Settings) (bool, *credentials.Credentials, error) {
 	var creds *credentials.Credentials
 	ok, err := APReq.Verify(s.Keytab, s.MaxClockSkew(), s.ClientAddress())
 	if err != nil || !ok {
