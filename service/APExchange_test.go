@@ -54,7 +54,7 @@ func TestVerifyAPREQ(t *testing.T) {
 
 	h, _ := types.GetHostAddress("127.0.0.1:1234")
 	s := NewSettings(kt, ClientAddress(h))
-	ok, _, err := VerifyAPREQ(&APReq, s)
+	ok, _, err := VerifyAPREQ(APReq, s)
 	if !ok || err != nil {
 		t.Fatalf("Validation of AP_REQ failed when it should not have: %v", err)
 	}
@@ -100,7 +100,7 @@ func TestVerifyAPREQ_KRB_AP_ERR_BADMATCH(t *testing.T) {
 	}
 	h, _ := types.GetHostAddress("127.0.0.1:1234")
 	s := NewSettings(kt, ClientAddress(h))
-	ok, _, err := VerifyAPREQ(&APReq, s)
+	ok, _, err := VerifyAPREQ(APReq, s)
 	if ok || err == nil {
 		t.Fatal("Validation of AP_REQ passed when it should not have")
 	}
@@ -149,7 +149,7 @@ func TestVerifyAPREQ_LargeClockSkew(t *testing.T) {
 
 	h, _ := types.GetHostAddress("127.0.0.1:1234")
 	s := NewSettings(kt, ClientAddress(h))
-	ok, _, err := VerifyAPREQ(&APReq, s)
+	ok, _, err := VerifyAPREQ(APReq, s)
 	if ok || err == nil {
 		t.Fatal("Validation of AP_REQ passed when it should not have")
 	}
@@ -196,12 +196,12 @@ func TestVerifyAPREQ_Replay(t *testing.T) {
 
 	h, _ := types.GetHostAddress("127.0.0.1:1234")
 	s := NewSettings(kt, ClientAddress(h))
-	ok, _, err := VerifyAPREQ(&APReq, s)
+	ok, _, err := VerifyAPREQ(APReq, s)
 	if !ok || err != nil {
 		t.Fatalf("Validation of AP_REQ failed when it should not have: %v", err)
 	}
 	// Replay
-	ok, _, err = VerifyAPREQ(&APReq, s)
+	ok, _, err = VerifyAPREQ(APReq, s)
 	if ok || err == nil {
 		t.Fatal("Validation of AP_REQ passed when it should not have")
 	}
@@ -246,7 +246,7 @@ func TestVerifyAPREQ_FutureTicket(t *testing.T) {
 
 	h, _ := types.GetHostAddress("127.0.0.1:1234")
 	s := NewSettings(kt, ClientAddress(h))
-	ok, _, err := VerifyAPREQ(&APReq, s)
+	ok, _, err := VerifyAPREQ(APReq, s)
 	if ok || err == nil {
 		t.Fatal("Validation of AP_REQ passed when it should not have")
 	}
@@ -295,7 +295,7 @@ func TestVerifyAPREQ_InvalidTicket(t *testing.T) {
 
 	h, _ := types.GetHostAddress("127.0.0.1:1234")
 	s := NewSettings(kt, ClientAddress(h))
-	ok, _, err := VerifyAPREQ(&APReq, s)
+	ok, _, err := VerifyAPREQ(APReq, s)
 	if ok || err == nil {
 		t.Fatal("Validation of AP_REQ passed when it should not have")
 	}
@@ -343,7 +343,7 @@ func TestVerifyAPREQ_ExpiredTicket(t *testing.T) {
 
 	h, _ := types.GetHostAddress("127.0.0.1:1234")
 	s := NewSettings(kt, ClientAddress(h))
-	ok, _, err := VerifyAPREQ(&APReq, s)
+	ok, _, err := VerifyAPREQ(APReq, s)
 	if ok || err == nil {
 		t.Fatal("Validation of AP_REQ passed when it should not have")
 	}
