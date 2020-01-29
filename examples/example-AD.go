@@ -4,8 +4,9 @@ package main
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
-	"gopkg.in/jcmturner/goidentity.v3"
+	"gopkg.in/jcmturner/goidentity.v5"
 	"gopkg.in/jcmturner/gokrb5.v7/client"
 	"gopkg.in/jcmturner/gokrb5.v7/config"
 	"gopkg.in/jcmturner/gokrb5.v7/credentials"
@@ -27,15 +28,15 @@ func main() {
 	b, _ := hex.DecodeString(testdata.TESTUSER1_USERKRB5_AD_KEYTAB)
 	kt := keytab.New()
 	kt.Unmarshal(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
-	cl := client.NewClientWithKeytab("testuser1", "USER.GOKRB5", kt, c, client.DisablePAFXFAST(true))
+	c, _ := config.NewFromString(testdata.TEST_KRB5CONF)
+	cl := client.NewWithKeytab("testuser1", "USER.GOKRB5", kt, c, client.DisablePAFXFAST(true))
 	httpRequest(s.URL, cl)
 
 	b, _ = hex.DecodeString(testdata.TESTUSER2_USERKRB5_AD_KEYTAB)
 	kt = keytab.New()
 	kt.Unmarshal(b)
-	c, _ = config.NewConfigFromString(testdata.TEST_KRB5CONF)
-	cl = client.NewClientWithKeytab("testuser2", "USER.GOKRB5", kt, c, client.DisablePAFXFAST(true))
+	c, _ = config.NewFromString(testdata.TEST_KRB5CONF)
+	cl = client.NewWithKeytab("testuser2", "USER.GOKRB5", kt, c, client.DisablePAFXFAST(true))
 	httpRequest(s.URL, cl)
 
 	//httpRequest("http://host.test.gokrb5/index.html")
@@ -73,18 +74,20 @@ func httpServer() *httptest.Server {
 }
 
 func testAppHandler(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	creds := goidentity.FromHTTPRequestContext(r)
 	fmt.Fprint(w, "<html>\n<p><h1>TEST.GOKRB5 Handler</h1></p>\n")
-	if validuser, ok := ctx.Value(spnego.CTXKeyAuthenticated).(bool); ok && validuser {
-		if creds, ok := ctx.Value(spnego.CTXKeyCredentials).(goidentity.Identity); ok {
-			fmt.Fprintf(w, "<ul><li>Authenticed user: %s</li>\n", creds.UserName())
-			fmt.Fprintf(w, "<li>User's realm: %s</li>\n", creds.Domain())
-			fmt.Fprint(w, "<li>Authz Attributes (Group Memberships):</li><ul>\n")
-			for _, s := range creds.AuthzAttributes() {
-				fmt.Fprintf(w, "<li>%v</li>\n", s)
-			}
-			fmt.Fprint(w, "</ul>\n")
-			if ADCreds, ok := creds.Attributes()[credentials.AttributeKeyADCredentials].(credentials.ADCredentials); ok {
+	if creds != nil && creds.Authenticated() {
+		fmt.Fprintf(w, "<ul><li>Authenticed user: %s</li>\n", creds.UserName())
+		fmt.Fprintf(w, "<li>User's realm: %s</li>\n", creds.Domain())
+		fmt.Fprint(w, "<li>Authz Attributes (Group Memberships):</li><ul>\n")
+		for _, s := range creds.AuthzAttributes() {
+			fmt.Fprintf(w, "<li>%v</li>\n", s)
+		}
+		fmt.Fprint(w, "</ul>\n")
+		if ADCredsJSON, ok := creds.Attributes()[credentials.AttributeKeyADCredentials]; ok {
+			ADCreds := new(credentials.ADCredentials)
+			err := json.Unmarshal([]byte(ADCredsJSON), ADCreds)
+			if err == nil {
 				// Now access the fields of the ADCredentials struct. For example:
 				fmt.Fprintf(w, "<li>EffectiveName: %v</li>\n", ADCreds.EffectiveName)
 				fmt.Fprintf(w, "<li>FullName: %v</li>\n", ADCreds.FullName)
@@ -98,9 +101,8 @@ func testAppHandler(w http.ResponseWriter, r *http.Request) {
 				fmt.Fprintf(w, "<li>LogonDomainName: %v</li>\n", ADCreds.LogonDomainName)
 				fmt.Fprintf(w, "<li>LogonDomainID: %v</li>\n", ADCreds.LogonDomainID)
 			}
-			fmt.Fprint(w, "</ul>")
 		}
-
+		fmt.Fprint(w, "</ul>")
 	} else {
 		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprint(w, "Authentication failed")

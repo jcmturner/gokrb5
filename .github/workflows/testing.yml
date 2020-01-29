@@ -1,5 +1,11 @@
-name: gokrb5
-on: [push, pull_request]
+name: v7
+on:
+  push:
+    paths-ignore:
+    - 'v[0-9]+/**'
+  pull_request:
+    paths-ignore:
+    - 'v[0-9]+/**'
 
 jobs:
   build:
@@ -27,6 +33,8 @@ jobs:
 
       - name: Test well formatted with gofmt
         run: |
+          # Remove major version sub directories
+          find . -maxdepth 1 -type d -regex '\./v[0-9]+' | xargs -i rm -rf {}
           GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/)
           test -z $(gofmt -s -d -l -e $GO_FILES | tee /dev/fd/2 | xargs | sed 's/\s//g')
         id: gofmt
@@ -43,7 +51,9 @@ jobs:
         id: goGet
 
       - name: Unit tests
-        run: go test -race ./...
+        run: |
+          cd /home/runner/go/src/gopkg.in/jcmturner/gokrb5.v7
+          go test -race $(go list ./... | grep -E -v '/v[0-9]+' | grep -v /vendor/)
         id: unitTests
 
       - name: Start integration test dependencies
@@ -62,13 +72,13 @@ jobs:
         id: intgTestDeps
 
       - name: Run Examples
-        run: |
-          go run -tags="examples" examples/example.go
+        run: go run -tags="examples" examples/example.go
         id: examples
 
       - name: Tests including integration tests
         run: |
-          go test -race ./...
+          cd /home/runner/go/src/gopkg.in/jcmturner/gokrb5.v7
+          go test -race $(go list ./... | grep -E -v '/v[0-9]+' | grep -v /vendor/)
         env:
           INTEGRATION: 1
           TESTPRIVILEGED: 1
@@ -76,7 +86,8 @@ jobs:
 
       - name: Tests (32bit)
         run: |
-          go test ./...
+          cd /home/runner/go/src/gopkg.in/jcmturner/gokrb5.v7
+          go test $(go list ./... | grep -E -v '/v[0-9]+' | grep -v /vendor/)
         env:
           GOARCH: 386
           INTEGRATION: 1

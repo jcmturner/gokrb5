@@ -51,8 +51,8 @@ func New() *Keytab {
 }
 
 // GetEncryptionKey returns the EncryptionKey from the Keytab for the newest entry with the required kvno, etype and matching principal.
-func (kt *Keytab) GetEncryptionKey(princName types.PrincipalName, realm string, kvno int, etype int32) (types.EncryptionKey, error) {
-	//TODO (theme: KVNO from keytab) this function should return the kvno too
+// If the kvno is zero then the latest kvno will be returned. The kvno is also returned for
+func (kt *Keytab) GetEncryptionKey(princName types.PrincipalName, realm string, kvno int, etype int32) (types.EncryptionKey, int, error) {
 	var key types.EncryptionKey
 	var t time.Time
 	for _, k := range kt.Entries {
@@ -69,18 +69,19 @@ func (kt *Keytab) GetEncryptionKey(princName types.PrincipalName, realm string, 
 			}
 			if p {
 				key = k.Key
+				kvno = int(k.KVNO)
 				t = k.Timestamp
 			}
 		}
 	}
 	if len(key.KeyValue) < 1 {
-		return key, fmt.Errorf("matching key not found in keytab. Looking for %v realm: %v kvno: %v etype: %v", princName.NameString, realm, kvno, etype)
+		return key, 0, fmt.Errorf("matching key not found in keytab. Looking for %v realm: %v kvno: %v etype: %v", princName.NameString, realm, kvno, etype)
 	}
-	return key, nil
+	return key, kvno, nil
 }
 
 // Create a new Keytab entry.
-func newKeytabEntry() entry {
+func newEntry() entry {
 	var b []byte
 	return entry{
 		Principal: newPrincipal(),
@@ -188,7 +189,7 @@ func (kt *Keytab) Unmarshal(b []byte) error {
 			}
 			eb := b[n : n+int(l)]
 			n = n + int(l)
-			ke := newKeytabEntry()
+			ke := newEntry()
 			// p keeps track as to where we are in the byte stream
 			var p int
 			var err error
