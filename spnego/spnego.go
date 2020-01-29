@@ -44,7 +44,7 @@ func (s *SPNEGO) OID() asn1.ObjectIdentifier {
 
 // AcquireCred is the GSS-API method to acquire a client credential via Kerberos for SPNEGO.
 func (s *SPNEGO) AcquireCred() error {
-	return s.client.Login()
+	return s.client.AffirmLogin()
 }
 
 // InitSecContext is the GSS-API method for the client to a generate a context token to the service via Kerberos.
