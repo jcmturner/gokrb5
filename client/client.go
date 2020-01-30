@@ -27,9 +27,9 @@ type Client struct {
 	cache       *Cache
 }
 
-// NewWithPassword creates a new client from a password credential.
+// NewClientWithPassword creates a new client from a password credential.
 // Set the realm to empty string to use the default realm from config.
-func NewWithPassword(username, realm, password string, krb5conf *config.Config, settings ...func(*Settings)) *Client {
+func NewClientWithPassword(username, realm, password string, krb5conf *config.Config, settings ...func(*Settings)) *Client {
 	creds := credentials.New(username, realm)
 	return &Client{
 		Credentials: creds.WithPassword(password),
@@ -42,8 +42,8 @@ func NewWithPassword(username, realm, password string, krb5conf *config.Config, 
 	}
 }
 
-// NewWithKeytab creates a new client from a keytab credential.
-func NewWithKeytab(username, realm string, kt *keytab.Keytab, krb5conf *config.Config, settings ...func(*Settings)) *Client {
+// NewClientWithKeytab creates a new client from a keytab credential.
+func NewClientWithKeytab(username, realm string, kt *keytab.Keytab, krb5conf *config.Config, settings ...func(*Settings)) *Client {
 	creds := credentials.New(username, realm)
 	return &Client{
 		Credentials: creds.WithKeytab(kt),
@@ -56,10 +56,10 @@ func NewWithKeytab(username, realm string, kt *keytab.Keytab, krb5conf *config.C
 	}
 }
 
-// NewFromCCache create a client from a populated client cache.
+// NewClientFromCCache create a client from a populated client cache.
 //
 // WARNING: A client created from CCache does not automatically renew TGTs and a failure will occur after the TGT expires.
-func NewFromCCache(c *credentials.CCache, krb5conf *config.Config, settings ...func(*Settings)) (*Client, error) {
+func NewClientFromCCache(c *credentials.CCache, krb5conf *config.Config, settings ...func(*Settings)) (*Client, error) {
 	cl := &Client{
 		Credentials: c.GetClientCredentials(),
 		Config:      krb5conf,
@@ -108,28 +108,28 @@ func NewFromCCache(c *credentials.CCache, krb5conf *config.Config, settings ...f
 	return cl, nil
 }
 
-// Key returns the client's encryption key for the specified encryption type and its kvno (kvno of zero will find latest).
+// Key returns the client's encryption key for the specified encryption type.
 // The key can be retrieved either from the keytab or generated from the client's password.
 // If the client has both a keytab and a password defined the keytab is favoured as the source for the key
 // A KRBError can be passed in the event the KDC returns one of type KDC_ERR_PREAUTH_REQUIRED and is required to derive
 // the key for pre-authentication from the client's password. If a KRBError is not available, pass nil to this argument.
-func (cl *Client) Key(etype etype.EType, kvno int, krberr *messages.KRBError) (types.EncryptionKey, int, error) {
+func (cl *Client) Key(etype etype.EType, krberr *messages.KRBError) (types.EncryptionKey, error) {
 	if cl.Credentials.HasKeytab() && etype != nil {
-		return cl.Credentials.Keytab().GetEncryptionKey(cl.Credentials.CName(), cl.Credentials.Domain(), kvno, etype.GetETypeID())
+		return cl.Credentials.Keytab().GetEncryptionKey(cl.Credentials.CName(), cl.Credentials.Domain(), 0, etype.GetETypeID())
 	} else if cl.Credentials.HasPassword() {
 		if krberr != nil && krberr.ErrorCode == errorcode.KDC_ERR_PREAUTH_REQUIRED {
 			var pas types.PADataSequence
 			err := pas.Unmarshal(krberr.EData)
 			if err != nil {
-				return types.EncryptionKey{}, 0, fmt.Errorf("could not get PAData from KRBError to generate key from password: %v", err)
+				return types.EncryptionKey{}, fmt.Errorf("could not get PAData from KRBError to generate key from password: %v", err)
 			}
 			key, _, err := crypto.GetKeyFromPassword(cl.Credentials.Password(), krberr.CName, krberr.CRealm, etype.GetETypeID(), pas)
-			return key, 0, err
+			return key, err
 		}
 		key, _, err := crypto.GetKeyFromPassword(cl.Credentials.Password(), cl.Credentials.CName(), cl.Credentials.Domain(), etype.GetETypeID(), types.PADataSequence{})
-		return key, 0, err
+		return key, err
 	}
-	return types.EncryptionKey{}, 0, errors.New("credential has neither keytab or password to generate key")
+	return types.EncryptionKey{}, errors.New("credential has neither keytab or password to generate key")
 }
 
 // IsConfigured indicates if the client has the values required set.
@@ -171,7 +171,7 @@ func (cl *Client) Login() error {
 			return krberror.Errorf(err, krberror.KRBMsgError, "no user credentials available and error getting any existing session")
 		}
 		if time.Now().UTC().After(endTime) {
-			return krberror.New(krberror.KRBMsgError, "cannot login, no user credentials available and no valid existing session")
+			return krberror.NewKrberror(krberror.KRBMsgError, "cannot login, no user credentials available and no valid existing session")
 		}
 		// no credentials but there is a session with tgt already
 		return nil

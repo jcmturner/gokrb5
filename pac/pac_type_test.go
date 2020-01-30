@@ -29,7 +29,7 @@ func TestPACTypeVerify(t *testing.T) {
 	kt := keytab.New()
 	kt.Unmarshal(b)
 	pn, _ := types.ParseSPNString("sysHTTP")
-	key, _, err := kt.GetEncryptionKey(pn, "TEST.GOKRB5", 2, 18)
+	key, err := kt.GetEncryptionKey(pn, "TEST.GOKRB5", 2, 18)
 	if err != nil {
 		t.Fatalf("Error getting key: %v", err)
 	}

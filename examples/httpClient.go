@@ -54,7 +54,7 @@ func main() {
 	}
 
 	// Load the client krb5 config
-	conf, err := config.NewFromString(kRB5CONF)
+	conf, err := config.NewConfigFromString(kRB5CONF)
 	if err != nil {
 		l.Fatalf("could not load krb5.conf: %v", err)
 	}
@@ -64,7 +64,7 @@ func main() {
 	}
 
 	// Create the client with the keytab
-	cl := client.NewWithKeytab("testuser2", "TEST.GOKRB5", kt, conf, client.Logger(l), client.DisablePAFXFAST(true))
+	cl := client.NewClientWithKeytab("testuser2", "TEST.GOKRB5", kt, conf, client.Logger(l), client.DisablePAFXFAST(true))
 
 	// Log in the client
 	err = cl.Login()

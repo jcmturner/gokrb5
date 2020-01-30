@@ -70,8 +70,8 @@ func (m *KRB5Token) Unmarshal(b []byte) error {
 	if err != nil {
 		return fmt.Errorf("error unmarshalling KRB5Token OID: %v", err)
 	}
-	if !oid.Equal(gssapi.OIDKRB5.OID()) {
-		return fmt.Errorf("error unmarshalling KRB5Token, OID is %s not %s", oid.String(), gssapi.OIDKRB5.OID().String())
+	if !oid.Equal(gssapi.OID(gssapi.OIDKRB5)) {
+		return fmt.Errorf("error unmarshalling KRB5Token, OID is %s not %s", oid.String(), gssapi.OID(gssapi.OIDKRB5).String())
 	}
 	m.OID = oid
 	if len(r) < 2 {
@@ -116,7 +116,8 @@ func (m *KRB5Token) Verify() (bool, gssapi.Status) {
 			return false, gssapi.Status{Code: gssapi.StatusDefectiveCredential, Message: "KRB5_AP_REQ token not valid"}
 		}
 		m.context = context.Background()
-		m.context = context.WithValue(m.context, ctxCredentials, creds)
+		m.context = context.WithValue(m.context, CTXKeyCredentials, creds)
+		m.context = context.WithValue(m.context, CTXKeyAuthenticated, ok)
 		return true, gssapi.Status{Code: gssapi.StatusComplete}
 	case TOK_ID_KRB_AP_REP:
 		// Client side
@@ -164,7 +165,7 @@ func (m *KRB5Token) Context() context.Context {
 func NewKRB5TokenAPREQ(cl *client.Client, tkt messages.Ticket, sessionKey types.EncryptionKey, GSSAPIFlags []int, APOptions []int) (KRB5Token, error) {
 	// TODO consider providing the SPN rather than the specific tkt and key and get these from the krb client.
 	var m KRB5Token
-	m.OID = gssapi.OIDKRB5.OID()
+	m.OID = gssapi.OID(gssapi.OIDKRB5)
 	tb, _ := hex.DecodeString(TOK_ID_KRB_AP_REQ)
 	m.tokID = tb
 
