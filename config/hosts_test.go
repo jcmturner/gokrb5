@@ -23,7 +23,7 @@ func TestConfig_GetKDCsUsesConfiguredKDC(t *testing.T) {
  }
 `
 
-	c, err := NewFromString(krb5ConfWithKDCAndDNSLookupKDC)
+	c, err := NewConfigFromString(krb5ConfWithKDCAndDNSLookupKDC)
 	if err != nil {
 		t.Fatalf("Error loading config: %v", err)
 	}
@@ -43,7 +43,7 @@ func TestConfig_GetKDCsUsesConfiguredKDC(t *testing.T) {
 func TestResolveKDC(t *testing.T) {
 	test.Privileged(t)
 
-	c, err := NewFromString(testdata.TEST_KRB5CONF)
+	c, err := NewConfigFromString(testdata.TEST_KRB5CONF)
 	if err != nil {
 		t.Fatal(err)
 	}

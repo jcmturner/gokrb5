@@ -2,8 +2,6 @@
 package credentials
 
 import (
-	"bytes"
-	"encoding/gob"
 	"time"
 
 	"github.com/hashicorp/go-uuid"
@@ -21,37 +19,20 @@ const (
 // Contains either a keytab, password or both.
 // Keytabs are used over passwords if both are defined.
 type Credentials struct {
-	username        string
-	displayName     string
-	realm           string
-	cname           types.PrincipalName
-	keytab          *keytab.Keytab
-	password        string
-	attributes      map[string]interface{}
-	validUntil      time.Time
+	username    string
+	displayName string
+	realm       string
+	cname       types.PrincipalName
+	keytab      *keytab.Keytab
+	password    string
+	attributes  map[string]interface{}
+	validUntil  time.Time
+
 	authenticated   bool
 	human           bool
 	authTime        time.Time
 	groupMembership map[string]bool
 	sessionID       string
-}
-
-// marshalCredentials is used to enable marshaling and unmarshaling of credentials
-// without having exported fields on the Credentials struct
-type marshalCredentials struct {
-	Username        string
-	DisplayName     string
-	Realm           string
-	CName           types.PrincipalName
-	Keytab          *keytab.Keytab
-	Password        string
-	Attributes      map[string]interface{}
-	ValidUntil      time.Time
-	Authenticated   bool
-	Human           bool
-	AuthTime        time.Time
-	GroupMembership map[string]bool
-	SessionID       string
 }
 
 // ADCredentials contains information obtained from the PAC.
@@ -90,9 +71,21 @@ func New(username string, realm string) *Credentials {
 
 // NewFromPrincipalName creates a new Credentials instance with the user details provides as a PrincipalName type.
 func NewFromPrincipalName(cname types.PrincipalName, realm string) *Credentials {
-	c := New(cname.PrincipalNameString(), realm)
-	c.cname = cname
-	return c
+	uid, err := uuid.GenerateUUID()
+	if err != nil {
+		uid = "00unique-sess-ions-uuid-unavailable0"
+	}
+	return &Credentials{
+		username:        cname.PrincipalNameString(),
+		displayName:     cname.PrincipalNameString(),
+		realm:           realm,
+		cname:           cname,
+		keytab:          keytab.New(),
+		attributes:      make(map[string]interface{}),
+		groupMembership: make(map[string]bool),
+		sessionID:       uid,
+		human:           true,
+	}
 }
 
 // WithKeytab sets the Keytab in the Credentials struct.
@@ -152,14 +145,6 @@ func (c *Credentials) SetADCredentials(a ADCredentials) {
 	for i := range a.GroupMembershipSIDs {
 		c.AddAuthzAttribute(a.GroupMembershipSIDs[i])
 	}
-}
-
-// GetADCredentials returns ADCredentials attributes sorted in the credential
-func (c *Credentials) GetADCredentials() ADCredentials {
-	if a, ok := c.attributes[AttributeKeyADCredentials].(ADCredentials); ok {
-		return a
-	}
-	return ADCredentials{}
 }
 
 // Methods to implement goidentity.Identity interface
@@ -326,59 +311,4 @@ func (c *Credentials) SetAttributes(a map[string]interface{}) {
 // RemoveAttribute deletes an attribute from the attribute map that has the key provided.
 func (c *Credentials) RemoveAttribute(k string) {
 	delete(c.attributes, k)
-}
-
-// Marshal the Credentials into a byte slice
-func (c *Credentials) Marshal() ([]byte, error) {
-	gob.Register(map[string]interface{}{})
-	gob.Register(ADCredentials{})
-	buf := new(bytes.Buffer)
-	enc := gob.NewEncoder(buf)
-	mc := marshalCredentials{
-		Username:        c.username,
-		DisplayName:     c.displayName,
-		Realm:           c.realm,
-		CName:           c.cname,
-		Keytab:          c.keytab,
-		Password:        c.password,
-		Attributes:      c.attributes,
-		ValidUntil:      c.validUntil,
-		Authenticated:   c.authenticated,
-		Human:           c.human,
-		AuthTime:        c.authTime,
-		GroupMembership: c.groupMembership,
-		SessionID:       c.sessionID,
-	}
-	err := enc.Encode(&mc)
-	if err != nil {
-		return []byte{}, err
-	}
-	return buf.Bytes(), nil
-}
-
-// Unmarshal a byte slice into Credentials
-func (c *Credentials) Unmarshal(b []byte) error {
-	gob.Register(map[string]interface{}{})
-	gob.Register(ADCredentials{})
-	mc := new(marshalCredentials)
-	buf := bytes.NewBuffer(b)
-	dec := gob.NewDecoder(buf)
-	err := dec.Decode(mc)
-	if err != nil {
-		return err
-	}
-	c.username = mc.Username
-	c.displayName = mc.DisplayName
-	c.realm = mc.Realm
-	c.cname = mc.CName
-	c.keytab = mc.Keytab
-	c.password = mc.Password
-	c.attributes = mc.Attributes
-	c.validUntil = mc.ValidUntil
-	c.authenticated = mc.Authenticated
-	c.human = mc.Human
-	c.authTime = mc.AuthTime
-	c.groupMembership = mc.GroupMembership
-	c.sessionID = mc.SessionID
-	return nil
 }
