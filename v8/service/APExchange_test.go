@@ -2,6 +2,7 @@ package service
 
 import (
 	"encoding/hex"
+	"strings"
 	"testing"
 	"time"
 
@@ -57,6 +58,51 @@ func TestVerifyAPREQ(t *testing.T) {
 	ok, _, err := VerifyAPREQ(&APReq, s)
 	if !ok || err != nil {
 		t.Fatalf("Validation of AP_REQ failed when it should not have: %v", err)
+	}
+}
+
+func TestVerifyAPREQWithPrincipalOverride(t *testing.T) {
+	t.Parallel()
+	cl := getClient()
+	sname := types.PrincipalName{
+		NameType:   nametype.KRB_NT_PRINCIPAL,
+		NameString: []string{"HTTP", "host.test.gokrb5"},
+	}
+	b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
+	kt := keytab.New()
+	kt.Unmarshal(b)
+	st := time.Now().UTC()
+	tkt, sessionKey, err := messages.NewTicket(cl.Credentials.CName(), cl.Credentials.Domain(),
+		sname, "TEST.GOKRB5",
+		types.NewKrbFlags(),
+		kt,
+		18,
+		1,
+		st,
+		st,
+		st.Add(time.Duration(24)*time.Hour),
+		st.Add(time.Duration(48)*time.Hour),
+	)
+	if err != nil {
+		t.Fatalf("Error getting test ticket: %v", err)
+	}
+	apReq, err := messages.NewAPReq(
+		tkt,
+		sessionKey,
+		newTestAuthenticator(*cl.Credentials),
+	)
+	if err != nil {
+		t.Fatalf("Error getting test AP_REQ: %v", err)
+	}
+
+	h, _ := types.GetHostAddress("127.0.0.1:1234")
+	s := NewSettings(kt, ClientAddress(h), KeytabPrincipal("foo"))
+	ok, _, err := VerifyAPREQ(&apReq, s)
+	if ok || err == nil {
+		t.Fatalf("Validation of AP_REQ should have failed")
+	}
+	if !strings.Contains(err.Error(), "Looking for [foo] realm") {
+		t.Fatalf("Looking for wrong entity: %s", err.Error())
 	}
 }
 
