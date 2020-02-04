@@ -5,7 +5,7 @@ go 1.13
 require (
 	github.com/gorilla/sessions v1.2.0
 	github.com/hashicorp/go-uuid v1.0.2
-	github.com/jcmturner/aescts v1.0.1
+	github.com/jcmturner/aescts/v2 v2.0.0
 	github.com/jcmturner/dnsutils/v2 v2.0.0
 	github.com/jcmturner/gofork v1.0.0
 	github.com/jcmturner/goidentity/v6 v6.0.1
