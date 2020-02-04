@@ -86,7 +86,7 @@ func setPAData(cl *Client, krberr *messages.KRBError, ASReq *messages.ASReq) err
 		var et etype.EType
 		var err error
 		var key types.EncryptionKey
-		kvno := 1
+		var kvno int
 		if krberr == nil {
 			// This is not in response to an error from the KDC. It is preemptive or renewal
 			// There is no KRB Error that tells us the etype to use
