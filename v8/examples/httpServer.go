@@ -15,7 +15,6 @@ import (
 	"github.com/jcmturner/gokrb5/v8/service"
 	"github.com/jcmturner/gokrb5/v8/spnego"
 	"github.com/jcmturner/gokrb5/v8/test/testdata"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -86,7 +85,7 @@ func (smgr SessionMgr) Get(r *http.Request, k string) ([]byte, error) {
 		return nil, err
 	}
 	if s == nil {
-		return nil, errors.New("nil session")
+		return nil, error.New("nil session")
 	}
 	b, ok := s.Values[k].([]byte)
 	if !ok {
