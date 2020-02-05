@@ -1,3 +1,8 @@
+## Version 7 Usage
+
+This usage documentation relates to version 7 only. For other versions please refer to the USAGE.md in the relevant
+major version sub-directory.
+
 ### Configuration
 The gokrb5 libraries use the same krb5.conf configuration file format as MIT Kerberos, described [here](https://web.mit.edu/kerberos/krb5-latest/doc/admin/conf_files/krb5_conf.html).
 Config instances can be created by loading from a file path or by passing a string, io.Reader or bufio.Scanner to the relevant method:
