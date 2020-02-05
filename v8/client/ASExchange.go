@@ -161,6 +161,7 @@ func preAuthEType(krberr *messages.KRBError) (etype etype.EType, err error) {
 		err = krberror.Errorf(e, krberror.EncodingError, "error unmashalling KRBError data")
 		return
 	}
+Loop:
 	for _, pa := range pas {
 		switch pa.PADataType {
 		case patype.PA_ETYPE_INFO2:
@@ -170,7 +171,7 @@ func preAuthEType(krberr *messages.KRBError) (etype etype.EType, err error) {
 				return
 			}
 			etypeID = info[0].EType
-			break
+			break Loop
 		case patype.PA_ETYPE_INFO:
 			info, e := pa.GetETypeInfo()
 			if e != nil {
