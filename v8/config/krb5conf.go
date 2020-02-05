@@ -301,9 +301,6 @@ func (l *LibDefaults) parseLines(lines []string) error {
 				return InvalidErrorf("libdefaults section line (%s): %v", line, err)
 			}
 			l.VerifyAPReqNofail = v
-		default:
-			//Ignore the line
-			continue
 		}
 	}
 	l.DefaultTGSEnctypeIDs = parseETypes(l.DefaultTGSEnctypes, l.AllowWeakCrypto)
@@ -394,9 +391,6 @@ func (r *Realm) parseLines(name string, lines []string) (err error) {
 			appendUntilFinal(&r.KPasswdServer, v, &kpasswdServerFinal)
 		case "master_kdc":
 			appendUntilFinal(&r.MasterKDC, v, &masterKDCFinal)
-		default:
-			//Ignore the line
-			continue
 		}
 	}
 	//default for Kpasswd_server = admin_server:464
@@ -605,8 +599,6 @@ func NewFromScanner(scanner *bufio.Scanner) (*Config, error) {
 				}
 				e = err
 			}
-		default:
-			continue
 		}
 	}
 	return c, e
