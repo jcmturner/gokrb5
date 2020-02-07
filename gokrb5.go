@@ -5,24 +5,24 @@ This is a pure Go implementation and does not have dependencies on native librar
 
 Feature include:
 
-* Server Side
+Server Side
 
-  * HTTP handler wrapper implements SPNEGO Kerberos authentication
+HTTP handler wrapper implements SPNEGO Kerberos authentication.
 
-  * HTTP handler wrapper decodes Microsoft AD PAC authorization data
+HTTP handler wrapper decodes Microsoft AD PAC authorization data.
 
-* Client Side
+Client Side
 
-  * Client that can authenticate to an SPNEGO Kerberos authenticated web service
+Client that can authenticate to an SPNEGO Kerberos authenticated web service.
 
-  * Ability to change client's password
+Ability to change client's password.
 
-* General
+General
 
-  * Kerberos libraries for custom integration
+Kerberos libraries for custom integration.
 
-  * Parsing Keytab files
+Parsing Keytab files.
 
-  * Parsing krb5.conf files
+Parsing krb5.conf files.
 */
 package gokrb5
