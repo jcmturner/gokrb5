@@ -292,7 +292,7 @@ func getAuthorizationNegotiationHeaderAsSPNEGOToken(spnego *SPNEGO, r *http.Requ
 	var st SPNEGOToken
 	err = st.Unmarshal(b)
 	if err != nil {
-		// Check if this is a raw KRB5 context token - issue #347
+		// Check if this is a raw KRB5 context token - issue #347.
 		var k5t KRB5Token
 		if k5t.Unmarshal(b) != nil {
 			err = fmt.Errorf("error in unmarshaling SPNEGO token: %v", err)
