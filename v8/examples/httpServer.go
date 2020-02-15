@@ -4,6 +4,7 @@ package main
 
 import (
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -85,7 +86,7 @@ func (smgr SessionMgr) Get(r *http.Request, k string) ([]byte, error) {
 		return nil, err
 	}
 	if s == nil {
-		return nil, error.New("nil session")
+		return nil, errors.New("nil session")
 	}
 	b, ok := s.Values[k].([]byte)
 	if !ok {
