@@ -47,10 +47,14 @@ type teeReadCloser struct {
 	io.Closer
 }
 
-// NewClient returns an SPNEGO enabled HTTP client.
+// NewClient returns a SPNEGO enabled HTTP client.
+// Be careful when passing in the *http.Client if it is beginning reused in multiple calls to this function.
+// Ensure reuse of the provided *http.Client is for the same user as a session cookie may have been added to
+// http.Client's cookie jar.
+// Incorrect reuse of the provided *http.Client could lead to access to the wrong user's session.
 func NewClient(krb5Cl *client.Client, httpCl *http.Client, spn string) *Client {
 	if httpCl == nil {
-		httpCl = http.DefaultClient
+		httpCl = &http.Client{}
 	}
 	// Add a cookie jar if there isn't one
 	if httpCl.Jar == nil {
