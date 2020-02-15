@@ -27,19 +27,20 @@ func main() {
 	s := httpServer()
 	defer s.Close()
 	fmt.Printf("Listening on %s\n", s.URL)
+	l := log.New(os.Stderr, "GOKRB5 Client: ", log.Ldate|log.Ltime|log.Lshortfile)
 
 	b, _ := hex.DecodeString(testdata.TESTUSER1_USERKRB5_AD_KEYTAB)
 	kt := keytab.New()
 	kt.Unmarshal(b)
 	c, _ := config.NewFromString(testdata.TEST_KRB5CONF)
-	cl := client.NewWithKeytab("testuser1", "USER.GOKRB5", kt, c, client.DisablePAFXFAST(true))
+	cl := client.NewWithKeytab("testuser1", "USER.GOKRB5", kt, c, client.DisablePAFXFAST(true), client.Logger(l))
 	httpRequest(s.URL, cl)
 
 	b, _ = hex.DecodeString(testdata.TESTUSER2_USERKRB5_AD_KEYTAB)
 	kt = keytab.New()
 	kt.Unmarshal(b)
 	c, _ = config.NewFromString(testdata.TEST_KRB5CONF)
-	cl = client.NewWithKeytab("testuser2", "USER.GOKRB5", kt, c, client.DisablePAFXFAST(true))
+	cl = client.NewWithKeytab("testuser2", "USER.GOKRB5", kt, c, client.DisablePAFXFAST(true), client.Logger(l))
 	httpRequest(s.URL, cl)
 }
 
@@ -48,7 +49,7 @@ func httpRequest(url string, cl *client.Client) {
 
 	err := cl.Login()
 	if err != nil {
-		l.Printf("Error on AS_REQ: %v\n", err)
+		l.Fatalf("Error on AS_REQ: %v\n", err)
 	}
 
 	spnegoCl := spnego.NewClient(cl, nil, "HTTP/host.res.gokrb5")
