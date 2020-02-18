@@ -119,7 +119,7 @@ const (
     "Forwardable": true,
     "IgnoreAcceptorHostname": false,
     "K5LoginAuthoritative": false,
-    "K5LoginDirectory": "/Users/turnerj",
+    "K5LoginDirectory": "/home/test",
     "KDCDefaultOptions": {
       "Bytes": "AAAAEA==",
       "BitLength": 32
@@ -670,11 +670,12 @@ func TestJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error loading config: %v", err)
 	}
-
+	c.LibDefaults.K5LoginDirectory = "/home/test"
 	j, err := c.JSON()
 	if err != nil {
 		t.Errorf("error marshaling krb config to JSON: %v", err)
 	}
 	assert.Equal(t, krb5ConfJson, j, "krb config marshaled json not as expected")
-	//t.Log(j)
+
+	t.Log(j)
 }
