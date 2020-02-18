@@ -14,6 +14,7 @@ type Settings struct {
 	logger                  *log.Logger
 }
 
+// jsonSettings is used when marshaling the Settings details to JSON format.
 type jsonSettings struct {
 	DisablePAFXFast         bool
 	AssumePreAuthentication bool

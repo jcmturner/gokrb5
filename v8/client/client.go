@@ -243,7 +243,7 @@ func (cl *Client) Destroy() {
 	cl.Log("client destroyed")
 }
 
-// Diagnostics runs a set of checks that the client is properly configured.
+// Diagnostics runs a set of checks that the client is properly configured and writes details to the io.Writer provided.
 func (cl *Client) Diagnostics(w io.Writer) error {
 	cl.Print(w)
 	var errs []string
@@ -307,6 +307,7 @@ func (cl *Client) Diagnostics(w io.Writer) error {
 	return err
 }
 
+// Print writes the details of the client to the io.Writer provided.
 func (cl *Client) Print(w io.Writer) {
 	c, _ := cl.Credentials.JSON()
 	fmt.Fprintf(w, "Credentials:\n%s\n", c)

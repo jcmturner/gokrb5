@@ -467,6 +467,7 @@ func isNativeEndianLittle() bool {
 	return endian
 }
 
+// JSON return information about the keys held in the keytab in a JSON format.
 func (k *Keytab) JSON() (string, error) {
 	b, err := json.MarshalIndent(k, "", "  ")
 	if err != nil {

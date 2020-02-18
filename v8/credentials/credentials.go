@@ -382,6 +382,7 @@ func (c *Credentials) Unmarshal(b []byte) error {
 	return nil
 }
 
+// JSON return details of the Credentials in a JSON format.
 func (c *Credentials) JSON() (string, error) {
 	mc := marshalCredentials{
 		Username:      c.username,

@@ -718,6 +718,7 @@ func appendUntilFinal(s *[]string, value string, final *bool) {
 	*s = append(*s, value)
 }
 
+// JSON return details of the config in a JSON format.
 func (c *Config) JSON() (string, error) {
 	b, err := json.MarshalIndent(c, "", "  ")
 	if err != nil {
