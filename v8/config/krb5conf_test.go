@@ -79,6 +79,141 @@ const (
    krb4_convert = false
  }
 `
+	krb5ConfJson = `{
+  "LibDefaults": {
+    "AllowWeakCrypto": false,
+    "Canonicalize": false,
+    "CCacheType": 4,
+    "Clockskew": 300000000000,
+    "DefaultClientKeytabName": "FILE:/home/gokrb5/client.keytab",
+    "DefaultKeytabName": "FILE:/etc/krb5.keytab",
+    "DefaultRealm": "TEST.GOKRB5",
+    "DefaultTGSEnctypes": [
+      "aes256-cts-hmac-sha1-96",
+      "aes128-cts-hmac-sha1-96",
+      "des3-cbc-sha1",
+      "arcfour-hmac-md5",
+      "camellia256-cts-cmac",
+      "camellia128-cts-cmac",
+      "des-cbc-crc",
+      "des-cbc-md5",
+      "des-cbc-md4"
+    ],
+    "DefaultTktEnctypes": [
+      "aes256-cts-hmac-sha1-96",
+      "aes128-cts-hmac-sha1-96"
+    ],
+    "DefaultTGSEnctypeIDs": [
+      18,
+      17,
+      23
+    ],
+    "DefaultTktEnctypeIDs": [
+      18,
+      17
+    ],
+    "DNSCanonicalizeHostname": true,
+    "DNSLookupKDC": false,
+    "DNSLookupRealm": false,
+    "ExtraAddresses": null,
+    "Forwardable": true,
+    "IgnoreAcceptorHostname": false,
+    "K5LoginAuthoritative": false,
+    "K5LoginDirectory": "/Users/turnerj",
+    "KDCDefaultOptions": {
+      "Bytes": "AAAAEA==",
+      "BitLength": 32
+    },
+    "KDCTimeSync": 1,
+    "NoAddresses": true,
+    "PermittedEnctypes": [
+      "aes256-cts-hmac-sha1-96",
+      "aes128-cts-hmac-sha1-96",
+      "des3-cbc-sha1",
+      "arcfour-hmac-md5",
+      "camellia256-cts-cmac",
+      "camellia128-cts-cmac",
+      "des-cbc-crc",
+      "des-cbc-md5",
+      "des-cbc-md4"
+    ],
+    "PermittedEnctypeIDs": [
+      18,
+      17,
+      23
+    ],
+    "PreferredPreauthTypes": [
+      17,
+      16,
+      15,
+      14
+    ],
+    "Proxiable": false,
+    "RDNS": true,
+    "RealmTryDomains": -1,
+    "RenewLifetime": 0,
+    "SafeChecksumType": 8,
+    "TicketLifetime": 36000000000000,
+    "UDPPreferenceLimit": 1465,
+    "VerifyAPReqNofail": false
+  },
+  "Realms": [
+    {
+      "Realm": "TEST.GOKRB5",
+      "AdminServer": [
+        "10.80.88.88:749"
+      ],
+      "DefaultDomain": "test.gokrb5",
+      "KDC": [
+        "10.80.88.88:88",
+        "assume.port.num:88",
+        "some.other.port:1234",
+        "10.80.88.88:88"
+      ],
+      "KPasswdServer": [
+        "10.80.88.88:464"
+      ],
+      "MasterKDC": null
+    },
+    {
+      "Realm": "EXAMPLE.COM",
+      "AdminServer": [
+        "kerberos.example.com"
+      ],
+      "DefaultDomain": "",
+      "KDC": [
+        "kerberos.example.com:88",
+        "kerberos-1.example.com:88"
+      ],
+      "KPasswdServer": [
+        "kerberos.example.com:464"
+      ],
+      "MasterKDC": null
+    },
+    {
+      "Realm": "lowercase.org",
+      "AdminServer": [
+        "kerberos.lowercase.org"
+      ],
+      "DefaultDomain": "",
+      "KDC": [
+        "kerberos.lowercase.org:88"
+      ],
+      "KPasswdServer": [
+        "kerberos.lowercase.org:464"
+      ],
+      "MasterKDC": null
+    }
+  ],
+  "DomainRealm": {
+    ".example.com": "EXAMPLE.COM",
+    ".test.gokrb5": "TEST.GOKRB5",
+    ".testlowercase.org": "lowercase.org",
+    "hostname1.example.com": "EXAMPLE.COM",
+    "hostname2.example.com": "TEST.GOKRB5",
+    "test.gokrb5": "TEST.GOKRB5"
+  }
+}`
 	krb5Conf2 = `
 [logging]
  default = FILE:/var/log/kerberos/krb5libs.log
@@ -527,4 +662,19 @@ func TestResolveRealm(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestJSON(t *testing.T) {
+	t.Parallel()
+	c, err := NewFromString(krb5Conf)
+	if err != nil {
+		t.Fatalf("Error loading config: %v", err)
+	}
+
+	j, err := c.JSON()
+	if err != nil {
+		t.Errorf("error marshaling krb config to JSON: %v", err)
+	}
+	assert.Equal(t, krb5ConfJson, j, "krb config marshaled json not as expected")
+	//t.Log(j)
 }

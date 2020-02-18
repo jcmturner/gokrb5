@@ -4,6 +4,7 @@ package config
 import (
 	"bufio"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -715,4 +716,12 @@ func appendUntilFinal(s *[]string, value string, final *bool) {
 		value = value[:len(value)-1]
 	}
 	*s = append(*s, value)
+}
+
+func (c *Config) JSON() (string, error) {
+	b, err := json.MarshalIndent(c, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return string(b), nil
 }

@@ -1,6 +1,7 @@
 package client
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"sync"
@@ -67,6 +68,15 @@ type session struct {
 	sessionKeyExpiration time.Time
 	cancel               chan bool
 	mux                  sync.RWMutex
+}
+
+// jsonSession is used to enable marshaling some information of a session in a JSON format
+type jsonSession struct {
+	Realm                string
+	AuthTime             time.Time
+	EndTime              time.Time
+	RenewTill            time.Time
+	SessionKeyExpiration time.Time
 }
 
 // AddSession adds a session for a realm with a TGT to the client's session cache.
@@ -138,6 +148,29 @@ func (s *session) timeDetails() (string, time.Time, time.Time, time.Time, time.T
 	s.mux.RLock()
 	defer s.mux.RUnlock()
 	return s.realm, s.authTime, s.endTime, s.renewTill, s.sessionKeyExpiration
+}
+
+// JSON return information about the held sessions in a JSON format.
+func (s *sessions) JSON() (string, error) {
+	s.mux.RLock()
+	defer s.mux.RUnlock()
+	var js []jsonSession
+	for _, e := range s.Entries {
+		r, at, et, rt, kt := e.timeDetails()
+		j := jsonSession{
+			Realm:                r,
+			AuthTime:             at,
+			EndTime:              et,
+			RenewTill:            rt,
+			SessionKeyExpiration: kt,
+		}
+		js = append(js, j)
+	}
+	b, err := json.MarshalIndent(js, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return string(b), nil
 }
 
 // enableAutoSessionRenewal turns on the automatic renewal for the client's TGT session.
@@ -239,6 +272,7 @@ func (cl *Client) sessionTGT(realm string) (tgt messages.Ticket, sessionKey type
 	return
 }
 
+// sessionTimes provides the timing information with regards to a session for the realm specified.
 func (cl *Client) sessionTimes(realm string) (authTime, endTime, renewTime, sessionExp time.Time, err error) {
 	s, ok := cl.sessions.get(realm)
 	if !ok {

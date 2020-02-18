@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"log"
+	"testing"
 
 	"github.com/jcmturner/gokrb5/v8/config"
 	"github.com/jcmturner/gokrb5/v8/iana/etypeID"
@@ -13,8 +14,6 @@ import (
 	"github.com/jcmturner/gokrb5/v8/test/testdata"
 	"github.com/jcmturner/gokrb5/v8/types"
 	"github.com/stretchr/testify/assert"
-
-	"testing"
 )
 
 func TestClient_SuccessfulLogin_AD(t *testing.T) {

@@ -1,6 +1,7 @@
 package client
 
 import (
+	"encoding/json"
 	"errors"
 	"sync"
 	"time"
@@ -17,12 +18,13 @@ type Cache struct {
 
 // CacheEntry holds details for a cache entry.
 type CacheEntry struct {
-	Ticket     messages.Ticket
+	SPN        string
+	Ticket     messages.Ticket `json:"-"`
 	AuthTime   time.Time
 	StartTime  time.Time
 	EndTime    time.Time
 	RenewTill  time.Time
-	SessionKey types.EncryptionKey
+	SessionKey types.EncryptionKey `json:"-"`
 }
 
 // NewCache creates a new client ticket cache instance.
@@ -40,12 +42,28 @@ func (c *Cache) getEntry(spn string) (CacheEntry, bool) {
 	return e, ok
 }
 
+// JSON returns information about the cached service tickets in a JSON format.
+func (c *Cache) JSON() (string, error) {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+	var es []CacheEntry
+	for _, e := range c.Entries {
+		es = append(es, e)
+	}
+	b, err := json.MarshalIndent(&es, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return string(b), nil
+}
+
 // addEntry adds a ticket to the cache.
 func (c *Cache) addEntry(tkt messages.Ticket, authTime, startTime, endTime, renewTill time.Time, sessionKey types.EncryptionKey) CacheEntry {
 	spn := tkt.SName.PrincipalNameString()
 	c.mux.Lock()
 	defer c.mux.Unlock()
 	(*c).Entries[spn] = CacheEntry{
+		SPN:        spn,
 		Ticket:     tkt,
 		AuthTime:   authTime,
 		StartTime:  startTime,
