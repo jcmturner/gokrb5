@@ -3,6 +3,7 @@ package client
 import (
 	"encoding/json"
 	"errors"
+	"sort"
 	"sync"
 	"time"
 
@@ -47,8 +48,13 @@ func (c *Cache) JSON() (string, error) {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
 	var es []CacheEntry
-	for _, e := range c.Entries {
-		es = append(es, e)
+	keys := make([]string, 0, len(c.Entries))
+	for k := range c.Entries {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		es = append(es, c.Entries[k])
 	}
 	b, err := json.MarshalIndent(&es, "", "  ")
 	if err != nil {
