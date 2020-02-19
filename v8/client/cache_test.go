@@ -12,6 +12,7 @@ import (
 )
 
 func TestCache_addEntry_getEntry_remove_clear(t *testing.T) {
+	t.Parallel()
 	c := NewCache()
 	cnt := 10
 	var wg sync.WaitGroup
@@ -28,7 +29,7 @@ func TestCache_addEntry_getEntry_remove_clear(t *testing.T) {
 			KeyValue: []byte{byte(i)},
 		}
 		go func(i int) {
-			e := c.addEntry(tkt, time.Unix(int64(0+i), 0), time.Unix(int64(10+i), 0), time.Unix(int64(20+i), 0), time.Unix(int64(30+i), 0), key)
+			e := c.addEntry(tkt, time.Unix(int64(0+i), 0).UTC(), time.Unix(int64(10+i), 0).UTC(), time.Unix(int64(20+i), 0).UTC(), time.Unix(int64(30+i), 0).UTC(), key)
 			assert.Equal(t, fmt.Sprintf("%d/test.cache", i), e.SPN, "SPN cache key not as expected")
 			wg.Done()
 		}(i)
@@ -39,10 +40,10 @@ func TestCache_addEntry_getEntry_remove_clear(t *testing.T) {
 		go func(i int) {
 			e, ok := c.getEntry(fmt.Sprintf("%d/test.cache", i))
 			assert.True(t, ok, "cache entry %d was not found", i)
-			assert.Equal(t, time.Unix(int64(0+i), 0), e.AuthTime, "auth time not as expected")
-			assert.Equal(t, time.Unix(int64(10+i), 0), e.StartTime, "start time not as expected")
-			assert.Equal(t, time.Unix(int64(20+i), 0), e.EndTime, "end time not as expected")
-			assert.Equal(t, time.Unix(int64(30+i), 0), e.RenewTill, "renew time not as expected")
+			assert.Equal(t, time.Unix(int64(0+i), 0).UTC(), e.AuthTime, "auth time not as expected")
+			assert.Equal(t, time.Unix(int64(10+i), 0).UTC(), e.StartTime, "start time not as expected")
+			assert.Equal(t, time.Unix(int64(20+i), 0).UTC(), e.EndTime, "end time not as expected")
+			assert.Equal(t, time.Unix(int64(30+i), 0).UTC(), e.RenewTill, "renew time not as expected")
 			assert.Equal(t, []string{fmt.Sprintf("%d", i), "test.cache"}, e.Ticket.SName.NameString, "ticket not correct")
 			assert.Equal(t, []byte{byte(i)}, e.SessionKey.KeyValue, "session key not correct")
 			wg.Done()
@@ -71,10 +72,10 @@ func TestCache_addEntry_getEntry_remove_clear(t *testing.T) {
 			} else {
 				e, ok := c.getEntry(fmt.Sprintf("%d/test.cache", i))
 				assert.True(t, ok, "cache entry %d was not found", i)
-				assert.Equal(t, time.Unix(int64(0+i), 0), e.AuthTime, "auth time not as expected")
-				assert.Equal(t, time.Unix(int64(10+i), 0), e.StartTime, "start time not as expected")
-				assert.Equal(t, time.Unix(int64(20+i), 0), e.EndTime, "end time not as expected")
-				assert.Equal(t, time.Unix(int64(30+i), 0), e.RenewTill, "renew time not as expected")
+				assert.Equal(t, time.Unix(int64(0+i), 0).UTC(), e.AuthTime, "auth time not as expected")
+				assert.Equal(t, time.Unix(int64(10+i), 0).UTC(), e.StartTime, "start time not as expected")
+				assert.Equal(t, time.Unix(int64(20+i), 0).UTC(), e.EndTime, "end time not as expected")
+				assert.Equal(t, time.Unix(int64(30+i), 0).UTC(), e.RenewTill, "renew time not as expected")
 				assert.Equal(t, []string{fmt.Sprintf("%d", i), "test.cache"}, e.Ticket.SName.NameString, "ticket not correct")
 				assert.Equal(t, []byte{byte(i)}, e.SessionKey.KeyValue, "session key not correct")
 			}
@@ -97,6 +98,7 @@ func TestCache_addEntry_getEntry_remove_clear(t *testing.T) {
 }
 
 func TestCache_JSON(t *testing.T) {
+	t.Parallel()
 	c := NewCache()
 	cnt := 3
 	for i := 0; i < cnt; i++ {
@@ -110,30 +112,30 @@ func TestCache_JSON(t *testing.T) {
 			KeyType:  1,
 			KeyValue: []byte{byte(i)},
 		}
-		e := c.addEntry(tkt, time.Unix(int64(0+i), 0), time.Unix(int64(10+i), 0), time.Unix(int64(20+i), 0), time.Unix(int64(30+i), 0), key)
+		e := c.addEntry(tkt, time.Unix(int64(0+i), 0).UTC(), time.Unix(int64(10+i), 0).UTC(), time.Unix(int64(20+i), 0).UTC(), time.Unix(int64(30+i), 0).UTC(), key)
 		assert.Equal(t, fmt.Sprintf("%d/test.cache", i), e.SPN, "SPN cache key not as expected")
 	}
 	expected := `[
   {
     "SPN": "0/test.cache",
-    "AuthTime": "1970-01-01T01:00:00+01:00",
-    "StartTime": "1970-01-01T01:00:10+01:00",
-    "EndTime": "1970-01-01T01:00:20+01:00",
-    "RenewTill": "1970-01-01T01:00:30+01:00"
+    "AuthTime": "1970-01-01T00:00:00Z",
+    "StartTime": "1970-01-01T00:00:10Z",
+    "EndTime": "1970-01-01T00:00:20Z",
+    "RenewTill": "1970-01-01T00:00:30Z"
   },
   {
     "SPN": "1/test.cache",
-    "AuthTime": "1970-01-01T01:00:01+01:00",
-    "StartTime": "1970-01-01T01:00:11+01:00",
-    "EndTime": "1970-01-01T01:00:21+01:00",
-    "RenewTill": "1970-01-01T01:00:31+01:00"
+    "AuthTime": "1970-01-01T00:00:01Z",
+    "StartTime": "1970-01-01T00:00:11Z",
+    "EndTime": "1970-01-01T00:00:21Z",
+    "RenewTill": "1970-01-01T00:00:31Z"
   },
   {
     "SPN": "2/test.cache",
-    "AuthTime": "1970-01-01T01:00:02+01:00",
-    "StartTime": "1970-01-01T01:00:12+01:00",
-    "EndTime": "1970-01-01T01:00:22+01:00",
-    "RenewTill": "1970-01-01T01:00:32+01:00"
+    "AuthTime": "1970-01-01T00:00:02Z",
+    "StartTime": "1970-01-01T00:00:12Z",
+    "EndTime": "1970-01-01T00:00:22Z",
+    "RenewTill": "1970-01-01T00:00:32Z"
   }
 ]`
 	j, err := c.JSON()
