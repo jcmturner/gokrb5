@@ -113,3 +113,48 @@ func TestClient_AutoRenew_Goroutine(t *testing.T) {
 		}
 	}
 }
+
+func TestSessions_JSON(t *testing.T) {
+	s := &sessions{
+		Entries: make(map[string]*session),
+	}
+	for i := 0; i < 3; i++ {
+		realm := fmt.Sprintf("test%d", i)
+		e := &session{
+			realm:                realm,
+			authTime:             time.Unix(int64(0+i), 0).UTC(),
+			endTime:              time.Unix(int64(10+i), 0).UTC(),
+			renewTill:            time.Unix(int64(20+i), 0).UTC(),
+			sessionKeyExpiration: time.Unix(int64(30+i), 0).UTC(),
+		}
+		s.Entries[realm] = e
+	}
+	j, err := s.JSON()
+	if err != nil {
+		t.Errorf("error getting json: %v", err)
+	}
+	expected := `[
+  {
+    "Realm": "test0",
+    "AuthTime": "1970-01-01T00:00:00Z",
+    "EndTime": "1970-01-01T00:00:10Z",
+    "RenewTill": "1970-01-01T00:00:20Z",
+    "SessionKeyExpiration": "1970-01-01T00:00:30Z"
+  },
+  {
+    "Realm": "test1",
+    "AuthTime": "1970-01-01T00:00:01Z",
+    "EndTime": "1970-01-01T00:00:11Z",
+    "RenewTill": "1970-01-01T00:00:21Z",
+    "SessionKeyExpiration": "1970-01-01T00:00:31Z"
+  },
+  {
+    "Realm": "test2",
+    "AuthTime": "1970-01-01T00:00:02Z",
+    "EndTime": "1970-01-01T00:00:12Z",
+    "RenewTill": "1970-01-01T00:00:22Z",
+    "SessionKeyExpiration": "1970-01-01T00:00:32Z"
+  }
+]`
+	assert.Equal(t, expected, j, "json output not as expected")
+}

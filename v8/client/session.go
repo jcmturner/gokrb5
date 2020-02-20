@@ -3,6 +3,7 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -155,8 +156,13 @@ func (s *sessions) JSON() (string, error) {
 	s.mux.RLock()
 	defer s.mux.RUnlock()
 	var js []jsonSession
-	for _, e := range s.Entries {
-		r, at, et, rt, kt := e.timeDetails()
+	keys := make([]string, 0, len(s.Entries))
+	for k := range s.Entries {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		r, at, et, rt, kt := s.Entries[k].timeDetails()
 		j := jsonSession{
 			Realm:                r,
 			AuthTime:             at,
