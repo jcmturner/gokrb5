@@ -4,6 +4,7 @@ package keytab
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -35,7 +36,7 @@ type entry struct {
 
 // Keytab entry principal struct.
 type principal struct {
-	NumComponents int16
+	NumComponents int16 `json:"-"`
 	Realm         string
 	Components    []string
 	NameType      int32
@@ -464,4 +465,13 @@ func isNativeEndianLittle() bool {
 		endian = false
 	}
 	return endian
+}
+
+// JSON return information about the keys held in the keytab in a JSON format.
+func (k *Keytab) JSON() (string, error) {
+	b, err := json.MarshalIndent(k, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return string(b), nil
 }

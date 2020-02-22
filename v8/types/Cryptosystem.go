@@ -18,7 +18,7 @@ type EncryptedData struct {
 // AKA KeyBlock
 type EncryptionKey struct {
 	KeyType  int32  `asn1:"explicit,tag:0"`
-	KeyValue []byte `asn1:"explicit,tag:1"`
+	KeyValue []byte `asn1:"explicit,tag:1" json:"-"`
 }
 
 // Checksum implements RFC 4120 type: https://tools.ietf.org/html/rfc4120#section-5.2.9

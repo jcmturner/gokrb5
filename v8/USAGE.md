@@ -145,6 +145,13 @@ REALM.COM = {
 ```
 See https://web.mit.edu/kerberos/krb5-latest/doc/admin/conf_files/krb5_conf.html#realms for more information.
 
+#### Client Diagnostics
+In the event of issues the configuration of a client can be investigated with its ``Diagnostics`` method.
+This will check that the required enctypes defined in the client's krb5 config are available in its keytab.
+It will also check that KDCs can be resolved for the client's REALM.
+The error returned will contain details of any failed checks.
+The configuration details of the client will be written to the ``io.Writer`` provided.
+
 ---
 
 ### Kerberised Service
