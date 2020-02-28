@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/jcmturner/aescts/v2"
 	"gopkg.in/jcmturner/aescts.v1"
 	"gopkg.in/jcmturner/gokrb5.v7/crypto/common"
 	"gopkg.in/jcmturner/gokrb5.v7/crypto/etype"
@@ -108,11 +109,8 @@ func DecryptMessage(key, ciphertext []byte, usage uint32, e etype.EType) ([]byte
 // GetIntegityHash returns a keyed integrity hash of the bytes provided as defined in RFC 8009
 func GetIntegityHash(iv, c, key []byte, usage uint32, e etype.EType) ([]byte, error) {
 	// Generate and append integrity hash
-	// The HMAC is calculated over the cipher state concatenated with the
-	// AES output, instead of being calculated over the confounder and
-	// plaintext.  This allows the message receiver to verify the
-	// integrity of the message before decrypting the message.
-	// H = HMAC(Ki, IV | C)
+	// Rather than calculating the hash over the confounder and plaintext
+	// it is calculated over the iv concatenated with the AES cipher output.
 	ib := append(iv, c...)
 	return common.GetIntegrityHash(ib, key, usage, e)
 }

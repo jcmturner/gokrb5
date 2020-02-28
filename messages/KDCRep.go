@@ -135,12 +135,8 @@ func (e *EncKDCRepPart) Unmarshal(b []byte) error {
 	_, err := asn1.UnmarshalWithParams(b, e, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.EncASRepPart))
 	if err != nil {
 		// Try using tag 26
-		/* Ref: RFC 4120
-		Compatibility note: Some implementations unconditionally send an
-		encrypted EncTGSRepPart (application tag number 26) in this field
-		regardless of whether the reply is a AS-REP or a TGS-REP.  In the
-		interest of compatibility, implementors MAY relax the check on the
-		tag number of the decrypted ENC-PART.*/
+		// Ref: RFC 4120 - mentions that some implementations use application tag number 26 wether or not the reply is
+		// a AS-REP or a TGS-REP.
 		_, err = asn1.UnmarshalWithParams(b, e, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.EncTGSRepPart))
 		if err != nil {
 			return krberror.Errorf(err, krberror.EncodingError, "error unmarshaling encrypted part within KDC_REP")

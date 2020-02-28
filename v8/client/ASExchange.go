@@ -145,15 +145,7 @@ func setPAData(cl *Client, krberr *messages.KRBError, ASReq *messages.ASReq) err
 
 // preAuthEType establishes what encryption type to use for pre-authentication from the KRBError returned from the KDC.
 func preAuthEType(krberr *messages.KRBError) (etype etype.EType, err error) {
-	//The preferred ordering of the "hint" pre-authentication data that
-	//affect client key selection is: ETYPE-INFO2, followed by ETYPE-INFO,
-	//followed by PW-SALT.
-	//A KDC SHOULD NOT send PA-PW-SALT when issuing a KRB-ERROR message
-	//that requests additional pre-authentication.  Implementation note:
-	//Some KDC implementations issue an erroneous PA-PW-SALT when issuing a
-	//KRB-ERROR message that requests additional pre-authentication.
-	//Therefore, clients SHOULD ignore a PA-PW-SALT accompanying a
-	//KRB-ERROR message that requests additional pre-authentication.
+	//RFC 4120 5.2.7.5 covers the preference order of ETYPE-INFO2 and ETYPE-INFO.
 	var etypeID int32
 	var pas types.PADataSequence
 	e := pas.Unmarshal(krberr.EData)

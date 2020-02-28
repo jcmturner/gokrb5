@@ -13,39 +13,7 @@ import (
 	"gopkg.in/jcmturner/gokrb5.v7/types"
 )
 
-/*
-https://msdn.microsoft.com/en-us/library/ms995330.aspx
-
-NegotiationToken ::= CHOICE {
-  negTokenInit    [0] NegTokenInit,  This is the Negotiation token sent from the client to the server.
-  negTokenResp    [1] NegTokenResp
-}
-
-NegTokenInit ::= SEQUENCE {
-  mechTypes       [0] MechTypeList,
-  reqFlags        [1] ContextFlags  OPTIONAL,
-  -- inherited from RFC 2478 for backward compatibility,
-  -- RECOMMENDED to be left out
-  mechToken       [2] OCTET STRING  OPTIONAL,
-  mechListMIC     [3] OCTET STRING  OPTIONAL,
-  ...
-}
-
-NegTokenResp ::= SEQUENCE {
-  negState       [0] ENUMERATED {
-    accept-completed    (0),
-    accept-incomplete   (1),
-    reject              (2),
-    request-mic         (3)
-  }                                 OPTIONAL,
-  -- REQUIRED in the first reply from the target
-  supportedMech   [1] MechType      OPTIONAL,
-  -- present only in the first reply from the target
-  responseToken   [2] OCTET STRING  OPTIONAL,
-  mechListMIC     [3] OCTET STRING  OPTIONAL,
-  ...
-}
-*/
+// https://msdn.microsoft.com/en-us/library/ms995330.aspx
 
 // Negotiation state values.
 const (
