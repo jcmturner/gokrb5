@@ -10,7 +10,7 @@ const (
 	prfconstant = "prf"
 )
 
-// DeriveRandom implements the RFC 3961 defined function: DR(Key, Constant) = k-truncate(E(Key, Constant, initial-cipher-state)).
+// DeriveRandom implements the RFC 3961 section 5.1 defined DR function
 //
 // key: base key or protocol key. Likely to be a key from a keytab file.
 //
@@ -28,16 +28,7 @@ func DeriveRandom(key, usage []byte, e etype.EType) ([]byte, error) {
 	nFoldUsage := Nfold(usage, n)
 	//k-truncate implemented by creating a byte array the size of k (k is in bits hence /8)
 	out := make([]byte, k/8)
-
-	/*If the output	of E is shorter than k bits, it is fed back into the encryption as many times as necessary.
-	The construct is as follows (where | indicates concatenation):
-
-	K1 = E(Key, n-fold(Constant), initial-cipher-state)
-	K2 = E(Key, K1, initial-cipher-state)
-	K3 = E(Key, K2, initial-cipher-state)
-	K4 = ...
-
-	DR(Key, Constant) = k-truncate(K1 | K2 | K3 | K4 ...)*/
+	// Keep feeding the output back into the encryption function until it is no longer short than k.
 	_, K, err := e.EncryptData(key, nFoldUsage)
 	if err != nil {
 		return out, err

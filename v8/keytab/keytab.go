@@ -163,12 +163,6 @@ func (kt *Keytab) Unmarshal(b []byte) error {
 	if kt.version == 1 && isNativeEndianLittle() {
 		endian = binary.LittleEndian
 	}
-	/*
-		After the two-byte version indicator, the file contains a sequence of signed 32-bit record lengths followed by key records or holes.
-		A positive record length indicates a valid key entry whose size is equal to or less than the record length.
-		A negative length indicates a zero-filled hole whose size is the inverse of the length.
-		A length of 0 indicates the end of the file.
-	*/
 	// n tracks position in the byte array
 	n := 2
 	l, err := readInt32(b, &n, &endian)
@@ -181,7 +175,6 @@ func (kt *Keytab) Unmarshal(b []byte) error {
 			l = l * -1
 			n = n + int(l)
 		} else {
-			//fmt.Printf("Bytes for entry: %v\n", b[n:n+int(l)])
 			if n < 0 {
 				return fmt.Errorf("%d can't be less than zero", n)
 			}
@@ -218,9 +211,9 @@ func (kt *Keytab) Unmarshal(b []byte) error {
 			if err != nil {
 				return err
 			}
-			//The 32-bit key version overrides the 8-bit key version.
-			// To determine if it is present, the implementation must check that at least 4 bytes remain in the record after the other fields are read,
-			// and that the value of the 32-bit integer contained in those bytes is non-zero.
+			// The 32-bit key version overrides the 8-bit key version.
+			// If at least 4 bytes are left after the other fields are read and they are non-zero
+			// this indicates the 32-bit version is present.
 			if len(eb)-p >= 4 {
 				// The 32-bit key may be present
 				ri32, err := readInt32(eb, &p, &endian)

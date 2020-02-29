@@ -172,18 +172,7 @@ func (cl *Client) sendUDP(conn *net.UDPConn, b []byte) ([]byte, error) {
 func (cl *Client) sendTCP(conn *net.TCPConn, b []byte) ([]byte, error) {
 	defer conn.Close()
 	var r []byte
-	/*
-		RFC https://tools.ietf.org/html/rfc4120#section-7.2.2
-		Each request (KRB_KDC_REQ) and response (KRB_KDC_REP or KRB_ERROR)
-		sent over the TCP stream is preceded by the length of the request as
-		4 octets in network byte order.  The high bit of the length is
-		reserved for future expansion and MUST currently be set to zero.  If
-		a KDC that does not understand how to interpret a set high bit of the
-		length encoding receives a request with the high order bit of the
-		length set, it MUST return a KRB-ERROR message with the error
-		KRB_ERR_FIELD_TOOLONG and MUST close the TCP stream.
-		NB: network byte order == big endian
-	*/
+	// RFC 4120 7.2.2 specifies the first 4 bytes indicate the length of the message in big endian order.
 	var buf bytes.Buffer
 	err := binary.Write(&buf, binary.BigEndian, uint32(len(b)))
 	if err != nil {
