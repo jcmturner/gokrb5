@@ -11,9 +11,9 @@ Development will be focused on the latest major version. New features will only 
 
 
 #### Go Version Support
+![Go version](https://img.shields.io/badge/Go-1.14-brightgreen.svg)
 ![Go version](https://img.shields.io/badge/Go-1.13-brightgreen.svg)
 ![Go version](https://img.shields.io/badge/Go-1.12-brightgreen.svg)
-![Go version](https://img.shields.io/badge/Go-1.11-brightgreen.svg)
 
 gokrb5 may work with other versions of Go but they are not tested.
 
