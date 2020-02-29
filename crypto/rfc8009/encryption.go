@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/jcmturner/aescts/v2"
 	"gopkg.in/jcmturner/aescts.v1"
 	"gopkg.in/jcmturner/gokrb5.v7/crypto/common"
 	"gopkg.in/jcmturner/gokrb5.v7/crypto/etype"
