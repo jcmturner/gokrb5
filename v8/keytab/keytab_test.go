@@ -9,7 +9,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jcmturner/gokrb5/v8/iana/etypeID"
 	"github.com/jcmturner/gokrb5/v8/test/testdata"
+	"github.com/jcmturner/gokrb5/v8/types"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,7 +23,7 @@ func TestUnmarshal(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error parsing keytab data: %v\n", err)
 	}
-	assert.Equal(t, uint8(2), kt.version, "Keytab version not as expected")
+	assert.Equal(t, uint8(2), kt.Version, "Keytab version not as expected")
 	assert.Equal(t, uint32(1), kt.Entries[0].KVNO, "KVNO not as expected")
 	assert.Equal(t, uint8(1), kt.Entries[0].KVNO8, "KVNO8 not as expected")
 	assert.Equal(t, time.Unix(1505669592, 0), kt.Entries[0].Timestamp, "Timestamp not as expected")
@@ -66,7 +68,7 @@ func TestLoad(t *testing.T) {
 	if err != nil {
 		t.Fatalf("could not load keytab: %v", err)
 	}
-	assert.Equal(t, uint8(2), kt.version, "keytab version not as expected")
+	assert.Equal(t, uint8(2), kt.Version, "keytab version not as expected")
 	assert.Equal(t, 12, len(kt.Entries), "keytab entry count not as expected: %+v", *kt)
 	for _, e := range kt.Entries {
 		if e.Principal.Realm != "TEST.GOKRB5" {
@@ -143,4 +145,82 @@ func TestBadKeytabs(t *testing.T) {
 		parsedKt := new(Keytab)
 		parsedKt.Unmarshal(decodedKt)
 	}
+}
+
+func TestKeytabEntriesUser(t *testing.T) {
+
+	// Load known-good keytab generated with ktutil
+	ktutilb64 := "BQIAAABGAAEAC0VYQU1QTEUuT1JHAAR1c2VyAAAAAV5ePQAfABIAIG6I6ys5Me8XyS54Ck7kIfFBH/WxBOP3W1DdE/ntBPnGAAAAHwAAADYAAQALRVhBTVBMRS5PUkcABHVzZXIAAAABXl49AB8AEQAQm7fVug9VRBJVhEGjHyN3EgAAAB8AAAA2AAEAC0VYQU1QTEUuT1JHAAR1c2VyAAAAAV5ePQAfABcAEBENDFHhRNNvt+T54BL7uIgAAAAf"
+	ktutilbytes, err := base64.StdEncoding.DecodeString(ktutilb64)
+	if err != nil {
+		t.Errorf("Could not parse b64 ktutil keytab: %s", err)
+	}
+	ktutil := new(Keytab)
+	err = ktutil.Unmarshal(ktutilbytes)
+	if err != nil {
+		t.Fatalf("Could not load ktutil-generated keytab: %s", err)
+	}
+
+	// Generate the same keytab with gokrb5
+	var ts time.Time = ktutil.Entries[0].Timestamp
+	var encTypes []int32 = []int32{
+		etypeID.AES256_CTS_HMAC_SHA1_96,
+		etypeID.AES128_CTS_HMAC_SHA1_96,
+		etypeID.RC4_HMAC,
+	}
+
+	kt := New()
+	kt.Version = 2
+	for _, et := range encTypes {
+		err = kt.AddEntry("user", "EXAMPLE.ORG", "hello123", ts, uint8(31), et, types.PADataSequence{})
+		if err != nil {
+			t.Errorf("Error adding entry to keytab: %s", err)
+		}
+	}
+	generated, err := kt.Marshal()
+	if err != nil {
+		t.Errorf("Error marshalling generated keytab: %s", err)
+	}
+
+	// Compare content
+	assert.Equal(t, generated, ktutilbytes, "Service keytab doesn't match ktutil keytab")
+}
+
+func TestKeytabEntriesService(t *testing.T) {
+
+	// Load known-good keytab generated with ktutil
+	ktutilb64 := "BQIAAABXAAIAC0VYQU1QTEUuT1JHAARIVFRQAA93d3cuZXhhbXBsZS5vcmcAAAABXl49ggoAEgAgOCSpM5CdiZQn1+rUtLtt6sTrg5Saw1DXJMai7vDWJ0QAAAAKAAAARwACAAtFWEFNUExFLk9SRwAESFRUUAAPd3d3LmV4YW1wbGUub3JnAAAAAV5ePYIKABEAEDpczoDyER1jscz0RWkThCMAAAAKAAAARwACAAtFWEFNUExFLk9SRwAESFRUUAAPd3d3LmV4YW1wbGUub3JnAAAAAV5ePYIKABcAELP27YfH0Th5rD+GtJkQmXQAAAAK"
+	ktutilbytes, err := base64.StdEncoding.DecodeString(ktutilb64)
+	if err != nil {
+		t.Errorf("Could not parse b64 ktutil keytab: %s", err)
+	}
+	ktutil := new(Keytab)
+	err = ktutil.Unmarshal(ktutilbytes)
+	if err != nil {
+		t.Errorf("Could not load ktutil-generated keytab: %s", err)
+	}
+
+	// Generate the same keytab with gokrb5
+	var ts time.Time = ktutil.Entries[0].Timestamp
+	var encTypes []int32 = []int32{
+		etypeID.AES256_CTS_HMAC_SHA1_96,
+		etypeID.AES128_CTS_HMAC_SHA1_96,
+		etypeID.RC4_HMAC,
+	}
+
+	kt := New()
+	kt.Version = 2
+	for _, et := range encTypes {
+		err = kt.AddEntry("HTTP/www.example.org", "EXAMPLE.ORG", "hello456", ts, uint8(10), et, types.PADataSequence{})
+		if err != nil {
+			t.Errorf("Error adding entry to keytab: %s", err)
+		}
+	}
+	generated, err := kt.Marshal()
+	if err != nil {
+		t.Errorf("Error marshalling generated keytab: %s", err)
+	}
+
+	// Compare content
+	assert.Equal(t, generated, ktutilbytes, "Service keytab doesn't match ktutil keytab")
 }

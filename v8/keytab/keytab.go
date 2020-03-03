@@ -12,6 +12,7 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/jcmturner/gokrb5/v8/crypto"
 	"github.com/jcmturner/gokrb5/v8/types"
 )
 
@@ -21,7 +22,7 @@ const (
 
 // Keytab struct.
 type Keytab struct {
-	version uint8
+	Version uint8
 	Entries []entry
 }
 
@@ -34,6 +35,16 @@ type entry struct {
 	KVNO      uint32
 }
 
+func (e entry) String() string {
+	return fmt.Sprintf("% 4d %s %-56s %2d %-64x",
+		e.KVNO8,
+		e.Timestamp.Format("02/01/06 15:04:05"),
+		e.Principal.String(),
+		e.Key.KeyType,
+		e.Key.KeyValue,
+	)
+}
+
 // Keytab entry principal struct.
 type principal struct {
 	NumComponents int16 `json:"-"`
@@ -42,11 +53,26 @@ type principal struct {
 	NameType      int32
 }
 
+func (p principal) String() string {
+	var s string
+	if len(p.Components) == 0 {
+		s = ""
+	} else {
+		s = p.Components[0]
+	}
+
+	if len(p.Components) == 2 {
+		s += fmt.Sprintf("/%s", p.Components[1])
+	}
+	s += fmt.Sprintf("@%s", p.Realm)
+	return s
+}
+
 // New creates new, empty Keytab type.
 func New() *Keytab {
 	var e []entry
 	return &Keytab{
-		version: 0,
+		Version: 0,
 		Entries: e,
 	}
 }
@@ -96,6 +122,60 @@ func newEntry() entry {
 	}
 }
 
+func (k Keytab) String() string {
+	var s string
+	s = `KVNO Timestamp         Principal                                                ET Key
+---- ----------------- -------------------------------------------------------- -- ----------------------------------------------------------------
+`
+
+	if len(k.Entries) > 0 {
+		for _, entry := range k.Entries {
+			s += entry.String() + "\n"
+		}
+	}
+	return s
+}
+
+// AddEntry adds an entry to the keytab. The password should be  provided in plain text as it will be derived to be stored as a key using the provided enctype.
+func (k *Keytab) AddEntry(principalName, realm, password string, ts time.Time, KVNO uint8, encType int32, pads types.PADataSequence) error {
+	var ktep principal
+	var princ types.PrincipalName
+	var key types.EncryptionKey
+	var e entry
+	var err error
+
+	// Generate a key from the password
+	princ, _ = types.ParseSPNString(principalName)
+	key, _, err = crypto.GetKeyFromPassword(password, princ, realm, encType, pads)
+	if err != nil {
+		return err
+	}
+
+	// Populate the keytab entry principal
+	ktep = newPrincipal()
+	ktep.NumComponents = int16(len(princ.NameString))
+	if k.Version == 1 {
+		ktep.NumComponents += 1
+	}
+
+	ktep.Realm = realm
+	ktep.Components = princ.NameString
+	ktep.NameType = princ.NameType
+
+	princ, _ = types.ParseSPNString(principalName)
+
+	// Populate the keytab entry
+	e = newEntry()
+	e.Principal = ktep
+	e.Timestamp = ts
+	e.KVNO8 = KVNO
+	e.KVNO = uint32(KVNO)
+	e.Key = key
+
+	k.Entries = append(k.Entries, e)
+	return nil
+}
+
 // Create a new principal.
 func newPrincipal() principal {
 	var c []string
@@ -120,9 +200,9 @@ func Load(ktPath string) (*Keytab, error) {
 
 // Marshal keytab into byte slice
 func (kt *Keytab) Marshal() ([]byte, error) {
-	b := []byte{keytabFirstByte, kt.version}
+	b := []byte{keytabFirstByte, kt.Version}
 	for _, e := range kt.Entries {
-		eb, err := e.marshal(int(kt.version))
+		eb, err := e.marshal(int(kt.Version))
 		if err != nil {
 			return b, err
 		}
@@ -153,14 +233,14 @@ func (kt *Keytab) Unmarshal(b []byte) error {
 	}
 	//Get keytab version
 	//The 2nd byte contains the version number (1 or 2)
-	kt.version = b[1]
-	if kt.version != 1 && kt.version != 2 {
+	kt.Version = b[1]
+	if kt.Version != 1 && kt.Version != 2 {
 		return errors.New("invalid keytab data. Keytab version is neither 1 nor 2")
 	}
 	//Version 1 of the file format uses native byte order for integer representations. Version 2 always uses big-endian byte order
 	var endian binary.ByteOrder
 	endian = binary.BigEndian
-	if kt.version == 1 && isNativeEndianLittle() {
+	if kt.Version == 1 && isNativeEndianLittle() {
 		endian = binary.LittleEndian
 	}
 	// n tracks position in the byte array
@@ -289,7 +369,7 @@ func parsePrincipal(b []byte, p *int, kt *Keytab, ke *entry, e *binary.ByteOrder
 	if err != nil {
 		return err
 	}
-	if kt.version == 1 {
+	if kt.Version == 1 {
 		//In version 1 the number of components includes the realm. Minus 1 to make consistent with version 2
 		ke.Principal.NumComponents--
 	}
@@ -313,7 +393,7 @@ func parsePrincipal(b []byte, p *int, kt *Keytab, ke *entry, e *binary.ByteOrder
 		}
 		ke.Principal.Components = append(ke.Principal.Components, string(compB))
 	}
-	if kt.version != 1 {
+	if kt.Version != 1 {
 		//Name Type is omitted in version 1
 		ke.Principal.NameType, err = readInt32(b, p, e)
 		if err != nil {
