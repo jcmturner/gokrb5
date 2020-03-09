@@ -76,6 +76,9 @@ func (cl *Client) sendKPasswdTCP(b []byte, kadmindAddr string) (r kadmin.Reply, 
 		return
 	}
 	rb, err := cl.sendTCP(conn, b)
+	if err != nil {
+		return
+	}
 	err = r.Unmarshal(rb)
 	return
 }
