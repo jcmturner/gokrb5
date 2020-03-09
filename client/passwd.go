@@ -90,6 +90,9 @@ func (cl *Client) sendKPasswdUDP(b []byte, kadmindAddr string) (r kadmin.Reply, 
 		return
 	}
 	rb, err := cl.sendUDP(conn, b)
+	if err != nil {
+		return
+	}
 	err = r.Unmarshal(rb)
 	return
 }
