@@ -117,11 +117,8 @@ func (k Keytab) String() string {
 	s = `KVNO Timestamp         Principal                                                ET Key
 ---- ----------------- -------------------------------------------------------- -- ----------------------------------------------------------------
 `
-
-	if len(k.Entries) > 0 {
-		for _, entry := range k.Entries {
-			s += entry.String() + "\n"
-		}
+	for _, entry := range k.Entries {
+		s += entry.String() + "\n"
 	}
 	return s
 }
