@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"strings"
 	"time"
 	"unsafe"
 
@@ -54,18 +55,7 @@ type principal struct {
 }
 
 func (p principal) String() string {
-	var s string
-	if len(p.Components) == 0 {
-		s = ""
-	} else {
-		s = p.Components[0]
-	}
-
-	if len(p.Components) == 2 {
-		s += fmt.Sprintf("/%s", p.Components[1])
-	}
-	s += fmt.Sprintf("@%s", p.Realm)
-	return s
+	return fmt.Sprintf("%s@%s", strings.Join(p.Components, "/"), p.Realm)
 }
 
 // New creates new, empty Keytab type.
