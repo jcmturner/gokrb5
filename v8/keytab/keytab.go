@@ -136,7 +136,7 @@ func (k Keytab) String() string {
 	return s
 }
 
-// AddEntry adds an entry to the keytab. The password should be  provided in plain text as it will be derived to be stored as a key using the provided enctype.
+// AddEntry adds an entry to the keytab. The password should be provided in plain text and it will be converted using the defined enctype to be stored.
 func (k *Keytab) AddEntry(principalName, realm, password string, ts time.Time, KVNO uint8, encType int32, pads types.PADataSequence) error {
 	var ktep principal
 	var princ types.PrincipalName
