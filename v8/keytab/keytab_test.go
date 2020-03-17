@@ -11,7 +11,6 @@ import (
 
 	"github.com/jcmturner/gokrb5/v8/iana/etypeID"
 	"github.com/jcmturner/gokrb5/v8/test/testdata"
-	"github.com/jcmturner/gokrb5/v8/types"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -171,7 +170,7 @@ func TestKeytabEntriesUser(t *testing.T) {
 
 	kt := New()
 	for _, et := range encTypes {
-		err = kt.AddEntry("user", "EXAMPLE.ORG", "hello123", ts, uint8(31), et, types.PADataSequence{})
+		err = kt.AddEntry("user", "EXAMPLE.ORG", "hello123", ts, uint8(31), et)
 		if err != nil {
 			t.Errorf("Error adding entry to keytab: %s", err)
 		}
@@ -209,7 +208,7 @@ func TestKeytabEntriesService(t *testing.T) {
 
 	kt := New()
 	for _, et := range encTypes {
-		err = kt.AddEntry("HTTP/www.example.org", "EXAMPLE.ORG", "hello456", ts, uint8(10), et, types.PADataSequence{})
+		err = kt.AddEntry("HTTP/www.example.org", "EXAMPLE.ORG", "hello456", ts, uint8(10), et)
 		if err != nil {
 			t.Errorf("Error adding entry to keytab: %s", err)
 		}
