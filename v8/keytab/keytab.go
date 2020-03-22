@@ -9,9 +9,11 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"strings"
 	"time"
 	"unsafe"
 
+	"github.com/jcmturner/gokrb5/v8/crypto"
 	"github.com/jcmturner/gokrb5/v8/types"
 )
 
@@ -34,6 +36,16 @@ type entry struct {
 	KVNO      uint32
 }
 
+func (e entry) String() string {
+	return fmt.Sprintf("% 4d %s %-56s %2d %-64x",
+		e.KVNO8,
+		e.Timestamp.Format("02/01/06 15:04:05"),
+		e.Principal.String(),
+		e.Key.KeyType,
+		e.Key.KeyValue,
+	)
+}
+
 // Keytab entry principal struct.
 type principal struct {
 	NumComponents int16 `json:"-"`
@@ -42,11 +54,15 @@ type principal struct {
 	NameType      int32
 }
 
+func (p principal) String() string {
+	return fmt.Sprintf("%s@%s", strings.Join(p.Components, "/"), p.Realm)
+}
+
 // New creates new, empty Keytab type.
 func New() *Keytab {
 	var e []entry
 	return &Keytab{
-		version: 0,
+		version: 2,
 		Entries: e,
 	}
 }
@@ -94,6 +110,49 @@ func newEntry() entry {
 		},
 		KVNO: 0,
 	}
+}
+
+func (k Keytab) String() string {
+	var s string
+	s = `KVNO Timestamp         Principal                                                ET Key
+---- ----------------- -------------------------------------------------------- -- ----------------------------------------------------------------
+`
+	for _, entry := range k.Entries {
+		s += entry.String() + "\n"
+	}
+	return s
+}
+
+// AddEntry adds an entry to the keytab. The password should be provided in plain text and it will be converted using the defined enctype to be stored.
+func (k *Keytab) AddEntry(principalName, realm, password string, ts time.Time, KVNO uint8, encType int32) error {
+	// Generate a key from the password
+	princ, _ := types.ParseSPNString(principalName)
+	key, _, err := crypto.GetKeyFromPassword(password, princ, realm, encType, types.PADataSequence{})
+	if err != nil {
+		return err
+	}
+
+	// Populate the keytab entry principal
+	ktep := newPrincipal()
+	ktep.NumComponents = int16(len(princ.NameString))
+	if k.version == 1 {
+		ktep.NumComponents += 1
+	}
+
+	ktep.Realm = realm
+	ktep.Components = princ.NameString
+	ktep.NameType = princ.NameType
+
+	// Populate the keytab entry
+	e := newEntry()
+	e.Principal = ktep
+	e.Timestamp = ts
+	e.KVNO8 = KVNO
+	e.KVNO = uint32(KVNO)
+	e.Key = key
+
+	k.Entries = append(k.Entries, e)
+	return nil
 }
 
 // Create a new principal.
