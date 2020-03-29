@@ -31,15 +31,15 @@ import (
 
 func TestClient_SetSPNEGOHeader(t *testing.T) {
 	test.Integration(t)
-	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER1_TEST_GOKRB5)
 	kt := keytab.New()
 	kt.Unmarshal(b)
-	c, _ := config.NewFromString(testdata.TEST_KRB5CONF)
+	c, _ := config.NewFromString(testdata.KRB5_CONF)
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
-		addr = testdata.TEST_KDC_ADDR
+		addr = testdata.KDC_IP_TEST_GOKRB5
 	}
-	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
+	c.Realms[0].KDC = []string{addr + ":" + testdata.KDC_PORT_TEST_GOKRB5}
 	l := log.New(os.Stderr, "SPNEGO Client:", log.LstdFlags)
 	cl := client.NewWithKeytab("testuser1", "TEST.GOKRB5", kt, c, client.Logger(l))
 
@@ -80,15 +80,15 @@ func TestClient_SetSPNEGOHeader(t *testing.T) {
 
 func TestSPNEGOHTTPClient(t *testing.T) {
 	test.Integration(t)
-	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER1_TEST_GOKRB5)
 	kt := keytab.New()
 	kt.Unmarshal(b)
-	c, _ := config.NewFromString(testdata.TEST_KRB5CONF)
+	c, _ := config.NewFromString(testdata.KRB5_CONF)
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
-		addr = testdata.TEST_KDC_ADDR
+		addr = testdata.KDC_IP_TEST_GOKRB5
 	}
-	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
+	c.Realms[0].KDC = []string{addr + ":" + testdata.KDC_PORT_TEST_GOKRB5}
 	l := log.New(os.Stderr, "SPNEGO Client:", log.LstdFlags)
 	cl := client.NewWithKeytab("testuser1", "TEST.GOKRB5", kt, c, client.Logger(l))
 
@@ -386,16 +386,16 @@ func testAppHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getClient() *client.Client {
-	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER1_TEST_GOKRB5)
 	kt := keytab.New()
 	kt.Unmarshal(b)
-	c, _ := config.NewFromString(testdata.TEST_KRB5CONF)
+	c, _ := config.NewFromString(testdata.KRB5_CONF)
 	c.LibDefaults.NoAddresses = true
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
-		addr = testdata.TEST_KDC_ADDR
+		addr = testdata.KDC_IP_TEST_GOKRB5
 	}
-	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
+	c.Realms[0].KDC = []string{addr + ":" + testdata.KDC_PORT_TEST_GOKRB5}
 	c.Realms[0].KPasswdServer = []string{addr + ":464"}
 	cl := client.NewWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 	return cl

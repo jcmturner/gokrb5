@@ -143,7 +143,7 @@ func TestAuthorizationData_GetPACType_GOKRB5TestData(t *testing.T) {
 			AuthorizationData: a,
 		},
 	}
-	b, _ = hex.DecodeString(testdata.SYSHTTP_KEYTAB)
+	b, _ = hex.DecodeString(testdata.KEYTAB_SYSHTTP_TEST_GOKRB5)
 	kt := keytab.New()
 	kt.Unmarshal(b)
 	sname := types.PrincipalName{NameType: nametype.KRB_NT_PRINCIPAL, NameString: []string{"sysHTTP"}}

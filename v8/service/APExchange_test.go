@@ -411,10 +411,10 @@ func newTestAuthenticator(creds credentials.Credentials) types.Authenticator {
 }
 
 func getClient() *client.Client {
-	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER1_TEST_GOKRB5)
 	kt := keytab.New()
 	kt.Unmarshal(b)
-	c, _ := config.NewFromString(testdata.TEST_KRB5CONF)
+	c, _ := config.NewFromString(testdata.KRB5_CONF)
 	cl := client.NewWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 	return cl
 }
