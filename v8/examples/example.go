@@ -25,18 +25,18 @@ func main() {
 	s := httpServer()
 	defer s.Close()
 
-	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER1_TEST_GOKRB5)
 	kt := keytab.New()
 	kt.Unmarshal(b)
-	c, _ := config.NewFromString(testdata.TEST_KRB5CONF)
+	c, _ := config.NewFromString(testdata.KRB5_CONF)
 	c.LibDefaults.NoAddresses = true
 	cl := client.NewWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 	httpRequest(s.URL, cl)
 
-	b, _ = hex.DecodeString(testdata.TESTUSER2_KEYTAB)
+	b, _ = hex.DecodeString(testdata.KEYTAB_TESTUSER2_TEST_GOKRB5)
 	kt = keytab.New()
 	kt.Unmarshal(b)
-	c, _ = config.NewFromString(testdata.TEST_KRB5CONF)
+	c, _ = config.NewFromString(testdata.KRB5_CONF)
 	c.LibDefaults.NoAddresses = true
 	cl = client.NewWithKeytab("testuser2", "TEST.GOKRB5", kt, c)
 	httpRequest(s.URL, cl)

@@ -21,15 +21,15 @@ import (
 func TestMultiThreadedClientSession(t *testing.T) {
 	test.Integration(t)
 
-	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER1_TEST_GOKRB5)
 	kt := keytab.New()
 	kt.Unmarshal(b)
-	c, _ := config.NewFromString(testdata.TEST_KRB5CONF)
+	c, _ := config.NewFromString(testdata.KRB5_CONF)
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
-		addr = testdata.TEST_KDC_ADDR
+		addr = testdata.KDC_IP_TEST_GOKRB5
 	}
-	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
+	c.Realms[0].KDC = []string{addr + ":" + testdata.KDC_PORT_TEST_GOKRB5}
 	cl := NewWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 	err := cl.Login()
 	if err != nil {
@@ -73,13 +73,13 @@ func TestClient_AutoRenew_Goroutine(t *testing.T) {
 	// Tests that the auto renew of client credentials is not spawning goroutines out of control.
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
-		addr = testdata.TEST_KDC_ADDR
+		addr = testdata.KDC_IP_TEST_GOKRB5
 	}
-	b, _ := hex.DecodeString(testdata.TESTUSER2_KEYTAB)
+	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER2_TEST_GOKRB5)
 	kt := keytab.New()
 	kt.Unmarshal(b)
-	c, _ := config.NewFromString(testdata.TEST_KRB5CONF)
-	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC_SHORTTICKETS}
+	c, _ := config.NewFromString(testdata.KRB5_CONF)
+	c.Realms[0].KDC = []string{addr + ":" + testdata.KDC_PORT_TEST_GOKRB5_SHORTTICKETS}
 	c.LibDefaults.PreferredPreauthTypes = []int{int(etypeID.DES3_CBC_SHA1_KD)} // a preauth etype the KDC does not support. Test this does not cause renewal to fail.
 	cl := NewWithKeytab("testuser2", "TEST.GOKRB5", kt, c)
 
