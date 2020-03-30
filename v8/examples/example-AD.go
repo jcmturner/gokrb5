@@ -29,17 +29,17 @@ func main() {
 	fmt.Printf("Listening on %s\n", s.URL)
 	l := log.New(os.Stderr, "GOKRB5 Client: ", log.Ldate|log.Ltime|log.Lshortfile)
 
-	b, _ := hex.DecodeString(testdata.TESTUSER1_USERKRB5_AD_KEYTAB)
+	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER1_USER_GOKRB5)
 	kt := keytab.New()
 	kt.Unmarshal(b)
-	c, _ := config.NewFromString(testdata.TEST_KRB5CONF)
+	c, _ := config.NewFromString(testdata.KRB5_CONF)
 	cl := client.NewWithKeytab("testuser1", "USER.GOKRB5", kt, c, client.DisablePAFXFAST(true), client.Logger(l))
 	httpRequest(s.URL, cl)
 
-	b, _ = hex.DecodeString(testdata.TESTUSER2_USERKRB5_AD_KEYTAB)
+	b, _ = hex.DecodeString(testdata.KEYTAB_TESTUSER2_USER_GOKRB5)
 	kt = keytab.New()
 	kt.Unmarshal(b)
-	c, _ = config.NewFromString(testdata.TEST_KRB5CONF)
+	c, _ = config.NewFromString(testdata.KRB5_CONF)
 	cl = client.NewWithKeytab("testuser2", "USER.GOKRB5", kt, c, client.DisablePAFXFAST(true), client.Logger(l))
 	httpRequest(s.URL, cl)
 }
@@ -76,7 +76,7 @@ func httpRequest(url string, cl *client.Client) {
 
 func httpServer() *httptest.Server {
 	l := log.New(os.Stderr, "GOKRB5 Service Tests: ", log.Ldate|log.Ltime|log.Lshortfile)
-	b, _ := hex.DecodeString(testdata.SYSHTTP_RESGOKRB5_AD_KEYTAB)
+	b, _ := hex.DecodeString(testdata.KEYTAB_SYSHTTP_RES_GOKRB5)
 	kt := keytab.New()
 	kt.Unmarshal(b)
 	th := http.HandlerFunc(testAppHandler)

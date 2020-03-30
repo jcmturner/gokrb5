@@ -16,13 +16,13 @@ func TestClient_Login_DNSKDCs(t *testing.T) {
 	//if ns == "" {
 	//	os.Setenv("DNSUTILS_OVERRIDE_NS", testdata.TEST_NS)
 	//}
-	c, _ := config.NewFromString(testdata.TEST_KRB5CONF)
+	c, _ := config.NewFromString(testdata.KRB5_CONF)
 	// Set to lookup KDCs in DNS
 	c.LibDefaults.DNSLookupKDC = true
 	//Blank out the KDCs to ensure they are not being used
 	c.Realms = []config.Realm{}
 
-	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER1_TEST_GOKRB5)
 	kt := keytab.New()
 	kt.Unmarshal(b)
 	cl := NewWithKeytab("testuser1", "TEST.GOKRB5", kt, c)

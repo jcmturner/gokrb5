@@ -25,7 +25,7 @@ func TestPACTypeVerify(t *testing.T) {
 		t.Fatalf("Error unmarshaling test data: %v", err)
 	}
 
-	b, _ = hex.DecodeString(testdata.SYSHTTP_KEYTAB)
+	b, _ = hex.DecodeString(testdata.KEYTAB_SYSHTTP_TEST_GOKRB5)
 	kt := keytab.New()
 	kt.Unmarshal(b)
 	pn, _ := types.ParseSPNString("sysHTTP")

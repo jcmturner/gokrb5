@@ -16,7 +16,7 @@ import (
 
 func TestUnmarshal(t *testing.T) {
 	t.Parallel()
-	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER1_TEST_GOKRB5)
 	kt := New()
 	err := kt.Unmarshal(b)
 	if err != nil {
@@ -36,7 +36,7 @@ func TestUnmarshal(t *testing.T) {
 
 func TestMarshal(t *testing.T) {
 	t.Parallel()
-	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER1_TEST_GOKRB5)
 	kt := New()
 	err := kt.Unmarshal(b)
 	if err != nil {

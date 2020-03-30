@@ -43,7 +43,7 @@ func TestConfig_GetKDCsUsesConfiguredKDC(t *testing.T) {
 func TestResolveKDC(t *testing.T) {
 	test.Privileged(t)
 
-	c, err := NewFromString(testdata.TEST_KRB5CONF)
+	c, err := NewFromString(testdata.KRB5_CONF)
 	if err != nil {
 		t.Fatal(err)
 	}
