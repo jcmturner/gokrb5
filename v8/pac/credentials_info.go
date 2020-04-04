@@ -40,6 +40,10 @@ func (c *CredentialsInfo) Unmarshal(b []byte, k types.EncryptionKey) (err error)
 		return
 	}
 	c.PACCredentialDataEncrypted, err = r.ReadBytes(len(b) - 8)
+	if err != nil {
+		err = fmt.Errorf("error reading PAC Credetials Data: %v", err)
+		return
+	}
 
 	err = c.DecryptEncPart(k)
 	if err != nil {
