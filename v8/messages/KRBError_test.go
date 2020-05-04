@@ -44,6 +44,12 @@ func TestUnmarshalKRBError(t *testing.T) {
 	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMESTRING, a.SName.NameString, "Ticket SName name string entries not as expected")
 	assert.Equal(t, "krb5data", a.EText, "EText not as expected")
 	assert.Equal(t, []byte("krb5data"), a.EData, "EData not as expected")
+
+	b2, err := a.Marshal()
+	if err != nil {
+		t.Errorf("error marshalling KRBError: %v", err)
+	}
+	assert.Equal(t, b, b2, "marshalled bytes not as expected")
 }
 
 func TestUnmarshalKRBError_optionalsNULL(t *testing.T) {
@@ -70,4 +76,10 @@ func TestUnmarshalKRBError_optionalsNULL(t *testing.T) {
 	assert.Equal(t, nametype.KRB_NT_PRINCIPAL, a.SName.NameType, "Ticket SName NameType not as expected")
 	assert.Equal(t, len(testdata.TEST_PRINCIPALNAME_NAMESTRING), len(a.SName.NameString), "Ticket SName does not have the expected number of NameStrings")
 	assert.Equal(t, testdata.TEST_PRINCIPALNAME_NAMESTRING, a.SName.NameString, "Ticket SName name string entries not as expected")
+
+	b2, err := a.Marshal()
+	if err != nil {
+		t.Errorf("error marshalling KRBError: %v", err)
+	}
+	assert.Equal(t, b, b2, "marshalled bytes not as expected")
 }

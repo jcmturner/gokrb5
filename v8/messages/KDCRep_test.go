@@ -91,6 +91,24 @@ func TestUnmarshalASRep_optionalsNULL(t *testing.T) {
 	assert.Equal(t, testdata.TEST_CIPHERTEXT, string(a.EncPart.Cipher), "Ticket encrypted part cipher not as expected")
 }
 
+func TestMarshalASRep(t *testing.T) {
+	t.Parallel()
+	var a ASRep
+	b, err := hex.DecodeString(testdata.MarshaledKRB5as_rep)
+	if err != nil {
+		t.Fatalf("Test vector read error: %v", err)
+	}
+	err = a.Unmarshal(b)
+	if err != nil {
+		t.Fatalf("Unmarshal error: %v", err)
+	}
+	mb, err := a.Marshal()
+	if err != nil {
+		t.Fatalf("Marshal errored: %v", err)
+	}
+	assert.Equal(t, b, mb, "Marshal bytes of ASRep not as expected")
+}
+
 func TestUnmarshalTGSRep(t *testing.T) {
 	t.Parallel()
 	var a TGSRep
@@ -155,6 +173,24 @@ func TestUnmarshalTGSRep_optionalsNULL(t *testing.T) {
 	assert.Equal(t, testdata.TEST_ETYPE, a.EncPart.EType, "Etype of encrypted part not as expected")
 	assert.Equal(t, iana.PVNO, a.EncPart.KVNO, "Encrypted part KVNO not as expected")
 	assert.Equal(t, testdata.TEST_CIPHERTEXT, string(a.EncPart.Cipher), "Ticket encrypted part cipher not as expected")
+}
+
+func TestMarshalTGSRep(t *testing.T) {
+	t.Parallel()
+	var a TGSRep
+	b, err := hex.DecodeString(testdata.MarshaledKRB5tgs_rep)
+	if err != nil {
+		t.Fatalf("Test vector read error: %v", err)
+	}
+	err = a.Unmarshal(b)
+	if err != nil {
+		t.Fatalf("Unmarshal error: %v", err)
+	}
+	mb, err := a.Marshal()
+	if err != nil {
+		t.Fatalf("Marshal errored: %v", err)
+	}
+	assert.Equal(t, b, mb, "Marshal bytes of TGSRep not as expected")
 }
 
 func TestUnmarshalEncKDCRepPart(t *testing.T) {
