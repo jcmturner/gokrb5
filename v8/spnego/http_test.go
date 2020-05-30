@@ -147,7 +147,7 @@ func TestService_SPNEGOKRB_NoAuthHeaderWithBasicAuth(t *testing.T) {
 		t.Fatalf("Request error: %v\n", err)
 	}
 	assert.Equal(t, http.StatusUnauthorized, httpResp.StatusCode, "Status code in response to client with no SPNEGO not as expected")
-	assert.ElementsMatch(t, []string{"Negotiate", "Basic realm=\"Kerberos Authentication\""}, httpResp.Header.Values("WWW-Authenticate"), "Authentication headers not set by server.")
+	assert.ElementsMatch(t, []string{"Negotiate", "Basic realm=\"Kerberos Authentication\""}, httpResp.Header["Www-Authenticate"], "Authentication headers not set by server.")
 }
 
 func TestService_SPNEGOKRB_ValidUser(t *testing.T) {
