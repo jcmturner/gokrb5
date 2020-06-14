@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/jcmturner/gofork/encoding/asn1"
+	"github.com/jcmturner/gokrb5/v8/asn1tools"
 	"github.com/jcmturner/gokrb5/v8/config"
 	"github.com/jcmturner/gokrb5/v8/credentials"
 	"github.com/jcmturner/gokrb5/v8/crypto"
@@ -103,6 +104,34 @@ func (k *ASRep) Unmarshal(b []byte) error {
 	return nil
 }
 
+// Marshal ASRep struct.
+func (k *ASRep) Marshal() ([]byte, error) {
+	m := marshalKDCRep{
+		PVNO:    k.PVNO,
+		MsgType: k.MsgType,
+		PAData:  k.PAData,
+		CRealm:  k.CRealm,
+		CName:   k.CName,
+		EncPart: k.EncPart,
+	}
+	b, err := k.Ticket.Marshal()
+	if err != nil {
+		return []byte{}, err
+	}
+	m.Ticket = asn1.RawValue{
+		Class:      asn1.ClassContextSpecific,
+		IsCompound: true,
+		Tag:        5,
+		Bytes:      b,
+	}
+	mk, err := asn1.Marshal(m)
+	if err != nil {
+		return mk, krberror.Errorf(err, krberror.EncodingError, "error marshaling AS_REP")
+	}
+	mk = asn1tools.AddASNAppTag(mk, asnAppTag.ASREP)
+	return mk, nil
+}
+
 // Unmarshal bytes b into the TGSRep struct.
 func (k *TGSRep) Unmarshal(b []byte) error {
 	var m marshalKDCRep
@@ -130,6 +159,34 @@ func (k *TGSRep) Unmarshal(b []byte) error {
 	return nil
 }
 
+// Marshal TGSRep struct.
+func (k *TGSRep) Marshal() ([]byte, error) {
+	m := marshalKDCRep{
+		PVNO:    k.PVNO,
+		MsgType: k.MsgType,
+		PAData:  k.PAData,
+		CRealm:  k.CRealm,
+		CName:   k.CName,
+		EncPart: k.EncPart,
+	}
+	b, err := k.Ticket.Marshal()
+	if err != nil {
+		return []byte{}, err
+	}
+	m.Ticket = asn1.RawValue{
+		Class:      asn1.ClassContextSpecific,
+		IsCompound: true,
+		Tag:        5,
+		Bytes:      b,
+	}
+	mk, err := asn1.Marshal(m)
+	if err != nil {
+		return mk, krberror.Errorf(err, krberror.EncodingError, "error marshaling TGS_REP")
+	}
+	mk = asn1tools.AddASNAppTag(mk, asnAppTag.TGSREP)
+	return mk, nil
+}
+
 // Unmarshal bytes b into encrypted part of KRB_KDC_REP.
 func (e *EncKDCRepPart) Unmarshal(b []byte) error {
 	_, err := asn1.UnmarshalWithParams(b, e, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.EncASRepPart))
@@ -143,6 +200,16 @@ func (e *EncKDCRepPart) Unmarshal(b []byte) error {
 		}
 	}
 	return nil
+}
+
+// Marshal encrypted part of KRB_KDC_REP.
+func (e *EncKDCRepPart) Marshal() ([]byte, error) {
+	b, err := asn1.Marshal(*e)
+	if err != nil {
+		return b, krberror.Errorf(err, krberror.EncodingError, "marshaling error of AS_REP encpart")
+	}
+	b = asn1tools.AddASNAppTag(b, asnAppTag.EncASRepPart)
+	return b, nil
 }
 
 // DecryptEncPart decrypts the encrypted part of an AS_REP.
@@ -201,6 +268,7 @@ func (k *ASRep) Verify(cfg *config.Config, creds *credentials.Credentials, asReq
 	if k.DecryptedEncPart.SName.NameType != asReq.ReqBody.SName.NameType || k.DecryptedEncPart.SName.NameString == nil {
 		return false, krberror.NewErrorf(krberror.KRBMsgError, "SName in response does not match what was requested. Requested: %v; Reply: %v", asReq.ReqBody.SName, k.DecryptedEncPart.SName)
 	}
+	//TODO is there something wrong here...>
 	for i := range k.CName.NameString {
 		if k.DecryptedEncPart.SName.NameString[i] != asReq.ReqBody.SName.NameString[i] {
 			return false, krberror.NewErrorf(krberror.KRBMsgError, "SName in response does not match what was requested. Requested: %+v; Reply: %+v", asReq.ReqBody.SName, k.DecryptedEncPart.SName)
