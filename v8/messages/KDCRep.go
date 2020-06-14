@@ -202,6 +202,16 @@ func (e *EncKDCRepPart) Unmarshal(b []byte) error {
 	return nil
 }
 
+// Marshal encrypted part of KRB_KDC_REP.
+func (e *EncKDCRepPart) Marshal() ([]byte, error) {
+	b, err := asn1.Marshal(*e)
+	if err != nil {
+		return b, krberror.Errorf(err, krberror.EncodingError, "marshaling error of AS_REP encpart")
+	}
+	b = asn1tools.AddASNAppTag(b, asnAppTag.EncASRepPart)
+	return b, nil
+}
+
 // DecryptEncPart decrypts the encrypted part of an AS_REP.
 func (k *ASRep) DecryptEncPart(c *credentials.Credentials) (types.EncryptionKey, error) {
 	var key types.EncryptionKey
@@ -258,6 +268,7 @@ func (k *ASRep) Verify(cfg *config.Config, creds *credentials.Credentials, asReq
 	if k.DecryptedEncPart.SName.NameType != asReq.ReqBody.SName.NameType || k.DecryptedEncPart.SName.NameString == nil {
 		return false, krberror.NewErrorf(krberror.KRBMsgError, "SName in response does not match what was requested. Requested: %v; Reply: %v", asReq.ReqBody.SName, k.DecryptedEncPart.SName)
 	}
+	//TODO is there something wrong here...>
 	for i := range k.CName.NameString {
 		if k.DecryptedEncPart.SName.NameString[i] != asReq.ReqBody.SName.NameString[i] {
 			return false, krberror.NewErrorf(krberror.KRBMsgError, "SName in response does not match what was requested. Requested: %+v; Reply: %+v", asReq.ReqBody.SName, k.DecryptedEncPart.SName)

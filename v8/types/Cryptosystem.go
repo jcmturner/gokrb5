@@ -1,7 +1,10 @@
 package types
 
 import (
+	"crypto/rand"
+
 	"github.com/jcmturner/gofork/encoding/asn1"
+	"github.com/jcmturner/gokrb5/v8/crypto/etype"
 )
 
 // Reference: https://www.ietf.org/rfc/rfc4120.txt
@@ -52,4 +55,17 @@ func (a *EncryptionKey) Unmarshal(b []byte) error {
 func (a *Checksum) Unmarshal(b []byte) error {
 	_, err := asn1.Unmarshal(b, a)
 	return err
+}
+
+func GenerateEncryptionKey(etype etype.EType) (EncryptionKey, error) {
+	k := EncryptionKey{
+		KeyType: etype.GetETypeID(),
+	}
+	b := make([]byte, etype.GetKeyByteSize(), etype.GetKeyByteSize())
+	_, err := rand.Read(b)
+	if err != nil {
+		return k, err
+	}
+	k.KeyValue = b
+	return k, nil
 }

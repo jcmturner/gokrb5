@@ -1,7 +1,6 @@
 package client
 
 import (
-	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -173,14 +172,11 @@ func (cl *Client) sendTCP(conn *net.TCPConn, b []byte) ([]byte, error) {
 	defer conn.Close()
 	var r []byte
 	// RFC 4120 7.2.2 specifies the first 4 bytes indicate the length of the message in big endian order.
-	var buf bytes.Buffer
-	err := binary.Write(&buf, binary.BigEndian, uint32(len(b)))
-	if err != nil {
-		return r, err
-	}
-	b = append(buf.Bytes(), b...)
+	hb := make([]byte, 4, 4)
+	binary.BigEndian.PutUint32(hb, uint32(len(b)))
+	b = append(hb, b...)
 
-	_, err = conn.Write(b)
+	_, err := conn.Write(b)
 	if err != nil {
 		return r, fmt.Errorf("error sending to KDC (%s): %v", conn.RemoteAddr().String(), err)
 	}
