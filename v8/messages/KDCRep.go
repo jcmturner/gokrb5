@@ -159,7 +159,7 @@ func (k *TGSRep) Unmarshal(b []byte) error {
 	return nil
 }
 
-// Marshal ASReq struct.
+// Marshal TGSRep struct.
 func (k *TGSRep) Marshal() ([]byte, error) {
 	m := marshalKDCRep{
 		PVNO:    k.PVNO,

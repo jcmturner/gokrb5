@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestUnmarshalKRBError(t *testing.T) {
+func TestUnmarshalMarshalKRBError(t *testing.T) {
 	t.Parallel()
 	var a KRBError
 	b, err := hex.DecodeString(testdata.MarshaledKRB5error)
@@ -52,7 +52,7 @@ func TestUnmarshalKRBError(t *testing.T) {
 	assert.Equal(t, b, b2, "marshalled bytes not as expected")
 }
 
-func TestUnmarshalKRBError_optionalsNULL(t *testing.T) {
+func TestUnmarshalMarshalKRBError_optionalsNULL(t *testing.T) {
 	t.Parallel()
 	var a KRBError
 	b, err := hex.DecodeString(testdata.MarshaledKRB5errorOptionalsNULL)
