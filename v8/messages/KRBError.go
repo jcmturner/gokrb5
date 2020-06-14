@@ -64,7 +64,6 @@ func (k *KRBError) Unmarshal(b []byte) error {
 func (k *KRBError) Marshal() ([]byte, error) {
 	b, err := asn1.Marshal(*k)
 	if err != nil {
-		// TODO - have a constant of generic server error bytes to return
 		return b, krberror.Errorf(err, krberror.EncodingError, "error marshaling KRBError")
 	}
 	b = asn1tools.AddASNAppTag(b, asnAppTag.KRBError)
