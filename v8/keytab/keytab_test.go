@@ -10,7 +10,9 @@ import (
 	"time"
 
 	"github.com/jcmturner/gokrb5/v8/iana/etypeID"
+	"github.com/jcmturner/gokrb5/v8/iana/nametype"
 	"github.com/jcmturner/gokrb5/v8/test/testdata"
+	"github.com/jcmturner/gokrb5/v8/types"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -220,4 +222,30 @@ func TestKeytabEntriesService(t *testing.T) {
 
 	// Compare content
 	assert.Equal(t, generated, ktutilbytes, "Service keytab doesn't match ktutil keytab")
+}
+
+func TestKeytab_GetEncryptionKey(t *testing.T) {
+	princ := "HTTP/princ.test.gokrb5"
+	realm := "TEST.GOKRB5"
+
+	kt := New()
+	kt.AddEntry(princ, realm, "abcdefg", time.Unix(100, 0), 1, 18)
+	kt.AddEntry(princ, realm, "abcdefg", time.Unix(200, 0), 2, 18)
+	kt.AddEntry(princ, realm, "abcdefg", time.Unix(300, 0), 3, 18)
+	kt.AddEntry(princ, realm, "abcdefg", time.Unix(400, 0), 4, 18)
+	kt.AddEntry(princ, realm, "abcdefg", time.Unix(350, 0), 5, 18)
+	kt.AddEntry("HTTP/other.test.gokrb5", realm, "abcdefg", time.Unix(500, 0), 5, 18)
+
+	pn := types.NewPrincipalName(nametype.KRB_NT_PRINCIPAL, princ)
+
+	_, kvno, err := kt.GetEncryptionKey(pn, realm, 0, 18)
+	if err != nil {
+		t.Error(err)
+	}
+	assert.Equal(t, 4, kvno)
+	_, kvno, err = kt.GetEncryptionKey(pn, realm, 3, 18)
+	if err != nil {
+		t.Error(err)
+	}
+	assert.Equal(t, 3, kvno)
 }
