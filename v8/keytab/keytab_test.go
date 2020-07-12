@@ -99,6 +99,13 @@ func TestLoad(t *testing.T) {
 	}
 }
 
+func TestLoadIncorrectPath(t *testing.T) {
+	_, err := Load(os.TempDir() + "/doesnotexist.keytab")
+	if err == nil {
+		t.Error("keytab loading did not error when path was invalid")
+	}
+}
+
 // This test provides inputs to readBytes that previously
 // caused a panic.
 func TestReadBytes(t *testing.T) {
