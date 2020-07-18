@@ -91,38 +91,6 @@ func TestMarshal_negTokenResp(t *testing.T) {
 }
 
 func TestUnmarshal_negTokenInitWithReqFlags(t *testing.T) {
-	//t.Parallel()
-	//b, err := hex.DecodeString(testNegTokenInit)
-	//if err != nil {
-	//	t.Fatalf("Error converting hex string test data to bytes: %v", err)
-	//}
-	//isInit, nt, err := UnmarshalNegToken(b)
-	//if err != nil {
-	//	t.Fatalf("Error unmarshalling negotiation token: %v", err)
-	//}
-	//assert.IsType(t, NegTokenInit{}, nt, "Not the expected type NegTokenInit")
-	//assert.True(t, isInit, "Boolean indicating type is negTokenInit is not true")
-	//nInit := nt.(NegTokenInit)
-	//
-	//// Now add some ReqFlags
-	//nInit.ReqFlags = gssapi.NewContextFlags()
-	//nInit.ReqFlags.Bytes = []byte{0xF6}
-	//mb, err := nInit.Marshal()
-	//if err != nil {
-	//	t.Fatalf("could not marshal with ReqFlags: %v", err)
-	//}
-	//t.Logf("MB: %s\n", hex.EncodeToString(mb))
-	//
-	//isInit, nt, err = UnmarshalNegToken(mb)
-	//if err != nil {
-	//	t.Fatalf("Error unmarshalling negotiation token: %v", err)
-	//}
-	//assert.IsType(t, NegTokenInit{}, nt, "Not the expected type NegTokenInit")
-	//assert.True(t, isInit, "Boolean indicating type is negTokenInit is not true")
-	//nInit2 := nt.(NegTokenInit)
-	//t.Logf("nt2: %+v\n", nInit2)
-	//assert.Equal(t, nInit.MechTokenBytes, nInit2.MechTokenBytes)
-
 	m := NegTokenInit{
 		MechTypes: []asn1.ObjectIdentifier{
 			asn1.ObjectIdentifier{1, 2, 840, 113554, 1, 2, 2},

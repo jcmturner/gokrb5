@@ -72,7 +72,6 @@ func NewClient(krb5Cl *client.Client, httpCl *http.Client, spn string) *Client {
 		}
 		return redirectErr{reqTarget: req}
 	}
-
 	return &Client{
 		Client:     httpCl,
 		krb5Client: krb5Cl,
