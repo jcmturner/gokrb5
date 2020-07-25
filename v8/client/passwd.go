@@ -58,17 +58,17 @@ func (cl *Client) sendToKPasswd(msg kadmin.Request) (r kadmin.Reply, err error) 
 	if err != nil {
 		return
 	}
+	var rb []byte
 	if len(b) <= cl.Config.LibDefaults.UDPPreferenceLimit {
-		rb, err := dialSendUDP(kps, b)
+		rb, err = dialSendUDP(kps, b)
 		if err != nil {
 			return
 		}
-		err = r.Unmarshal(rb)
-		return
-	}
-	rb, err := dialSendTCP(kps, b)
-	if err != nil {
-		return
+	} else {
+		rb, err = dialSendTCP(kps, b)
+		if err != nil {
+			return
+		}
 	}
 	err = r.Unmarshal(rb)
 	return
