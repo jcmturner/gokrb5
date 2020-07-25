@@ -253,6 +253,35 @@ func TestClient_NetworkTimeout(t *testing.T) {
 	}
 }
 
+func TestClient_NetworkTryNextKDC(t *testing.T) {
+	test.Integration(t)
+
+	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER1_TEST_GOKRB5)
+	kt := keytab.New()
+	kt.Unmarshal(b)
+	c, _ := config.NewFromString(testdata.KRB5_CONF)
+	addr := os.Getenv("TEST_KDC_ADDR")
+	if addr == "" {
+		addr = testdata.KDC_IP_TEST_GOKRB5
+	}
+	// Two out fo three times this should fail the first time.
+	// So will run login twice to expect at least once the first time it will be to a bad KDC
+	c.Realms[0].KDC = []string{testdata.KDC_IP_TEST_GOKRB5_BADADDR + ":88",
+		testdata.KDC_IP_TEST_GOKRB5_BADADDR + ":88",
+		addr + ":" + testdata.KDC_PORT_TEST_GOKRB5,
+	}
+	cl := client.NewWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
+
+	err := cl.Login()
+	if err != nil {
+		t.Fatal("login failed")
+	}
+	err = cl.Login()
+	if err != nil {
+		t.Fatal("login failed")
+	}
+}
+
 func TestClient_GetServiceTicket(t *testing.T) {
 	test.Integration(t)
 
