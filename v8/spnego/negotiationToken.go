@@ -38,7 +38,7 @@ type NegTokenInit struct {
 
 type marshalNegTokenInit struct {
 	MechTypes      []asn1.ObjectIdentifier `asn1:"explicit,tag:0"`
-	ReqFlags       gssapi.ContextFlags     `asn1:"explicit,optional,tag:1"`
+	ReqFlags       asn1.BitString          `asn1:"explicit,optional,tag:1"`
 	MechTokenBytes []byte                  `asn1:"explicit,optional,omitempty,tag:2"`
 	MechListMIC    []byte                  `asn1:"explicit,optional,omitempty,tag:3"` // This field is not used when negotiating Kerberos tokens
 }
@@ -67,7 +67,7 @@ type NegTokenTarg NegTokenResp
 func (n *NegTokenInit) Marshal() ([]byte, error) {
 	m := marshalNegTokenInit{
 		MechTypes:      n.MechTypes,
-		ReqFlags:       n.ReqFlags,
+		ReqFlags:       (asn1.BitString)(n.ReqFlags),
 		MechTokenBytes: n.MechTokenBytes,
 		MechListMIC:    n.MechListMIC,
 	}
@@ -261,7 +261,7 @@ func UnmarshalNegToken(b []byte) (bool, interface{}, error) {
 		}
 		nt := NegTokenInit{
 			MechTypes:      n.MechTypes,
-			ReqFlags:       n.ReqFlags,
+			ReqFlags:       (gssapi.ContextFlags)(n.ReqFlags),
 			MechTokenBytes: n.MechTokenBytes,
 			MechListMIC:    n.MechListMIC,
 		}
