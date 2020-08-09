@@ -88,3 +88,20 @@ func TestMarshal_negTokenResp(t *testing.T) {
 	}
 	assert.Equal(t, b, mb, "Marshalled bytes not as expected for NegTokenResp")
 }
+
+func TestUnmarshal_negTokenInitWithReqFlags(t *testing.T) {
+	mhex := "a01e301ca00d300b06092a864886f712010202a10403020176a2050403010203"
+	mb, err := hex.DecodeString(mhex)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var m NegTokenInit
+	err = m.Unmarshal(mb)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(m.MechTokenBytes) != 3 {
+		t.Errorf("unmarshal did not return the correct number of mechToken bytes")
+	}
+}
