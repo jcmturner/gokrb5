@@ -317,6 +317,42 @@ func TestClient_GetServiceTicket(t *testing.T) {
 	assert.Equal(t, key.KeyValue, key2.KeyValue)
 }
 
+func TestClient_GetServiceTicket_CanonicalizeTrue(t *testing.T) {
+	test.Integration(t)
+
+	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER1_TEST_GOKRB5)
+	kt := keytab.New()
+	kt.Unmarshal(b)
+	c, _ := config.NewFromString(testdata.KRB5_CONF)
+	c.LibDefaults.Canonicalize = true
+	addr := os.Getenv("TEST_KDC_ADDR")
+	if addr == "" {
+		addr = testdata.KDC_IP_TEST_GOKRB5
+	}
+	c.Realms[0].KDC = []string{addr + ":" + testdata.KDC_PORT_TEST_GOKRB5}
+	cl := client.NewWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
+
+	err := cl.Login()
+	if err != nil {
+		t.Fatalf("error on login: %v\n", err)
+	}
+	spn := "HTTP/host.test.gokrb5"
+	tkt, key, err := cl.GetServiceTicket(spn)
+	if err != nil {
+		t.Fatalf("error getting service ticket: %v\n", err)
+	}
+	assert.Equal(t, spn, tkt.SName.PrincipalNameString())
+	assert.Equal(t, int32(18), key.KeyType)
+
+	//Check cache use - should get the same values back again
+	tkt2, key2, err := cl.GetServiceTicket(spn)
+	if err != nil {
+		t.Fatalf("error getting service ticket: %v\n", err)
+	}
+	assert.Equal(t, tkt.EncPart.Cipher, tkt2.EncPart.Cipher)
+	assert.Equal(t, key.KeyValue, key2.KeyValue)
+}
+
 func TestClient_GetServiceTicket_InvalidSPN(t *testing.T) {
 	test.Integration(t)
 
