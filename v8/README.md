@@ -14,7 +14,8 @@ Development will be focused on the latest major version. New features will only 
 ![Go version](https://img.shields.io/badge/Go-1.15-brightgreen.svg)
 ![Go version](https://img.shields.io/badge/Go-1.14-brightgreen.svg)
 
-gokrb5 may work with other versions of Go but they are not tested.
+gokrb5 may work with other versions of Go but they are not formally tested.
+It has been reported that gokrb5 also works with the [gollvm](https://go.googlesource.com/gollvm/) compiler but this is not formally tested.
 
 ## Features
 * **Pure Go** - no dependency on external libraries 
