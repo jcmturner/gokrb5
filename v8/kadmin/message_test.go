@@ -4,9 +4,9 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/jcmturner/gokrb5/v8/iana"
-	"github.com/jcmturner/gokrb5/v8/iana/msgtype"
-	"github.com/jcmturner/gokrb5/v8/test/testdata"
+	"github.com/NeilGerring/gokrb5/v8/iana"
+	"github.com/NeilGerring/gokrb5/v8/iana/msgtype"
+	"github.com/NeilGerring/gokrb5/v8/test/testdata"
 	"github.com/stretchr/testify/assert"
 )
 

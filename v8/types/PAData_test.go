@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jcmturner/gokrb5/v8/iana/patype"
-	"github.com/jcmturner/gokrb5/v8/test/testdata"
+	"github.com/NeilGerring/gokrb5/v8/iana/patype"
+	"github.com/NeilGerring/gokrb5/v8/test/testdata"
 	"github.com/stretchr/testify/assert"
 )
 
