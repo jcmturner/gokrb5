@@ -86,27 +86,334 @@ func (c *CCache) Unmarshal(b []byte) error {
 		return errors.New("Invalid credential cache data. Keytab version is not within 1 to 4")
 	}
 	p++
-	//Version 1 or 2 of the file format uses native byte order for integer representations. Versions 3 & 4 always uses big-endian byte order
-	var endian binary.ByteOrder
-	endian = binary.BigEndian
-	if (c.Version == 1 || c.Version == 2) && isNativeEndianLittle() {
-		endian = binary.LittleEndian
-	}
+	endian := c.getEndian()
 	if c.Version == 4 {
-		err := parseHeader(b, &p, c, &endian)
+		err := parseHeader(b, &p, c, endian)
 		if err != nil {
 			return err
 		}
 	}
-	c.DefaultPrincipal = parsePrincipal(b, &p, c, &endian)
+	c.DefaultPrincipal = parsePrincipal(b, &p, c, endian)
 	for p < len(b) {
-		cred, err := parseCredential(b, &p, c, &endian)
+		cred, err := parseCredential(b, &p, c, endian)
 		if err != nil {
 			return err
 		}
 		c.Credentials = append(c.Credentials, cred)
 	}
 	return nil
+}
+
+// Marshal a CCache type into a byte string
+func (c *CCache) Marshal() ([]byte, error) {
+	var b bytes.Buffer
+	var err error
+	endian := c.getEndian()
+
+	// The first byte of the file always has the value 5
+	err = b.WriteByte(5)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	// Write the CCache version
+	err = b.WriteByte(c.Version)
+
+	if c.Version == 4 {
+		// Write version 4 header
+		headerBytes, err := c.writeV4Header()
+		if err != nil {
+			return []byte{}, err
+		}
+
+		_, err = b.Write(headerBytes)
+		if err != nil {
+			return []byte{}, err
+		}
+	}
+
+	// Write default principal
+	princBytes, err := c.writePrincipal(c.DefaultPrincipal, endian)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	_, err = b.Write(princBytes)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	// Write credentials
+	for _, cred := range c.Credentials {
+		credBytes, err := c.writeCredential(cred, endian)
+		if err != nil {
+			return []byte{}, err
+		}
+		_, err = b.Write(credBytes)
+		if err != nil {
+			return []byte{}, err
+		}
+	}
+
+	return b.Bytes(), nil
+}
+
+func (c *CCache) writeV4Header() ([]byte, error) {
+	var byteString bytes.Buffer
+	var err error
+
+	b := &byteString
+
+	// V4 is always BigEndian
+	endian := binary.BigEndian
+
+	// Write header length
+	err = binary.Write(b, endian, c.Header.length)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	for _, field := range c.Header.fields {
+		// Write field tag
+		err = binary.Write(b, endian, field.tag)
+		if err != nil {
+			return []byte{}, err
+		}
+
+		// Write field length
+		err = binary.Write(b, endian, field.length)
+		if err != nil {
+			return []byte{}, err
+		}
+
+		// Write field data
+		_, err = b.Write(field.value)
+		if err != nil {
+			return []byte{}, err
+		}
+	}
+
+	return byteString.Bytes(), nil
+}
+
+func (c *CCache) writePrincipal(p principal, endian *binary.ByteOrder) ([]byte, error) {
+	var byteString bytes.Buffer
+	var err error
+
+	b := &byteString
+
+	// Version 1 does not have the name type
+	if c.Version != 1 {
+		err = binary.Write(b, *endian, uint32(p.PrincipalName.NameType))
+		if err != nil {
+			return []byte{}, err
+		}
+	}
+
+	// Count of components
+	componentCount := len(p.PrincipalName.NameString)
+	if c.Version == 1 {
+		// Version 1 includes realm in count
+		componentCount = componentCount + 1
+	}
+	err = binary.Write(b, *endian, uint32(componentCount))
+	if err != nil {
+		return []byte{}, err
+	}
+
+	// Realm --- Length then data
+
+	realmLength := len(p.Realm)
+	err = binary.Write(b, *endian, uint32(realmLength))
+	if err != nil {
+		return []byte{}, err
+	}
+
+	_, err = b.WriteString(p.Realm)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	// Components
+	for _, namePart := range p.PrincipalName.NameString {
+		// length then data
+		err = binary.Write(b, *endian, uint32(len(namePart)))
+		if err != nil {
+			return []byte{}, err
+		}
+
+		_, err = b.WriteString(namePart)
+		if err != nil {
+			return []byte{}, err
+		}
+	}
+
+	return byteString.Bytes(), nil
+
+}
+
+func (c *CCache) writeCredential(cred *Credential, endian *binary.ByteOrder) ([]byte, error) {
+	var byteString bytes.Buffer
+	var err error
+
+	b := &byteString
+
+	// Client - a principal
+	princBytes, err := c.writePrincipal(cred.Client, endian)
+	if err != nil {
+		return []byte{}, err
+	}
+	_, err = b.Write(princBytes)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	// Server - a principal
+	princBytes, err = c.writePrincipal(cred.Server, endian)
+	if err != nil {
+		return []byte{}, err
+	}
+	_, err = b.Write(princBytes)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	// Key - 16 bit key type, then key data
+	err = binary.Write(b, *endian, uint16(cred.Key.KeyType))
+	if err != nil {
+		return []byte{}, err
+	}
+
+	if c.Version == 3 {
+		// Version 3 repeats the key type for some reason
+		err = binary.Write(b, *endian, uint32(cred.Key.KeyType))
+		if err != nil {
+			return []byte{}, err
+		}
+	}
+
+	keyLen := len(cred.Key.KeyValue)
+	err = binary.Write(b, *endian, uint32(keyLen))
+	if err != nil {
+		return []byte{}, err
+	}
+
+	_, err = b.Write(cred.Key.KeyValue)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	// AuthTime, StartTime, EndTime, RewnewTil - all 32 bit
+	// Unix Epoch seconds
+	for _, timeValue := range []time.Time{cred.AuthTime, cred.StartTime, cred.EndTime, cred.RenewTill} {
+		err = binary.Write(b, *endian, uint32(timeValue.Unix()))
+		if err != nil {
+			return []byte{}, err
+		}
+	}
+
+	// IsSKey
+	isSKey := uint8(0)
+	if cred.IsSKey {
+		isSKey = uint8(1)
+	}
+	err = binary.Write(b, *endian, isSKey)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	// TicketFlags
+	err = binary.Write(b, *endian, cred.TicketFlags.Bytes)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	// Addresses
+	// Address count first
+	err = binary.Write(b, *endian, uint32(len(cred.Addresses)))
+	if err != nil {
+		return []byte{}, err
+	}
+
+	// Then each address
+	for _, address := range cred.Addresses {
+		// Type
+		err = binary.Write(b, *endian, uint16(address.AddrType))
+		if err != nil {
+			return []byte{}, err
+		}
+		// Data length
+		err = binary.Write(b, *endian, uint32(len(address.Address)))
+		if err != nil {
+			return []byte{}, err
+		}
+		// Data
+		_, err = b.Write(address.Address)
+		if err != nil {
+			return []byte{}, err
+		}
+	}
+
+	// AuthData
+	// AuthData count first
+	err = binary.Write(b, *endian, uint32(len(cred.AuthData)))
+	if err != nil {
+		return []byte{}, err
+	}
+
+	// Then each auth data
+	for _, authData := range cred.AuthData {
+		// Type
+		err = binary.Write(b, *endian, uint16(authData.ADType))
+		if err != nil {
+			return []byte{}, err
+		}
+		// Data length
+		err = binary.Write(b, *endian, uint32(len(authData.ADData)))
+		if err != nil {
+			return []byte{}, err
+		}
+		// Data
+		_, err = b.Write(authData.ADData)
+		if err != nil {
+			return []byte{}, err
+		}
+	}
+
+	// Ticket
+	err = binary.Write(b, *endian, uint32(len(cred.Ticket)))
+	if err != nil {
+		return []byte{}, err
+	}
+	_, err = b.Write(cred.Ticket)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	// Second Ticket
+	err = binary.Write(b, *endian, uint32(len(cred.SecondTicket)))
+	if err != nil {
+		return []byte{}, err
+	}
+	_, err = b.Write(cred.SecondTicket)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	return byteString.Bytes(), nil
+}
+
+// Return either binary.ByteOrder depending on the CCache
+// version and machine endianess
+func (c *CCache) getEndian() *binary.ByteOrder {
+	var endian binary.ByteOrder
+	endian = binary.BigEndian
+	//Version 1 or 2 of the file format uses native byte order for integer representations. Versions 3 & 4 always uses big-endian byte order
+	if (c.Version == 1 || c.Version == 2) && isNativeEndianLittle() {
+		endian = binary.LittleEndian
+	}
+
+	return &endian
 }
 
 func parseHeader(b []byte, p *int, c *CCache, e *binary.ByteOrder) error {
