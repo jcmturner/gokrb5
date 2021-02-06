@@ -10,6 +10,24 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestMarshal(t *testing.T) {
+	t.Parallel()
+	b, err := hex.DecodeString(testdata.CCACHE_TEST)
+	if err != nil {
+		t.Fatal("Error decoding test data")
+	}
+	c := new(CCache)
+	err = c.Unmarshal(b)
+	if err != nil {
+		t.Fatalf("Error parsing cache: %v", err)
+	}
+	marshalled, err := c.Marshal()
+	if err != nil {
+		t.Fatalf("Error marshalling cache: %v", err)
+	}
+	assert.Equal(t, b, marshalled, "Marshalled cache does not match test data")
+}
+
 func TestParse(t *testing.T) {
 	t.Parallel()
 	b, err := hex.DecodeString(testdata.CCACHE_TEST)
