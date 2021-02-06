@@ -71,6 +71,34 @@ func LoadCCache(cpath string) (*CCache, error) {
 	return c, err
 }
 
+// NewV4CCache creates a new Version 4 CCache with no credentials in it
+func NewV4CCache() *CCache {
+	c := CCache{}
+	c.Version = 4
+	h := header{}
+	h.length = 0
+	c.Header = h
+	return &c
+}
+
+// AddCredential adds a credential to a CCache
+func (c *CCache) AddCredential(cred *Credential) {
+	c.Credentials = append(c.Credentials, cred)
+}
+
+// SetDefaultPrincipal sets the default principal for a CCache
+func (c *CCache) SetDefaultPrincipal(d principal) {
+	c.DefaultPrincipal = d
+}
+
+// NewPrincipal returns a new principal
+func NewPrincipal(name types.PrincipalName, realm string) principal {
+	p := principal{}
+	p.Realm = realm
+	p.PrincipalName = name
+	return p
+}
+
 // Unmarshal a byte slice of credential cache data into CCache type.
 func (c *CCache) Unmarshal(b []byte) error {
 	p := 0
