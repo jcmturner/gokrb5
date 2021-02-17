@@ -41,7 +41,9 @@ func (s *sessions) update(sess *session) {
 			// Cancel the one in the cache and add this one.
 			i.mux.Lock()
 			defer i.mux.Unlock()
-			i.cancel <- true
+			if i.cancel != nil {
+				i.cancel <- true
+			}
 			s.Entries[sess.realm] = sess
 			return
 		}
@@ -291,5 +293,11 @@ func (cl *Client) sessionTimes(realm string) (authTime, endTime, renewTime, sess
 
 // spnRealm resolves the realm name of a service principal name
 func (cl *Client) spnRealm(spn types.PrincipalName) string {
-	return cl.Config.ResolveRealm(spn.NameString[len(spn.NameString)-1])
+	// Is thre a domain/realm mapping for the spn's domain ?
+
+	// We don't want to use the default realm, that isn't meant to be used
+	// for TGS requests.  The caller should ask the client's realm if the
+	// config doesn't specify one
+
+	return cl.Config.ResolveRealm(spn.NameString[len(spn.NameString)-1], false)
 }

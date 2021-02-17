@@ -490,8 +490,9 @@ func (d *DomainRealm) deleteMapping(domain, realm string) {
 }
 
 // ResolveRealm resolves the kerberos realm for the specified domain name from the domain to realm mapping.
-// The most specific mapping is returned.
-func (c *Config) ResolveRealm(domainName string) string {
+// The most specific mapping is returned.  If none is found, the default realm is returned, unless
+// useDefault is false
+func (c *Config) ResolveRealm(domainName string, useDefault bool) string {
 	domainName = strings.TrimSuffix(domainName, ".")
 
 	// Try to match the entire hostname first
@@ -507,7 +508,11 @@ func (c *Config) ResolveRealm(domainName string) string {
 			return r
 		}
 	}
-	return c.LibDefaults.DefaultRealm
+
+	if useDefault {
+		return c.LibDefaults.DefaultRealm
+	}
+	return ""
 }
 
 // Load the KRB5 configuration from the specified file path.

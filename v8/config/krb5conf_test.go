@@ -646,18 +646,22 @@ func TestResolveRealm(t *testing.T) {
 
 	tests := []struct {
 		domainName string
+		useDefault bool
 		want       string
 	}{
-		{"unknown.com", "TEST.GOKRB5"},
-		{"hostname1.example.com", "EXAMPLE.COM"},
-		{"hostname2.example.com", "TEST.GOKRB5"},
-		{"one.two.three.example.com", "EXAMPLE.COM"},
-		{".test.gokrb5", "TEST.GOKRB5"},
-		{"foo.testlowercase.org", "lowercase.org"},
+		{"unknown.com", true, "TEST.GOKRB5"},
+		{"unknown.com", false, ""},
+		{"hostname1.example.com", true, "EXAMPLE.COM"},
+		{"hostname1.example.com", false, "EXAMPLE.COM"},
+		{"hostname2.example.com", true, "TEST.GOKRB5"},
+		{"hostname2.example.com", false, "TEST.GOKRB5"},
+		{"one.two.three.example.com", true, "EXAMPLE.COM"},
+		{".test.gokrb5", true, "TEST.GOKRB5"},
+		{"foo.testlowercase.org", true, "lowercase.org"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.domainName, func(t *testing.T) {
-			if got := c.ResolveRealm(tt.domainName); got != tt.want {
+			if got := c.ResolveRealm(tt.domainName, tt.useDefault); got != tt.want {
 				t.Errorf("config.ResolveRealm() = %v, want %v", got, tt.want)
 			}
 		})
