@@ -10,8 +10,10 @@ import (
 	"io"
 	"net"
 	"os"
+	"os/exec"
 	"os/user"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -46,12 +48,12 @@ func New() *Config {
 type LibDefaults struct {
 	AllowWeakCrypto bool //default false
 	// ap_req_checksum_type int //unlikely to support this
-	Canonicalize bool          //default false
-	CCacheType   int           //default is 4. unlikely to implement older
-	Clockskew    time.Duration //max allowed skew in seconds, default 300
-	//Default_ccache_name string // default /tmp/krb5cc_%{uid} //Not implementing as will hold in memory
-	DefaultClientKeytabName string //default /usr/local/var/krb5/user/%{euid}/client.keytab
-	DefaultKeytabName       string //default /etc/krb5.keytab
+	Canonicalize            bool          //default false
+	CCacheType              int           //default is 4. unlikely to implement older
+	Clockskew               time.Duration //max allowed skew in seconds, default 300
+	DefaultCcacheName       string        // default /tmp/krb5cc_%{uid} //Not implementing as will hold in memory
+	DefaultClientKeytabName string        //default /usr/local/var/krb5/user/%{euid}/client.keytab
+	DefaultKeytabName       string        //default /etc/krb5.keytab
 	DefaultRealm            string
 	DefaultTGSEnctypes      []string //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
 	DefaultTktEnctypes      []string //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
@@ -85,11 +87,11 @@ type LibDefaults struct {
 
 // Create a new LibDefaults struct.
 func newLibDefaults() LibDefaults {
-	uid := "0"
+	vars := PkgConfigVars(nil)
+
 	var hdir string
 	usr, _ := user.Current()
 	if usr != nil {
-		uid = usr.Uid
 		hdir = usr.HomeDir
 	}
 	opts := asn1.BitString{}
@@ -98,8 +100,9 @@ func newLibDefaults() LibDefaults {
 	return LibDefaults{
 		CCacheType:              4,
 		Clockskew:               time.Duration(300) * time.Second,
-		DefaultClientKeytabName: fmt.Sprintf("/usr/local/var/krb5/user/%s/client.keytab", uid),
-		DefaultKeytabName:       "/etc/krb5.keytab",
+		DefaultCcacheName:       ExpandParams(vars["DEFCCNAME"]),
+		DefaultClientKeytabName: ExpandParams(vars["DEFCKTNAME"]),
+		DefaultKeytabName:       ExpandParams(vars["DEFKTNAME"]),
 		DefaultTGSEnctypes:      []string{"aes256-cts-hmac-sha1-96", "aes128-cts-hmac-sha1-96", "des3-cbc-sha1", "arcfour-hmac-md5", "camellia256-cts-cmac", "camellia128-cts-cmac", "des-cbc-crc", "des-cbc-md5", "des-cbc-md4"},
 		DefaultTktEnctypes:      []string{"aes256-cts-hmac-sha1-96", "aes128-cts-hmac-sha1-96", "des3-cbc-sha1", "arcfour-hmac-md5", "camellia256-cts-cmac", "camellia128-cts-cmac", "des-cbc-crc", "des-cbc-md5", "des-cbc-md4"},
 		DNSCanonicalizeHostname: true,
@@ -160,10 +163,12 @@ func (l *LibDefaults) parseLines(lines []string) error {
 				return InvalidErrorf("libdefaults section line (%s): %v", line, err)
 			}
 			l.Clockskew = d
+		case "default_ccache_name":
+			l.DefaultCcacheName = ExpandParams(strings.TrimSpace(p[1]))
 		case "default_client_keytab_name":
-			l.DefaultClientKeytabName = strings.TrimSpace(p[1])
+			l.DefaultClientKeytabName = ExpandParams(strings.TrimSpace(p[1]))
 		case "default_keytab_name":
-			l.DefaultKeytabName = strings.TrimSpace(p[1])
+			l.DefaultKeytabName = ExpandParams(strings.TrimSpace(p[1]))
 		case "default_realm":
 			l.DefaultRealm = strings.TrimSpace(p[1])
 		case "default_tgs_enctypes":
@@ -725,4 +730,101 @@ func (c *Config) JSON() (string, error) {
 		return "", err
 	}
 	return string(b), nil
+}
+
+var expandMap map[string]string
+
+func init() {
+	expandMap = makeExpandMap()
+}
+
+func makeExpandMap() (out map[string]string) {
+	out = make(map[string]string)
+	vars := PkgConfigVars(nil)
+
+	out["TEMP"] = os.TempDir()
+
+	user, err := user.Current()
+	if err == nil {
+		out["uid"] = user.Uid
+		out["USERID"] = user.Uid
+		out["username"] = user.Username
+	}
+
+	if runtime.GOOS == "windows" {
+		out["euid"] = out["uid"]
+	} else {
+		out["euid"] = fmt.Sprintf("%d", os.Geteuid())
+	}
+
+	out["null"] = ""
+	out["LIBDIR"] = vars["libdir"]
+	out["BINDIR"] = vars["exec_prefix"] + "/bin"
+	out["SBINDIR"] = vars["exec_prefix"] + "/sbin"
+
+	return
+}
+
+func ExpandParams(in string) (out string) {
+	out = in
+
+	for k, v := range expandMap {
+		repl := fmt.Sprintf("%%{%s}", k)
+		out = strings.ReplaceAll(out, repl, v)
+	}
+	return
+}
+
+// PkgConfigVars returns useful variables from the krb5 pkg-config file, if it is found
+// otherwise returns a set of defaults
+func PkgConfigVars(cfg *string) (out map[string]string) {
+	out = make(map[string]string)
+	for k, v := range defaultPkgConfigVars {
+		out[k] = v
+	}
+
+	if cfg == nil {
+		// find krb5-config
+		file, err := exec.LookPath("krb5-config")
+		if err == nil {
+			cfg = &file
+		}
+	}
+
+	if cfg == nil {
+		return
+	}
+
+	fh, err := os.Open(*cfg)
+	if err != nil {
+		return
+	}
+	defer fh.Close()
+
+	var lineRegex = regexp.MustCompile(`^(\w+)='?([^']+)'?$`)
+
+	scanner := bufio.NewScanner(fh)
+	for scanner.Scan() {
+		line := scanner.Text()
+		kv := lineRegex.FindStringSubmatch(line)
+		if len(kv) != 3 {
+			continue
+		}
+
+		if _, ok := defaultPkgConfigVars[kv[1]]; ok {
+			out[kv[1]] = kv[2]
+		}
+	}
+
+	return
+}
+
+var defaultPkgConfigVars = map[string]string{
+	"prefix":      "/usr",
+	"exec_prefix": "/usr",
+	"includedir":  "/usr/include",
+	"libdir":      "/usr/lib",
+	"DEFCCNAME":   "FILE:/tmp/krb5cc_%{uid}",
+	"DEFKTNAME":   "FILE:/etc/krb5.keytab",
+	"DEFCKTNAME":  "FILE:/var/kerberos/krb5/user/%{euid}/client.keytab",
 }
