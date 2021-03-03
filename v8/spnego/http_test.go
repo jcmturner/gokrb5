@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"sync"
 	"testing"
@@ -327,6 +328,33 @@ func TestService_SPNEGOKRB_Upload(t *testing.T) {
 		bodyString := string(bodyBytes)
 		httpResp.Body.Close()
 		t.Errorf("unexpected code from http server (%d): %s", httpResp.StatusCode, bodyString)
+	}
+}
+
+func TestRequest_setRequestSPN_EmptyCNAMEResponse(t *testing.T) {
+	url, _ := url.Parse("https://cc.in2p3.fr/ipa/session/login_kerberos")
+	r, _ := http.NewRequest("POST", url.String(), nil)
+
+	// simulate the "pure golang" resolver behavior
+	// if name is present in /etc/hosts
+	// See https://github.com/golang/go/issues/44741
+	testHookNetLookupCNAME = func(string) (string, error) {
+		return "", nil
+	}
+
+	pName, err := setRequestSPN(r)
+	if err != nil {
+		t.Fatalf("setRequestSPN failed: %s", err)
+	}
+
+	// If host is present in /etc/hosts and "pure golang" resolver is used
+	// we want to avoid the service principal to result in "HTTP/"
+	if pName.NameString[1] == "" {
+		t.Error("empty host in HTTP service principal name")
+	}
+
+	if pName.NameString[1] != url.Host {
+		t.Errorf("HTTP principal host is %s while %s was expected", pName.NameString[1], url.Host)
 	}
 }
 

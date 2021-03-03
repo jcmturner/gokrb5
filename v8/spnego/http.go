@@ -48,6 +48,10 @@ type teeReadCloser struct {
 	io.Closer
 }
 
+var (
+	testHookNetLookupCNAME = net.LookupCNAME
+)
+
 // NewClient returns a SPNEGO enabled HTTP client.
 // Be careful when passing in the *http.Client if it is beginning reused in multiple calls to this function.
 // Ensure reuse of the provided *http.Client is for the same user as a session cookie may have been added to
@@ -174,8 +178,8 @@ func setRequestSPN(r *http.Request) (types.PrincipalName, error) {
 		if err != nil {
 			return types.PrincipalName{}, err
 		}
-		name, err := net.LookupCNAME(h)
-		if err == nil {
+		name, err := testHookNetLookupCNAME(h)
+		if name != "" && err == nil {
 			// Underlyng canonical name should be used for SPN
 			h = name
 		}
@@ -183,8 +187,8 @@ func setRequestSPN(r *http.Request) (types.PrincipalName, error) {
 		r.Host = fmt.Sprintf("%s:%s", h, p)
 		return types.NewPrincipalName(nametype.KRB_NT_PRINCIPAL, "HTTP/"+h), nil
 	}
-	name, err := net.LookupCNAME(h)
-	if err == nil {
+	name, err := testHookNetLookupCNAME(h)
+	if name != "" && err == nil {
 		// Underlyng canonical name should be used for SPN
 		h = name
 	}
