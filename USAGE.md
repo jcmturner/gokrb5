@@ -9,9 +9,9 @@ Config instances can be created by loading from a file path or by passing a stri
 ```go
 import "gopkg.in/jcmturner/gokrb5.v7/config"
 cfg, err := config.Load("/path/to/config/file")
-cfg, err := config.NewConfigFromString(krb5Str) //String must have appropriate newline separations
-cfg, err := config.NewConfigFromReader(reader)
-cfg, err := config.NewConfigFromScanner(scanner)
+cfg, err := config.NewFromString(krb5Str) //String must have appropriate newline separations
+cfg, err := config.NewFromReader(reader)
+cfg, err := config.NewFromScanner(scanner)
 ```
 ### Keytab files
 Standard keytab files can be read from a file or from a slice of bytes:
