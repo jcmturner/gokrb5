@@ -93,7 +93,7 @@ func (kt *Keytab) GetEncryptionKey(princName types.PrincipalName, realm string, 
 		}
 	}
 	if len(key.KeyValue) < 1 {
-		return key, 0, fmt.Errorf("matching key not found in keytab. Looking for %v realm: %v kvno: %v etype: %v", princName.NameString, realm, kvno, etype)
+		return key, 0, fmt.Errorf("matching key not found in keytab. Looking for %q realm: %v kvno: %v etype: %v", princName.PrincipalNameString(), realm, kvno, etype)
 	}
 	return key, kv, nil
 }
