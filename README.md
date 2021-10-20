@@ -1,4 +1,11 @@
-# gokrb5
+[![ContainerSSH - Launch Containers on Demand](https://containerssh.github.io/images/logo-for-embedding.svg)](https://containerssh.github.io/)
+
+<!--suppress HtmlDeprecatedAttribute -->
+<h1 align="center">ContainerSSH gokrb5 fork</h1>
+
+<p align="center"><strong>⚠⚠⚠ This is a fork of <a href="https://github.com/jcmturner/gokrb5">gokrb5</a></strong>, an excellent Kerberos implementation in Golang. We are maintaining it exclusively for the use in <a href="https://containerssh.io/">ContainerSSH</a> so we can add changes we need quickly. <strong>Please do not use this fork outside of ContainerSSH.</strong></p>
+
+---
 
 It is recommended to use the latest version: [![Version](https://img.shields.io/github/release/jcmturner/gokrb5.svg)](https://github.com/jcmturner/gokrb5/releases)
 
