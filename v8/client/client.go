@@ -145,7 +145,7 @@ func (cl *Client) IsConfigured() (bool, error) {
 	}
 	// Client needs to have either a password, keytab or a session already (later when loading from CCache)
 	if !cl.Credentials.HasPassword() && !cl.Credentials.HasKeytab() {
-		authTime, _, _, _, err := cl.sessionTimes(cl.Credentials.Domain())
+		authTime, _, _, _, _, err := cl.sessionTimes(cl.Credentials.Domain())
 		if err != nil || authTime.IsZero() {
 			return false, errors.New("client has neither a keytab nor a password set and no session")
 		}
@@ -169,7 +169,7 @@ func (cl *Client) Login() error {
 		return err
 	}
 	if !cl.Credentials.HasPassword() && !cl.Credentials.HasKeytab() {
-		_, endTime, _, _, err := cl.sessionTimes(cl.Credentials.Domain())
+		_, _, endTime, _, _, err := cl.sessionTimes(cl.Credentials.Domain())
 		if err != nil {
 			return krberror.Errorf(err, krberror.KRBMsgError, "no user credentials available and error getting any existing session")
 		}
@@ -193,7 +193,7 @@ func (cl *Client) Login() error {
 
 // AffirmLogin will only perform an AS exchange with the KDC if the client does not already have a TGT.
 func (cl *Client) AffirmLogin() error {
-	_, endTime, _, _, err := cl.sessionTimes(cl.Credentials.Domain())
+	_, _, endTime, _, _, err := cl.sessionTimes(cl.Credentials.Domain())
 	if err != nil || time.Now().UTC().After(endTime) {
 		err := cl.Login()
 		if err != nil {
@@ -208,14 +208,14 @@ func (cl *Client) realmLogin(realm string) error {
 	if realm == cl.Credentials.Domain() {
 		return cl.Login()
 	}
-	_, endTime, _, _, err := cl.sessionTimes(cl.Credentials.Domain())
+	_, _, endTime, _, _, err := cl.sessionTimes(cl.Credentials.Domain())
 	if err != nil || time.Now().UTC().After(endTime) {
 		err := cl.Login()
 		if err != nil {
 			return fmt.Errorf("could not get valid TGT for client's realm: %v", err)
 		}
 	}
-	tgt, skey, err := cl.sessionTGT(cl.Credentials.Domain())
+	tgt, _, skey, err := cl.sessionTGT(cl.Credentials.Domain())
 	if err != nil {
 		return err
 	}
@@ -241,6 +241,45 @@ func (cl *Client) Destroy() {
 	cl.cache.clear()
 	cl.Credentials = creds
 	cl.Log("client destroyed")
+}
+
+func (cl *Client) GetCCache() (*credentials.CCache, error) {
+	tgt, flags, skey, err := cl.sessionTGT(cl.Credentials.Realm())
+	if err != nil {
+		return nil, err
+	}
+	authTime, startTime, endTime, renewTime, _, err := cl.sessionTimes(cl.Credentials.Realm())
+	if err != nil {
+		return nil, fmt.Errorf("failed to get session times while getting cache (%w)", err)
+	}
+	tgtMar, err := tgt.Marshal()
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal tft while getting cache (%w)", err)
+	}
+	tgtCred := credentials.Credential{
+		Client: credentials.Principal{
+			Realm:         cl.Credentials.Realm(),
+			PrincipalName: cl.Credentials.CName(),
+		},
+		Server: credentials.Principal{
+			Realm:         tgt.Realm,
+			PrincipalName: tgt.SName,
+		},
+		Key:         skey,
+		AuthTime:    authTime,
+		StartTime:   startTime,
+		EndTime:     endTime,
+		RenewTill:   renewTime,
+		TicketFlags: flags,
+		Ticket:      tgtMar,
+	}
+	creds := []credentials.Credential{tgtCred}
+	ccache := credentials.CCacheFromCredentials(creds)
+	ccache.DefaultPrincipal = credentials.Principal{
+		Realm:         cl.Credentials.Realm(),
+		PrincipalName: cl.Credentials.CName(),
+	}
+	return ccache, nil
 }
 
 // Diagnostics runs a set of checks that the client is properly configured and writes details to the io.Writer provided.
