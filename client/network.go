@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"strings"
 	"time"
 
 	"gopkg.in/jcmturner/gokrb5.v7/iana/errorcode"
@@ -93,6 +94,7 @@ func dialKDCUDP(count int, kdcs map[int]string) (*net.UDPConn, error) {
 // dialKDCTCP establishes a TCP connection to a KDC.
 func dialKDCTCP(count int, kdcs map[int]string) (*net.TCPConn, error) {
 	i := 1
+	var dialTimeoutErrors []string
 	for i <= count {
 		tcpAddr, err := net.ResolveTCPAddr("tcp", kdcs[i])
 		if err != nil {
@@ -100,6 +102,7 @@ func dialKDCTCP(count int, kdcs map[int]string) (*net.TCPConn, error) {
 		}
 
 		conn, err := net.DialTimeout("tcp", tcpAddr.String(), 5*time.Second)
+
 		if err == nil {
 			if err := conn.SetDeadline(time.Now().Add(5 * time.Second)); err != nil {
 				return nil, err
@@ -107,7 +110,13 @@ func dialKDCTCP(count int, kdcs map[int]string) (*net.TCPConn, error) {
 			// conn is guaranteed to be a TCPConn
 			return conn.(*net.TCPConn), nil
 		}
+		dialTimeoutErrors = append(dialTimeoutErrors, err.Error())
 		i++
+	}
+
+	if len(dialTimeoutErrors) > 0 {
+		dialTimeoutError := "'" + strings.Join(dialTimeoutErrors, ",") + "'"
+		return nil, fmt.Errorf("DialTimeout Error: %v", dialTimeoutError)
 	}
 	return nil, errors.New("error in getting a TCP connection to any of the KDCs")
 }
