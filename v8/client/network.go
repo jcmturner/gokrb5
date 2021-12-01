@@ -173,6 +173,10 @@ func dialSendTCP(kdcs map[int]string, b []byte) ([]byte, error) {
 		}
 		return rb, nil
 	}
+	if len(errs) > 0 {
+		errorString := strings.Join(errs, ",")
+		return nil, fmt.Errorf("error in getting a TCP connection to any of the KDCs: %v", errorString)
+	}
 	return nil, errors.New("error in getting a TCP connection to any of the KDCs")
 }
 
