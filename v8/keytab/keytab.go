@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 	"unsafe"
@@ -170,7 +170,7 @@ func newPrincipal() principal {
 // Load a Keytab file into a Keytab type.
 func Load(ktPath string) (*Keytab, error) {
 	kt := new(Keytab)
-	b, err := ioutil.ReadFile(ktPath)
+	b, err := os.ReadFile(ktPath)
 	if err != nil {
 		return kt, err
 	}

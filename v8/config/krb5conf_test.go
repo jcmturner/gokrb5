@@ -1,7 +1,6 @@
 package config
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -445,7 +444,7 @@ const (
 
 func TestLoad(t *testing.T) {
 	t.Parallel()
-	cf, _ := ioutil.TempFile(os.TempDir(), "TEST-gokrb5-krb5.conf")
+	cf, _ := os.CreateTemp(os.TempDir(), "TEST-gokrb5-krb5.conf")
 	defer os.Remove(cf.Name())
 	cf.WriteString(krb5Conf)
 
@@ -479,7 +478,7 @@ func TestLoad(t *testing.T) {
 
 func TestLoadWithV4Lines(t *testing.T) {
 	t.Parallel()
-	cf, _ := ioutil.TempFile(os.TempDir(), "TEST-gokrb5-krb5.conf")
+	cf, _ := os.CreateTemp(os.TempDir(), "TEST-gokrb5-krb5.conf")
 	defer os.Remove(cf.Name())
 	cf.WriteString(krb5ConfV4Lines)
 
@@ -576,7 +575,7 @@ func TestLoadNoBlankLines(t *testing.T) {
 
 func TestLoadTabs(t *testing.T) {
 	t.Parallel()
-	cf, _ := ioutil.TempFile(os.TempDir(), "TEST-gokrb5-krb5.conf")
+	cf, _ := os.CreateTemp(os.TempDir(), "TEST-gokrb5-krb5.conf")
 	defer os.Remove(cf.Name())
 	cf.WriteString(krb5ConfTabs)
 

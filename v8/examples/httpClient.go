@@ -6,7 +6,7 @@ package main
 import (
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -87,7 +87,7 @@ func main() {
 	if err != nil {
 		l.Fatalf("error making request: %v", err)
 	}
-	b, err := ioutil.ReadAll(resp.Body)
+	b, err := io.ReadAll(resp.Body)
 	if err != nil {
 		l.Fatalf("error reading response body: %v", err)
 	}

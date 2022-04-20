@@ -3,7 +3,7 @@ package client
 import (
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"runtime"
 	"sync"
@@ -60,7 +60,7 @@ func TestMultiThreadedClientSession(t *testing.T) {
 				t.Logf("error getting session: %v", err)
 			}
 			_, _, _, r, _ := cl.sessionTimes("TEST.GOKRB5")
-			fmt.Fprintf(ioutil.Discard, "%v", r)
+			fmt.Fprintf(io.Discard, "%v", r)
 		}()
 		time.Sleep(time.Second)
 	}
