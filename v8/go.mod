@@ -11,5 +11,5 @@ require (
 	github.com/jcmturner/goidentity/v6 v6.0.1
 	github.com/jcmturner/rpc/v2 v2.0.3
 	github.com/stretchr/testify v1.6.1
-	golang.org/x/crypto v0.0.0-20220214200702-86341886e292
+	golang.org/x/crypto v0.0.0-20220511200225-c6db032c6c88
 )
