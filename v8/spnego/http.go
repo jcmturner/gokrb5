@@ -176,7 +176,7 @@ func setRequestSPN(r *http.Request) (types.PrincipalName, error) {
 		name, err := net.LookupCNAME(h)
 		if err == nil {
 			// Underlyng canonical name should be used for SPN
-			h = name
+			h = strings.ToLower(name)
 		}
 		h = strings.TrimSuffix(h, ".")
 		r.Host = fmt.Sprintf("%s:%s", h, p)
@@ -185,7 +185,7 @@ func setRequestSPN(r *http.Request) (types.PrincipalName, error) {
 	name, err := net.LookupCNAME(h)
 	if err == nil {
 		// Underlyng canonical name should be used for SPN
-		h = name
+		h = strings.ToLower(name)
 	}
 	h = strings.TrimSuffix(h, ".")
 	r.Host = h
