@@ -20,6 +20,7 @@ jobs:
       TEST_HTTP_ADDR: 127.0.0.1
       DNS_IP: 127.0.88.53
       DNSUTILS_OVERRIDE_NS: 127.0.88.53:53
+      GO111MODULE: auto
     steps:
       - name: Set up Go ${{ matrix.go }}
         uses: actions/setup-go@v1
