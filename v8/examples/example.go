@@ -1,4 +1,5 @@
 // Package examples provides simple examples of gokrb5 use.
+//go:build examples
 // +build examples
 
 package main
@@ -12,7 +13,6 @@ import (
 	"net/http/httptest"
 	"os"
 
-	"github.com/jcmturner/goidentity/v6"
 	"github.com/jcmturner/gokrb5/v8/client"
 	"github.com/jcmturner/gokrb5/v8/config"
 	"github.com/jcmturner/gokrb5/v8/keytab"

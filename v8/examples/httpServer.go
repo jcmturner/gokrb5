@@ -1,3 +1,4 @@
+//go:build examples
 // +build examples
 
 package main
@@ -11,7 +12,6 @@ import (
 	"os"
 
 	"github.com/gorilla/sessions"
-	"github.com/jcmturner/goidentity/v6"
 	"github.com/jcmturner/gokrb5/v8/keytab"
 	"github.com/jcmturner/gokrb5/v8/service"
 	"github.com/jcmturner/gokrb5/v8/spnego"
