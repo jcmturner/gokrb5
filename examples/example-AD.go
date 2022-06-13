@@ -1,3 +1,4 @@
+//go:build examples
 // +build examples
 
 package main
@@ -11,6 +12,7 @@ import (
 	"net/http/httptest"
 	"os"
 
+	goidentity "gopkg.in/jcmturner/goidentity.v3"
 	"gopkg.in/jcmturner/gokrb5.v7/client"
 	"gopkg.in/jcmturner/gokrb5.v7/config"
 	"gopkg.in/jcmturner/gokrb5.v7/credentials"

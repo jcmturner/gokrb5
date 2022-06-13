@@ -1,4 +1,5 @@
 // Package examples provides simple examples of gokrb5 use.
+//go:build examples
 // +build examples
 
 package main
