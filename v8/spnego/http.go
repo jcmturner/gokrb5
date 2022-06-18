@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/http/cookiejar"
@@ -100,7 +99,7 @@ func (c *Client) Do(req *http.Request) (resp *http.Response, err error) {
 				}
 				if req.Body != nil {
 					// Refresh the body reader so the body can be sent again
-					e.reqTarget.Body = ioutil.NopCloser(&body)
+					e.reqTarget.Body = io.NopCloser(&body)
 				}
 				return c.Do(e.reqTarget)
 			}
@@ -114,9 +113,9 @@ func (c *Client) Do(req *http.Request) (resp *http.Response, err error) {
 		}
 		if req.Body != nil {
 			// Refresh the body reader so the body can be sent again
-			req.Body = ioutil.NopCloser(&body)
+			req.Body = io.NopCloser(&body)
 		}
-		io.Copy(ioutil.Discard, resp.Body)
+		io.Copy(io.Discard, resp.Body)
 		resp.Body.Close()
 		return c.Do(req)
 	}
