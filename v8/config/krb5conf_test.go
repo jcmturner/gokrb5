@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -31,7 +32,7 @@ const (
 
  default_client_keytab_name = FILE:/home/gokrb5/client.keytab
  default_tkt_enctypes = aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 # comment to be ignored
-
+ default_ccache_name = FILE:%{TEMP}/krb5cc.%{uid}
 
 [realms]
  TEST.GOKRB5 = {
@@ -85,6 +86,7 @@ const (
     "Canonicalize": false,
     "CCacheType": 4,
     "Clockskew": 300000000000,
+    "DefaultCcacheName": "/tmp/testcc",
     "DefaultClientKeytabName": "FILE:/home/gokrb5/client.keytab",
     "DefaultKeytabName": "FILE:/etc/krb5.keytab",
     "DefaultRealm": "TEST.GOKRB5",
@@ -441,6 +443,53 @@ const (
    krb4_convert = false
  }
 `
+
+	pkg_config = `
+#!/usr/bin/sh
+
+# Copyright 2001, 2002, 2003 by the Massachusetts Institute of Technology.
+# All Rights Reserved.
+#
+
+# Configurable parameters set by autoconf
+version_string="Kerberos 5 release 1.18.2"
+
+prefix=/test/usr
+exec_prefix=/test/usr
+includedir=/usr/include
+libdir=/test/usr/lib
+CC_LINK='$(CC) $(PROG_LIBPATH) $(PROG_RPATH_FLAGS) $(CFLAGS) -pie -Wl,-z,relro -Wl,-z,now $(LDFLAGS)'
+KDB5_DB_LIB=
+LDFLAGS='-Wl,-z,relro -Wl,--as-needed  -Wl,-z,now  '
+RPATH_FLAG=''
+PROG_RPATH_FLAGS=''
+PTHREAD_CFLAGS='-pthread'
+DL_LIB='-ldl'
+DEFCCNAME='FILE:/test/tmp/krb5cc_%{uid}'
+DEFKTNAME='FILE:/test/etc/krb5.keytab'
+DEFCKTNAME='FILE:/test/var/kerberos/krb5/user/%{euid}/client.keytab'
+SELINUX_LIBS='-lselinux '
+
+LIBS='-lkeyutils -lcrypto  -lresolv'
+GEN_LIB=
+
+# Defaults for program
+library=krb5
+
+# Some constants
+vendor_string="Massachusetts Institute of Technology"
+
+# Process arguments
+# Yes, we are sloppy, library specifications can come before options
+while test $# != 0; do
+	case $1 in
+	--all)
+		do_all=1
+		;;
+
+#### truncated for test
+exit 0
+`
 )
 
 func TestLoad(t *testing.T) {
@@ -462,6 +511,7 @@ func TestLoad(t *testing.T) {
 	assert.Equal(t, "FILE:/etc/krb5.keytab", c.LibDefaults.DefaultKeytabName, "[libdefaults] default_keytab_name not as expected")
 	assert.Equal(t, "FILE:/home/gokrb5/client.keytab", c.LibDefaults.DefaultClientKeytabName, "[libdefaults] default_client_keytab_name not as expected")
 	assert.Equal(t, []string{"aes256-cts-hmac-sha1-96", "aes128-cts-hmac-sha1-96"}, c.LibDefaults.DefaultTktEnctypes, "[libdefaults] default_tkt_enctypes not as expected")
+	assert.Equal(t, fmt.Sprintf("FILE:%s/krb5cc.%d", os.TempDir(), os.Getuid()), c.LibDefaults.DefaultCcacheName, "[libdefaults] default_ccache_name not as expected")
 
 	assert.Equal(t, 3, len(c.Realms), "Number of realms not as expected")
 	assert.Equal(t, "TEST.GOKRB5", c.Realms[0].Realm, "[realm] realm name not as expectd")
@@ -671,6 +721,7 @@ func TestJSON(t *testing.T) {
 		t.Fatalf("Error loading config: %v", err)
 	}
 	c.LibDefaults.K5LoginDirectory = "/home/test"
+	c.LibDefaults.DefaultCcacheName = "/tmp/testcc"
 	j, err := c.JSON()
 	if err != nil {
 		t.Errorf("error marshaling krb config to JSON: %v", err)
@@ -678,4 +729,46 @@ func TestJSON(t *testing.T) {
 	assert.Equal(t, krb5ConfJson, j, "krb config marshaled json not as expected")
 
 	t.Log(j)
+}
+
+func TestPkgConfigVars(t *testing.T) {
+	t.Parallel()
+
+	fh, err := ioutil.TempFile("", "test")
+	if err != nil {
+		t.Fatalf("creating temp file: %v", err)
+	}
+
+	defer os.Remove(fh.Name())
+
+	if _, err := fh.Write([]byte(pkg_config)); err != nil {
+		t.Fatalf("writing temp file: %v", err)
+	}
+
+	fh.Sync()
+
+	fname := fh.Name()
+	vars := PkgConfigVars(&fname)
+	assert.Equal(t, "/test/usr", vars["prefix"])
+	assert.Equal(t, "/test/usr", vars["exec_prefix"])
+	assert.Equal(t, "/usr/include", vars["includedir"])
+	assert.Equal(t, "/test/usr/lib", vars["libdir"])
+	assert.Equal(t, "FILE:/test/tmp/krb5cc_%{uid}", vars["DEFCCNAME"])
+	assert.Equal(t, "FILE:/test/etc/krb5.keytab", vars["DEFKTNAME"])
+	assert.Equal(t, "FILE:/test/var/kerberos/krb5/user/%{euid}/client.keytab", vars["DEFCKTNAME"])
+}
+
+func TestExpandParams(t *testing.T) {
+	t.Parallel()
+
+	vars := PkgConfigVars(nil)
+
+	want := fmt.Sprintf("FILE:/tmp/krb5cc_%d", os.Getuid())
+	assert.Equal(t, want, ExpandParams("FILE:/tmp/krb5cc_%{uid}"))
+
+	want = fmt.Sprintf("test %s", vars["libdir"])
+	assert.Equal(t, want, ExpandParams("test %{LIBDIR}"))
+
+	want = fmt.Sprintf("%s/user-%d", os.TempDir(), os.Getuid())
+	assert.Equal(t, want, ExpandParams("%{TEMP}/user-%{uid}"))
 }
