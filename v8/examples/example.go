@@ -7,7 +7,7 @@ package main
 import (
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -60,7 +60,7 @@ func httpRequest(url string, cl *client.Client) {
 		l.Printf("Request error: %v\n", err)
 	}
 	fmt.Fprintf(os.Stdout, "Response Code: %v\n", httpResp.StatusCode)
-	content, _ := ioutil.ReadAll(httpResp.Body)
+	content, _ := io.ReadAll(httpResp.Body)
 	fmt.Fprintf(os.Stdout, "Response Body:\n%s\n", content)
 }
 

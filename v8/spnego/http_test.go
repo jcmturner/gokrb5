@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"mime/multipart"
 	"net/http"
@@ -323,7 +322,7 @@ func TestService_SPNEGOKRB_Upload(t *testing.T) {
 		t.Fatalf("Request error: %v\n", err)
 	}
 	if httpResp.StatusCode != http.StatusOK {
-		bodyBytes, _ := ioutil.ReadAll(httpResp.Body)
+		bodyBytes, _ := io.ReadAll(httpResp.Body)
 		bodyString := string(bodyBytes)
 		httpResp.Body.Close()
 		t.Errorf("unexpected code from http server (%d): %s", httpResp.StatusCode, bodyString)
@@ -371,7 +370,7 @@ func testAppHandler(w http.ResponseWriter, r *http.Request) {
 		defer file.Close()
 
 		// write out to /dev/null
-		_, err = io.Copy(ioutil.Discard, file)
+		_, err = io.Copy(io.Discard, file)
 		if err != nil {
 			http.Error(w, "WRITE_ERR", http.StatusInternalServerError)
 			return

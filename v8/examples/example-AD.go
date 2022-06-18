@@ -7,7 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -62,7 +62,7 @@ func httpRequest(url string, cl *client.Client) {
 		l.Fatalf("error making request: %v", err)
 	}
 	fmt.Fprintf(os.Stdout, "Response Code: %v\n", httpResp.StatusCode)
-	content, _ := ioutil.ReadAll(httpResp.Body)
+	content, _ := io.ReadAll(httpResp.Body)
 	fmt.Fprintf(os.Stdout, "Response Body:\n%s\n", content)
 
 	// Make the request again which should use the session
@@ -71,7 +71,7 @@ func httpRequest(url string, cl *client.Client) {
 		l.Fatalf("error making request: %v", err)
 	}
 	fmt.Fprintf(os.Stdout, "Response Code: %v\n", httpResp.StatusCode)
-	content, _ = ioutil.ReadAll(httpResp.Body)
+	content, _ = io.ReadAll(httpResp.Body)
 	fmt.Fprintf(os.Stdout, "Response Body:\n%s\n", content)
 }
 
