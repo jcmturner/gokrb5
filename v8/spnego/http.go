@@ -174,7 +174,7 @@ func setRequestSPN(r *http.Request) (types.PrincipalName, error) {
 			return types.PrincipalName{}, err
 		}
 		name, err := net.LookupCNAME(h)
-		if err == nil {
+		if name != "" && err == nil {
 			// Underlyng canonical name should be used for SPN
 			h = strings.ToLower(name)
 		}
@@ -183,7 +183,7 @@ func setRequestSPN(r *http.Request) (types.PrincipalName, error) {
 		return types.NewPrincipalName(nametype.KRB_NT_PRINCIPAL, "HTTP/"+h), nil
 	}
 	name, err := net.LookupCNAME(h)
-	if err == nil {
+	if name != "" && err == nil {
 		// Underlyng canonical name should be used for SPN
 		h = strings.ToLower(name)
 	}
