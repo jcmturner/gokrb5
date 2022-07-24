@@ -101,7 +101,7 @@ func TestVerifyAPREQWithPrincipalOverride(t *testing.T) {
 	if ok || err == nil {
 		t.Fatalf("Validation of AP_REQ should have failed")
 	}
-	if !strings.Contains(err.Error(), "Looking for [foo] realm") {
+	if !strings.Contains(err.Error(), "Looking for \"foo\" realm") {
 		t.Fatalf("Looking for wrong entity: %s", err.Error())
 	}
 }
