@@ -647,7 +647,7 @@ func TestResolveRealm(t *testing.T) {
 		domainName string
 		want       string
 	}{
-		{"unknown.com", "TEST.GOKRB5"},
+		{"unknown.com", ""},
 		{"hostname1.example.com", "EXAMPLE.COM"},
 		{"hostname2.example.com", "TEST.GOKRB5"},
 		{"one.two.three.example.com", "EXAMPLE.COM"},
