@@ -511,7 +511,7 @@ func (c *Config) ResolveRealm(domainName string) string {
 			return r
 		}
 	}
-	return c.LibDefaults.DefaultRealm
+	return ""
 }
 
 // Load the KRB5 configuration from the specified file path.
