@@ -14,18 +14,18 @@ import (
 // ASExchange performs an AS exchange for the client to retrieve a TGT.
 func (cl *Client) ASExchange(realm string, ASReq messages.ASReq, referral int) (messages.ASRep, error) {
 	if ok, err := cl.IsConfigured(); !ok {
-		return messages.ASRep{}, krberror.Errorf(err, krberror.ConfigError, "AS Exchange cannot be performed")
+		return messages.ASRep{}, krberror.Errorf(err, krberror.ConfigErrorf, "AS Exchange cannot be performed")
 	}
 
 	// Set PAData if required
 	err := setPAData(cl, nil, &ASReq)
 	if err != nil {
-		return messages.ASRep{}, krberror.Errorf(err, krberror.KRBMsgError, "AS Exchange Error: issue with setting PAData on AS_REQ")
+		return messages.ASRep{}, krberror.Errorf(err, krberror.KRBMsgErrorf, "AS Exchange Error: issue with setting PAData on AS_REQ")
 	}
 
 	b, err := ASReq.Marshal()
 	if err != nil {
-		return messages.ASRep{}, krberror.Errorf(err, krberror.EncodingError, "AS Exchange Error: failed marshaling AS_REQ")
+		return messages.ASRep{}, krberror.Errorf(err, krberror.EncodingErrorf, "AS Exchange Error: failed marshaling AS_REQ")
 	}
 	var ASRep messages.ASRep
 
@@ -38,39 +38,39 @@ func (cl *Client) ASExchange(realm string, ASReq messages.ASReq, referral int) (
 				cl.settings.assumePreAuthentication = true
 				err = setPAData(cl, &e, &ASReq)
 				if err != nil {
-					return messages.ASRep{}, krberror.Errorf(err, krberror.KRBMsgError, "AS Exchange Error: failed setting AS_REQ PAData for pre-authentication required")
+					return messages.ASRep{}, krberror.Errorf(err, krberror.KRBMsgErrorf, "AS Exchange Error: failed setting AS_REQ PAData for pre-authentication required")
 				}
 				b, err := ASReq.Marshal()
 				if err != nil {
-					return messages.ASRep{}, krberror.Errorf(err, krberror.EncodingError, "AS Exchange Error: failed marshaling AS_REQ with PAData")
+					return messages.ASRep{}, krberror.Errorf(err, krberror.EncodingErrorf, "AS Exchange Error: failed marshaling AS_REQ with PAData")
 				}
 				rb, err = cl.sendToKDC(b, realm)
 				if err != nil {
 					if _, ok := err.(messages.KRBError); ok {
-						return messages.ASRep{}, krberror.Errorf(err, krberror.KDCError, "AS Exchange Error: kerberos error response from KDC")
+						return messages.ASRep{}, krberror.Errorf(err, krberror.KDCErrorf, "AS Exchange Error: kerberos error response from KDC")
 					}
-					return messages.ASRep{}, krberror.Errorf(err, krberror.NetworkingError, "AS Exchange Error: failed sending AS_REQ to KDC")
+					return messages.ASRep{}, krberror.Errorf(err, krberror.NetworkingErrorf, "AS Exchange Error: failed sending AS_REQ to KDC")
 				}
 			case errorcode.KDC_ERR_WRONG_REALM:
 				// Client referral https://tools.ietf.org/html/rfc6806.html#section-7
 				if referral > 5 {
-					return messages.ASRep{}, krberror.Errorf(err, krberror.KRBMsgError, "maximum number of client referrals exceeded")
+					return messages.ASRep{}, krberror.Errorf(err, krberror.KRBMsgErrorf, "maximum number of client referrals exceeded")
 				}
 				referral++
 				return cl.ASExchange(e.CRealm, ASReq, referral)
 			default:
-				return messages.ASRep{}, krberror.Errorf(err, krberror.KDCError, "AS Exchange Error: kerberos error response from KDC")
+				return messages.ASRep{}, krberror.Errorf(err, krberror.KDCErrorf, "AS Exchange Error: kerberos error response from KDC")
 			}
 		} else {
-			return messages.ASRep{}, krberror.Errorf(err, krberror.NetworkingError, "AS Exchange Error: failed sending AS_REQ to KDC")
+			return messages.ASRep{}, krberror.Errorf(err, krberror.NetworkingErrorf, "AS Exchange Error: failed sending AS_REQ to KDC")
 		}
 	}
 	err = ASRep.Unmarshal(rb)
 	if err != nil {
-		return messages.ASRep{}, krberror.Errorf(err, krberror.EncodingError, "AS Exchange Error: failed to process the AS_REP")
+		return messages.ASRep{}, krberror.Errorf(err, krberror.EncodingErrorf, "AS Exchange Error: failed to process the AS_REP")
 	}
 	if ok, err := ASRep.Verify(cl.Config, cl.Credentials, ASReq); !ok {
-		return messages.ASRep{}, krberror.Errorf(err, krberror.KRBMsgError, "AS Exchange Error: AS_REP is not valid or client password/keytab incorrect")
+		return messages.ASRep{}, krberror.Errorf(err, krberror.KRBMsgErrorf, "AS Exchange Error: AS_REP is not valid or client password/keytab incorrect")
 	}
 	return ASRep, nil
 }
@@ -96,36 +96,36 @@ func setPAData(cl *Client, krberr *messages.KRBError, ASReq *messages.ASReq) err
 			}
 			et, err = crypto.GetEtype(etn)
 			if err != nil {
-				return krberror.Errorf(err, krberror.EncryptingError, "error getting etype for pre-auth encryption")
+				return krberror.Errorf(err, krberror.EncryptingErrorf, "error getting etype for pre-auth encryption")
 			}
 			key, kvno, err = cl.Key(et, 0, nil)
 			if err != nil {
-				return krberror.Errorf(err, krberror.EncryptingError, "error getting key from credentials")
+				return krberror.Errorf(err, krberror.EncryptingErrorf, "error getting key from credentials")
 			}
 		} else {
 			// Get the etype to use from the PA data in the KRBError e-data
 			et, err = preAuthEType(krberr)
 			if err != nil {
-				return krberror.Errorf(err, krberror.EncryptingError, "error getting etype for pre-auth encryption")
+				return krberror.Errorf(err, krberror.EncryptingErrorf, "error getting etype for pre-auth encryption")
 			}
 			cl.settings.preAuthEType = et.GetETypeID() // Set the etype that has been defined for potential future use
 			key, kvno, err = cl.Key(et, 0, krberr)
 			if err != nil {
-				return krberror.Errorf(err, krberror.EncryptingError, "error getting key from credentials")
+				return krberror.Errorf(err, krberror.EncryptingErrorf, "error getting key from credentials")
 			}
 		}
 		// Generate the PA data
 		paTSb, err := types.GetPAEncTSEncAsnMarshalled()
 		if err != nil {
-			return krberror.Errorf(err, krberror.KRBMsgError, "error creating PAEncTSEnc for Pre-Authentication")
+			return krberror.Errorf(err, krberror.KRBMsgErrorf, "error creating PAEncTSEnc for Pre-Authentication")
 		}
 		paEncTS, err := crypto.GetEncryptedData(paTSb, key, keyusage.AS_REQ_PA_ENC_TIMESTAMP, kvno)
 		if err != nil {
-			return krberror.Errorf(err, krberror.EncryptingError, "error encrypting pre-authentication timestamp")
+			return krberror.Errorf(err, krberror.EncryptingErrorf, "error encrypting pre-authentication timestamp")
 		}
 		pb, err := paEncTS.Marshal()
 		if err != nil {
-			return krberror.Errorf(err, krberror.EncodingError, "error marshaling the PAEncTSEnc encrypted data")
+			return krberror.Errorf(err, krberror.EncodingErrorf, "error marshaling the PAEncTSEnc encrypted data")
 		}
 		pa := types.PAData{
 			PADataType:  patype.PA_ENC_TIMESTAMP,
@@ -150,7 +150,7 @@ func preAuthEType(krberr *messages.KRBError) (etype etype.EType, err error) {
 	var pas types.PADataSequence
 	e := pas.Unmarshal(krberr.EData)
 	if e != nil {
-		err = krberror.Errorf(e, krberror.EncodingError, "error unmashalling KRBError data")
+		err = krberror.Errorf(e, krberror.EncodingErrorf, "error unmashalling KRBError data")
 		return
 	}
 Loop:
@@ -159,7 +159,7 @@ Loop:
 		case patype.PA_ETYPE_INFO2:
 			info, e := pa.GetETypeInfo2()
 			if e != nil {
-				err = krberror.Errorf(e, krberror.EncodingError, "error unmashalling ETYPE-INFO2 data")
+				err = krberror.Errorf(e, krberror.EncodingErrorf, "error unmashalling ETYPE-INFO2 data")
 				return
 			}
 			etypeID = info[0].EType
@@ -167,7 +167,7 @@ Loop:
 		case patype.PA_ETYPE_INFO:
 			info, e := pa.GetETypeInfo()
 			if e != nil {
-				err = krberror.Errorf(e, krberror.EncodingError, "error unmashalling ETYPE-INFO data")
+				err = krberror.Errorf(e, krberror.EncodingErrorf, "error unmashalling ETYPE-INFO data")
 				return
 			}
 			etypeID = info[0].EType
@@ -175,7 +175,7 @@ Loop:
 	}
 	etype, e = crypto.GetEtype(etypeID)
 	if e != nil {
-		err = krberror.Errorf(e, krberror.EncryptingError, "error creating etype")
+		err = krberror.Errorf(e, krberror.EncryptingErrorf, "error creating etype")
 		return
 	}
 	return etype, nil

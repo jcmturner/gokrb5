@@ -224,7 +224,7 @@ func (cl *Client) renewTGT(s *session) error {
 	}
 	_, tgsRep, err := cl.TGSREQGenerateAndExchange(spn, cl.Credentials.Domain(), tgt, skey, true)
 	if err != nil {
-		return krberror.Errorf(err, krberror.KRBMsgError, "error renewing TGT for %s", realm)
+		return krberror.Errorf(err, krberror.KRBMsgErrorf, "error renewing TGT for %s", realm)
 	}
 	s.update(tgsRep.Ticket, tgsRep.DecryptedEncPart)
 	cl.sessions.update(s)

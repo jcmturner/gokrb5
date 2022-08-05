@@ -63,7 +63,7 @@ func (k *KRBCred) Unmarshal(b []byte) error {
 	}
 	expectedMsgType := msgtype.KRB_CRED
 	if m.MsgType != expectedMsgType {
-		return krberror.NewErrorf(krberror.KRBMsgError, "message ID does not indicate a KRB_CRED. Expected: %v; Actual: %v", expectedMsgType, m.MsgType)
+		return krberror.KRBMsgErrorf("message ID does not indicate a KRB_CRED. Expected: %v; Actual: %v", expectedMsgType, m.MsgType)
 	}
 	k.PVNO = m.PVNO
 	k.MsgType = m.MsgType
@@ -71,7 +71,7 @@ func (k *KRBCred) Unmarshal(b []byte) error {
 	if len(m.Tickets.Bytes) > 0 {
 		k.Tickets, err = unmarshalTicketsSequence(m.Tickets)
 		if err != nil {
-			return krberror.Errorf(err, krberror.EncodingError, "error unmarshaling tickets within KRB_CRED")
+			return krberror.Errorf(err, krberror.EncodingErrorf, "error unmarshaling tickets within KRB_CRED")
 		}
 	}
 	return nil
@@ -81,12 +81,12 @@ func (k *KRBCred) Unmarshal(b []byte) error {
 func (k *KRBCred) DecryptEncPart(key types.EncryptionKey) error {
 	b, err := crypto.DecryptEncPart(k.EncPart, key, keyusage.KRB_CRED_ENCPART)
 	if err != nil {
-		return krberror.Errorf(err, krberror.DecryptingError, "error decrypting KRB_CRED EncPart")
+		return krberror.Errorf(err, krberror.DecryptingErrorf, "error decrypting KRB_CRED EncPart")
 	}
 	var denc EncKrbCredPart
 	err = denc.Unmarshal(b)
 	if err != nil {
-		return krberror.Errorf(err, krberror.EncodingError, "error unmarshaling encrypted part of KRB_CRED")
+		return krberror.Errorf(err, krberror.EncodingErrorf, "error unmarshaling encrypted part of KRB_CRED")
 	}
 	k.DecryptedEncPart = denc
 	return nil
@@ -96,7 +96,7 @@ func (k *KRBCred) DecryptEncPart(key types.EncryptionKey) error {
 func (k *EncKrbCredPart) Unmarshal(b []byte) error {
 	_, err := asn1.UnmarshalWithParams(b, k, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.EncKrbCredPart))
 	if err != nil {
-		return krberror.Errorf(err, krberror.EncodingError, "error unmarshaling EncKrbCredPart")
+		return krberror.Errorf(err, krberror.EncodingErrorf, "error unmarshaling EncKrbCredPart")
 	}
 	return nil
 }

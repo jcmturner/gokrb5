@@ -50,7 +50,7 @@ func (k *KRBPriv) Unmarshal(b []byte) error {
 	}
 	expectedMsgType := msgtype.KRB_PRIV
 	if k.MsgType != expectedMsgType {
-		return krberror.NewErrorf(krberror.KRBMsgError, "message ID does not indicate a KRB_PRIV. Expected: %v; Actual: %v", expectedMsgType, k.MsgType)
+		return krberror.KRBMsgErrorf("message ID does not indicate a KRB_PRIV. Expected: %v; Actual: %v", expectedMsgType, k.MsgType)
 	}
 	return nil
 }
@@ -59,7 +59,7 @@ func (k *KRBPriv) Unmarshal(b []byte) error {
 func (k *EncKrbPrivPart) Unmarshal(b []byte) error {
 	_, err := asn1.UnmarshalWithParams(b, k, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.EncKrbPrivPart))
 	if err != nil {
-		return krberror.Errorf(err, krberror.EncodingError, "KRB_PRIV unmarshal error")
+		return krberror.Errorf(err, krberror.EncodingErrorf, "KRB_PRIV unmarshal error")
 	}
 	return nil
 }

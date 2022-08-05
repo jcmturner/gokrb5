@@ -12,7 +12,7 @@ import (
 func (cl *Client) TGSREQGenerateAndExchange(spn types.PrincipalName, kdcRealm string, tgt messages.Ticket, sessionKey types.EncryptionKey, renewal bool) (tgsReq messages.TGSReq, tgsRep messages.TGSRep, err error) {
 	tgsReq, err = messages.NewTGSReq(cl.Credentials.CName(), kdcRealm, cl.Config, tgt, sessionKey, spn, renewal)
 	if err != nil {
-		return tgsReq, tgsRep, krberror.Errorf(err, krberror.KRBMsgError, "TGS Exchange Error: failed to generate a new TGS_REQ")
+		return tgsReq, tgsRep, krberror.Errorf(err, krberror.KRBMsgErrorf, "TGS Exchange Error: failed to generate a new TGS_REQ")
 	}
 	return cl.TGSExchange(tgsReq, kdcRealm, tgsRep.Ticket, sessionKey, 0)
 }
@@ -24,30 +24,30 @@ func (cl *Client) TGSExchange(tgsReq messages.TGSReq, kdcRealm string, tgt messa
 	var tgsRep messages.TGSRep
 	b, err := tgsReq.Marshal()
 	if err != nil {
-		return tgsReq, tgsRep, krberror.Errorf(err, krberror.EncodingError, "TGS Exchange Error: failed to marshal TGS_REQ")
+		return tgsReq, tgsRep, krberror.Errorf(err, krberror.EncodingErrorf, "TGS Exchange Error: failed to marshal TGS_REQ")
 	}
 	r, err := cl.sendToKDC(b, kdcRealm)
 	if err != nil {
 		if _, ok := err.(messages.KRBError); ok {
-			return tgsReq, tgsRep, krberror.Errorf(err, krberror.KDCError, "TGS Exchange Error: kerberos error response from KDC when requesting for %s", tgsReq.ReqBody.SName.PrincipalNameString())
+			return tgsReq, tgsRep, krberror.Errorf(err, krberror.KDCErrorf, "TGS Exchange Error: kerberos error response from KDC when requesting for %s", tgsReq.ReqBody.SName.PrincipalNameString())
 		}
-		return tgsReq, tgsRep, krberror.Errorf(err, krberror.NetworkingError, "TGS Exchange Error: issue sending TGS_REQ to KDC")
+		return tgsReq, tgsRep, krberror.Errorf(err, krberror.NetworkingErrorf, "TGS Exchange Error: issue sending TGS_REQ to KDC")
 	}
 	err = tgsRep.Unmarshal(r)
 	if err != nil {
-		return tgsReq, tgsRep, krberror.Errorf(err, krberror.EncodingError, "TGS Exchange Error: failed to process the TGS_REP")
+		return tgsReq, tgsRep, krberror.Errorf(err, krberror.EncodingErrorf, "TGS Exchange Error: failed to process the TGS_REP")
 	}
 	err = tgsRep.DecryptEncPart(sessionKey)
 	if err != nil {
-		return tgsReq, tgsRep, krberror.Errorf(err, krberror.EncodingError, "TGS Exchange Error: failed to process the TGS_REP")
+		return tgsReq, tgsRep, krberror.Errorf(err, krberror.EncodingErrorf, "TGS Exchange Error: failed to process the TGS_REP")
 	}
 	if ok, err := tgsRep.Verify(cl.Config, tgsReq); !ok {
-		return tgsReq, tgsRep, krberror.Errorf(err, krberror.EncodingError, "TGS Exchange Error: TGS_REP is not valid")
+		return tgsReq, tgsRep, krberror.Errorf(err, krberror.EncodingErrorf, "TGS Exchange Error: TGS_REP is not valid")
 	}
 
 	if tgsRep.Ticket.SName.NameString[0] == "krbtgt" && !tgsRep.Ticket.SName.Equal(tgsReq.ReqBody.SName) {
 		if referral > 5 {
-			return tgsReq, tgsRep, krberror.Errorf(err, krberror.KRBMsgError, "TGS Exchange Error: maximum number of referrals exceeded")
+			return tgsReq, tgsRep, krberror.Errorf(err, krberror.KRBMsgErrorf, "TGS Exchange Error: maximum number of referrals exceeded")
 		}
 		// Server referral https://tools.ietf.org/html/rfc6806.html#section-8
 		// The TGS Rep contains a TGT for another domain as the service resides in that domain.

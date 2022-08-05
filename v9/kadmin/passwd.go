@@ -18,24 +18,24 @@ func ChangePasswdMsg(cname types.PrincipalName, realm, password string, tkt mess
 	}
 	chpwdb, err := chgpasswd.Marshal()
 	if err != nil {
-		err = krberror.Errorf(err, krberror.KRBMsgError, "error marshaling change passwd data")
+		err = krberror.Errorf(err, krberror.KRBMsgErrorf, "error marshaling change passwd data")
 		return
 	}
 
 	// Generate authenticator
 	auth, err := types.NewAuthenticator(realm, cname)
 	if err != nil {
-		err = krberror.Errorf(err, krberror.KRBMsgError, "error generating new authenticator")
+		err = krberror.Errorf(err, krberror.KRBMsgErrorf, "error generating new authenticator")
 		return
 	}
 	etype, err := crypto.GetEtype(sessionKey.KeyType)
 	if err != nil {
-		err = krberror.Errorf(err, krberror.KRBMsgError, "error generating subkey etype")
+		err = krberror.Errorf(err, krberror.KRBMsgErrorf, "error generating subkey etype")
 		return
 	}
 	err = auth.GenerateSeqNumberAndSubKey(etype.GetETypeID(), etype.GetKeyByteSize())
 	if err != nil {
-		err = krberror.Errorf(err, krberror.KRBMsgError, "error generating subkey")
+		err = krberror.Errorf(err, krberror.KRBMsgErrorf, "error generating subkey")
 		return
 	}
 	k = auth.SubKey
@@ -56,7 +56,7 @@ func ChangePasswdMsg(cname types.PrincipalName, realm, password string, tkt mess
 	kpriv := messages.NewKRBPriv(kp)
 	err = kpriv.EncryptEncPart(k)
 	if err != nil {
-		err = krberror.Errorf(err, krberror.EncryptingError, "error encrypting change passwd data")
+		err = krberror.Errorf(err, krberror.EncryptingErrorf, "error encrypting change passwd data")
 		return
 	}
 

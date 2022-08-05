@@ -41,7 +41,7 @@ func NewAPReq(tkt Ticket, sessionKey types.EncryptionKey, auth types.Authenticat
 	var a APReq
 	ed, err := encryptAuthenticator(auth, sessionKey, tkt)
 	if err != nil {
-		return a, krberror.Errorf(err, krberror.KRBMsgError, "error creating Authenticator for AP_REQ")
+		return a, krberror.Errorf(err, krberror.KRBMsgErrorf, "error creating Authenticator for AP_REQ")
 	}
 	a = APReq{
 		PVNO:                   iana.PVNO,
@@ -58,12 +58,12 @@ func encryptAuthenticator(a types.Authenticator, sessionKey types.EncryptionKey,
 	var ed types.EncryptedData
 	m, err := a.Marshal()
 	if err != nil {
-		return ed, krberror.Errorf(err, krberror.EncodingError, "marshaling error of EncryptedData form of Authenticator")
+		return ed, krberror.Errorf(err, krberror.EncodingErrorf, "marshaling error of EncryptedData form of Authenticator")
 	}
 	usage := authenticatorKeyUsage(tkt.SName)
 	ed, err = crypto.GetEncryptedData(m, sessionKey, uint32(usage), tkt.EncPart.KVNO)
 	if err != nil {
-		return ed, krberror.Errorf(err, krberror.EncryptingError, "error encrypting Authenticator")
+		return ed, krberror.Errorf(err, krberror.EncryptingErrorf, "error encrypting Authenticator")
 	}
 	return ed, nil
 }
@@ -95,7 +95,7 @@ func (a *APReq) Unmarshal(b []byte) error {
 	var m marshalAPReq
 	_, err := asn1.UnmarshalWithParams(b, &m, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.APREQ))
 	if err != nil {
-		return krberror.Errorf(err, krberror.EncodingError, "unmarshal error of AP_REQ")
+		return krberror.Errorf(err, krberror.EncodingErrorf, "unmarshal error of AP_REQ")
 	}
 	if m.MsgType != msgtype.KRB_AP_REQ {
 		return NewKRBError(types.PrincipalName{}, "", errorcode.KRB_AP_ERR_MSG_TYPE, errorcode.Lookup(errorcode.KRB_AP_ERR_MSG_TYPE))
@@ -106,7 +106,7 @@ func (a *APReq) Unmarshal(b []byte) error {
 	a.EncryptedAuthenticator = m.EncryptedAuthenticator
 	a.Ticket, err = unmarshalTicket(m.Ticket.Bytes)
 	if err != nil {
-		return krberror.Errorf(err, krberror.EncodingError, "unmarshaling error of Ticket within AP_REQ")
+		return krberror.Errorf(err, krberror.EncodingErrorf, "unmarshaling error of Ticket within AP_REQ")
 	}
 	return nil
 }
@@ -132,7 +132,7 @@ func (a *APReq) Marshal() ([]byte, error) {
 	}
 	mk, err := asn1.Marshal(m)
 	if err != nil {
-		return mk, krberror.Errorf(err, krberror.EncodingError, "marshaling error of AP_REQ")
+		return mk, krberror.Errorf(err, krberror.EncodingErrorf, "marshaling error of AP_REQ")
 	}
 	mk = asn1tools.AddASNAppTag(mk, asnAppTag.APREQ)
 	return mk, nil
@@ -146,12 +146,12 @@ func (a *APReq) Verify(kt *keytab.Keytab, d time.Duration, cAddr types.HostAddre
 	//if types.IsFlagSet(&a.APOptions, flags.APOptionUseSessionKey) {
 	//	err := a.Ticket.Decrypt(tgt.DecryptedEncPart.Key)
 	//	if err != nil {
-	//		return false, krberror.Errorf(err, krberror.DecryptingError, "error decrypting encpart of ticket provided using session key")
+	//		return false, krberror.Errorf(err, krberror.DecryptingErrorf, "error decrypting encpart of ticket provided using session key")
 	//	}
 	//} else {
 	//	err := a.Ticket.DecryptEncPart(*kt, &a.Ticket.SName)
 	//	if err != nil {
-	//		return false, krberror.Errorf(err, krberror.DecryptingError, "error decrypting encpart of service ticket provided")
+	//		return false, krberror.Errorf(err, krberror.DecryptingErrorf, "error decrypting encpart of service ticket provided")
 	//	}
 	//}
 	sname := &a.Ticket.SName
@@ -160,7 +160,7 @@ func (a *APReq) Verify(kt *keytab.Keytab, d time.Duration, cAddr types.HostAddre
 	}
 	err := a.Ticket.DecryptEncPart(kt, sname)
 	if err != nil {
-		return false, krberror.Errorf(err, krberror.DecryptingError, "error decrypting encpart of service ticket provided")
+		return false, krberror.Errorf(err, krberror.DecryptingErrorf, "error decrypting encpart of service ticket provided")
 	}
 
 	// Check time validity of ticket

@@ -192,7 +192,7 @@ func krb5TokenAuthenticator(creds *credentials.Credentials, flags []int) (types.
 	//RFC 4121 Section 4.1.1
 	auth, err := types.NewAuthenticator(creds.Domain(), creds.CName())
 	if err != nil {
-		return auth, krberror.Errorf(err, krberror.KRBMsgError, "error generating new authenticator")
+		return auth, krberror.Errorf(err, krberror.KRBMsgErrorf, "error generating new authenticator")
 	}
 	auth.Cksum = types.Checksum{
 		CksumType: chksumtype.GSSAPI,

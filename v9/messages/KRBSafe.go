@@ -37,7 +37,7 @@ func (s *KRBSafe) Unmarshal(b []byte) error {
 	}
 	expectedMsgType := msgtype.KRB_SAFE
 	if s.MsgType != expectedMsgType {
-		return krberror.NewErrorf(krberror.KRBMsgError, "message ID does not indicate a KRB_SAFE. Expected: %v; Actual: %v", expectedMsgType, s.MsgType)
+		return krberror.KRBMsgErrorf("message ID does not indicate a KRB_SAFE. Expected: %v; Actual: %v", expectedMsgType, s.MsgType)
 	}
 	return nil
 }

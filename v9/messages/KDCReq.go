@@ -230,22 +230,22 @@ func (k *TGSReq) setPAData(tgt Ticket, sessionKey types.EncryptionKey) error {
 	// Marshal the request and calculate checksum
 	b, err := k.ReqBody.Marshal()
 	if err != nil {
-		return krberror.Errorf(err, krberror.EncodingError, "error marshaling TGS_REQ body")
+		return krberror.Errorf(err, krberror.EncodingErrorf, "error marshaling TGS_REQ body")
 	}
 	etype, err := crypto.GetEtype(sessionKey.KeyType)
 	if err != nil {
-		return krberror.Errorf(err, krberror.EncryptingError, "error getting etype to encrypt authenticator")
+		return krberror.Errorf(err, krberror.EncryptingErrorf, "error getting etype to encrypt authenticator")
 	}
 	cb, err := etype.GetChecksumHash(sessionKey.KeyValue, b, keyusage.TGS_REQ_PA_TGS_REQ_AP_REQ_AUTHENTICATOR_CHKSUM)
 	if err != nil {
-		return krberror.Errorf(err, krberror.ChksumError, "error getting etype checksum hash")
+		return krberror.Errorf(err, krberror.ChksumErrorf, "error getting etype checksum hash")
 	}
 
 	// Form PAData for TGS_REQ
 	// Create authenticator
 	auth, err := types.NewAuthenticator(tgt.Realm, k.ReqBody.CName)
 	if err != nil {
-		return krberror.Errorf(err, krberror.KRBMsgError, "error generating new authenticator")
+		return krberror.Errorf(err, krberror.KRBMsgErrorf, "error generating new authenticator")
 	}
 	auth.Cksum = types.Checksum{
 		CksumType: etype.GetHashID(),
@@ -254,11 +254,11 @@ func (k *TGSReq) setPAData(tgt Ticket, sessionKey types.EncryptionKey) error {
 	// Create AP_REQ
 	apReq, err := NewAPReq(tgt, sessionKey, auth)
 	if err != nil {
-		return krberror.Errorf(err, krberror.KRBMsgError, "error generating new AP_REQ")
+		return krberror.Errorf(err, krberror.KRBMsgErrorf, "error generating new AP_REQ")
 	}
 	apb, err := apReq.Marshal()
 	if err != nil {
-		return krberror.Errorf(err, krberror.EncodingError, "error marshaling AP_REQ for pre-authentication data")
+		return krberror.Errorf(err, krberror.EncodingErrorf, "error marshaling AP_REQ for pre-authentication data")
 	}
 	k.PAData = types.PADataSequence{
 		types.PAData{
@@ -274,16 +274,16 @@ func (k *ASReq) Unmarshal(b []byte) error {
 	var m marshalKDCReq
 	_, err := asn1.UnmarshalWithParams(b, &m, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.ASREQ))
 	if err != nil {
-		return krberror.Errorf(err, krberror.EncodingError, "error unmarshaling AS_REQ")
+		return krberror.Errorf(err, krberror.EncodingErrorf, "error unmarshaling AS_REQ")
 	}
 	expectedMsgType := msgtype.KRB_AS_REQ
 	if m.MsgType != expectedMsgType {
-		return krberror.NewErrorf(krberror.KRBMsgError, "message ID does not indicate a AS_REQ. Expected: %v; Actual: %v", expectedMsgType, m.MsgType)
+		return krberror.KRBMsgErrorf("message ID does not indicate a AS_REQ. Expected: %v; Actual: %v", expectedMsgType, m.MsgType)
 	}
 	var reqb KDCReqBody
 	err = reqb.Unmarshal(m.ReqBody.Bytes)
 	if err != nil {
-		return krberror.Errorf(err, krberror.EncodingError, "error processing AS_REQ body")
+		return krberror.Errorf(err, krberror.EncodingErrorf, "error processing AS_REQ body")
 	}
 	k.MsgType = m.MsgType
 	k.PAData = m.PAData
@@ -297,16 +297,16 @@ func (k *TGSReq) Unmarshal(b []byte) error {
 	var m marshalKDCReq
 	_, err := asn1.UnmarshalWithParams(b, &m, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.TGSREQ))
 	if err != nil {
-		return krberror.Errorf(err, krberror.EncodingError, "error unmarshaling TGS_REQ")
+		return krberror.Errorf(err, krberror.EncodingErrorf, "error unmarshaling TGS_REQ")
 	}
 	expectedMsgType := msgtype.KRB_TGS_REQ
 	if m.MsgType != expectedMsgType {
-		return krberror.NewErrorf(krberror.KRBMsgError, "message ID does not indicate a TGS_REQ. Expected: %v; Actual: %v", expectedMsgType, m.MsgType)
+		return krberror.KRBMsgErrorf("message ID does not indicate a TGS_REQ. Expected: %v; Actual: %v", expectedMsgType, m.MsgType)
 	}
 	var reqb KDCReqBody
 	err = reqb.Unmarshal(m.ReqBody.Bytes)
 	if err != nil {
-		return krberror.Errorf(err, krberror.EncodingError, "error processing TGS_REQ body")
+		return krberror.Errorf(err, krberror.EncodingErrorf, "error processing TGS_REQ body")
 	}
 	k.MsgType = m.MsgType
 	k.PAData = m.PAData
@@ -320,7 +320,7 @@ func (k *KDCReqBody) Unmarshal(b []byte) error {
 	var m marshalKDCReqBody
 	_, err := asn1.Unmarshal(b, &m)
 	if err != nil {
-		return krberror.Errorf(err, krberror.EncodingError, "error unmarshaling KDC_REQ body")
+		return krberror.Errorf(err, krberror.EncodingErrorf, "error unmarshaling KDC_REQ body")
 	}
 	k.KDCOptions = m.KDCOptions
 	if len(k.KDCOptions.Bytes) < 4 {
@@ -341,7 +341,7 @@ func (k *KDCReqBody) Unmarshal(b []byte) error {
 	if len(m.AdditionalTickets.Bytes) > 0 {
 		k.AdditionalTickets, err = unmarshalTicketsSequence(m.AdditionalTickets)
 		if err != nil {
-			return krberror.Errorf(err, krberror.EncodingError, "error unmarshaling additional tickets")
+			return krberror.Errorf(err, krberror.EncodingErrorf, "error unmarshaling additional tickets")
 		}
 	}
 	return nil
@@ -367,7 +367,7 @@ func (k *ASReq) Marshal() ([]byte, error) {
 	}
 	mk, err := asn1.Marshal(m)
 	if err != nil {
-		return mk, krberror.Errorf(err, krberror.EncodingError, "error marshaling AS_REQ")
+		return mk, krberror.Errorf(err, krberror.EncodingErrorf, "error marshaling AS_REQ")
 	}
 	mk = asn1tools.AddASNAppTag(mk, asnAppTag.ASREQ)
 	return mk, nil
@@ -393,7 +393,7 @@ func (k *TGSReq) Marshal() ([]byte, error) {
 	}
 	mk, err := asn1.Marshal(m)
 	if err != nil {
-		return mk, krberror.Errorf(err, krberror.EncodingError, "error marshaling AS_REQ")
+		return mk, krberror.Errorf(err, krberror.EncodingErrorf, "error marshaling AS_REQ")
 	}
 	mk = asn1tools.AddASNAppTag(mk, asnAppTag.TGSREQ)
 	return mk, nil
@@ -417,7 +417,7 @@ func (k *KDCReqBody) Marshal() ([]byte, error) {
 	}
 	rawtkts, err := MarshalTicketSequence(k.AdditionalTickets)
 	if err != nil {
-		return b, krberror.Errorf(err, krberror.EncodingError, "error in marshaling KDC request body additional tickets")
+		return b, krberror.Errorf(err, krberror.EncodingErrorf, "error in marshaling KDC request body additional tickets")
 	}
 	//The asn1.rawValue needs the tag setting on it for where it is in the KDCReqBody
 	rawtkts.Tag = 11
@@ -426,7 +426,7 @@ func (k *KDCReqBody) Marshal() ([]byte, error) {
 	}
 	b, err = asn1.Marshal(m)
 	if err != nil {
-		return b, krberror.Errorf(err, krberror.EncodingError, "error in marshaling KDC request body")
+		return b, krberror.Errorf(err, krberror.EncodingErrorf, "error in marshaling KDC request body")
 	}
 	return b, nil
 }

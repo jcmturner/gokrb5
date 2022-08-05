@@ -214,7 +214,7 @@ func SetSPNEGOHeader(cl *client.Client, r *http.Request, spn string) error {
 	}
 	nb, err := st.Marshal()
 	if err != nil {
-		return krberror.Errorf(err, krberror.EncodingError, "could not marshal SPNEGO")
+		return krberror.Errorf(err, krberror.EncodingErrorf, "could not marshal SPNEGO")
 	}
 	hs := "Negotiate " + base64.StdEncoding.EncodeToString(nb)
 	r.Header.Set(HTTPHeaderAuthRequest, hs)

@@ -51,11 +51,11 @@ func NewKRBError(sname types.PrincipalName, realm string, code int32, etext stri
 func (k *KRBError) Unmarshal(b []byte) error {
 	_, err := asn1.UnmarshalWithParams(b, k, fmt.Sprintf("application,explicit,tag:%v", asnAppTag.KRBError))
 	if err != nil {
-		return krberror.Errorf(err, krberror.EncodingError, "KRB_ERROR unmarshal error")
+		return krberror.Errorf(err, krberror.EncodingErrorf, "KRB_ERROR unmarshal error")
 	}
 	expectedMsgType := msgtype.KRB_ERROR
 	if k.MsgType != expectedMsgType {
-		return krberror.NewErrorf(krberror.KRBMsgError, "message ID does not indicate a KRB_ERROR. Expected: %v; Actual: %v", expectedMsgType, k.MsgType)
+		return krberror.KRBMsgErrorf("message ID does not indicate a KRB_ERROR. Expected: %v; Actual: %v", expectedMsgType, k.MsgType)
 	}
 	return nil
 }
@@ -64,7 +64,7 @@ func (k *KRBError) Unmarshal(b []byte) error {
 func (k *KRBError) Marshal() ([]byte, error) {
 	b, err := asn1.Marshal(*k)
 	if err != nil {
-		return b, krberror.Errorf(err, krberror.EncodingError, "error marshaling KRBError")
+		return b, krberror.Errorf(err, krberror.EncodingErrorf, "error marshaling KRBError")
 	}
 	b = asn1tools.AddASNAppTag(b, asnAppTag.KRBError)
 	return b, nil
@@ -85,10 +85,10 @@ func processUnmarshalReplyError(b []byte, err error) error {
 		var krberr KRBError
 		tmperr := krberr.Unmarshal(b)
 		if tmperr != nil {
-			return krberror.Errorf(err, krberror.EncodingError, "failed to unmarshal KDC's reply")
+			return krberror.Errorf(err, krberror.EncodingErrorf, "failed to unmarshal KDC's reply")
 		}
 		return krberr
 	default:
-		return krberror.Errorf(err, krberror.EncodingError, "failed to unmarshal KDC's reply")
+		return krberror.Errorf(err, krberror.EncodingErrorf, "failed to unmarshal KDC's reply")
 	}
 }

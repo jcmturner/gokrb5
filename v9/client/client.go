@@ -171,17 +171,17 @@ func (cl *Client) Login() error {
 	if !cl.Credentials.HasPassword() && !cl.Credentials.HasKeytab() {
 		_, endTime, _, _, err := cl.sessionTimes(cl.Credentials.Domain())
 		if err != nil {
-			return krberror.Errorf(err, krberror.KRBMsgError, "no user credentials available and error getting any existing session")
+			return krberror.Errorf(err, krberror.KRBMsgErrorf, "no user credentials available and error getting any existing session")
 		}
 		if time.Now().UTC().After(endTime) {
-			return krberror.New(krberror.KRBMsgError, "cannot login, no user credentials available and no valid existing session")
+			return krberror.KRBMsgErrorf("cannot login, no user credentials available and no valid existing session")
 		}
 		// no credentials but there is a session with tgt already
 		return nil
 	}
 	ASReq, err := messages.NewASReqForTGT(cl.Credentials.Domain(), cl.Config, cl.Credentials.CName())
 	if err != nil {
-		return krberror.Errorf(err, krberror.KRBMsgError, "error generating new AS_REQ")
+		return krberror.Errorf(err, krberror.KRBMsgErrorf, "error generating new AS_REQ")
 	}
 	ASRep, err := cl.ASExchange(cl.Credentials.Domain(), ASReq, 0)
 	if err != nil {

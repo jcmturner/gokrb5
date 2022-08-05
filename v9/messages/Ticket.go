@@ -57,11 +57,11 @@ type TransitedEncoding struct {
 func NewTicket(cname types.PrincipalName, crealm string, sname types.PrincipalName, srealm string, flags asn1.BitString, sktab *keytab.Keytab, eTypeID int32, kvno int, authTime, startTime, endTime, renewTill time.Time) (Ticket, types.EncryptionKey, error) {
 	etype, err := crypto.GetEtype(eTypeID)
 	if err != nil {
-		return Ticket{}, types.EncryptionKey{}, krberror.Errorf(err, krberror.EncryptingError, "error getting etype for new ticket")
+		return Ticket{}, types.EncryptionKey{}, krberror.Errorf(err, krberror.EncryptingErrorf, "error getting etype for new ticket")
 	}
 	sessionKey, err := types.GenerateEncryptionKey(etype)
 	if err != nil {
-		return Ticket{}, types.EncryptionKey{}, krberror.Errorf(err, krberror.EncryptingError, "error generating session key")
+		return Ticket{}, types.EncryptionKey{}, krberror.Errorf(err, krberror.EncryptingErrorf, "error generating session key")
 	}
 
 	etp := EncTicketPart{
@@ -77,16 +77,16 @@ func NewTicket(cname types.PrincipalName, crealm string, sname types.PrincipalNa
 	}
 	b, err := asn1.Marshal(etp)
 	if err != nil {
-		return Ticket{}, types.EncryptionKey{}, krberror.Errorf(err, krberror.EncodingError, "error marshalling ticket encpart")
+		return Ticket{}, types.EncryptionKey{}, krberror.Errorf(err, krberror.EncodingErrorf, "error marshalling ticket encpart")
 	}
 	b = asn1tools.AddASNAppTag(b, asnAppTag.EncTicketPart)
 	skey, _, err := sktab.GetEncryptionKey(sname, srealm, kvno, eTypeID)
 	if err != nil {
-		return Ticket{}, types.EncryptionKey{}, krberror.Errorf(err, krberror.EncryptingError, "error getting encryption key for new ticket")
+		return Ticket{}, types.EncryptionKey{}, krberror.Errorf(err, krberror.EncryptingErrorf, "error getting encryption key for new ticket")
 	}
 	ed, err := crypto.GetEncryptedData(b, skey, keyusage.KDC_REP_TICKET, kvno)
 	if err != nil {
-		return Ticket{}, types.EncryptionKey{}, krberror.Errorf(err, krberror.EncryptingError, "error encrypting ticket encpart")
+		return Ticket{}, types.EncryptionKey{}, krberror.Errorf(err, krberror.EncryptingErrorf, "error encrypting ticket encpart")
 	}
 	tkt := Ticket{
 		TktVNO:  iana.PVNO,
