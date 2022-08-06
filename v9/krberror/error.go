@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// Error type descriptions.
+// Error classification descriptions.
 const (
 	separator              = " < %s"
 	encodingErrorClass     = "Encoding_Error"
@@ -21,258 +21,299 @@ const (
 	unclassifiedErrorClass = "Unclassified_Error"
 )
 
-type Krberror interface {
+// KRBError defines the interface for the gokrb5 error type.
+type KRBError interface {
 	Error() string
 	String() string
 	Unwrap() error
-	RootCause() Krberror
+	RootCause() KRBError
 	Class() string
 	Wrap(err error)
 }
 
-// Errorf appends to or creates a new Krberror.
-func Errorf(err error, krberr func(format string, a ...interface{}) Krberror, format string, a ...interface{}) Krberror {
+// Errorf wraps an error in a new KRBError created from the provided function with the specified error text.
+func Errorf(err error, krberr func(format string, a ...interface{}) KRBError, format string, a ...interface{}) KRBError {
 	e := krberr(format, a...)
 	e.Wrap(err)
 	return e
 }
 
+// EncodingError implements the KRBError interface for message encoding related errors.
 type EncodingError struct {
-	Krberror
+	KRBError
 }
 
+// Class returns a descriptive string for the classification of the KRBError.
 func (e *EncodingError) Class() string {
 	return encodingErrorClass
 }
 
+// As implements the method required for the errors.As() function.
 func (e *EncodingError) As(target interface{}) bool {
 	if t, ok := target.(*EncodingError); ok {
-		t.Krberror = e.Krberror
+		t.KRBError = e.KRBError
 		return true
 	}
 	return false
 }
 
-func EncodingErrorf(format string, a ...interface{}) Krberror {
+// EncodingErrorf creates a new EncodingError type KRBError with the error text provided.
+func EncodingErrorf(format string, a ...interface{}) KRBError {
 	e := &EncodingError{}
-	e.Krberror = &krberror{
+	e.KRBError = &krberror{
 		etext:   fmt.Sprintf(format, a...),
 		rooterr: e,
 	}
 	return e
 }
 
+// NetworkingError implements the KRBError interface for networking related errors.
 type NetworkingError struct {
-	Krberror
+	KRBError
 }
 
+// Class returns a descriptive string for the classification of the KRBError.
 func (e *NetworkingError) Class() string {
 	return networkingErrorClass
 }
 
+// As implements the method required for the errors.As() function.
 func (e *NetworkingError) As(target interface{}) bool {
 	if t, ok := target.(*NetworkingError); ok {
-		t.Krberror = e.Krberror
+		t.KRBError = e.KRBError
 		return true
 	}
 	return false
 }
 
-func NetworkingErrorf(format string, a ...interface{}) Krberror {
+// NetworkingErrorf creates a new NetworkingError type KRBError with the error text provided.
+func NetworkingErrorf(format string, a ...interface{}) KRBError {
 	e := &NetworkingError{}
-	e.Krberror = &krberror{
+	e.KRBError = &krberror{
 		etext:   fmt.Sprintf(format, a...),
 		rooterr: e,
 	}
 	return e
 }
 
+// DecryptingError implements the KRBError interface for decrypting related errors.
 type DecryptingError struct {
-	Krberror
+	KRBError
 }
 
+// Class returns a descriptive string for the classification of the KRBError.
 func (e *DecryptingError) Class() string {
 	return decryptingErrorClass
 }
 
+// As implements the method required for the errors.As() function.
 func (e *DecryptingError) As(target interface{}) bool {
 	if t, ok := target.(*DecryptingError); ok {
-		t.Krberror = e.Krberror
+		t.KRBError = e.KRBError
 		return true
 	}
 	return false
 }
 
-func DecryptingErrorf(format string, a ...interface{}) Krberror {
+// DecryptingErrorf creates a new DecryptingError type KRBError with the error text provided.
+func DecryptingErrorf(format string, a ...interface{}) KRBError {
 	e := &DecryptingError{}
-	e.Krberror = &krberror{
+	e.KRBError = &krberror{
 		etext:   fmt.Sprintf(format, a...),
 		rooterr: e,
 	}
 	return e
 }
 
+// EncryptingError implements the KRBError interface for encrypting related errors.
 type EncryptingError struct {
-	Krberror
+	KRBError
 }
 
+// Class returns a descriptive string for the classification of the KRBError.
 func (e *EncryptingError) Class() string {
 	return encryptingErrorClass
 }
 
+// As implements the method required for the errors.As() function.
 func (e *EncryptingError) As(target interface{}) bool {
 	if t, ok := target.(*EncryptingError); ok {
-		t.Krberror = e.Krberror
+		t.KRBError = e.KRBError
 		return true
 	}
 	return false
 }
 
-func EncryptingErrorf(format string, a ...interface{}) Krberror {
+// EncryptingErrorf creates a new EncryptingError type KRBError with the error text provided.
+func EncryptingErrorf(format string, a ...interface{}) KRBError {
 	e := &EncryptingError{}
-	e.Krberror = &krberror{
+	e.KRBError = &krberror{
 		etext:   fmt.Sprintf(format, a...),
 		rooterr: e,
 	}
 	return e
 }
 
+// ChksumError implements the KRBError interface for checksum validation errors.
 type ChksumError struct {
-	Krberror
+	KRBError
 }
 
+// Class returns a descriptive string for the classification of the KRBError.
 func (e *ChksumError) Class() string {
 	return chksumErrorClass
 }
 
+// As implements the method required for the errors.As() function.
 func (e *ChksumError) As(target interface{}) bool {
 	if t, ok := target.(*ChksumError); ok {
-		t.Krberror = e.Krberror
+		t.KRBError = e.KRBError
 		return true
 	}
 	return false
 }
 
-func ChksumErrorf(format string, a ...interface{}) Krberror {
+// ChksumErrorf creates a new ChksumError type KRBError with the error text provided.
+func ChksumErrorf(format string, a ...interface{}) KRBError {
 	e := &ChksumError{}
-	e.Krberror = &krberror{
+	e.KRBError = &krberror{
 		etext:   fmt.Sprintf(format, a...),
 		rooterr: e,
 	}
 	return e
 }
 
+// KRBMsgError implements the KRBError interface for kerberos message formation and processing related errors.
 type KRBMsgError struct {
-	Krberror
+	KRBError
 }
 
+// Class returns a descriptive string for the classification of the KRBError.
 func (e *KRBMsgError) Class() string {
 	return krbMsgErrorClass
 }
 
+// As implements the method required for the errors.As() function.
 func (e *KRBMsgError) As(target interface{}) bool {
 	if t, ok := target.(*KRBMsgError); ok {
-		t.Krberror = e.Krberror
+		t.KRBError = e.KRBError
 		return true
 	}
 	return false
 }
 
-func KRBMsgErrorf(format string, a ...interface{}) Krberror {
+// KRBMsgErrorf creates a new KRBMsgError type KRBError with the error text provided.
+func KRBMsgErrorf(format string, a ...interface{}) KRBError {
 	e := &KRBMsgError{}
-	e.Krberror = &krberror{
+	e.KRBError = &krberror{
 		etext:   fmt.Sprintf(format, a...),
 		rooterr: e,
 	}
 	return e
 }
 
+// ConfigError implements the KRBError interface for configuration related errors.
 type ConfigError struct {
-	Krberror
+	KRBError
 }
 
+// Class returns a descriptive string for the classification of the KRBError.
 func (e *ConfigError) Class() string {
 	return configErrorClass
 }
 
+// As implements the method required for the errors.As() function.
 func (e *ConfigError) As(target interface{}) bool {
 	if t, ok := target.(*ConfigError); ok {
-		t.Krberror = e.Krberror
+		t.KRBError = e.KRBError
 		return true
 	}
 	return false
 }
 
-func ConfigErrorf(format string, a ...interface{}) Krberror {
+// ConfigErrorf creates a new ConfigError type KRBError with the error text provided.
+func ConfigErrorf(format string, a ...interface{}) KRBError {
 	e := &ConfigError{}
-	e.Krberror = &krberror{
+	e.KRBError = &krberror{
 		etext:   fmt.Sprintf(format, a...),
 		rooterr: e,
 	}
 	return e
 }
 
+// KDCError implements the KRBError interface for errors originating from the KDC.
 type KDCError struct {
-	Krberror
+	KRBError
 }
 
+// Class returns a descriptive string for the classification of the KRBError.
 func (e *KDCError) Class() string {
 	return kdcErrorClass
 }
 
+// As implements the method required for the errors.As() function.
 func (e *KDCError) As(target interface{}) bool {
 	if t, ok := target.(*KDCError); ok {
-		t.Krberror = e.Krberror
+		t.KRBError = e.KRBError
 		return true
 	}
 	return false
 }
 
-func KDCErrorf(format string, a ...interface{}) Krberror {
+// KDCErrorf creates a new KDCError type KRBError with the error text provided.
+func KDCErrorf(format string, a ...interface{}) KRBError {
 	e := &KDCError{}
-	e.Krberror = &krberror{
+	e.KRBError = &krberror{
 		etext:   fmt.Sprintf(format, a...),
 		rooterr: e,
 	}
 	return e
 }
 
+// krberror implements the KRBError interface and is used by other error types to implement common methods of the
+// interface.
 type krberror struct {
 	etext   string
 	inner   error
-	rooterr Krberror
+	rooterr KRBError
 }
 
+// String returns the error text without recusing into wrapped errors.
 func (e *krberror) String() string {
 	return e.etext
 }
 
+// Wrap the provided error with the KRBError receiver of this method.
 func (e *krberror) Wrap(err error) {
 	e.inner = err
-	if krberr, ok := err.(Krberror); ok {
+	if krberr, ok := err.(KRBError); ok {
 		e.rooterr = krberr.RootCause()
 		return
 	}
 }
 
+// Unwrap returns any error wrapped within the KRBError receiver of this method.
 func (e *krberror) Unwrap() error {
 	return e.inner
 }
 
-func (e *krberror) RootCause() Krberror {
+// RootCause returns the inner most wrapped error that is a KRBError.
+func (e *krberror) RootCause() KRBError {
 	return e.rooterr
 }
 
+// Class returns a descriptive string for the classification of the KRBError.
 func (e *krberror) Class() string {
 	return unclassifiedErrorClass
 }
 
+// Error returns a string combining the error texts of all wrapped KRBErrors.
 func (e *krberror) Error() string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "[Root cause: %s] %s", e.RootCause().Class(), e.String())
 	i := e.Unwrap()
 	for i != nil {
-		if err, ok := isKrbError(i); ok {
+		if err, ok := isKRBError(i); ok {
 			fmt.Fprintf(&b, separator, err.String())
 		} else {
 			fmt.Fprintf(&b, separator, i.Error())
@@ -282,7 +323,8 @@ func (e *krberror) Error() string {
 	return b.String()
 }
 
-func isKrbError(err error) (Krberror, bool) {
+// isKRBError indicates if the provided error is one of the KRBError types.
+func isKRBError(err error) (KRBError, bool) {
 	switch v := err.(type) {
 	case *EncodingError:
 		return v, true

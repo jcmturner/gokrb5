@@ -9,7 +9,7 @@ import (
 )
 
 func TestKrberrorImplement(t *testing.T) {
-	i := new(Krberror)
+	i := new(KRBError)
 	f := "testing %s %s"
 	s := "hello world"
 
@@ -39,42 +39,42 @@ func TestKrberrorAs(t *testing.T) {
 		switch target.(type) {
 		case *EncodingError:
 			krberr := new(EncodingError)
-			krberr.Krberror = &krberror{}
+			krberr.KRBError = &krberror{}
 			errors.As(err, krberr)
 			assert.Equal(t, s, krberr.String())
 		case *NetworkingError:
 			krberr := new(NetworkingError)
-			krberr.Krberror = &krberror{}
+			krberr.KRBError = &krberror{}
 			errors.As(err, krberr)
 			assert.Equal(t, s, krberr.String())
 		case *DecryptingError:
 			krberr := new(DecryptingError)
-			krberr.Krberror = &krberror{}
+			krberr.KRBError = &krberror{}
 			errors.As(err, krberr)
 			assert.Equal(t, s, krberr.String())
 		case *EncryptingError:
 			krberr := new(EncryptingError)
-			krberr.Krberror = &krberror{}
+			krberr.KRBError = &krberror{}
 			errors.As(err, krberr)
 			assert.Equal(t, s, krberr.String())
 		case *ChksumError:
 			krberr := new(ChksumError)
-			krberr.Krberror = &krberror{}
+			krberr.KRBError = &krberror{}
 			errors.As(err, krberr)
 			assert.Equal(t, s, krberr.String())
 		case *KRBMsgError:
 			krberr := new(KRBMsgError)
-			krberr.Krberror = &krberror{}
+			krberr.KRBError = &krberror{}
 			errors.As(err, krberr)
 			assert.Equal(t, s, krberr.String())
 		case *ConfigError:
 			krberr := new(ConfigError)
-			krberr.Krberror = &krberror{}
+			krberr.KRBError = &krberror{}
 			errors.As(err, krberr)
 			assert.Equal(t, s, krberr.String())
 		case *KDCError:
 			krberr := new(KDCError)
-			krberr.Krberror = &krberror{}
+			krberr.KRBError = &krberror{}
 			errors.As(err, krberr)
 			assert.Equal(t, s, krberr.String())
 		}
@@ -89,8 +89,8 @@ func TestKrberrorIs(t *testing.T) {
 	}
 }
 
-func wrappedErr() (error, map[Krberror]string) {
-	var errs = []func(format string, a ...interface{}) Krberror{
+func wrappedErr() (error, map[KRBError]string) {
+	var errs = []func(format string, a ...interface{}) KRBError{
 		EncodingErrorf,
 		NetworkingErrorf,
 		DecryptingErrorf,
@@ -100,11 +100,11 @@ func wrappedErr() (error, map[Krberror]string) {
 		ConfigErrorf,
 		KDCErrorf,
 	}
-	var errorFormat = make(map[Krberror]string)
+	var errorFormat = make(map[KRBError]string)
 	err := errors.New("0")
 	for i, c := range errs {
 		err = Errorf(err, c, "krberr %s", strconv.Itoa(i+1))
-		errorFormat[err.(Krberror)] = strconv.Itoa(i + 1)
+		errorFormat[err.(KRBError)] = strconv.Itoa(i + 1)
 	}
 	return err, errorFormat
 }
