@@ -17,7 +17,7 @@ func TestAes128CtsHmacSha196_StringToKey(t *testing.T) {
 	b, _ = hex.DecodeString("f09d849e")
 	s2 := string(b)
 	var tests = []struct {
-		iterations int64
+		iterations int
 		phrase     string
 		salt       string
 		pbkdf2     string
