@@ -297,7 +297,7 @@ func (e *krberror) Unwrap() error {
 	return e.inner
 }
 
-// RootCause returns the inner most wrapped error that is a KRBError.
+// RootCause returns the innermost wrapped error that is a KRBError.
 func (e *krberror) RootCause() KRBError {
 	return e.rooterr
 }
