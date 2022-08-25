@@ -141,7 +141,7 @@ func (kt *Keytab) AddActiveDirectoryComputerAccountEntry(principalName, realm, p
 func (kt *Keytab) AddEntry(principalName, realm, password string, ts time.Time, KVNO uint8, encType int32) error {
 	// Generate a key from the password
 	princ, _ := types.ParseSPNString(principalName)
-	key, _, err := crypto.GetKeyFromPassword(password, princ, realm, "", encType, types.PADataSequence{})
+	key, _, err := crypto.GetKeyFromPassword(password, princ, realm, encType, types.PADataSequence{})
 	if err != nil {
 		return err
 	}

@@ -71,11 +71,10 @@ func GetChksumEtype(id int32) (etype.EType, error) {
 // GetActiveDirectoryKeyFromPassword generates an Active Directory compatible encryption key from the principal's password.
 func GetActiveDirectoryKeyFromPassword(passwd string, cname types.PrincipalName, realm, samAccountName string, etypeID int32, pas types.PADataSequence) (types.EncryptionKey, etype.EType, error) {
 	salt := realm + "host" + samAccountName + "." + strings.ToLower(realm)
-	return GetKeyFromPassword(passwd, cname, realm, salt, etypeID, pas)
+	return GetKeyFromPasswordWithSalt(passwd, cname, realm, salt, etypeID, pas)
 }
 
-// GetKeyFromPassword generates an encryption key from the principal's password.
-func GetKeyFromPassword(passwd string, cname types.PrincipalName, realm, salt string, etypeID int32, pas types.PADataSequence) (types.EncryptionKey, etype.EType, error) {
+func GetKeyFromPasswordWithSalt(passwd string, cname types.PrincipalName, realm, salt string, etypeID int32, pas types.PADataSequence) (types.EncryptionKey, etype.EType, error) {
 	var key types.EncryptionKey
 	et, err := GetEtype(etypeID)
 	if err != nil {
@@ -139,6 +138,11 @@ func GetKeyFromPassword(passwd string, cname types.PrincipalName, realm, salt st
 		KeyValue: k,
 	}
 	return key, et, nil
+}
+
+// GetKeyFromPassword generates an encryption key from the principal's password.
+func GetKeyFromPassword(passwd string, cname types.PrincipalName, realm string, etypeID int32, pas types.PADataSequence) (types.EncryptionKey, etype.EType, error) {
+	return GetKeyFromPasswordWithSalt(passwd, cname, realm, "", etypeID, pas)
 }
 
 // GetEncryptedData encrypts the data provided and returns and EncryptedData type.
