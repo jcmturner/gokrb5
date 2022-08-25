@@ -224,6 +224,86 @@ func TestKeytabEntriesService(t *testing.T) {
 	assert.Equal(t, generated, ktutilbytes, "Service keytab doesn't match ktutil keytab")
 }
 
+func TestKeytabEntriesComputer(t *testing.T) {
+	// Load known-good keytab generated with ktutil
+	ktutilb64 := string(`BQIAAABAAAEAC0NZTE9OLkxPQ0FMAA5sb3NwZWNuaW5mcmEzJAAAAAFjB6XsBQAXABARDQxR4UTT
+b7fk+eAS+7iIAAAABQAAAEAAAQALQ1lMT04uTE9DQUwADmxvc3BlY25pbmZyYTMkAAAAAWMHpewF
+ABEAEDgTr5D44EdeyfbxcTNpiO4AAAAFAAAAUAABAAtDWUxPTi5MT0NBTAAObG9zcGVjbmluZnJh
+MyQAAAABYwel7AUAEgAg9LXbCPYwoqorwz7TJIe3TIMRyiR7u5J4trLwtXgAzBMAAAAFAAAAQAAB
+AAtDWUxPTi5MT0NBTAAOTE9TUEVDTklORlJBMyQAAAABYwel7AUAFwAQEQ0MUeFE02+35PngEvu4
+iAAAAAUAAABAAAEAC0NZTE9OLkxPQ0FMAA5MT1NQRUNOSU5GUkEzJAAAAAFjB6XsBQARABA4E6+Q
++OBHXsn28XEzaYjuAAAABQAAAFAAAQALQ1lMT04uTE9DQUwADkxPU1BFQ05JTkZSQTMkAAAAAWMH
+pewFABIAIPS12wj2MKKqK8M+0ySHt0yDEcoke7uSeLay8LV4AMwTAAAABQAAAFUAAgALQ1lMT04u
+TE9DQUwABGhvc3QAHWxvc3BlY25pbmZyYTMuZWNuLmN5bG9uLmxvY2FsAAAAAWMHpewFABcAEBEN
+DFHhRNNvt+T54BL7uIgAAAAFAAAAVQACAAtDWUxPTi5MT0NBTAAEaG9zdAAdbG9zcGVjbmluZnJh
+My5lY24uY3lsb24ubG9jYWwAAAABYwel7AUAEQAQOBOvkPjgR17J9vFxM2mI7gAAAAUAAABlAAIA
+C0NZTE9OLkxPQ0FMAARob3N0AB1sb3NwZWNuaW5mcmEzLmVjbi5jeWxvbi5sb2NhbAAAAAFjB6Xs
+BQASACD0tdsI9jCiqivDPtMkh7dMgxHKJHu7kni2svC1eADMEwAAAAUAAABFAAIAC0NZTE9OLkxP
+Q0FMAARob3N0AA1sb3NwZWNuaW5mcmEzAAAAAWMHpewFABcAEBENDFHhRNNvt+T54BL7uIgAAAAF
+AAAARQACAAtDWUxPTi5MT0NBTAAEaG9zdAANbG9zcGVjbmluZnJhMwAAAAFjB6XsBQARABA4E6+Q
++OBHXsn28XEzaYjuAAAABQAAAFUAAgALQ1lMT04uTE9DQUwABGhvc3QADWxvc3BlY25pbmZyYTMA
+AAABYwel7AUAEgAg9LXbCPYwoqorwz7TJIe3TIMRyiR7u5J4trLwtXgAzBMAAAAFAAAAYgACAAtD
+WUxPTi5MT0NBTAARUmVzdHJpY3RlZEtyYkhvc3QAHWxvc3BlY25pbmZyYTMuZWNuLmN5bG9uLmxv
+Y2FsAAAAAWMHpewFABcAEBENDFHhRNNvt+T54BL7uIgAAAAFAAAAYgACAAtDWUxPTi5MT0NBTAAR
+UmVzdHJpY3RlZEtyYkhvc3QAHWxvc3BlY25pbmZyYTMuZWNuLmN5bG9uLmxvY2FsAAAAAWMHpewF
+ABEAEDgTr5D44EdeyfbxcTNpiO4AAAAFAAAAcgACAAtDWUxPTi5MT0NBTAARUmVzdHJpY3RlZEty
+Ykhvc3QAHWxvc3BlY25pbmZyYTMuZWNuLmN5bG9uLmxvY2FsAAAAAWMHpewFABIAIPS12wj2MKKq
+K8M+0ySHt0yDEcoke7uSeLay8LV4AMwTAAAABQAAAFIAAgALQ1lMT04uTE9DQUwAEVJlc3RyaWN0
+ZWRLcmJIb3N0AA1MT1NQRUNOSU5GUkEzAAAAAWMHpewFABcAEBENDFHhRNNvt+T54BL7uIgAAAAF
+AAAAUgACAAtDWUxPTi5MT0NBTAARUmVzdHJpY3RlZEtyYkhvc3QADUxPU1BFQ05JTkZSQTMAAAAB
+Ywel7AUAEQAQOBOvkPjgR17J9vFxM2mI7gAAAAUAAABiAAIAC0NZTE9OLkxPQ0FMABFSZXN0cmlj
+dGVkS3JiSG9zdAANTE9TUEVDTklORlJBMwAAAAFjB6XsBQASACD0tdsI9jCiqivDPtMkh7dMgxHK
+JHu7kni2svC1eADMEwAAAAUAAABFAAIAC0NZTE9OLkxPQ0FMAARob3N0AA1MT1NQRUNOSU5GUkEz
+AAAAAWMHpewFABcAEBENDFHhRNNvt+T54BL7uIgAAAAFAAAARQACAAtDWUxPTi5MT0NBTAAEaG9z
+dAANTE9TUEVDTklORlJBMwAAAAFjB6XsBQARABA4E6+Q+OBHXsn28XEzaYjuAAAABQAAAFUAAgAL
+Q1lMT04uTE9DQUwABGhvc3QADUxPU1BFQ05JTkZSQTMAAAABYwel7AUAEgAg9LXbCPYwoqorwz7T
+JIe3TIMRyiR7u5J4trLwtXgAzBMAAAAF`)
+	ktutilbytes, err := base64.StdEncoding.DecodeString(ktutilb64)
+	if err != nil {
+		t.Errorf("Could not parse b64 ktutil keytab: %s", err)
+	}
+	ktutil := new(Keytab)
+	err = ktutil.Unmarshal(ktutilbytes)
+	if err != nil {
+		t.Fatalf("Could not load ktutil-generated keytab: %s", err)
+	}
+
+	// Generate the same keytab with gokrb5
+	ts := ktutil.Entries[0].Timestamp
+	var encTypes = []int32{
+		etypeID.RC4_HMAC,
+		etypeID.AES128_CTS_HMAC_SHA1_96,
+		etypeID.AES256_CTS_HMAC_SHA1_96,
+	}
+
+	principals := []string{
+		"lospecninfra3$",
+		"LOSPECNINFRA3$",
+		"host/lospecninfra3.ecn.cylon.local",
+		"host/lospecninfra3",
+		"RestrictedKrbHost/lospecninfra3.ecn.cylon.local",
+		"RestrictedKrbHost/LOSPECNINFRA3",
+		"host/LOSPECNINFRA3",
+	}
+
+	kt := New()
+	for _, princ := range principals {
+		for _, et := range encTypes {
+			err = kt.AddActiveDirectoryComputerAccountEntry(princ, "CYLON.LOCAL", "hello123", "lospecninfra3", ts, uint8(5), et)
+			if err != nil {
+				t.Errorf("Error adding entry to keytab: %s", err)
+			}
+		}
+	}
+	generated, err := kt.Marshal()
+	if err != nil {
+		t.Errorf("Error marshalling generated keytab: %s", err)
+	}
+
+	// Compare content
+	assert.Equal(t, generated, ktutilbytes, "Computer keytab doesn't match ktutil keytab")
+}
+
 func TestKeytab_GetEncryptionKey(t *testing.T) {
 	princ := "HTTP/princ.test.gokrb5"
 	realm := "TEST.GOKRB5"
