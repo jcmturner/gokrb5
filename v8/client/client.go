@@ -126,10 +126,10 @@ func (cl *Client) Key(etype etype.EType, kvno int, krberr *messages.KRBError) (t
 			if err != nil {
 				return types.EncryptionKey{}, 0, fmt.Errorf("could not get PAData from KRBError to generate key from password: %v", err)
 			}
-			key, _, err := crypto.GetKeyFromPassword(cl.Credentials.Password(), krberr.CName, krberr.CRealm, etype.GetETypeID(), pas)
+			key, _, err := crypto.GetKeyFromPassword(cl.Credentials.Password(), krberr.CName, krberr.CRealm, "", etype.GetETypeID(), pas)
 			return key, 0, err
 		}
-		key, _, err := crypto.GetKeyFromPassword(cl.Credentials.Password(), cl.Credentials.CName(), cl.Credentials.Domain(), etype.GetETypeID(), types.PADataSequence{})
+		key, _, err := crypto.GetKeyFromPassword(cl.Credentials.Password(), cl.Credentials.CName(), cl.Credentials.Domain(), "", etype.GetETypeID(), types.PADataSequence{})
 		return key, 0, err
 	}
 	return types.EncryptionKey{}, 0, errors.New("credential has neither keytab or password to generate key")
