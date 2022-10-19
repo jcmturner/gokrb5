@@ -43,6 +43,10 @@ func (k *SignatureData) Unmarshal(b []byte) (rb []byte, err error) {
 		c = 12
 	case uint32(chksumtype.HMAC_SHA1_96_AES256):
 		c = 12
+	case uint32(chksumtype.HMAC_SHA256_128_AES128):
+		c = 16
+	case uint32(chksumtype.HMAC_SHA384_192_AES256):
+		c = 24
 	}
 	k.Signature, err = r.ReadBytes(c)
 	if err != nil {
