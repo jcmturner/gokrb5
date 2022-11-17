@@ -134,6 +134,15 @@ func (wt *WrapToken) Unmarshal(b []byte, expectFromAcceptor bool) error {
 	if len(b) < 16 {
 		return errors.New("bytes shorter than header length")
 	}
+
+	// Check for 0x60 as the first byte;  As per RFC 4121 § 4.4, these Token ID - 0x60 0x00 to 0x60 0xFF
+	// are reserved to indicate 'Generic GSS-API token framing' that was used by
+	// GSS-API v1, and are not supported in GSS-API v2.. catch that specific case so
+	// we can emmit a useful message
+	if b[0] == 0x60 {
+		return errors.New(fmt.Sprintf("GSS-API v1 message tokens are not supported: %s", hex.EncodeToString(b[0:2])))
+	}
+
 	// Is the Token ID correct?
 	if !bytes.Equal(getGssWrapTokenId()[:], b[0:2]) {
 		return fmt.Errorf("wrong Token ID. Expected %s, was %s",
