@@ -15,7 +15,7 @@ import (
 
 const (
 	// Length of the Wrap Token's header
-	TOKEN_NO_CKSUM_SIZE           = 16
+	TOKEN_NO_CKSUM_SIZE = 16
 
 	// TOKEN_ID_POS int16 = 0
 	// SIGN_ALG_POS int16 = 2
@@ -27,7 +27,7 @@ const (
 var TOK_ID                    = [2]byte{0x02, 0x01}
 
 // Filler in WrapToken v1
-var	FILLER                    = [2]byte{0xFF, 0xFF}
+var FILLER                    = [2]byte{0xFF, 0xFF}
 
 // Use DES MAC MD5 checksum - RFC 1964
 var SGN_ALG_DES_MAC_MD5       = [2]byte{0x00, 0x00}
