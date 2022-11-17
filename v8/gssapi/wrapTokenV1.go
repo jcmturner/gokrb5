@@ -191,7 +191,7 @@ func (wt *WrapTokenV1) Unmarshal(b []byte, expectFromAcceptor bool) error {
 	// Is the Token ID correct?
 	if !bytes.Equal(TOK_ID[:], b[start_position:start_position+2]) {
 		return fmt.Errorf("wrong Token ID. Expected %s, was %s",
-			hex.EncodeToString(TOK_ID_V2[:]),
+			hex.EncodeToString(TOK_ID[:]),
 			hex.EncodeToString(b[start_position:start_position+2]))
 	}
 	// Check SGN_ALG
