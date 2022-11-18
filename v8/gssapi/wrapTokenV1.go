@@ -185,7 +185,7 @@ func (wt *WrapTokenV1) Unmarshal(b []byte, expectFromAcceptor bool) error {
 	}
 
 	if b[0] == 0x60 {
-		start_position = 14
+		start_position = 13
 	}
 
 	// Is the Token ID correct?
@@ -194,15 +194,16 @@ func (wt *WrapTokenV1) Unmarshal(b []byte, expectFromAcceptor bool) error {
 			hex.EncodeToString(TOK_ID[:]),
 			hex.EncodeToString(b[start_position:start_position+2]))
 	}
+
 	// Check SGN_ALG
 	switch {
-		case bytes.Equal(SGN_ALG_DES_MAC[:], b[start_position+2:start_position+4]):
+		case bytes.Equal(SGN_ALG_DES_MAC_MD5[:],       b[start_position+2:start_position+4]):
 			break
-		case bytes.Equal(SGN_ALG_DES_MAC[:], b[start_position+2:start_position+4]):
+		case bytes.Equal(SGN_ALG_DES_MAC[:],           b[start_position+2:start_position+4]):
 			break
-		case bytes.Equal(SGN_ALG_DES_MAC[:], b[start_position+2:start_position+4]):
+		case bytes.Equal(SGN_ALG_HMAC_SHA1_DES3_KD[:], b[start_position+2:start_position+4]):
 			break
-		case bytes.Equal(SGN_ALG_DES_MAC[:], b[start_position+2:start_position+4]):
+		case bytes.Equal(SGN_ALG_HMAC_MD5_ARCFOUR[:],  b[start_position+2:start_position+4]):
 			break
 		default:
 			return fmt.Errorf("Unsupported SGN_ALG value: %s", hex.EncodeToString(b[start_position+2:start_position+4]))
@@ -239,6 +240,8 @@ func (wt *WrapTokenV1) Unmarshal(b []byte, expectFromAcceptor bool) error {
 // This is currently not supported.
 func NewInitiatorWrapTokenV1(payload []byte, key types.EncryptionKey) (*WrapTokenV1, error) {
 	encType, err := crypto.GetEtype(key.KeyType)
+	_ = encType
+
 	if err != nil {
 		return nil, err
 	}
