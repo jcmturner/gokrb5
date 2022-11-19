@@ -14,12 +14,8 @@ import (
 )
 
 const (
-	// Length of the Wrap Token's header
-	TOKEN_NO_CKSUM_SIZE = 16
-
-	// TOKEN_ID_POS int16 = 0
-	// SIGN_ALG_POS int16 = 2
-	// SEAL_ALG_POS int16 = 4
+	// Length of the Wrap Token v1 header
+	TOKEN_NO_CKSUM_SIZE = 8
 )
 
 // ===== Almost const 2 bytes values to represent various values from GSS API RFCs
@@ -58,15 +54,17 @@ var SEAL_ALG_ARCFOUR_HMAC     = [2]byte{0x10, 0x00}
 // WrapTokenV1 represents a GSS API Wrap token v1, as defined in RFC 1964.
 // It contains the header fields, the payload and the checksum, and provides
 // the logic for converting to/from bytes plus computing and verifying checksums
+// This specific Token is for RC4-HMAC Wrap as per https://datatracker.ietf.org/doc/html/rfc4757#section-7.3
 type WrapTokenV1 struct {
 	// const GSS Token ID: 0x02 0x01
-	SGN_ALG  uint16 // checksum algorithm indicator. big-endian
-	SEAL_ALG uint16 // seal algorithm indicator. big-endian
+	SGN_ALG  uint16 // Checksum algorithm indicator: big-endian
+	SEAL_ALG uint16 // Seal algorithm indicator: big-endian
 
 	// const Filler: 0xFF 0xFF
-	SndSeqNum uint64 // encrypted sender's sequence number. big-endian
-	CheckSum  []byte // authenticated checksum of { payload | header }
-	Payload   []byte // your data! :)
+	SndSeqNum  uint64 // Encrypted sender's sequence number: big-endian
+	CheckSum   []byte // Checksum of plaintext padded data: { payload | header }
+	Confounder []byte // Random confounder
+	Payload    []byte // Encrypted or plaintext padded data
 }
 
 // Marshal the WrapToken into a byte slice.
@@ -102,10 +100,12 @@ func (wt *WrapTokenV1) SetCheckSum(key types.EncryptionKey, keyUsage uint32) err
 	if wt.CheckSum != nil {
 		return errors.New("checksum has already been computed")
 	}
+
 	chkSum, cErr := wt.computeCheckSum(key, keyUsage)
 	if cErr != nil {
 		return cErr
 	}
+
 	wt.CheckSum = chkSum
 	return nil
 }
@@ -116,26 +116,42 @@ func (wt *WrapTokenV1) computeCheckSum(key types.EncryptionKey, keyUsage uint32)
 	if wt.Payload == nil {
 		return nil, errors.New("cannot compute checksum with uninitialized payload")
 	}
-	// Build a slice containing { payload | header }
-	checksumMe := make([]byte, HdrLen+len(wt.Payload))
-	copy(checksumMe[0:], wt.Payload)
-	copy(checksumMe[len(wt.Payload):], getChecksumHeaderV1(wt.SndSeqNum))
+
+	if wt.Confounder == nil {
+		return nil, errors.New("cannot compute checksum with uninitialized confounder")
+	}
+
+	// Build a slice containing { header | confounder | payload }
+	header := getChecksumHeaderV1()
+	checksumMe := make([]byte, len(header) + len(wt.Confounder) + len(wt.Payload))
+	copy(checksumMe[0:], header)
+	copy(checksumMe[len(header):], wt.Confounder)
+	copy(checksumMe[len(header) + len(wt.Confounder):], wt.Payload)
 
 	encType, err := crypto.GetEtype(key.KeyType)
 	if err != nil {
 		return nil, err
 	}
-	return encType.GetChecksumHash(key.KeyValue, checksumMe, keyUsage)
+
+	fmt.Printf("keyType: %d, keyValue: %s, keyUsage: %d, checksumMe: %s\n", key.KeyType, hex.EncodeToString(key.KeyValue), keyUsage, hex.EncodeToString(checksumMe))
+
+	checksumHash, err := encType.GetChecksumHash(key.KeyValue, checksumMe, keyUsage)
+
+	if err!= nil {
+		return nil, err
+	}
+
+	return checksumHash[:8], nil
 }
 
 // Build a header suitable for a checksum computation
-func getChecksumHeaderV1(senderSeqNum uint64) []byte {
-	header := make([]byte, 16)
+func getChecksumHeaderV1() []byte {
+	header := make([]byte, 8)
 	copy(header[0:], TOK_ID[:])
 	copy(header[2:], SGN_ALG_HMAC_MD5_ARCFOUR[:])
-	copy(header[4:], SEAL_ALG_NONE[:][:])
+	copy(header[4:], SEAL_ALG_ARCFOUR_HMAC[:])
 	copy(header[6:], FILLER[:])
-	binary.BigEndian.PutUint64(header[8:], senderSeqNum)
+
 	return header
 }
 
@@ -155,28 +171,32 @@ func (wt *WrapTokenV1) Verify(key types.EncryptionKey, keyUsage uint32) (bool, e
 	return true, nil
 }
 
+
 // Unmarshal bytes into the corresponding WrapTokenV1.
 func (wt *WrapTokenV1) Unmarshal(b []byte, expectFromAcceptor bool) error {
-	// This function maps onto GSS_Wrap() from RFC 1964
-	//   The GSS_Wrap() token has the following format:
-	//
-  //  Byte no          Name           Description
-  //   0..1           TOK_ID          Identification field.
-  //                                  Tokens emitted by GSS_Wrap() contain
-  //                                  the hex value 02 01 in this field.
-  //   2..3           SGN_ALG         Checksum algorithm indicator.
-  //                                  00 00 - DES MAC MD5
-  //                                  02 00 - DES MAC
-  //                                  01 00 - MD2.5
-	//                                  11 00 - HMAC MD5 ARCFOUR
-  //   4..5           SEAL_ALG        ff ff - none
-  //                                  00 00 - DES
-  //   6..7           Filler          Contains ff ff
-  //   8..15          SND_SEQ         Encrypted sequence number field.
-  //   16..23         SGN_CKSUM       Checksum of plaintext padded data,
-  //                                  calculated according to algorithm
-  //                                  specified in SGN_ALG field.
-  //   24..last       Data            encrypted or plaintext padded data
+  // This function maps onto GSS_Wrap() from RFC 1964
+  //   The GSS_Wrap() token has the following format:
+  //
+  //  Byte no      Name         Description
+  //   0..1       TOK_ID        Identification field.
+  //                            Tokens emitted by GSS_Wrap() contain
+  //                            the hex value 02 01 in this field.
+  //   2..3       SGN_ALG       Checksum algorithm indicator.
+  //                            00 00 - DES MAC MD5
+  //                            02 00 - DES MAC
+  //                            01 00 - MD2.5
+  //                            11 00 - HMAC MD5 ARCFOUR
+  //   4..5       SEAL_ALG      ff ff - none
+  //                            00 00 - DES
+  //                            02 00 - DES3-KD
+  //                            10 00 - ARCFOUR-HMAC
+  //   6..7       Filler        Contains ff ff
+  //   8..15      SND_SEQ       Encrypted sequence number field.
+  //   16..23     SGN_CKSUM     Checksum of plaintext padded data,
+  //                            calculated according to algorithm
+  //                            specified in SGN_ALG field.
+  //   24..31     Confounder    Random confounder
+  //   32..last   Data          encrypted or plaintext padded data
 	start_position := 0
 	
 	// Check if we can read a whole header
@@ -228,9 +248,11 @@ func (wt *WrapTokenV1) Unmarshal(b []byte, expectFromAcceptor bool) error {
 		return fmt.Errorf("unexpected filler byte: expecting 0xFFFF, was %s", hex.EncodeToString(b[start_position+6:start_position+8]))
 	}
 
-	wt.SndSeqNum = binary.BigEndian.Uint64(b[start_position+8:start_position+16])
-	wt.CheckSum  = b[start_position+16:start_position+24]
-	wt.Payload   = b[start_position+24:]
+	wt.SndSeqNum  = binary.BigEndian.Uint64(b[start_position+8:start_position+16])
+	wt.CheckSum   = b[start_position+16:start_position+24]
+	wt.Confounder = b[start_position+24:start_position+32]
+	wt.Payload    = b[start_position+32:]
+	fmt.Printf("Unmarshal! SndSeqNum: %s, CheckSum: %s, Confounder: %s, Payload: %s\n", hex.EncodeToString(b[start_position+8:start_position+16]), hex.EncodeToString(wt.CheckSum), hex.EncodeToString(wt.Confounder), hex.EncodeToString(wt.Payload))
 	return nil
 }
 
@@ -248,7 +270,8 @@ func NewInitiatorWrapTokenV1(payload []byte, key types.EncryptionKey) (*WrapToke
 
 	token := WrapTokenV1{
 		SndSeqNum: 0,
-		Payload:   payload,
+		Confounder: payload[:8],
+		Payload:    payload[8:],
 	}
 
 	if err := token.SetCheckSum(key, keyusage.GSSAPI_INITIATOR_SEAL); err != nil {
