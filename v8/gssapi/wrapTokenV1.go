@@ -3,7 +3,8 @@ package gssapi
 import (
 	"bytes"
 	"crypto/hmac"
-	"encoding/binary"
+	"crypto/rand"
+	// "encoding/binary"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -19,6 +20,13 @@ const (
 )
 
 // ===== Almost const 2 bytes values to represent various values from GSS API RFCs
+// 13 bytes Independent Token Header as per https://www.rfc-editor.org/rfc/rfc2743#page-81
+//   1. 0x60         -- Tag for [APPLICATION 0] SEQUENCE
+//   2. 0x30         -- Token length octets (lengths of elements in 3-5 + actual WrapToken v1)
+//   3. 0x06         -- Tag for OBJECT IDENTIFIER
+//   4. 0x09         -- Object identifier length (lengths of elements in 5)
+//   5. 0x2a to 0x02 -- Object identifier octets
+var GSS_WRAP_HEADER           = [13]byte{0x60, 0x30, 0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x12, 0x01, 0x02, 0x02}
 // 2 bytes identifying GSS API Wrap token v1
 var TOK_ID                    = [2]byte{0x02, 0x01}
 
@@ -61,7 +69,8 @@ type WrapTokenV1 struct {
 	SEAL_ALG uint16 // Seal algorithm indicator: big-endian
 
 	// const Filler: 0xFF 0xFF
-	SndSeqNum  uint64 // Encrypted sender's sequence number: big-endian
+	// SndSeqNum  uint64 // Encrypted sender's sequence number: big-endian
+	SndSeqNum  []byte // Encrypted sender's sequence number: big-endian
 	CheckSum   []byte // Checksum of plaintext padded data: { payload | header }
 	Confounder []byte // Random confounder
 	Payload    []byte // Encrypted or plaintext padded data
@@ -77,37 +86,22 @@ func (wt *WrapTokenV1) Marshal() ([]byte, error) {
 		return nil, errors.New("payload has not been set")
 	}
 
-	bytes := make([]byte, 24 + len(wt.Payload))
-	copy(bytes[0:],  TOK_ID[:])                           // Insert TOK_ID
-	copy(bytes[2:4], SGN_ALG_HMAC_MD5_ARCFOUR[:])         // Insert SGN_ALG
-	copy(bytes[4:6], SEAL_ALG_NONE[:])                    // Insert SEAL_ALG
-	copy(bytes[6:8], FILLER[:])                           // Insert Filler
+	bytes := make([]byte, 13 + 32 + len(wt.Payload)) // { len(GSS_WRAP_HEADER) | len(TOKEN.HEADER) | len (TOKEN.SGN_ALG) | len(TOKEN.SEAL_ALG) | len(FILLER) | len(SND_SEQ) | len(SGN_CHSUM) | len(Confounder) | len (Payload)  }
+	copy(bytes[0:],    GSS_WRAP_HEADER[:])           // Seems like the final token needs to have GSS_WRAP_HEADER (as per RFC 2743)
+	copy(bytes[13:],   TOK_ID[:])                    // Insert TOK_ID
+	copy(bytes[15:17], SGN_ALG_HMAC_MD5_ARCFOUR[:])  // Insert SGN_ALG
+	copy(bytes[17:19], SEAL_ALG_NONE[:])             // Insert SEAL_ALG
+	copy(bytes[19:21], FILLER[:])                    // Insert Filler
 
-	binary.BigEndian.PutUint64(bytes[8:16], wt.SndSeqNum) // Insert SND_SEQ
-	copy(bytes[16:24], wt.CheckSum)                       // Insert SGN_CKSUM
-	copy(bytes[24:], wt.Payload)                          // Insert Data
+	copy(bytes[21:29], wt.SndSeqNum)  // Insert SND_SEQ
+	copy(bytes[29:37], wt.CheckSum)   // Insert SGN_CKSUM
+	copy(bytes[37:45], wt.Confounder) // Insert Confounder
+	copy(bytes[45:],   wt.Payload)    // Insert Data
+
+	fmt.Printf("GSS_WRAP_HEADER: %s, TOK_ID: %s, SGN_ALG: %s, SEAL_ALG: %s, Filler: %s, SND_SEQ: %s, SGN_CKSUM: %s, Confounder: %s, Data: %s\n", hex.EncodeToString(bytes[0:13]), hex.EncodeToString(bytes[13:15]), hex.EncodeToString(bytes[15:17]), hex.EncodeToString(bytes[17:19]), hex.EncodeToString(bytes[19:21]), hex.EncodeToString(bytes[21:29]), hex.EncodeToString(bytes[29:37]), hex.EncodeToString(bytes[37:45]), hex.EncodeToString(bytes[45:]))
+	fmt.Printf("Final WrapToken v1 is: %s\n", hex.EncodeToString(bytes[:]))
 
 	return bytes, nil
-}
-
-// SetCheckSum uses the passed encryption key and key usage to compute the checksum over the payload and
-// the header, and sets the CheckSum field of this WrapToken.
-// If the payload has not been set or the checksum has already been set, an error is returned.
-func (wt *WrapTokenV1) SetCheckSum(key types.EncryptionKey, keyUsage uint32) error {
-	if wt.Payload == nil {
-		return errors.New("payload has not been set")
-	}
-	if wt.CheckSum != nil {
-		return errors.New("checksum has already been computed")
-	}
-
-	chkSum, cErr := wt.computeCheckSum(key, keyUsage)
-	if cErr != nil {
-		return cErr
-	}
-
-	wt.CheckSum = chkSum
-	return nil
 }
 
 // ComputeCheckSum computes and returns the checksum of this token, computed using the passed key and key usage.
@@ -149,7 +143,7 @@ func getChecksumHeaderV1() []byte {
 	header := make([]byte, 8)
 	copy(header[0:], TOK_ID[:])
 	copy(header[2:], SGN_ALG_HMAC_MD5_ARCFOUR[:])
-	copy(header[4:], SEAL_ALG_ARCFOUR_HMAC[:])
+	copy(header[4:], SEAL_ALG_NONE[:])
 	copy(header[6:], FILLER[:])
 
 	return header
@@ -248,30 +242,33 @@ func (wt *WrapTokenV1) Unmarshal(b []byte, expectFromAcceptor bool) error {
 		return fmt.Errorf("unexpected filler byte: expecting 0xFFFF, was %s", hex.EncodeToString(b[start_position+6:start_position+8]))
 	}
 
-	wt.SndSeqNum  = binary.BigEndian.Uint64(b[start_position+8:start_position+16])
+	// wt.SndSeqNum  = binary.BigEndian.Uint64(b[start_position+8:start_position+16])
+	wt.SndSeqNum  = b[start_position+8:start_position+16]
 	wt.CheckSum   = b[start_position+16:start_position+24]
 	wt.Confounder = b[start_position+24:start_position+32]
 	wt.Payload    = b[start_position+32:]
-	fmt.Printf("Unmarshal! SndSeqNum: %s, CheckSum: %s, Confounder: %s, Payload: %s\n", hex.EncodeToString(b[start_position+8:start_position+16]), hex.EncodeToString(wt.CheckSum), hex.EncodeToString(wt.Confounder), hex.EncodeToString(wt.Payload))
+	fmt.Printf("Unmarshal! SndSeqNum: %s, CheckSum: %s, Confounder: %s, Payload: %s\n", hex.EncodeToString(wt.SndSeqNum), hex.EncodeToString(wt.CheckSum), hex.EncodeToString(wt.Confounder), hex.EncodeToString(wt.Payload))
 	return nil
 }
 
-// NewInitiatorWrapToken builds a new initiator token (acceptor flag will be set to 0) and computes the authenticated checksum.
-// Other flags are set to 0, and the RRC and sequence number are initialized to 0.
-// Note that in certain circumstances you may need to provide a sequence number that has been defined earlier.
-// This is currently not supported.
-func NewInitiatorWrapTokenV1(payload []byte, key types.EncryptionKey) (*WrapTokenV1, error) {
-	encType, err := crypto.GetEtype(key.KeyType)
-	_ = encType
-
+// NewInitiatorWrapToken builds a new initiator token
+func NewInitiatorWrapTokenV1(payload []byte, seq_num []byte, key types.EncryptionKey) (*WrapTokenV1, error) {
+	// Create random Confounder
+	confounder := make([]byte, 8)
+	_, err     := rand.Read(confounder)
 	if err != nil {
 		return nil, err
 	}
 
+	// Create new SND_SEQ based on request SND_SEQ
+	new_seq_num := make([]byte, 8)
+	copy(new_seq_num[:4], seq_num[4:])
+	copy(new_seq_num[4:], []byte{0x00, 0x00, 0x00, 0x00})
+
 	token := WrapTokenV1{
-		SndSeqNum: 0,
-		Confounder: payload[:8],
-		Payload:    payload[8:],
+		SndSeqNum:  new_seq_num[:],
+		Confounder: confounder[:],
+		Payload:    payload[:],
 	}
 
 	if err := token.SetCheckSum(key, keyusage.GSSAPI_INITIATOR_SEAL); err != nil {
@@ -279,4 +276,24 @@ func NewInitiatorWrapTokenV1(payload []byte, key types.EncryptionKey) (*WrapToke
 	}
 
 	return &token, nil
+}
+
+// SetCheckSum uses the passed encryption key and key usage to compute the checksum over the payload and
+// the header, and sets the CheckSum field of this WrapToken.
+// If the payload has not been set or the checksum has already been set, an error is returned.
+func (wt *WrapTokenV1) SetCheckSum(key types.EncryptionKey, keyUsage uint32) error {
+	if wt.Payload == nil {
+		return errors.New("payload has not been set")
+	}
+	if wt.CheckSum != nil {
+		return errors.New("checksum has already been computed")
+	}
+
+	chkSum, cErr := wt.computeCheckSum(key, keyUsage)
+	if cErr != nil {
+		return cErr
+	}
+
+	wt.CheckSum = chkSum
+	return nil
 }
