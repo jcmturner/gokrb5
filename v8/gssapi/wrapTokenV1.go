@@ -3,8 +3,9 @@ package gssapi
 import (
 	"bytes"
 	"crypto/hmac"
+	"crypto/md5"
 	"crypto/rand"
-	// "encoding/binary"
+	"crypto/rc4"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -27,6 +28,7 @@ const (
 //   4. 0x09         -- Object identifier length (lengths of elements in 5)
 //   5. 0x2a to 0x02 -- Object identifier octets
 var GSS_WRAP_HEADER           = [13]byte{0x60, 0x30, 0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x12, 0x01, 0x02, 0x02}
+
 // 2 bytes identifying GSS API Wrap token v1
 var TOK_ID                    = [2]byte{0x02, 0x01}
 
@@ -65,8 +67,8 @@ var SEAL_ALG_ARCFOUR_HMAC     = [2]byte{0x10, 0x00}
 // This specific Token is for RC4-HMAC Wrap as per https://datatracker.ietf.org/doc/html/rfc4757#section-7.3
 type WrapTokenV1 struct {
 	// const GSS Token ID: 0x02 0x01
-	SGN_ALG  uint16 // Checksum algorithm indicator: big-endian
-	SEAL_ALG uint16 // Seal algorithm indicator: big-endian
+	SGN_ALG  []byte // Checksum algorithm indicator
+	SEAL_ALG []byte // Seal algorithm indicator
 
 	// const Filler: 0xFF 0xFF
 	// SndSeqNum  uint64 // Encrypted sender's sequence number: big-endian
@@ -77,31 +79,58 @@ type WrapTokenV1 struct {
 }
 
 // Marshal the WrapToken into a byte slice.
-// The payload should have been set and the checksum computed, otherwise an error is returned.
-func (wt *WrapTokenV1) Marshal() ([]byte, error) {
+// The payload & checksum should be present, otherwise an error is returned.
+func (wt *WrapTokenV1) Marshal(key types.EncryptionKey) ([]byte, error) {
 	if wt.CheckSum == nil {
-		return nil, errors.New("checksum has not been set")
+		return nil, errors.New("Token SGN_CKSUM has not been set")
 	}
 	if wt.Payload == nil {
-		return nil, errors.New("payload has not been set")
+		return nil, errors.New("Token Payload has not been set")
 	}
 
-	bytes := make([]byte, 13 + 32 + len(wt.Payload)) // { len(GSS_WRAP_HEADER) | len(TOKEN.HEADER) | len (TOKEN.SGN_ALG) | len(TOKEN.SEAL_ALG) | len(FILLER) | len(SND_SEQ) | len(SGN_CHSUM) | len(Confounder) | len (Payload)  }
+	bytes := make([]byte, 13 + 32 + len(wt.Payload)) // { len(GSS_WRAP_HEADER) = 13 | len(TOKEN.HEADER) + len (TOKEN.SGN_ALG) + len(TOKEN.SEAL_ALG) + len(FILLER) + len(SND_SEQ) + len(SGN_CHSUM) + len(Confounder) = 32 | len (Payload)  }
 	copy(bytes[0:],    GSS_WRAP_HEADER[:])           // Seems like the final token needs to have GSS_WRAP_HEADER (as per RFC 2743)
 	copy(bytes[13:],   TOK_ID[:])                    // Insert TOK_ID
 	copy(bytes[15:17], SGN_ALG_HMAC_MD5_ARCFOUR[:])  // Insert SGN_ALG
 	copy(bytes[17:19], SEAL_ALG_NONE[:])             // Insert SEAL_ALG
 	copy(bytes[19:21], FILLER[:])                    // Insert Filler
 
+	fmt.Printf("Original SND_SEQ: %s\n", hex.EncodeToString(wt.SndSeqNum))
+	wt.encryptSndSeqNum(key.KeyValue)
+
 	copy(bytes[21:29], wt.SndSeqNum)  // Insert SND_SEQ
 	copy(bytes[29:37], wt.CheckSum)   // Insert SGN_CKSUM
 	copy(bytes[37:45], wt.Confounder) // Insert Confounder
 	copy(bytes[45:],   wt.Payload)    // Insert Data
 
-	fmt.Printf("GSS_WRAP_HEADER: %s, TOK_ID: %s, SGN_ALG: %s, SEAL_ALG: %s, Filler: %s, SND_SEQ: %s, SGN_CKSUM: %s, Confounder: %s, Data: %s\n", hex.EncodeToString(bytes[0:13]), hex.EncodeToString(bytes[13:15]), hex.EncodeToString(bytes[15:17]), hex.EncodeToString(bytes[17:19]), hex.EncodeToString(bytes[19:21]), hex.EncodeToString(bytes[21:29]), hex.EncodeToString(bytes[29:37]), hex.EncodeToString(bytes[37:45]), hex.EncodeToString(bytes[45:]))
-	fmt.Printf("Final WrapToken v1 is: %s\n", hex.EncodeToString(bytes[:]))
+	fmt.Printf("Final WrapToken v1 is: GSS_WRAP_HEADER: %s, TOK_ID: %s, SGN_ALG: %s, SEAL_ALG: %s, Filler: %s, SND_SEQ: %s, SGN_CKSUM: %s, Confounder: %s, Data: %s\n", hex.EncodeToString(bytes[0:13]), hex.EncodeToString(bytes[13:15]), hex.EncodeToString(bytes[15:17]), hex.EncodeToString(bytes[17:19]), hex.EncodeToString(bytes[19:21]), hex.EncodeToString(bytes[21:29]), hex.EncodeToString(bytes[29:37]), hex.EncodeToString(bytes[37:45]), hex.EncodeToString(bytes[45:]))
+	fmt.Printf("Final WrapToken v1 is (as 1 string): %s\n", hex.EncodeToString(bytes[:]))
 
 	return bytes, nil
+}
+
+func (wt *WrapTokenV1) encryptSndSeqNum(key []byte) (error) {
+	if wt.SndSeqNum == nil {
+		return errors.New("Token SND_SEQ has not been set")
+	}
+
+	tb := []byte{0x00, 0x00, 0x00, 0x00}
+
+	mac := hmac.New(md5.New, key)
+	mac.Write(tb)
+	interimHash := mac.Sum(nil)
+
+	mac = hmac.New(md5.New, interimHash)
+	mac.Write(wt.SndSeqNum)
+	encryptHash := mac.Sum(nil)
+
+	rc4Encryption, err := rc4.NewCipher(encryptHash)
+	if err != nil {
+		return err
+	}
+
+	rc4Encryption.XORKeyStream(wt.SndSeqNum, wt.SndSeqNum)
+	return nil
 }
 
 // ComputeCheckSum computes and returns the checksum of this token, computed using the passed key and key usage.
