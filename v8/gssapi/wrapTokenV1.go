@@ -27,7 +27,7 @@ const (
 //   3. 0x06         -- Tag for OBJECT IDENTIFIER
 //   4. 0x09         -- Object identifier length (lengths of elements in 5)
 //   5. 0x2a to 0x02 -- Object identifier octets
-var GSS_WRAP_HEADER           = [13]byte{0x60, 0x30, 0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x12, 0x01, 0x02, 0x02}
+var GSS_HEADER                = [13]byte{0x60, 0x30, 0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x12, 0x01, 0x02, 0x02}
 
 // 2 bytes identifying GSS API Wrap token v1
 var TOK_ID                    = [2]byte{0x02, 0x01}
@@ -88,8 +88,8 @@ func (wt *WrapTokenV1) Marshal(key types.EncryptionKey) ([]byte, error) {
 		return nil, errors.New("Token Payload has not been set")
 	}
 
-	bytes := make([]byte, 13 + 32 + len(wt.Payload)) // { len(GSS_WRAP_HEADER) = 13 | len(TOKEN.HEADER) + len (TOKEN.SGN_ALG) + len(TOKEN.SEAL_ALG) + len(FILLER) + len(SND_SEQ) + len(SGN_CHSUM) + len(Confounder) = 32 | len (Payload)  }
-	copy(bytes[0:],    GSS_WRAP_HEADER[:])           // Seems like the final token needs to have GSS_WRAP_HEADER (as per RFC 2743)
+	bytes := make([]byte, 13 + 32 + len(wt.Payload)) // { len(GSS_HEADER) = 13 | len(TOKEN.HEADER) + len (TOKEN.SGN_ALG) + len(TOKEN.SEAL_ALG) + len(FILLER) + len(SND_SEQ) + len(SGN_CHSUM) + len(Confounder) = 32 | len (Payload)  }
+	copy(bytes[0:],    GSS_HEADER[:])                // Final token needs to have GSS_HEADER (as per RFC 2743)
 	copy(bytes[13:],   TOK_ID[:])                    // Insert TOK_ID
 	copy(bytes[15:17], SGN_ALG_HMAC_MD5_ARCFOUR[:])  // Insert SGN_ALG
 	copy(bytes[17:19], SEAL_ALG_NONE[:])             // Insert SEAL_ALG
@@ -103,8 +103,8 @@ func (wt *WrapTokenV1) Marshal(key types.EncryptionKey) ([]byte, error) {
 	copy(bytes[37:45], wt.Confounder) // Insert Confounder
 	copy(bytes[45:],   wt.Payload)    // Insert Data
 
-	fmt.Printf("Final WrapToken v1 is: GSS_WRAP_HEADER: %s, TOK_ID: %s, SGN_ALG: %s, SEAL_ALG: %s, Filler: %s, SND_SEQ: %s, SGN_CKSUM: %s, Confounder: %s, Data: %s\n", hex.EncodeToString(bytes[0:13]), hex.EncodeToString(bytes[13:15]), hex.EncodeToString(bytes[15:17]), hex.EncodeToString(bytes[17:19]), hex.EncodeToString(bytes[19:21]), hex.EncodeToString(bytes[21:29]), hex.EncodeToString(bytes[29:37]), hex.EncodeToString(bytes[37:45]), hex.EncodeToString(bytes[45:]))
-	fmt.Printf("Final WrapToken v1 is (as 1 string): %s\n", hex.EncodeToString(bytes[:]))
+	fmt.Printf("Final WrapToken v1 is (bit by bit): GSS_HEADER: %s, TOK_ID: %s, SGN_ALG: %s, SEAL_ALG: %s, Filler: %s, SND_SEQ: %s, SGN_CKSUM: %s, Confounder: %s, Data: %s\n", hex.EncodeToString(bytes[0:13]), hex.EncodeToString(bytes[13:15]), hex.EncodeToString(bytes[15:17]), hex.EncodeToString(bytes[17:19]), hex.EncodeToString(bytes[19:21]), hex.EncodeToString(bytes[21:29]), hex.EncodeToString(bytes[29:37]), hex.EncodeToString(bytes[37:45]), hex.EncodeToString(bytes[45:]))
+	fmt.Printf("Final WrapToken v1 is (as string): %s\n", hex.EncodeToString(bytes[:]))
 
 	return bytes, nil
 }
@@ -300,7 +300,9 @@ func NewInitiatorWrapTokenV1(payload []byte, seq_num []byte, key types.Encryptio
 		Payload:    payload[:],
 	}
 
-	if err := token.SetCheckSum(key, keyusage.GSSAPI_INITIATOR_SEAL); err != nil {
+	// keyusage.GSSAPI_ACCEPTOR_SIGN resolves into derivation salt = 13 which is the one we must use for RC4 WrapTokenV1
+	// even though https://datatracker.ietf.org/doc/html/rfc4757#section-7.3 suggests to use derivation salt = 15
+	if err := token.SetCheckSum(key, keyusage.GSSAPI_ACCEPTOR_SIGN); err != nil {
 		return nil, err
 	}
 
