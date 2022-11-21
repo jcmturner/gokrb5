@@ -15,11 +15,6 @@ import (
 	"github.com/jcmturner/gokrb5/v8/types"
 )
 
-const (
-	// Length of the Wrap Token v1 header
-	TOKEN_NO_CKSUM_SIZE = 8
-)
-
 // ===== Almost const 2 bytes values to represent various values from GSS API RFCs
 // 13 bytes Independent Token Header as per https://www.rfc-editor.org/rfc/rfc2743#page-81
 //   1. 0x60         -- Tag for [APPLICATION 0] SEQUENCE
@@ -102,6 +97,13 @@ func (wt *WrapTokenV1) Marshal(key types.EncryptionKey) ([]byte, error) {
 	copy(bytes[29:37], wt.CheckSum)   // Insert SGN_CKSUM
 	copy(bytes[37:45], wt.Confounder) // Insert Confounder
 	copy(bytes[45:],   wt.Payload)    // Insert Data
+
+	// Now we need to calculate the final length of the WrapToken (including GSS_HEADER minus first 2 bytes)
+	// and alter 2nd byte of GSS_HEADER to set the length
+	tokenLength     := len(bytes) - 2
+	tokenLengthByte := byte(tokenLength)
+
+	bytes[1] = tokenLengthByte
 
 	fmt.Printf("Final WrapToken v1 is (bit by bit): GSS_HEADER: %s, TOK_ID: %s, SGN_ALG: %s, SEAL_ALG: %s, Filler: %s, SND_SEQ: %s, SGN_CKSUM: %s, Confounder: %s, Data: %s\n", hex.EncodeToString(bytes[0:13]), hex.EncodeToString(bytes[13:15]), hex.EncodeToString(bytes[15:17]), hex.EncodeToString(bytes[17:19]), hex.EncodeToString(bytes[19:21]), hex.EncodeToString(bytes[21:29]), hex.EncodeToString(bytes[29:37]), hex.EncodeToString(bytes[37:45]), hex.EncodeToString(bytes[45:]))
 	fmt.Printf("Final WrapToken v1 is (as string): %s\n", hex.EncodeToString(bytes[:]))
@@ -205,12 +207,12 @@ func (wt *WrapTokenV1) Unmarshal(b []byte, expectFromAcceptor bool) error {
   //                            Tokens emitted by GSS_Wrap() contain
   //                            the hex value 02 01 in this field.
   //   2..3       SGN_ALG       Checksum algorithm indicator.
-  //                            00 00 - DES MAC MD5
-  //                            02 00 - DES MAC
-  //                            01 00 - MD2.5
+  //                            00 00 - DES MAC MD5 << please don't use this one as per https://datatracker.ietf.org/doc/html/rfc6649
+  //                            02 00 - DES MAC     << please don't use this one as per https://datatracker.ietf.org/doc/html/rfc6649
+  //                            01 00 - MD2.5       << please don't use this one as per https://datatracker.ietf.org/doc/html/rfc6649
   //                            11 00 - HMAC MD5 ARCFOUR
   //   4..5       SEAL_ALG      ff ff - none
-  //                            00 00 - DES
+  //                            00 00 - DES << please don't use this one as per https://datatracker.ietf.org/doc/html/rfc6649
   //                            02 00 - DES3-KD
   //                            10 00 - ARCFOUR-HMAC
   //   6..7       Filler        Contains ff ff
@@ -282,6 +284,15 @@ func (wt *WrapTokenV1) Unmarshal(b []byte, expectFromAcceptor bool) error {
 
 // NewInitiatorWrapToken builds a new initiator token
 func NewInitiatorWrapTokenV1(payload []byte, seq_num []byte, key types.EncryptionKey) (*WrapTokenV1, error) {
+	// We need to pad the data before we do anything else
+	// as per https://datatracker.ietf.org/doc/html/rfc1964#section-1.2.2.3
+	pad := (8 - (len(payload) % 8)) & 0x7
+
+	for i := 0; i < pad; i++ {
+		payload = append(payload, byte(pad))
+	}
+
+
 	// Create random Confounder
 	confounder := make([]byte, 8)
 	_, err     := rand.Read(confounder)
