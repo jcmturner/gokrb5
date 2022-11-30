@@ -83,14 +83,14 @@ func (wt *WrapTokenV1) Marshal(key types.EncryptionKey) ([]byte, error) {
 		return nil, errors.New("Token Payload has not been set")
 	}
 
-	bytes := make([]byte, 13 + 32 + len(wt.Payload)) // { len(GSS_HEADER) = 13 | len(TOKEN.HEADER) + len (TOKEN.SGN_ALG) + len(TOKEN.SEAL_ALG) + len(FILLER) + len(SND_SEQ) + len(SGN_CHSUM) + len(Confounder) = 32 | len (Payload)  }
-	copy(bytes[0:],    GSS_HEADER[:])                // Final token needs to have GSS_HEADER (as per RFC 2743)
-	copy(bytes[13:],   TOK_ID[:])                    // Insert TOK_ID
-	copy(bytes[15:17], SGN_ALG_HMAC_MD5_ARCFOUR[:])  // Insert SGN_ALG
-	copy(bytes[17:19], SEAL_ALG_NONE[:])             // Insert SEAL_ALG
-	copy(bytes[19:21], FILLER[:])                    // Insert Filler
+	// { len(GSS_HEADER) = 13 | len(TOKEN.HEADER) + len (TOKEN.SGN_ALG) + len(TOKEN.SEAL_ALG) + len(FILLER) + len(SND_SEQ) + len(SGN_CHSUM) + len(Confounder) = 32 | len (Payload)  }
+	bytes := make([]byte, 13 + 32 + len(wt.Payload))
+	copy(bytes[0:],    GSS_HEADER[:]) // Final token needs to have GSS_HEADER (as per RFC 2743)
+	copy(bytes[13:],   TOK_ID[:])     // Insert TOK_ID
+	copy(bytes[15:17], wt.SGN_ALG)    // Insert SGN_ALG
+	copy(bytes[17:19], wt.SEAL_ALG)   // Insert SEAL_ALG
+	copy(bytes[19:21], FILLER[:])     // Insert Filler
 
-	fmt.Printf("Original SND_SEQ: %s\n", hex.EncodeToString(wt.SndSeqNum))
 	wt.encryptSndSeqNum(key.KeyValue, wt.CheckSum)
 
 	copy(bytes[21:29], wt.SndSeqNum)  // Insert SND_SEQ
@@ -102,11 +102,7 @@ func (wt *WrapTokenV1) Marshal(key types.EncryptionKey) ([]byte, error) {
 	// and alter 2nd byte of GSS_HEADER to set the length
 	tokenLength     := len(bytes) - 2
 	tokenLengthByte := byte(tokenLength)
-
-	bytes[1] = tokenLengthByte
-
-	fmt.Printf("Final WrapToken v1 is (bit by bit): GSS_HEADER: %s, TOK_ID: %s, SGN_ALG: %s, SEAL_ALG: %s, Filler: %s, SND_SEQ: %s, SGN_CKSUM: %s, Confounder: %s, Data: %s\n", hex.EncodeToString(bytes[0:13]), hex.EncodeToString(bytes[13:15]), hex.EncodeToString(bytes[15:17]), hex.EncodeToString(bytes[17:19]), hex.EncodeToString(bytes[19:21]), hex.EncodeToString(bytes[21:29]), hex.EncodeToString(bytes[29:37]), hex.EncodeToString(bytes[37:45]), hex.EncodeToString(bytes[45:]))
-	fmt.Printf("Final WrapToken v1 is (as string): %s\n", hex.EncodeToString(bytes[:]))
+	bytes[1]         = tokenLengthByte
 
 	return bytes, nil
 }
@@ -146,38 +142,26 @@ func (wt *WrapTokenV1) computeCheckSum(key types.EncryptionKey, keyUsage uint32)
 		return nil, errors.New("cannot compute checksum with uninitialized confounder")
 	}
 
-	// Build a slice containing { header | confounder | payload }
-	header := getChecksumHeaderV1()
-	checksumMe := make([]byte, len(header) + len(wt.Confounder) + len(wt.Payload))
-	copy(checksumMe[0:], header)
-	copy(checksumMe[len(header):], wt.Confounder)
-	copy(checksumMe[len(header) + len(wt.Confounder):], wt.Payload)
+	// Build a slice containing { header=8 | confounder | payload }
+	checksumMe := make([]byte, 8 + len(wt.Confounder) + len(wt.Payload))
+	copy(checksumMe[0:], TOK_ID[:])
+	copy(checksumMe[2:], wt.SGN_ALG)
+	copy(checksumMe[4:], wt.SEAL_ALG)
+	copy(checksumMe[6:], FILLER[:])
+	copy(checksumMe[8:], wt.Confounder)
+	copy(checksumMe[8 + len(wt.Confounder):], wt.Payload)
 
 	encType, err := crypto.GetEtype(key.KeyType)
 	if err != nil {
 		return nil, err
 	}
 
-	fmt.Printf("keyType: %d, keyValue: %s, keyUsage: %d, checksumMe: %s\n", key.KeyType, hex.EncodeToString(key.KeyValue), keyUsage, hex.EncodeToString(checksumMe))
-
 	checksumHash, err := encType.GetChecksumHash(key.KeyValue, checksumMe, keyUsage)
-
 	if err!= nil {
 		return nil, err
 	}
 
 	return checksumHash[:8], nil
-}
-
-// Build a header suitable for a checksum computation
-func getChecksumHeaderV1() []byte {
-	header := make([]byte, 8)
-	copy(header[0:], TOK_ID[:])
-	copy(header[2:], SGN_ALG_HMAC_MD5_ARCFOUR[:])
-	copy(header[4:], SEAL_ALG_NONE[:])
-	copy(header[6:], FILLER[:])
-
-	return header
 }
 
 // Verify computes the token's checksum with the provided key and usage,
@@ -227,7 +211,7 @@ func (wt *WrapTokenV1) Unmarshal(b []byte, expectFromAcceptor bool) error {
 	
 	// Check if we can read a whole header
 	if len(b) < 21 {
-		return errors.New("GSSAPI: bytes shorter than header length")
+		return errors.New("bytes shorter than header length")
 	}
 
 	if b[0] == 0x60 {
@@ -254,6 +238,7 @@ func (wt *WrapTokenV1) Unmarshal(b []byte, expectFromAcceptor bool) error {
 		default:
 			return fmt.Errorf("Unsupported SGN_ALG value: %s", hex.EncodeToString(b[start_position+2:start_position+4]))
 	}
+	wt.SGN_ALG = b[start_position+2:start_position+4]
 
 	// Check SEAL_ALG
 	switch {
@@ -268,23 +253,23 @@ func (wt *WrapTokenV1) Unmarshal(b []byte, expectFromAcceptor bool) error {
 		default:
 			return fmt.Errorf("Unsupported SEAL_ALG value: %s", hex.EncodeToString(b[start_position+4:start_position+6]))
 	}
+	wt.SEAL_ALG = b[start_position+4:start_position+6]
 
 	// Check the filler byte
 	if !bytes.Equal(FILLER[:], b[start_position+6:start_position+8]) {
 		return fmt.Errorf("unexpected filler byte: expecting 0xFFFF, was %s", hex.EncodeToString(b[start_position+6:start_position+8]))
 	}
 
-	// wt.SndSeqNum  = binary.BigEndian.Uint64(b[start_position+8:start_position+16])
 	wt.SndSeqNum  = b[start_position+8:start_position+16]
 	wt.CheckSum   = b[start_position+16:start_position+24]
 	wt.Confounder = b[start_position+24:start_position+32]
 	wt.Payload    = b[start_position+32:]
-	fmt.Printf("Unmarshal! SndSeqNum: %s, CheckSum: %s, Confounder: %s, Payload: %s\n", hex.EncodeToString(wt.SndSeqNum), hex.EncodeToString(wt.CheckSum), hex.EncodeToString(wt.Confounder), hex.EncodeToString(wt.Payload))
+
 	return nil
 }
 
 // NewInitiatorWrapToken builds a new initiator token
-func NewInitiatorWrapTokenV1(payload []byte, seq_num []byte, key types.EncryptionKey) (*WrapTokenV1, error) {
+func NewInitiatorWrapTokenV1(initial_toke *WrapTokenV1, key types.EncryptionKey) (*WrapTokenV1, error) {
 	// Create random Confounder
 	confounder := make([]byte, 8)
 	_, err     := rand.Read(confounder)
@@ -294,27 +279,19 @@ func NewInitiatorWrapTokenV1(payload []byte, seq_num []byte, key types.Encryptio
 
 	// We need to pad the data (confounder + payload) before we do anything else
 	// as per https://datatracker.ietf.org/doc/html/rfc1964#section-1.2.2.3
-	// TODO: Possibly remove padding code below
-	//   Reasoning: looking through the code an numerous runs, seems like we can skip padding
-	//   because Kafka returns already padded data, so why bother?
-	// pad := (8 - (len(confounder)+len(payload) % 8)) & 0x7
-	// if pad == 0 {
-	// 	payload = append(payload, byte(0x00))
-	// } else {
-	// 	for i := 0; i < pad; i++ {
-	// 		payload = append(payload, byte(pad))
-	// 	}
-	// }
+	// However Kafka sends already padded data so we can ignore it
 
 	// Create new SND_SEQ based on request SND_SEQ
 	new_seq_num := make([]byte, 8)
-	copy(new_seq_num[:4], seq_num[4:])
+	copy(new_seq_num[:4], initial_toke.SndSeqNum[4:])
 	copy(new_seq_num[4:], []byte{0x00, 0x00, 0x00, 0x00})
 
 	token := WrapTokenV1{
+		SGN_ALG:    initial_toke.SGN_ALG,
+		SEAL_ALG:   initial_toke.SEAL_ALG,
 		SndSeqNum:  new_seq_num[:],
 		Confounder: confounder[:],
-		Payload:    payload[:],
+		Payload:    initial_toke.Payload[:],
 	}
 
 	// keyusage.GSSAPI_ACCEPTOR_SIGN (=23) resolves into derivation salt = 13 which is the one we must use for RC4 WrapTokenV1
