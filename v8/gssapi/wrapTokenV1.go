@@ -22,7 +22,7 @@ import (
 //   3. 0x06         -- Tag for OBJECT IDENTIFIER
 //   4. 0x09         -- Object identifier length (lengths of elements in 5)
 //   5. 0x2a to 0x02 -- Object identifier octets
-var GSS_HEADER                = [13]byte{0x60, 0x30, 0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x12, 0x01, 0x02, 0x02}
+var GSS_HEADER                = [13]byte{0x60, 0x2b, 0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x12, 0x01, 0x02, 0x02}
 
 // 2 bytes identifying GSS API Wrap token v1
 var TOK_ID                    = [2]byte{0x02, 0x01}
@@ -91,7 +91,7 @@ func (wt *WrapTokenV1) Marshal(key types.EncryptionKey) ([]byte, error) {
 	copy(bytes[19:21], FILLER[:])                    // Insert Filler
 
 	fmt.Printf("Original SND_SEQ: %s\n", hex.EncodeToString(wt.SndSeqNum))
-	wt.encryptSndSeqNum(key.KeyValue)
+	wt.encryptSndSeqNum(key.KeyValue, wt.CheckSum)
 
 	copy(bytes[21:29], wt.SndSeqNum)  // Insert SND_SEQ
 	copy(bytes[29:37], wt.CheckSum)   // Insert SGN_CKSUM
@@ -111,7 +111,7 @@ func (wt *WrapTokenV1) Marshal(key types.EncryptionKey) ([]byte, error) {
 	return bytes, nil
 }
 
-func (wt *WrapTokenV1) encryptSndSeqNum(key []byte) (error) {
+func (wt *WrapTokenV1) encryptSndSeqNum(key []byte, checksum []byte) (error) {
 	if wt.SndSeqNum == nil {
 		return errors.New("Token SND_SEQ has not been set")
 	}
@@ -123,7 +123,7 @@ func (wt *WrapTokenV1) encryptSndSeqNum(key []byte) (error) {
 	interimHash := mac.Sum(nil)
 
 	mac = hmac.New(md5.New, interimHash)
-	mac.Write(wt.SndSeqNum)
+	mac.Write(checksum)
 	encryptHash := mac.Sum(nil)
 
 	rc4Encryption, err := rc4.NewCipher(encryptHash)
@@ -221,11 +221,12 @@ func (wt *WrapTokenV1) Unmarshal(b []byte, expectFromAcceptor bool) error {
   //                            calculated according to algorithm
   //                            specified in SGN_ALG field.
   //   24..31     Confounder    Random confounder
-  //   32..last   Data          encrypted or plaintext padded data
+  //   32..last   Data          Encrypted, according to algorithm specified
+	//                            in SEAL_ALG field or plaintext padded data
 	start_position := 0
 	
 	// Check if we can read a whole header
-	if len(b) < 16 {
+	if len(b) < 21 {
 		return errors.New("GSSAPI: bytes shorter than header length")
 	}
 
@@ -284,21 +285,26 @@ func (wt *WrapTokenV1) Unmarshal(b []byte, expectFromAcceptor bool) error {
 
 // NewInitiatorWrapToken builds a new initiator token
 func NewInitiatorWrapTokenV1(payload []byte, seq_num []byte, key types.EncryptionKey) (*WrapTokenV1, error) {
-	// We need to pad the data before we do anything else
-	// as per https://datatracker.ietf.org/doc/html/rfc1964#section-1.2.2.3
-	pad := (8 - (len(payload) % 8)) & 0x7
-
-	for i := 0; i < pad; i++ {
-		payload = append(payload, byte(pad))
-	}
-
-
 	// Create random Confounder
 	confounder := make([]byte, 8)
 	_, err     := rand.Read(confounder)
 	if err != nil {
 		return nil, err
 	}
+
+	// We need to pad the data (confounder + payload) before we do anything else
+	// as per https://datatracker.ietf.org/doc/html/rfc1964#section-1.2.2.3
+	// TODO: Possibly remove padding code below
+	//   Reasoning: looking through the code an numerous runs, seems like we can skip padding
+	//   because Kafka returns already padded data, so why bother?
+	// pad := (8 - (len(confounder)+len(payload) % 8)) & 0x7
+	// if pad == 0 {
+	// 	payload = append(payload, byte(0x00))
+	// } else {
+	// 	for i := 0; i < pad; i++ {
+	// 		payload = append(payload, byte(pad))
+	// 	}
+	// }
 
 	// Create new SND_SEQ based on request SND_SEQ
 	new_seq_num := make([]byte, 8)
@@ -311,8 +317,8 @@ func NewInitiatorWrapTokenV1(payload []byte, seq_num []byte, key types.Encryptio
 		Payload:    payload[:],
 	}
 
-	// keyusage.GSSAPI_ACCEPTOR_SIGN resolves into derivation salt = 13 which is the one we must use for RC4 WrapTokenV1
-	// even though https://datatracker.ietf.org/doc/html/rfc4757#section-7.3 suggests to use derivation salt = 15
+	// keyusage.GSSAPI_ACCEPTOR_SIGN (=23) resolves into derivation salt = 13 which is the one we must use for RC4 WrapTokenV1
+	// even though https://datatracker.ietf.org/doc/html/rfc4757#section-7.3 suggests to use derivation salt = 15 (which is actually MIC's salt)
 	if err := token.SetCheckSum(key, keyusage.GSSAPI_ACCEPTOR_SIGN); err != nil {
 		return nil, err
 	}
