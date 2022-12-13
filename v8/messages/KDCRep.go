@@ -347,9 +347,15 @@ func (k *TGSRep) Verify(cfg *config.Config, tgsReq TGSReq) (bool, error) {
 		return false, krberror.NewErrorf(krberror.KRBMsgError, "SRealm in response does not match what was requested. Requested: %s; Reply: %s", tgsReq.ReqBody.Realm, k.DecryptedEncPart.SRealm)
 	}
 	if len(k.DecryptedEncPart.CAddr) > 0 {
-		if !types.HostAddressesEqual(k.DecryptedEncPart.CAddr, tgsReq.ReqBody.Addresses) {
-			return false, krberror.NewErrorf(krberror.KRBMsgError, "addresses listed in the TGS_REP does not match those listed in the TGS_REQ")
+		// When TGS_REQ has both IPv4s and IPv6s, it's possible that TGS_REP only has IPv4s.
+		// Adresses in TGS_REQ != TGS_REP in the case and equality check fails.
+		// We only check all the TGS_REP's addresses are included in TGS_REQ here.
+		for _, a := range k.DecryptedEncPart.CAddr {
+			if !types.HostAddressesContains(tgsReq.ReqBody.Addresses, a) {
+				return false, krberror.NewErrorf(krberror.KRBMsgError, "all addresses listed in the TGS_REP are not in the TGS_REQ")
+			}
 		}
+
 	}
 	if time.Since(k.DecryptedEncPart.StartTime) > cfg.LibDefaults.Clockskew || k.DecryptedEncPart.StartTime.Sub(time.Now().UTC()) > cfg.LibDefaults.Clockskew {
 		if time.Since(k.DecryptedEncPart.AuthTime) > cfg.LibDefaults.Clockskew || k.DecryptedEncPart.AuthTime.Sub(time.Now().UTC()) > cfg.LibDefaults.Clockskew {
