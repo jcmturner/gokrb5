@@ -109,6 +109,13 @@ func setPAData(cl *Client, krberr *messages.KRBError, ASReq *messages.ASReq) err
 				return krberror.Errorf(err, krberror.EncryptingError, "error getting etype for pre-auth encryption")
 			}
 			cl.settings.preAuthEType = et.GetETypeID() // Set the etype that has been defined for potential future use
+
+			// Store PA Data Sequence for potential future use
+			err := cl.settings.preAuthDataSeq.Unmarshal(krberr.EData)
+			if err != nil {
+				return krberror.Errorf(err, krberror.EncryptingError, "could not get PAData for pre-auth encryption")
+			}
+
 			key, kvno, err = cl.Key(et, 0, krberr)
 			if err != nil {
 				return krberror.Errorf(err, krberror.EncryptingError, "error getting key from credentials")
