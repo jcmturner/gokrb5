@@ -1,8 +1,10 @@
 package config
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -10,6 +12,39 @@ import (
 )
 
 const (
+	krb5ConfIncHead = `
+# To opt out of the system crypto-policies configuration of krb5, remove the
+# symlink at /etc/krb5.conf.d/crypto-policies which will not be recreated.
+#includedir /etc/krb5.conf.d/
+`
+
+	krb5ConfInc = `
+[logging]
+    default = FILE:/var/log/krb5libs.log
+    kdc = FILE:/var/log/krb5kdc.log
+    admin_server = FILE:/var/log/kadmind.log
+
+[libdefaults]
+    dns_lookup_realm = false
+    ticket_lifetime = 24h
+    renew_lifetime = 7d
+    forwardable = true
+    rdns = false
+    pkinit_anchors = FILE:/etc/pki/tls/certs/ca-bundle.crt
+    spake_preauth_groups = edwards25519
+#    default_realm = EXAMPLE.COM
+    default_ccache_name = KEYRING:persistent:%{uid}
+
+[realms]
+# EXAMPLE.COM = {
+#     kdc = kerberos.example.com
+#     admin_server = kerberos.example.com
+# }
+
+[domain_realm]
+# .example.com = EXAMPLE.COM
+# example.com = EXAMPLE.COM
+`
 	krb5Conf = `
 [logging]
  default = FILE:/var/log/kerberos/krb5libs.log
@@ -307,6 +342,54 @@ const (
  }
 `
 )
+
+func TestLoadinc(t *testing.T) {
+	t.Parallel()
+	cf, _ := ioutil.TempFile(os.TempDir(), "TEST-gokrb5-krb5inc.conf")
+	defer os.Remove(cf.Name())
+	cdir, _ := ioutil.TempDir("", "example")
+	defer os.RemoveAll(cdir)
+	cfgDir := "testkrb5.conf.d"
+	files, err := os.ReadDir(cfgDir)
+	if err != nil {
+		t.Fatalf("Error loading config dir: %v", err)
+	}
+	for _, file := range files {
+		srcPath := filepath.Join(cfgDir, file.Name())
+		data, err := ioutil.ReadFile(srcPath)
+		if err != nil {
+			t.Fatalf("Error reading config file: %v", err)
+		}
+		dstPath := filepath.Join(cdir, file.Name())
+		err = ioutil.WriteFile(dstPath, data, 0644)
+		if err != nil {
+			t.Fatalf("Error writting config file: %v", err)
+		}
+	}
+	krb5ContentsInc := krb5ConfIncHead + fmt.Sprintf("includedir %s\n", cdir) + krb5ConfInc
+	cf.WriteString(krb5ContentsInc)
+
+	c, err := Load(cf.Name())
+	if err != nil {
+		t.Fatalf("Error loading config: %v", err)
+	}
+
+	assert.Equal(t, "TEST.GOKRB5", c.LibDefaults.DefaultRealm, "[libdefaults] default_realm not as expected")
+	assert.Equal(t, false, c.LibDefaults.DNSLookupRealm, "[libdefaults] dns_lookup_realm not as expected")
+	assert.Equal(t, false, c.LibDefaults.DNSLookupKDC, "[libdefaults] dns_lookup_kdc not as expected")
+	assert.Equal(t, time.Duration(24)*time.Hour, c.LibDefaults.TicketLifetime, "[libdefaults] Ticket lifetime not as expected")
+	assert.Equal(t, true, c.LibDefaults.Forwardable, "[libdefaults] forwardable not as expected")
+	assert.Equal(t, "/etc/krb5.keytab", c.LibDefaults.DefaultKeytabName, "[libdefaults] default_keytab_name not as expected")
+	assert.Equal(t, "/usr/local/var/krb5/user/1450/client.keytab", c.LibDefaults.DefaultClientKeytabName, "[libdefaults] default_client_keytab_name not as expected")
+	assert.Equal(t, []string{"aes256-cts-hmac-sha1-96", "aes128-cts-hmac-sha1-96", "des3-cbc-sha1", "arcfour-hmac-md5", "camellia256-cts-cmac", "camellia128-cts-cmac", "des-cbc-crc", "des-cbc-md5", "des-cbc-md4"}, c.LibDefaults.DefaultTktEnctypes, "[libdefaults] default_tkt_enctypes not as expected")
+	assert.Equal(t, 7, len(c.Realms), "Number of realms not as expected")
+	assert.Equal(t, "TEST.GOKRB5", c.Realms[6].Realm, "[realm] realm name not as expectd")
+	assert.Equal(t, []string{"cndc.test.gokrb5"}, c.Realms[6].AdminServer, "[realm] Admin_server not as expectd")
+	assert.Equal(t, []string{"cndc.test.gokrb5"}, c.Realms[6].KPasswdServer, "[realm] Kpasswd_server not as expectd")
+	assert.Equal(t, "test.gokrb5", c.Realms[6].DefaultDomain, "[realm] Default_domain not as expectd")
+	assert.Equal(t, []string{"cndc.test.gokrb5:88"}, c.Realms[6].KDC, "[realm] Kdc not as expectd")
+
+}
 
 func TestLoad(t *testing.T) {
 	t.Parallel()

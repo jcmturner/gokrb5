@@ -1,0 +1,3 @@
+; Puppet managed
+[libdefaults]
+   default_ccache_name = KEYRING:persistent:%{uid}

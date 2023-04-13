@@ -1,0 +1,8 @@
+[realms]
+ STG.FEDORAPROJECT.ORG = {
+        kdc = https://id.stg.fedoraproject.org/KdcProxy
+        pkinit_anchors = FILE:/etc/pki/ipa/stg_fedoraproject_ipa_ca.crt
+ }
+[domain_realm]
+ .stg.fedoraproject.org = STG.FEDORAPROJECT.ORG
+ stg.fedoraproject.org = STG.FEDORAPROJECT.ORG
