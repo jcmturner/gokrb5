@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+
+	"github.com/jcmturner/gokrb5/v8/types"
 )
 
 // Settings holds optional client settings.
@@ -11,6 +13,7 @@ type Settings struct {
 	disablePAFXFast         bool
 	assumePreAuthentication bool
 	preAuthEType            int32
+	preAuthDataSeq          types.PADataSequence
 	logger                  *log.Logger
 }
 
