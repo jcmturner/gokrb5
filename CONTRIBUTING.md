@@ -45,7 +45,7 @@ This would require a minor (v\_.X.\_) version update.
 * Ensure tests pass.
 * Ensure godoc comments are created or updated as required for any new or updated code.
 * Ensure your contributions are formatted correctly with gofmt. The travis build will test this.
-* Do not use external package dependencies.  
+* Do not use external package dependencies.
 As gokrb5 is designed to be a core library used in other applications it is best to avoid dependencies the project has 
 no control over, other than the Go standard library, as issues with any dependency could have large knock on effects.
 * Provide useful commit messages.

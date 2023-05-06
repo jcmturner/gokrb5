@@ -134,6 +134,7 @@ func (wt *WrapToken) Unmarshal(b []byte, expectFromAcceptor bool) error {
 	if len(b) < 16 {
 		return errors.New("bytes shorter than header length")
 	}
+
 	// Is the Token ID correct?
 	if !bytes.Equal(getGssWrapTokenId()[:], b[0:2]) {
 		return fmt.Errorf("wrong Token ID. Expected %s, was %s",
