@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: [ '1.16.x', '1.17.x', '1.18.x' ]
+        go: [ '1.18.x', '1.19.x', '1.20.x' ]
     env:
       TEST_KDC_ADDR: 127.0.0.1
       TEST_HTTP_URL: http://cname.test.gokrb5
@@ -37,7 +37,7 @@ jobs:
           # Remove major version sub directories
           find . -maxdepth 1 -type d -regex '\./v[0-9]+' | xargs -i rm -rf {}
           GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/)
-          test -z $(gofmt -s -d -l -e $GO_FILES | tee /dev/fd/2 | xargs | sed 's/\s//g')
+          test -z $(gofmt -s -l -e $GO_FILES | tee /dev/fd/2 | xargs | sed 's/\s//g')
         id: gofmt
 
       - name: Copy to gopkg.in in GOPATH
