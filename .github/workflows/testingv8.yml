@@ -35,7 +35,7 @@ jobs:
       - name: Test well formatted with gofmt
         run: |
           GO_FILES=$(find ${GITHUB_WORKFLOW} -iname '*.go' -type f | grep -v /vendor/)
-          test -z $(gofmt -s -d -l -e $GO_FILES | tee /dev/fd/2 | xargs | sed 's/\s//g')
+          test -z $(gofmt -s -l -e $GO_FILES | tee /dev/fd/2 | xargs | sed 's/\s//g')
         id: gofmt
 
       - name: Unit tests
