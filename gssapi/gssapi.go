@@ -168,7 +168,7 @@ func (s Status) Error() string {
 	case StatusNoCred:
 		str = "no valid credentials provided"
 	case StatusBadQOP:
-		str = "unsupported QOP valu"
+		str = "unsupported QOP value"
 	case StatusUnauthorized:
 		str = "operation unauthorized"
 	case StatusUnavailable:
