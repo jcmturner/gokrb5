@@ -10,6 +10,7 @@ import (
 	"io"
 	"log"
 	"mime/multipart"
+	"net"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
@@ -52,7 +53,7 @@ func TestClient_SetSPNEGOHeader(t *testing.T) {
 	}
 	paths := []string{
 		"/modkerb/index.html",
-		//"/modgssapi/index.html",
+		"/modgssapi/index.html",
 	}
 	for _, url := range urls {
 		for _, p := range paths {
@@ -61,6 +62,7 @@ func TestClient_SetSPNEGOHeader(t *testing.T) {
 			if err != nil {
 				t.Fatalf("%s request error: %v", url+p, err)
 			}
+			log.Printf("Status %d", httpResp.StatusCode)
 			assert.Equal(t, http.StatusUnauthorized, httpResp.StatusCode, "Status code in response to client with no SPNEGO not as expected")
 
 			err = SetSPNEGOHeader(cl, r, "")
@@ -135,6 +137,18 @@ func TestService_SPNEGOKRB_NoAuthHeader(t *testing.T) {
 	assert.Equal(t, "Negotiate", httpResp.Header.Get("WWW-Authenticate"), "Negotiation header not set by server.")
 }
 
+func TestService_SPNEGOKRB_NoAuthHeaderWithBasicAuth(t *testing.T) {
+	s := httpServerWithBasicAuth()
+	defer s.Close()
+	r, _ := http.NewRequest("GET", s.URL, nil)
+	httpResp, err := http.DefaultClient.Do(r)
+	if err != nil {
+		t.Fatalf("Request error: %v\n", err)
+	}
+	assert.Equal(t, http.StatusUnauthorized, httpResp.StatusCode, "Status code in response to client with no SPNEGO not as expected")
+	assert.ElementsMatch(t, []string{"Negotiate", "Basic realm=\"Kerberos Authentication\""}, httpResp.Header["Www-Authenticate"], "Authentication headers not set by server.")
+}
+
 func TestService_SPNEGOKRB_ValidUser(t *testing.T) {
 	test.Integration(t)
 
@@ -153,6 +167,77 @@ func TestService_SPNEGOKRB_ValidUser(t *testing.T) {
 		t.Fatalf("Request error: %v\n", err)
 	}
 	assert.Equal(t, http.StatusOK, httpResp.StatusCode, "Status code in response to client SPNEGO request not as expected")
+}
+
+func TestService_SPNEGOKRB_ValidUserWithBasicAuth(t *testing.T) {
+	test.Integration(t)
+
+	s := httpServerWithBasicAuth()
+	defer s.Close()
+
+	_, port, _ := net.SplitHostPort(s.Listener.Addr().String())
+	u := fmt.Sprintf("http://cname.test.gokrb5:%s/", port)
+
+	r, _ := http.NewRequest("GET", u, nil)
+	r.SetBasicAuth("testuser1", "passwordvalue")
+
+	httpResp, err := http.DefaultClient.Do(r)
+	if err != nil {
+		t.Fatalf("Request error: %v\n", err)
+	}
+	assert.Equal(t, http.StatusOK, httpResp.StatusCode, "Status code in response to client basic auth request not as expected")
+}
+
+func TestService_SPNEGOKRB_InvalidUserWithBasicAuth(t *testing.T) {
+	test.Integration(t)
+
+	s := httpServerWithBasicAuth()
+	defer s.Close()
+
+	_, port, _ := net.SplitHostPort(s.Listener.Addr().String())
+	u := fmt.Sprintf("http://cname.test.gokrb5:%s/", port)
+
+	r, _ := http.NewRequest("GET", u, nil)
+	r.SetBasicAuth("testuser1", "bad")
+
+	httpResp, err := http.DefaultClient.Do(r)
+	if err != nil {
+		t.Fatalf("Request error: %v\n", err)
+	}
+	assert.Equal(t, http.StatusUnauthorized, httpResp.StatusCode, "Status code in response to client basic auth request not as expected")
+}
+
+func TestService_SPNEGOKRB_UnknownAuth(t *testing.T) {
+	s := httpServerWithUnknownAuth()
+	defer s.Close()
+	r, _ := http.NewRequest("GET", s.URL, nil)
+	r.Header.Add("Authorization", "Token abc")
+	httpResp, err := http.DefaultClient.Do(r)
+	if err != nil {
+		t.Fatalf("Request error: %v\n", err)
+	}
+	body, _ := ioutil.ReadAll(httpResp.Body)
+	assert.Equal(t, http.StatusOK, httpResp.StatusCode, "Status code in response to client with unknown authorization method not as expected")
+	assert.Equal(t, string(body), "Inner handler", "Response body in response to client with unknown authorization method not as expected")
+}
+
+func TestService_SPNEGOKRB_CustomUnauthHandler(t *testing.T) {
+	test.Integration(t)
+
+	s := httpServerWithCustomUnauthHandler()
+	defer s.Close()
+
+	r, _ := http.NewRequest("GET", s.URL, nil)
+	r.Header.Add("WWW-Authenticate", "Negotiate badtoken")
+
+	httpResp, err := http.DefaultClient.Do(r)
+	if err != nil {
+		t.Fatalf("Request error: %v\n", err)
+	}
+	body, _ := ioutil.ReadAll(httpResp.Body)
+
+	assert.Equal(t, http.StatusUnauthorized, httpResp.StatusCode, "Status code in response from server custom unauthorized handler not as expected")
+	assert.Equal(t, string(body), "Sorry, wrong auth", "Response body in response from server custom unauthorized handler not as expected")
 }
 
 func TestService_SPNEGOKRB_ValidUser_RawKRB5Token(t *testing.T) {
@@ -351,6 +436,83 @@ func httpServer() *httptest.Server {
 	kt.Unmarshal(b)
 	th := http.HandlerFunc(testAppHandler)
 	s := httptest.NewServer(SPNEGOKRB5Authenticate(th, kt, service.Logger(l), service.SessionManager(NewSessionMgr("gokrb5"))))
+	return s
+}
+
+func httpServerWithBasicAuth() *httptest.Server {
+	l := log.New(os.Stderr, "GOKRB5 Service Tests: ", log.LstdFlags)
+	b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
+	kt := keytab.New()
+	kt.Unmarshal(b)
+	th := http.HandlerFunc(testAppHandler)
+
+	c, _ := config.NewFromString(testdata.KRB5_CONF)
+	c.LibDefaults.NoAddresses = true // Workaround 127.0.0.1 limitation
+	addr := os.Getenv("TEST_KDC_ADDR")
+	if addr == "" {
+		addr = testdata.KDC_IP_TEST_GOKRB5
+	}
+	c.Realms[0].KDC = []string{addr + ":" + testdata.KDC_PORT_TEST_GOKRB5}
+	c.Realms[0].KPasswdServer = []string{addr + ":464"}
+
+	a := SPNEGOKRB5Authenticator{
+		Keytab: kt,
+		SPNEGOSettings: []func(*service.Settings){
+			service.Logger(l),
+		},
+
+		AllowBasicAuth: true,
+		ClientConfig:   c,
+	}
+
+	s := httptest.NewServer(a.Authenticate(th))
+	return s
+}
+
+func httpServerWithUnknownAuth() *httptest.Server {
+	l := log.New(os.Stderr, "GOKRB5 Service Tests: ", log.LstdFlags)
+	b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
+	kt := keytab.New()
+	kt.Unmarshal(b)
+
+	th := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Inner handler")
+	})
+
+	a := SPNEGOKRB5Authenticator{
+		Keytab: kt,
+		SPNEGOSettings: []func(*service.Settings){
+			service.Logger(l),
+		},
+
+		AllowUnknownAuthorizationType: true,
+	}
+
+	s := httptest.NewServer(a.Authenticate(th))
+	return s
+}
+
+func httpServerWithCustomUnauthHandler() *httptest.Server {
+	l := log.New(os.Stderr, "GOKRB5 Service Tests: ", log.LstdFlags)
+	b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
+	kt := keytab.New()
+	kt.Unmarshal(b)
+
+	th := http.HandlerFunc(testAppHandler)
+	un := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Sorry, wrong auth")
+	})
+
+	a := SPNEGOKRB5Authenticator{
+		Keytab: kt,
+		SPNEGOSettings: []func(*service.Settings){
+			service.Logger(l),
+		},
+
+		UnauthorizedHandler: un,
+	}
+
+	s := httptest.NewServer(a.Authenticate(th))
 	return s
 }
 

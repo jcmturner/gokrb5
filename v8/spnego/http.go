@@ -15,6 +15,7 @@ import (
 	"github.com/jcmturner/gofork/encoding/asn1"
 	"github.com/jcmturner/goidentity/v6"
 	"github.com/jcmturner/gokrb5/v8/client"
+	"github.com/jcmturner/gokrb5/v8/config"
 	"github.com/jcmturner/gokrb5/v8/credentials"
 	"github.com/jcmturner/gokrb5/v8/gssapi"
 	"github.com/jcmturner/gokrb5/v8/iana/nametype"
@@ -235,109 +236,25 @@ const (
 	// ctxCredentials is the SPNEGO context key holding the credentials jcmturner/goidentity/Identity object.
 	ctxCredentials = "github.com/jcmturner/gokrb5/v8/ctxCredentials"
 	// HTTPHeaderAuthRequest is the header that will hold authn/z information.
-	HTTPHeaderAuthRequest = "Authorization"
+	HTTPHeaderAuthRequest                  = "Authorization"
+	HTTPHeaderAuthRequestValueKeyNegotiate = "Negotiate"
+	HTTPHeaderAuthRequestValueKeyBasic     = "Basic"
 	// HTTPHeaderAuthResponse is the header that will hold SPNEGO data from the server.
 	HTTPHeaderAuthResponse = "WWW-Authenticate"
 	// HTTPHeaderAuthResponseValueKey is the key in the auth header for SPNEGO.
-	HTTPHeaderAuthResponseValueKey = "Negotiate"
+	HTTPHeaderAuthResponseValueKey      = "Negotiate"
+	HTTPHeaderAuthResponseValueKeyBasic = "Basic realm=\"Kerberos Authentication\""
 	// UnauthorizedMsg is the message returned in the body when authentication fails.
 	UnauthorizedMsg = "Unauthorised.\n"
 )
 
 // SPNEGOKRB5Authenticate is a Kerberos SPNEGO authentication HTTP handler wrapper.
 func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, settings ...func(*service.Settings)) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Set up the SPNEGO GSS-API mechanism
-		var spnego *SPNEGO
-		h, err := types.GetHostAddress(r.RemoteAddr)
-		if err == nil {
-			// put in this order so that if the user provides a ClientAddress it will override the one here.
-			o := append([]func(*service.Settings){service.ClientAddress(h)}, settings...)
-			spnego = SPNEGOService(kt, o...)
-		} else {
-			spnego = SPNEGOService(kt, settings...)
-			spnego.Log("%s - SPNEGO could not parse client address: %v", r.RemoteAddr, err)
-		}
-
-		// Check if there is a session manager and if there is an already established session for this client
-		id, err := getSessionCredentials(spnego, r)
-		if err == nil && id.Authenticated() {
-			// There is an established session so bypass auth and serve
-			spnego.Log("%s - SPNEGO request served under session %s", r.RemoteAddr, id.SessionID())
-			inner.ServeHTTP(w, goidentity.AddToHTTPRequestContext(&id, r))
-			return
-		}
-
-		st, err := getAuthorizationNegotiationHeaderAsSPNEGOToken(spnego, r, w)
-		if st == nil || err != nil {
-			// response to client and logging handled in function above so just return
-			return
-		}
-
-		// Validate the context token
-		authed, ctx, status := spnego.AcceptSecContext(st)
-		if status.Code != gssapi.StatusComplete && status.Code != gssapi.StatusContinueNeeded {
-			spnegoResponseReject(spnego, w, "%s - SPNEGO validation error: %v", r.RemoteAddr, status)
-			return
-		}
-		if status.Code == gssapi.StatusContinueNeeded {
-			spnegoNegotiateKRB5MechType(spnego, w, "%s - SPNEGO GSS-API continue needed", r.RemoteAddr)
-			return
-		}
-
-		if authed {
-			// Authentication successful; get user's credentials from the context
-			id := ctx.Value(ctxCredentials).(*credentials.Credentials)
-			// Create a new session if a session manager has been configured
-			err = newSession(spnego, r, w, id)
-			if err != nil {
-				return
-			}
-			spnegoResponseAcceptCompleted(spnego, w, "%s %s@%s - SPNEGO authentication succeeded", r.RemoteAddr, id.UserName(), id.Domain())
-			// Add the identity to the context and serve the inner/wrapped handler
-			inner.ServeHTTP(w, goidentity.AddToHTTPRequestContext(id, r))
-			return
-		}
-		// If we get to here we have not authenticationed so just reject
-		spnegoResponseReject(spnego, w, "%s - SPNEGO Kerberos authentication failed", r.RemoteAddr)
-		return
-	})
-}
-
-func getAuthorizationNegotiationHeaderAsSPNEGOToken(spnego *SPNEGO, r *http.Request, w http.ResponseWriter) (*SPNEGOToken, error) {
-	s := strings.SplitN(r.Header.Get(HTTPHeaderAuthRequest), " ", 2)
-	if len(s) != 2 || s[0] != HTTPHeaderAuthResponseValueKey {
-		// No Authorization header set so return 401 with WWW-Authenticate Negotiate header
-		w.Header().Set(HTTPHeaderAuthResponse, HTTPHeaderAuthResponseValueKey)
-		http.Error(w, UnauthorizedMsg, http.StatusUnauthorized)
-		return nil, errors.New("client did not provide a negotiation authorization header")
+	s := SPNEGOKRB5Authenticator{
+		Keytab:         kt,
+		SPNEGOSettings: settings,
 	}
-
-	// Decode the header into an SPNEGO context token
-	b, err := base64.StdEncoding.DecodeString(s[1])
-	if err != nil {
-		err = fmt.Errorf("error in base64 decoding negotiation header: %v", err)
-		spnegoNegotiateKRB5MechType(spnego, w, "%s - SPNEGO %v", r.RemoteAddr, err)
-		return nil, err
-	}
-	var st SPNEGOToken
-	err = st.Unmarshal(b)
-	if err != nil {
-		// Check if this is a raw KRB5 context token - issue #347.
-		var k5t KRB5Token
-		if k5t.Unmarshal(b) != nil {
-			err = fmt.Errorf("error in unmarshaling SPNEGO token: %v", err)
-			spnegoNegotiateKRB5MechType(spnego, w, "%s - SPNEGO %v", r.RemoteAddr, err)
-			return nil, err
-		}
-		// Wrap it into an SPNEGO context token
-		st.Init = true
-		st.NegTokenInit = NegTokenInit{
-			MechTypes:      []asn1.ObjectIdentifier{k5t.OID},
-			MechTokenBytes: b,
-		}
-	}
-	return &st, nil
+	return s.Authenticate(inner)
 }
 
 func getSessionCredentials(spnego *SPNEGO, r *http.Request) (credentials.Credentials, error) {
@@ -362,12 +279,10 @@ func newSession(spnego *SPNEGO, r *http.Request, w http.ResponseWriter, id *cred
 		// create new session
 		idb, err := id.Marshal()
 		if err != nil {
-			spnegoInternalServerError(spnego, w, "SPNEGO could not marshal credentials to add to the session: %v", err)
 			return err
 		}
 		err = sm.New(w, r, sessionCredentials, idb)
 		if err != nil {
-			spnegoInternalServerError(spnego, w, "SPNEGO could not create new session: %v", err)
 			return err
 		}
 		spnego.Log("%s %s@%s - SPNEGO new session (%s) created", r.RemoteAddr, id.UserName(), id.Domain(), id.SessionID())
@@ -375,26 +290,278 @@ func newSession(spnego *SPNEGO, r *http.Request, w http.ResponseWriter, id *cred
 	return nil
 }
 
-// Log and respond to client for error conditions
+type SPNEGOKRB5Authenticator struct {
+	Keytab         *keytab.Keytab
+	SPNEGOSettings []func(*service.Settings)
 
-func spnegoNegotiateKRB5MechType(s *SPNEGO, w http.ResponseWriter, format string, v ...interface{}) {
-	s.Log(format, v...)
-	w.Header().Set(HTTPHeaderAuthResponse, spnegoNegTokenRespIncompleteKRB5)
-	http.Error(w, UnauthorizedMsg, http.StatusUnauthorized)
+	// Allow basic auth in addition to SPNEGO. The authenticator will create
+	// a SPNEGO token on behalf of the user with the provided credentials.
+	// ClientConfig is needed for Basic auth. ClientSettings can be used to
+	// customise the client created on behalf of the user.
+	AllowBasicAuth bool
+	ClientConfig   *config.Config
+	ClientSettings []func(*client.Settings)
+
+	// Send the next handler if the client uses an unsupported authorization
+	// type. This is useful if you chain another authentication handler.
+	// Enable with caution as this allows unauthenticated requests.
+	AllowUnknownAuthorizationType bool
+
+	// Set your own handler to notify the client of unauthorized requests.
+	// Please be aware that the status code and required www-authenticate
+	// headers will already have been set on the http.ResponseWriter.
+	// Subsequent calls to WriteHeader() are ineffective.
+	UnauthorizedHandler http.Handler
 }
 
-func spnegoResponseReject(s *SPNEGO, w http.ResponseWriter, format string, v ...interface{}) {
-	s.Log(format, v...)
+// SPNEGOKRB5Authenticate is a Kerberos SPNEGO authentication HTTP handler wrapper.
+func (a SPNEGOKRB5Authenticator) Authenticate(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		authType, value := a.getAuthorizationHeader(r)
+		if authType == "" {
+			// No authorization token provided
+			a.replyUnauthorizedWithSupportedMethods(w, r)
+			return
+		}
+
+		if authType == HTTPHeaderAuthRequestValueKeyNegotiate || (a.AllowBasicAuth && authType == HTTPHeaderAuthRequestValueKeyBasic) {
+
+			// Set up the SPNEGO GSS-API mechanism
+			var spnego *SPNEGO
+			h, err := types.GetHostAddress(r.RemoteAddr)
+			if err == nil {
+				// put in this order so that if the user provides a ClientAddress it will override the one here.
+				o := append([]func(*service.Settings){service.ClientAddress(h)}, a.SPNEGOSettings...)
+				spnego = SPNEGOService(a.Keytab, o...)
+			} else {
+				spnego = SPNEGOService(a.Keytab, a.SPNEGOSettings...)
+				spnego.Log("%s - SPNEGO could not parse client address: %v", r.RemoteAddr, err)
+			}
+
+			// Check if there is a session manager and if there is an already established session for this client
+			id, err := getSessionCredentials(spnego, r)
+			if err == nil && id.Authenticated() {
+				// There is an established session so bypass auth and serve
+				spnego.Log("%s - SPNEGO request served under session %s", r.RemoteAddr, id.SessionID())
+				next.ServeHTTP(w, goidentity.AddToHTTPRequestContext(&id, r))
+				return
+			}
+
+			var st gssapi.ContextToken
+			if authType == HTTPHeaderAuthRequestValueKeyNegotiate {
+
+				st, err = spnegoTokenFromHTTPHeader(value)
+				if err != nil {
+					spnego.Log("%s - error parsing SPNEGO token: %v", r.RemoteAddr, err)
+					a.replyUnauthorizedWithSupportedMethods(w, r)
+					return
+				}
+
+			} else if authType == HTTPHeaderAuthRequestValueKeyBasic {
+
+				// We create a client on behalf of the user and generate a token for the service
+				user, pass, ok := r.BasicAuth()
+				if !ok {
+					spnego.Log("%s - invalid basic auth token", r.RemoteAddr)
+					a.replyUnauthorizedWithSupportedMethods(w, r)
+					return
+				}
+
+				// Try a login in the configured realms
+				if len(a.ClientConfig.Realms) == 0 {
+					spnego.Log("%s - no realms configured in client config", r.RemoteAddr)
+					a.replyInternalServerError(w, r)
+					return
+				}
+				var cli *client.Client
+				for _, realm := range a.ClientConfig.Realms {
+					cli = client.NewWithPassword(user, realm.Realm, pass, a.ClientConfig, a.ClientSettings...)
+					err = cli.Login()
+					if err == nil {
+						break
+					}
+					spnego.Log("%s - login failed for user %s in realm %s", r.RemoteAddr, user, realm.Realm)
+				}
+				if err != nil {
+					spnego.Log("%s - error logging as client: %v", r.RemoteAddr, err)
+					a.replyUnauthorizedWithSupportedMethods(w, r)
+					return
+				}
+
+				// Setup a SPNEGO client and generate a gssapi.ContextToken
+				spn, err := getRequestSPN(r)
+				if err != nil {
+					spnego.Log("%s - error find SPN from request (host:%s): %v", r.RemoteAddr, r.Host, err)
+					a.replyUnauthorizedWithSupportedMethods(w, r)
+					return
+				}
+				spnegoCli := SPNEGOClient(cli, spn)
+				err = spnegoCli.AcquireCred()
+				if err != nil {
+					spnego.Log("%s - error logging as client: %v", r.RemoteAddr, err)
+					a.replyUnauthorizedWithSupportedMethods(w, r)
+					return
+				}
+
+				st, err = spnegoCli.InitSecContext()
+				if err != nil {
+					spnego.Log("%s - error initiating GSSAPI sec context: %v", r.RemoteAddr, err)
+					a.replyUnauthorizedWithSupportedMethods(w, r)
+					return
+				}
+
+				cli.Destroy()
+			}
+
+			// Validate the context token
+			authed, ctx, status := spnego.AcceptSecContext(st)
+			if status.Code != gssapi.StatusComplete && status.Code != gssapi.StatusContinueNeeded {
+				spnego.Log("%s - error accepting GSSAPI sec context: %s", r.RemoteAddr, status)
+				if authType == HTTPHeaderAuthRequestValueKeyNegotiate {
+					a.replyUnauthorizedSPNEGORejected(w, r)
+				} else { // Basic
+					a.replyUnauthorizedWithSupportedMethods(w, r)
+				}
+				return
+			}
+			if status.Code == gssapi.StatusContinueNeeded {
+				spnego.Log("%s - GSSAPI continue needed", r.RemoteAddr)
+				if authType == HTTPHeaderAuthRequestValueKeyNegotiate {
+					a.replyUnauthorisedSPNEGOIncomplete(w, r)
+				} else { // Basic
+					a.replyUnauthorizedWithSupportedMethods(w, r)
+				}
+				return
+			}
+
+			if authed {
+				// Authentication successful; get user's credentials from the context
+				id := ctx.Value(ctxCredentials).(*credentials.Credentials)
+				err = newSession(spnego, r, w, id)
+				if err != nil {
+					spnego.Log("%s - failed to create new session: %v", r.RemoteAddr, err)
+					a.replyInternalServerError(w, r)
+					return
+				}
+				spnego.Log("%s - authentication succeeded", r.RemoteAddr)
+				if authType == HTTPHeaderAuthRequestValueKeyNegotiate {
+					w.Header().Set(HTTPHeaderAuthResponse, spnegoNegTokenRespKRBAcceptCompleted)
+				}
+				next.ServeHTTP(w, goidentity.AddToHTTPRequestContext(id, r))
+				return
+			}
+
+			// Kerberos auth failed
+			spnego.Log("%s - authentication failed", r.RemoteAddr)
+			if authType == HTTPHeaderAuthRequestValueKeyNegotiate {
+				a.replyUnauthorizedSPNEGORejected(w, r)
+			} else {
+				a.replyUnauthorizedWithSupportedMethods(w, r)
+			}
+			return
+
+		}
+
+		if a.AllowUnknownAuthorizationType {
+			next.ServeHTTP(w, r)
+			return
+		}
+		a.replyUnauthorizedWithSupportedMethods(w, r)
+		return
+	})
+}
+
+func (a SPNEGOKRB5Authenticator) getAuthorizationHeader(r *http.Request) (string, string) {
+	s := strings.SplitN(r.Header.Get(HTTPHeaderAuthRequest), " ", 2)
+	switch len(s) {
+	case 0:
+		return "", ""
+	case 1:
+		return s[0], ""
+	}
+	return s[0], s[1]
+}
+
+func (a SPNEGOKRB5Authenticator) unauthorizedHandler() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusUnauthorized)
+		if a.UnauthorizedHandler != nil {
+			a.UnauthorizedHandler.ServeHTTP(w, r)
+			return
+		}
+		DefaultUnauthorizedHandler.ServeHTTP(w, r)
+	})
+}
+
+func (a SPNEGOKRB5Authenticator) replyUnauthorizedWithSupportedMethods(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add(HTTPHeaderAuthResponse, HTTPHeaderAuthResponseValueKey)
+	if a.AllowBasicAuth {
+		w.Header().Add(HTTPHeaderAuthResponse, HTTPHeaderAuthResponseValueKeyBasic)
+	}
+	a.unauthorizedHandler().ServeHTTP(w, r)
+}
+
+func (a SPNEGOKRB5Authenticator) replyUnauthorizedSPNEGORejected(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set(HTTPHeaderAuthResponse, spnegoNegTokenRespReject)
-	http.Error(w, UnauthorizedMsg, http.StatusUnauthorized)
+	a.unauthorizedHandler().ServeHTTP(w, r)
 }
 
-func spnegoResponseAcceptCompleted(s *SPNEGO, w http.ResponseWriter, format string, v ...interface{}) {
-	s.Log(format, v...)
-	w.Header().Set(HTTPHeaderAuthResponse, spnegoNegTokenRespKRBAcceptCompleted)
+func (a SPNEGOKRB5Authenticator) replyUnauthorisedSPNEGOIncomplete(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set(HTTPHeaderAuthResponse, spnegoNegTokenRespIncompleteKRB5)
+	a.unauthorizedHandler().ServeHTTP(w, r)
 }
 
-func spnegoInternalServerError(s *SPNEGO, w http.ResponseWriter, format string, v ...interface{}) {
-	s.Log(format, v...)
+func (a SPNEGOKRB5Authenticator) replyInternalServerError(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 }
+
+func spnegoTokenFromHTTPHeader(content string) (*SPNEGOToken, error) {
+	// Decode the header into an SPNEGO context token
+	b, err := base64.StdEncoding.DecodeString(content)
+	if err != nil {
+		err = fmt.Errorf("error in base64 decoding negotiation header: %v", err)
+		return nil, err
+	}
+	var st SPNEGOToken
+	err = st.Unmarshal(b)
+	if err != nil {
+		// Check if this is a raw KRB5 context token - issue #347.
+		var k5t KRB5Token
+		if k5t.Unmarshal(b) != nil {
+			err = fmt.Errorf("error in unmarshaling SPNEGO token: %v", err)
+			return nil, err
+		}
+		// Wrap it into an SPNEGO context token
+		st.Init = true
+		st.NegTokenInit = NegTokenInit{
+			MechTypes:      []asn1.ObjectIdentifier{k5t.OID},
+			MechTokenBytes: b,
+		}
+	}
+	return &st, nil
+}
+
+func getRequestSPN(r *http.Request) (string, error) {
+	h := strings.TrimSuffix(r.Host, ".")
+	// This if statement checks if the host includes a port number
+	if strings.LastIndex(h, ":") > strings.LastIndex(h, "]") {
+		// There is a port number in the URL
+		var err error
+		h, _, err = net.SplitHostPort(h)
+		if err != nil {
+			return "", err
+		}
+	}
+	name, err := net.LookupCNAME(h)
+	if err == nil {
+		// Underlyng canonical name should be used for SPN
+		h = strings.TrimSuffix(name, ".")
+	}
+	return "HTTP/" + h, nil
+}
+
+// DefaultUnauthorizedHandler is used to notify clients of unauthorised access, unless one is provided.
+var DefaultUnauthorizedHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, UnauthorizedMsg)
+})
