@@ -5,7 +5,11 @@ import (
 	"time"
 
 	"github.com/jcmturner/gofork/encoding/asn1"
+	"github.com/jcmturner/gokrb5/v8/asn1tools"
+	"github.com/jcmturner/gokrb5/v8/crypto"
+	"github.com/jcmturner/gokrb5/v8/iana"
 	"github.com/jcmturner/gokrb5/v8/iana/asnAppTag"
+	"github.com/jcmturner/gokrb5/v8/iana/keyusage"
 	"github.com/jcmturner/gokrb5/v8/iana/msgtype"
 	"github.com/jcmturner/gokrb5/v8/krberror"
 	"github.com/jcmturner/gokrb5/v8/types"
@@ -45,5 +49,79 @@ func (a *EncAPRepPart) Unmarshal(b []byte) error {
 	if err != nil {
 		return krberror.Errorf(err, krberror.EncodingError, "AP_REP unmarshal error")
 	}
+	return nil
+}
+
+// Marshal the AP-REP message to a byte slice
+func (a *APRep) Marshal() (b []byte, err error) {
+	b, err = asn1.Marshal(*a)
+	if err != nil {
+		return
+	}
+
+	b = asn1tools.AddASNAppTag(b, asnAppTag.APREP)
+	return
+}
+
+// Decrypt the encrypted part of the APRep message
+func (a *APRep) DecryptEncPart(sessionKey types.EncryptionKey) (encpart EncAPRepPart, err error) {
+	decrypted, err := crypto.DecryptEncPart(a.EncPart, sessionKey, uint32(keyusage.AP_REP_ENCPART))
+	if err != nil {
+		err = krberror.Errorf(err, krberror.DecryptingError, "error decrypting AP-REP enc-part")
+		return
+	}
+
+	err = encpart.Unmarshal(decrypted)
+	if err != nil {
+		err = krberror.Errorf(err, krberror.EncodingError, "error unmarshalling decrypted AP-REP enc-part")
+		return
+	}
+
+	return
+}
+
+// Marshal the encrypted part of the APRep message to a byte slice
+func (a *EncAPRepPart) Marshal() (b []byte, err error) {
+	b, err = asn1.Marshal(*a)
+	if err != nil {
+		return
+	}
+
+	b = asn1tools.AddASNAppTag(b, asnAppTag.EncAPRepPart)
+	return
+}
+
+// Create a new APRep message with an encrypted enc-part
+func NewAPRep(tkt Ticket, sessionKey types.EncryptionKey, encPart EncAPRepPart) (a APRep, err error) {
+	m, err := encPart.Marshal()
+	if err != nil {
+		err = krberror.Errorf(err, krberror.EncodingError, "marshaling error of AP-REP enc-part")
+		return
+	}
+
+	ed, err := crypto.GetEncryptedData(m, sessionKey, uint32(keyusage.AP_REP_ENCPART), tkt.EncPart.KVNO)
+	if err != nil {
+		err = krberror.Errorf(err, krberror.EncryptingError, "error encrypting AP-REP enc-part")
+		return
+	}
+
+	a = APRep{
+		PVNO:    iana.PVNO,
+		MsgType: msgtype.KRB_AP_REP,
+		EncPart: ed,
+	}
+	return
+}
+
+// Verify a decrypted APRep enc-part against an authenticator.  The authenticatror should be
+// same as the one embedded in the APReq message that casused this APRep to be generated
+func (a *EncAPRepPart) Verify(auth types.Authenticator) error {
+	// check the response has the same time values as the request
+	// Note - we can't use time.Equal() as m.clientCTime has a monotomic clock value and
+	// which causes the equality to fail
+	if !(a.CTime.Unix() == auth.CTime.Unix() && a.Cusec == auth.Cusec) {
+		return fmt.Errorf("ap-rep time stamp does not match authenticator")
+	}
+
 	return nil
 }
