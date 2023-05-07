@@ -443,6 +443,9 @@ func parseRealms(lines []string) (realms []Realm, err error) {
 			}
 			c--
 			if c == 0 {
+				if start == i {
+					return nil, errors.New("invalid Realms section in configuration")
+				}
 				var r Realm
 				e := r.parseLines(name, lines[start+1:i])
 				if e != nil {
