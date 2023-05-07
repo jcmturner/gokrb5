@@ -124,6 +124,19 @@ func (kt Keytab) String() string {
 	return s
 }
 
+// AddActiveDirectoryComputerAccountEntry adds an entry to the keytab for a Microsoft Active Directory Computer Object. The password should be provided in plain text and it will be converted using the defined enctype to be stored.
+func (kt *Keytab) AddActiveDirectoryComputerAccountEntry(principalName, realm, password, samAccountName string, ts time.Time, KVNO uint8, encType int32) error {
+	// Generate a key from the password
+	princ, _ := types.ParseSPNString(principalName)
+	key, _, err := crypto.GetActiveDirectoryKeyFromPassword(password, princ, realm, samAccountName, encType, types.PADataSequence{})
+	if err != nil {
+		return err
+	}
+
+	kt.populateEntry(princ, realm, ts, KVNO, key)
+	return nil
+}
+
 // AddEntry adds an entry to the keytab. The password should be provided in plain text and it will be converted using the defined enctype to be stored.
 func (kt *Keytab) AddEntry(principalName, realm, password string, ts time.Time, KVNO uint8, encType int32) error {
 	// Generate a key from the password
@@ -133,11 +146,16 @@ func (kt *Keytab) AddEntry(principalName, realm, password string, ts time.Time, 
 		return err
 	}
 
+	kt.populateEntry(princ, realm, ts, KVNO, key)
+	return nil
+}
+
+func (kt *Keytab) populateEntry(princ types.PrincipalName, realm string, ts time.Time, KVNO uint8, key types.EncryptionKey) {
 	// Populate the keytab entry principal
 	ktep := newPrincipal()
 	ktep.NumComponents = int16(len(princ.NameString))
 	if kt.version == 1 {
-		ktep.NumComponents += 1
+		ktep.NumComponents++
 	}
 
 	ktep.Realm = realm
@@ -153,7 +171,6 @@ func (kt *Keytab) AddEntry(principalName, realm, password string, ts time.Time, 
 	e.Key = key
 
 	kt.Entries = append(kt.Entries, e)
-	return nil
 }
 
 // Create a new principal.

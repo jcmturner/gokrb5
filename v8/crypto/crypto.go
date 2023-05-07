@@ -4,6 +4,7 @@ package crypto
 import (
 	"encoding/hex"
 	"fmt"
+	"strings"
 
 	"github.com/jcmturner/gokrb5/v8/crypto/etype"
 	"github.com/jcmturner/gokrb5/v8/iana/chksumtype"
@@ -67,15 +68,19 @@ func GetChksumEtype(id int32) (etype.EType, error) {
 	}
 }
 
-// GetKeyFromPassword generates an encryption key from the principal's password.
-func GetKeyFromPassword(passwd string, cname types.PrincipalName, realm string, etypeID int32, pas types.PADataSequence) (types.EncryptionKey, etype.EType, error) {
+// GetActiveDirectoryKeyFromPassword generates an Active Directory compatible encryption key from the principal's password.
+func GetActiveDirectoryKeyFromPassword(passwd string, cname types.PrincipalName, realm, samAccountName string, etypeID int32, pas types.PADataSequence) (types.EncryptionKey, etype.EType, error) {
+	salt := realm + "host" + samAccountName + "." + strings.ToLower(realm)
+	return GetKeyFromPasswordWithSalt(passwd, cname, realm, salt, etypeID, pas)
+}
+
+func GetKeyFromPasswordWithSalt(passwd string, cname types.PrincipalName, realm, salt string, etypeID int32, pas types.PADataSequence) (types.EncryptionKey, etype.EType, error) {
 	var key types.EncryptionKey
 	et, err := GetEtype(etypeID)
 	if err != nil {
 		return key, et, fmt.Errorf("error getting encryption type: %v", err)
 	}
 	sk2p := et.GetDefaultStringToKeyParams()
-	var salt string
 	var paID int32
 	for _, pa := range pas {
 		switch pa.PADataType {
@@ -133,6 +138,11 @@ func GetKeyFromPassword(passwd string, cname types.PrincipalName, realm string, 
 		KeyValue: k,
 	}
 	return key, et, nil
+}
+
+// GetKeyFromPassword generates an encryption key from the principal's password.
+func GetKeyFromPassword(passwd string, cname types.PrincipalName, realm string, etypeID int32, pas types.PADataSequence) (types.EncryptionKey, etype.EType, error) {
+	return GetKeyFromPasswordWithSalt(passwd, cname, realm, "", etypeID, pas)
 }
 
 // GetEncryptedData encrypts the data provided and returns and EncryptedData type.
