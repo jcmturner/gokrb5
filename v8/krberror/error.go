@@ -21,8 +21,9 @@ const (
 
 // Krberror is an error type for gokrb5
 type Krberror struct {
-	RootCause string
-	EText     []string
+	RootCause  string
+	EText      []string
+	innerError error
 }
 
 // Error function to implement the error interface.
@@ -33,6 +34,11 @@ func (e Krberror) Error() string {
 // Add another error statement to the error.
 func (e *Krberror) Add(et string, s string) {
 	e.EText = append([]string{fmt.Sprintf("%s: %s", et, s)}, e.EText...)
+}
+
+// Unwrap returns the inner error (if any)
+func (e Krberror) Unwrap() error {
+	return e.innerError
 }
 
 // New creates a new instance of Krberror.
@@ -49,7 +55,9 @@ func Errorf(err error, et, format string, a ...interface{}) Krberror {
 		e.Add(et, fmt.Sprintf(format, a...))
 		return e
 	}
-	return NewErrorf(et, format+": %s", append(a, err)...)
+	e := NewErrorf(et, format+": %s", append(a, err)...)
+	e.innerError = err
+	return e
 }
 
 // NewErrorf creates a new Krberror from a formatted string.
