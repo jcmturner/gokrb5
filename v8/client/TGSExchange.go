@@ -8,19 +8,23 @@ import (
 	"github.com/jcmturner/gokrb5/v8/types"
 )
 
+func MyCrossDomainPatch() {
+	// patch for cross-domain
+}
+
 // TGSREQGenerateAndExchange generates the TGS_REQ and performs a TGS exchange to retrieve a ticket to the specified SPN.
 func (cl *Client) TGSREQGenerateAndExchange(spn types.PrincipalName, kdcRealm string, tgt messages.Ticket, sessionKey types.EncryptionKey, renewal bool) (tgsReq messages.TGSReq, tgsRep messages.TGSRep, err error) {
-	tgsReq, err = messages.NewTGSReq(cl.Credentials.CName(), kdcRealm, cl.Config, tgt, sessionKey, spn, renewal)
+	tgsReq, err = messages.NewTGSReq(cl.Credentials.CName(), kdcRealm, kdcRealm, cl.Config, tgt, sessionKey, spn, renewal)
 	if err != nil {
 		return tgsReq, tgsRep, krberror.Errorf(err, krberror.KRBMsgError, "TGS Exchange Error: failed to generate a new TGS_REQ")
 	}
-	return cl.TGSExchange(tgsReq, kdcRealm, tgsRep.Ticket, sessionKey, 0)
+	return cl.TGSExchange(tgsReq, kdcRealm, kdcRealm, tgsRep.Ticket, sessionKey, 0)
 }
 
 // TGSExchange exchanges the provided TGS_REQ with the KDC to retrieve a TGS_REP.
 // Referrals are automatically handled.
 // The client's cache is updated with the ticket received.
-func (cl *Client) TGSExchange(tgsReq messages.TGSReq, kdcRealm string, tgt messages.Ticket, sessionKey types.EncryptionKey, referral int) (messages.TGSReq, messages.TGSRep, error) {
+func (cl *Client) TGSExchange(tgsReq messages.TGSReq, paRealm string, kdcRealm string, tgt messages.Ticket, sessionKey types.EncryptionKey, referral int) (messages.TGSReq, messages.TGSRep, error) {
 	var tgsRep messages.TGSRep
 	b, err := tgsReq.Marshal()
 	if err != nil {
@@ -60,11 +64,11 @@ func (cl *Client) TGSExchange(tgsReq messages.TGSReq, kdcRealm string, tgt messa
 				return tgsReq, tgsRep, err
 			}
 		}
-		tgsReq, err = messages.NewTGSReq(cl.Credentials.CName(), realm, cl.Config, tgsRep.Ticket, tgsRep.DecryptedEncPart.Key, tgsReq.ReqBody.SName, tgsReq.Renewal)
+		tgsReq, err = messages.NewTGSReq(cl.Credentials.CName(), paRealm, realm, cl.Config, tgsRep.Ticket, tgsRep.DecryptedEncPart.Key, tgsReq.ReqBody.SName, tgsReq.Renewal)
 		if err != nil {
 			return tgsReq, tgsRep, err
 		}
-		return cl.TGSExchange(tgsReq, realm, tgsRep.Ticket, tgsRep.DecryptedEncPart.Key, referral)
+		return cl.TGSExchange(tgsReq, paRealm, realm, tgsRep.Ticket, tgsRep.DecryptedEncPart.Key, referral)
 	}
 	cl.cache.addEntry(
 		tgsRep.Ticket,
