@@ -87,7 +87,7 @@ func login() error {
 
 	err = cmd.Wait()
 	if err != nil {
-		return fmt.Errorf("%s did not run successfully: %v stderr: %s", kinitCmd, err, string(errBuf.Bytes()))
+		return fmt.Errorf("%s did not run successfully: %v stderr: %s", kinitCmd, err, errBuf.String())
 	}
 	return nil
 }
