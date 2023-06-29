@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 
-	"gopkg.in/jcmturner/rpc.v1/mstypes"
-	"gopkg.in/jcmturner/rpc.v1/ndr"
+	"github.com/jcmturner/rpc/v2/mstypes"
+	"github.com/jcmturner/rpc/v2/ndr"
 )
 
 // Claims reference: https://msdn.microsoft.com/en-us/library/hh553895.aspx

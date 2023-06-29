@@ -6,8 +6,8 @@ import (
 	"errors"
 	"fmt"
 
-	"gopkg.in/jcmturner/rpc.v1/mstypes"
-	"gopkg.in/jcmturner/rpc.v1/ndr"
+	"github.com/jcmturner/rpc/v2/mstypes"
+	"github.com/jcmturner/rpc/v2/ndr"
 )
 
 const (

@@ -6,16 +6,16 @@ package main
 import (
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
 
-	"gopkg.in/jcmturner/gokrb5.v7/client"
-	"gopkg.in/jcmturner/gokrb5.v7/config"
-	"gopkg.in/jcmturner/gokrb5.v7/keytab"
-	"gopkg.in/jcmturner/gokrb5.v7/spnego"
-	"gopkg.in/jcmturner/gokrb5.v7/test/testdata"
+	"github.com/jcmturner/gokrb5/v8/client"
+	"github.com/jcmturner/gokrb5/v8/config"
+	"github.com/jcmturner/gokrb5/v8/keytab"
+	"github.com/jcmturner/gokrb5/v8/spnego"
+	"github.com/jcmturner/gokrb5/v8/test/testdata"
 )
 
 const (
@@ -47,7 +47,7 @@ func main() {
 
 	//defer profile.Start(profile.TraceProfile).Stop()
 	// Load the keytab
-	kb, _ := hex.DecodeString(testdata.TESTUSER2_KEYTAB)
+	kb, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER2_TEST_GOKRB5)
 	kt := keytab.New()
 	err := kt.Unmarshal(kb)
 	if err != nil {
@@ -55,7 +55,7 @@ func main() {
 	}
 
 	// Load the client krb5 config
-	conf, err := config.NewConfigFromString(kRB5CONF)
+	conf, err := config.NewFromString(kRB5CONF)
 	if err != nil {
 		l.Fatalf("could not load krb5.conf: %v", err)
 	}
@@ -65,7 +65,7 @@ func main() {
 	}
 
 	// Create the client with the keytab
-	cl := client.NewClientWithKeytab("testuser2", "TEST.GOKRB5", kt, conf, client.Logger(l), client.DisablePAFXFAST(true))
+	cl := client.NewWithKeytab("testuser2", "TEST.GOKRB5", kt, conf, client.Logger(l), client.DisablePAFXFAST(true))
 
 	// Log in the client
 	err = cl.Login()
@@ -87,7 +87,7 @@ func main() {
 	if err != nil {
 		l.Fatalf("error making request: %v", err)
 	}
-	b, err := ioutil.ReadAll(resp.Body)
+	b, err := io.ReadAll(resp.Body)
 	if err != nil {
 		l.Fatalf("error reading response body: %v", err)
 	}

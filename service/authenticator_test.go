@@ -3,8 +3,8 @@ package service
 import (
 	"testing"
 
+	"github.com/jcmturner/goidentity/v6"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/goidentity.v3"
 )
 
 func TestImplementsInterface(t *testing.T) {

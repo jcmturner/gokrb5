@@ -4,17 +4,16 @@ import (
 	"bytes"
 	"encoding/hex"
 	"log"
-
-	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v7/config"
-	"gopkg.in/jcmturner/gokrb5.v7/iana/etypeID"
-	"gopkg.in/jcmturner/gokrb5.v7/iana/nametype"
-	"gopkg.in/jcmturner/gokrb5.v7/keytab"
-	"gopkg.in/jcmturner/gokrb5.v7/test"
-	"gopkg.in/jcmturner/gokrb5.v7/test/testdata"
-	"gopkg.in/jcmturner/gokrb5.v7/types"
-
 	"testing"
+
+	"github.com/jcmturner/gokrb5/v8/config"
+	"github.com/jcmturner/gokrb5/v8/iana/etypeID"
+	"github.com/jcmturner/gokrb5/v8/iana/nametype"
+	"github.com/jcmturner/gokrb5/v8/keytab"
+	"github.com/jcmturner/gokrb5/v8/test"
+	"github.com/jcmturner/gokrb5/v8/test/testdata"
+	"github.com/jcmturner/gokrb5/v8/types"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestClient_SuccessfulLogin_AD(t *testing.T) {
@@ -23,8 +22,23 @@ func TestClient_SuccessfulLogin_AD(t *testing.T) {
 	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER1_USER_GOKRB5)
 	kt := keytab.New()
 	kt.Unmarshal(b)
-	c, _ := config.NewConfigFromString(testdata.KRB5_CONF_AD)
-	cl := NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
+	c, _ := config.NewFromString(testdata.KRB5_CONF_AD)
+	cl := NewWithKeytab("testuser1", "USER.GOKRB5", kt, c, DisablePAFXFAST(true))
+
+	err := cl.Login()
+	if err != nil {
+		t.Fatalf("Error on login: %v\n", err)
+	}
+}
+
+func TestClient_SuccessfulLogin_AD_Without_PreAuth(t *testing.T) {
+	test.AD(t)
+
+	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER3_USER_GOKRB5)
+	kt := keytab.New()
+	kt.Unmarshal(b)
+	c, _ := config.NewFromString(testdata.KRB5_CONF_AD)
+	cl := NewWithKeytab("testuser3", "USER.GOKRB5", kt, c, DisablePAFXFAST(true))
 
 	err := cl.Login()
 	if err != nil {
@@ -38,8 +52,8 @@ func TestClient_GetServiceTicket_AD(t *testing.T) {
 	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER1_USER_GOKRB5)
 	kt := keytab.New()
 	kt.Unmarshal(b)
-	c, _ := config.NewConfigFromString(testdata.KRB5_CONF_AD)
-	cl := NewClientWithKeytab("testuser1", "USER.GOKRB5", kt, c)
+	c, _ := config.NewFromString(testdata.KRB5_CONF_AD)
+	cl := NewWithKeytab("testuser1", "USER.GOKRB5", kt, c)
 
 	err := cl.Login()
 	if err != nil {
@@ -78,15 +92,13 @@ func TestClient_GetServiceTicket_AD_TRUST_USER_DOMAIN(t *testing.T) {
 	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER1_USER_GOKRB5)
 	kt := keytab.New()
 	kt.Unmarshal(b)
-	c, _ := config.NewConfigFromString(testdata.KRB5_CONF_AD)
-	c.LibDefaults.DefaultRealm = "USER.GOKRB5"
+	c, _ := config.NewFromString(testdata.KRB5_CONF_AD)
 	c.LibDefaults.Canonicalize = true
 	c.LibDefaults.DefaultTktEnctypes = []string{"rc4-hmac"}
 	c.LibDefaults.DefaultTktEnctypeIDs = []int32{etypeID.ETypesByName["rc4-hmac"]}
 	c.LibDefaults.DefaultTGSEnctypes = []string{"rc4-hmac"}
 	c.LibDefaults.DefaultTGSEnctypeIDs = []int32{etypeID.ETypesByName["rc4-hmac"]}
-	cl := NewClientWithKeytab("testuser1", "USER.GOKRB5", kt, c, DisablePAFXFAST(true))
-
+	cl := NewWithKeytab("testuser1", "USER.GOKRB5", kt, c, DisablePAFXFAST(true))
 	err := cl.Login()
 
 	if err != nil {
@@ -126,13 +138,13 @@ func TestClient_GetServiceTicket_AD_USER_DOMAIN(t *testing.T) {
 	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER1_USER_GOKRB5)
 	kt := keytab.New()
 	kt.Unmarshal(b)
-	c, _ := config.NewConfigFromString(testdata.KRB5_CONF_AD)
+	c, _ := config.NewFromString(testdata.KRB5_CONF_AD)
 	c.LibDefaults.Canonicalize = true
 	c.LibDefaults.DefaultTktEnctypes = []string{"rc4-hmac"}
 	c.LibDefaults.DefaultTktEnctypeIDs = []int32{etypeID.ETypesByName["rc4-hmac"]}
 	c.LibDefaults.DefaultTGSEnctypes = []string{"rc4-hmac"}
 	c.LibDefaults.DefaultTGSEnctypeIDs = []int32{etypeID.ETypesByName["rc4-hmac"]}
-	cl := NewClientWithKeytab("testuser1", "USER.GOKRB5", kt, c, DisablePAFXFAST(true))
+	cl := NewWithKeytab("testuser1", "USER.GOKRB5", kt, c, DisablePAFXFAST(true))
 
 	err := cl.Login()
 

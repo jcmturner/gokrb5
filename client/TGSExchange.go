@@ -1,11 +1,11 @@
 package client
 
 import (
-	"gopkg.in/jcmturner/gokrb5.v7/iana/flags"
-	"gopkg.in/jcmturner/gokrb5.v7/iana/nametype"
-	"gopkg.in/jcmturner/gokrb5.v7/krberror"
-	"gopkg.in/jcmturner/gokrb5.v7/messages"
-	"gopkg.in/jcmturner/gokrb5.v7/types"
+	"github.com/jcmturner/gokrb5/v8/iana/flags"
+	"github.com/jcmturner/gokrb5/v8/iana/nametype"
+	"github.com/jcmturner/gokrb5/v8/krberror"
+	"github.com/jcmturner/gokrb5/v8/messages"
+	"github.com/jcmturner/gokrb5/v8/types"
 )
 
 // TGSREQGenerateAndExchange generates the TGS_REQ and performs a TGS exchange to retrieve a ticket to the specified SPN.
@@ -89,7 +89,12 @@ func (cl *Client) GetServiceTicket(spn string) (messages.Ticket, types.Encryptio
 		return tkt, skey, nil
 	}
 	princ := types.NewPrincipalName(nametype.KRB_NT_PRINCIPAL, spn)
-	realm := cl.Config.ResolveRealm(princ.NameString[len(princ.NameString)-1])
+	realm := cl.spnRealm(princ)
+
+	// if we don't know the SPN's realm, ask the client realm's KDC
+	if realm == "" {
+		realm = cl.Credentials.Realm()
+	}
 
 	tgt, skey, err := cl.sessionTGT(realm)
 	if err != nil {

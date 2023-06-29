@@ -7,10 +7,10 @@ import (
 	"log"
 	"testing"
 
+	"github.com/jcmturner/gokrb5/v8/keytab"
+	"github.com/jcmturner/gokrb5/v8/test/testdata"
+	"github.com/jcmturner/gokrb5/v8/types"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v7/keytab"
-	"gopkg.in/jcmturner/gokrb5.v7/test/testdata"
-	"gopkg.in/jcmturner/gokrb5.v7/types"
 )
 
 func TestPACTypeVerify(t *testing.T) {
@@ -25,11 +25,11 @@ func TestPACTypeVerify(t *testing.T) {
 		t.Fatalf("Error unmarshaling test data: %v", err)
 	}
 
-	b, _ = hex.DecodeString(testdata.SYSHTTP_KEYTAB)
+	b, _ = hex.DecodeString(testdata.KEYTAB_SYSHTTP_TEST_GOKRB5)
 	kt := keytab.New()
 	kt.Unmarshal(b)
 	pn, _ := types.ParseSPNString("sysHTTP")
-	key, err := kt.GetEncryptionKey(pn, "TEST.GOKRB5", 2, 18)
+	key, _, err := kt.GetEncryptionKey(pn, "TEST.GOKRB5", 2, 18)
 	if err != nil {
 		t.Fatalf("Error getting key: %v", err)
 	}

@@ -2,20 +2,23 @@
 package client
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"strings"
 	"time"
 
-	"gopkg.in/jcmturner/gokrb5.v7/config"
-	"gopkg.in/jcmturner/gokrb5.v7/credentials"
-	"gopkg.in/jcmturner/gokrb5.v7/crypto"
-	"gopkg.in/jcmturner/gokrb5.v7/crypto/etype"
-	"gopkg.in/jcmturner/gokrb5.v7/iana/errorcode"
-	"gopkg.in/jcmturner/gokrb5.v7/iana/nametype"
-	"gopkg.in/jcmturner/gokrb5.v7/keytab"
-	"gopkg.in/jcmturner/gokrb5.v7/krberror"
-	"gopkg.in/jcmturner/gokrb5.v7/messages"
-	"gopkg.in/jcmturner/gokrb5.v7/types"
+	"github.com/jcmturner/gokrb5/v8/config"
+	"github.com/jcmturner/gokrb5/v8/credentials"
+	"github.com/jcmturner/gokrb5/v8/crypto"
+	"github.com/jcmturner/gokrb5/v8/crypto/etype"
+	"github.com/jcmturner/gokrb5/v8/iana/errorcode"
+	"github.com/jcmturner/gokrb5/v8/iana/nametype"
+	"github.com/jcmturner/gokrb5/v8/keytab"
+	"github.com/jcmturner/gokrb5/v8/krberror"
+	"github.com/jcmturner/gokrb5/v8/messages"
+	"github.com/jcmturner/gokrb5/v8/types"
 )
 
 // Client side configuration and state.
@@ -27,9 +30,9 @@ type Client struct {
 	cache       *Cache
 }
 
-// NewClientWithPassword creates a new client from a password credential.
+// NewWithPassword creates a new client from a password credential.
 // Set the realm to empty string to use the default realm from config.
-func NewClientWithPassword(username, realm, password string, krb5conf *config.Config, settings ...func(*Settings)) *Client {
+func NewWithPassword(username, realm, password string, krb5conf *config.Config, settings ...func(*Settings)) *Client {
 	creds := credentials.New(username, realm)
 	return &Client{
 		Credentials: creds.WithPassword(password),
@@ -42,8 +45,8 @@ func NewClientWithPassword(username, realm, password string, krb5conf *config.Co
 	}
 }
 
-// NewClientWithKeytab creates a new client from a keytab credential.
-func NewClientWithKeytab(username, realm string, kt *keytab.Keytab, krb5conf *config.Config, settings ...func(*Settings)) *Client {
+// NewWithKeytab creates a new client from a keytab credential.
+func NewWithKeytab(username, realm string, kt *keytab.Keytab, krb5conf *config.Config, settings ...func(*Settings)) *Client {
 	creds := credentials.New(username, realm)
 	return &Client{
 		Credentials: creds.WithKeytab(kt),
@@ -56,10 +59,10 @@ func NewClientWithKeytab(username, realm string, kt *keytab.Keytab, krb5conf *co
 	}
 }
 
-// NewClientFromCCache create a client from a populated client cache.
+// NewFromCCache create a client from a populated client cache.
 //
 // WARNING: A client created from CCache does not automatically renew TGTs and a failure will occur after the TGT expires.
-func NewClientFromCCache(c *credentials.CCache, krb5conf *config.Config, settings ...func(*Settings)) (*Client, error) {
+func NewFromCCache(c *credentials.CCache, krb5conf *config.Config, settings ...func(*Settings)) (*Client, error) {
 	cl := &Client{
 		Credentials: c.GetClientCredentials(),
 		Config:      krb5conf,
@@ -108,28 +111,28 @@ func NewClientFromCCache(c *credentials.CCache, krb5conf *config.Config, setting
 	return cl, nil
 }
 
-// Key returns the client's encryption key for the specified encryption type.
+// Key returns the client's encryption key for the specified encryption type and its kvno (kvno of zero will find latest).
 // The key can be retrieved either from the keytab or generated from the client's password.
 // If the client has both a keytab and a password defined the keytab is favoured as the source for the key
 // A KRBError can be passed in the event the KDC returns one of type KDC_ERR_PREAUTH_REQUIRED and is required to derive
 // the key for pre-authentication from the client's password. If a KRBError is not available, pass nil to this argument.
-func (cl *Client) Key(etype etype.EType, krberr *messages.KRBError) (types.EncryptionKey, error) {
+func (cl *Client) Key(etype etype.EType, kvno int, krberr *messages.KRBError) (types.EncryptionKey, int, error) {
 	if cl.Credentials.HasKeytab() && etype != nil {
-		return cl.Credentials.Keytab().GetEncryptionKey(cl.Credentials.CName(), cl.Credentials.Domain(), 0, etype.GetETypeID())
+		return cl.Credentials.Keytab().GetEncryptionKey(cl.Credentials.CName(), cl.Credentials.Domain(), kvno, etype.GetETypeID())
 	} else if cl.Credentials.HasPassword() {
 		if krberr != nil && krberr.ErrorCode == errorcode.KDC_ERR_PREAUTH_REQUIRED {
 			var pas types.PADataSequence
 			err := pas.Unmarshal(krberr.EData)
 			if err != nil {
-				return types.EncryptionKey{}, fmt.Errorf("could not get PAData from KRBError to generate key from password: %v", err)
+				return types.EncryptionKey{}, 0, fmt.Errorf("could not get PAData from KRBError to generate key from password: %v", err)
 			}
 			key, _, err := crypto.GetKeyFromPassword(cl.Credentials.Password(), krberr.CName, krberr.CRealm, etype.GetETypeID(), pas)
-			return key, err
+			return key, 0, err
 		}
 		key, _, err := crypto.GetKeyFromPassword(cl.Credentials.Password(), cl.Credentials.CName(), cl.Credentials.Domain(), etype.GetETypeID(), types.PADataSequence{})
-		return key, err
+		return key, 0, err
 	}
-	return types.EncryptionKey{}, errors.New("credential has neither keytab or password to generate key")
+	return types.EncryptionKey{}, 0, errors.New("credential has neither keytab or password to generate key")
 }
 
 // IsConfigured indicates if the client has the values required set.
@@ -171,7 +174,7 @@ func (cl *Client) Login() error {
 			return krberror.Errorf(err, krberror.KRBMsgError, "no user credentials available and error getting any existing session")
 		}
 		if time.Now().UTC().After(endTime) {
-			return krberror.NewKrberror(krberror.KRBMsgError, "cannot login, no user credentials available and no valid existing session")
+			return krberror.New(krberror.KRBMsgError, "cannot login, no user credentials available and no valid existing session")
 		}
 		// no credentials but there is a session with tgt already
 		return nil
@@ -238,4 +241,89 @@ func (cl *Client) Destroy() {
 	cl.cache.clear()
 	cl.Credentials = creds
 	cl.Log("client destroyed")
+}
+
+// Diagnostics runs a set of checks that the client is properly configured and writes details to the io.Writer provided.
+func (cl *Client) Diagnostics(w io.Writer) error {
+	cl.Print(w)
+	var errs []string
+	if cl.Credentials.HasKeytab() {
+		var loginRealmEncTypes []int32
+		for _, e := range cl.Credentials.Keytab().Entries {
+			if e.Principal.Realm == cl.Credentials.Realm() {
+				loginRealmEncTypes = append(loginRealmEncTypes, e.Key.KeyType)
+			}
+		}
+		for _, et := range cl.Config.LibDefaults.DefaultTktEnctypeIDs {
+			var etInKt bool
+			for _, val := range loginRealmEncTypes {
+				if val == et {
+					etInKt = true
+					break
+				}
+			}
+			if !etInKt {
+				errs = append(errs, fmt.Sprintf("default_tkt_enctypes specifies %d but this enctype is not available in the client's keytab", et))
+			}
+		}
+		for _, et := range cl.Config.LibDefaults.PreferredPreauthTypes {
+			var etInKt bool
+			for _, val := range loginRealmEncTypes {
+				if int(val) == et {
+					etInKt = true
+					break
+				}
+			}
+			if !etInKt {
+				errs = append(errs, fmt.Sprintf("preferred_preauth_types specifies %d but this enctype is not available in the client's keytab", et))
+			}
+		}
+	}
+	udpCnt, udpKDC, err := cl.Config.GetKDCs(cl.Credentials.Realm(), false)
+	if err != nil {
+		errs = append(errs, fmt.Sprintf("error when resolving KDCs for UDP communication: %v", err))
+	}
+	if udpCnt < 1 {
+		errs = append(errs, "no KDCs resolved for communication via UDP.")
+	} else {
+		b, _ := json.MarshalIndent(&udpKDC, "", "  ")
+		fmt.Fprintf(w, "UDP KDCs: %s\n", string(b))
+	}
+	tcpCnt, tcpKDC, err := cl.Config.GetKDCs(cl.Credentials.Realm(), false)
+	if err != nil {
+		errs = append(errs, fmt.Sprintf("error when resolving KDCs for TCP communication: %v", err))
+	}
+	if tcpCnt < 1 {
+		errs = append(errs, "no KDCs resolved for communication via TCP.")
+	} else {
+		b, _ := json.MarshalIndent(&tcpKDC, "", "  ")
+		fmt.Fprintf(w, "TCP KDCs: %s\n", string(b))
+	}
+
+	if errs == nil || len(errs) < 1 {
+		return nil
+	}
+	err = fmt.Errorf(strings.Join(errs, "\n"))
+	return err
+}
+
+// Print writes the details of the client to the io.Writer provided.
+func (cl *Client) Print(w io.Writer) {
+	c, _ := cl.Credentials.JSON()
+	fmt.Fprintf(w, "Credentials:\n%s\n", c)
+
+	s, _ := cl.sessions.JSON()
+	fmt.Fprintf(w, "TGT Sessions:\n%s\n", s)
+
+	c, _ = cl.cache.JSON()
+	fmt.Fprintf(w, "Service ticket cache:\n%s\n", c)
+
+	s, _ = cl.settings.JSON()
+	fmt.Fprintf(w, "Settings:\n%s\n", s)
+
+	j, _ := cl.Config.JSON()
+	fmt.Fprintf(w, "Krb5 config:\n%s\n", j)
+
+	k, _ := cl.Credentials.Keytab().JSON()
+	fmt.Fprintf(w, "Keytab:\n%s\n", k)
 }

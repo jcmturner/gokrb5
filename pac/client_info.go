@@ -3,7 +3,7 @@ package pac
 import (
 	"bytes"
 
-	"gopkg.in/jcmturner/rpc.v1/mstypes"
+	"github.com/jcmturner/rpc/v2/mstypes"
 )
 
 // ClientInfo implements https://msdn.microsoft.com/en-us/library/cc237951.aspx

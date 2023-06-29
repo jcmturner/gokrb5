@@ -4,14 +4,17 @@ package keytab
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
+	"os"
+	"strings"
 	"time"
 	"unsafe"
 
-	"gopkg.in/jcmturner/gokrb5.v7/types"
+	"github.com/jcmturner/gokrb5/v8/crypto"
+	"github.com/jcmturner/gokrb5/v8/types"
 )
 
 const (
@@ -33,28 +36,43 @@ type entry struct {
 	KVNO      uint32
 }
 
+func (e entry) String() string {
+	return fmt.Sprintf("% 4d %s %-56s %2d %-64x",
+		e.KVNO8,
+		e.Timestamp.Format("02/01/06 15:04:05"),
+		e.Principal.String(),
+		e.Key.KeyType,
+		e.Key.KeyValue,
+	)
+}
+
 // Keytab entry principal struct.
 type principal struct {
-	NumComponents int16
+	NumComponents int16 `json:"-"`
 	Realm         string
 	Components    []string
 	NameType      int32
+}
+
+func (p principal) String() string {
+	return fmt.Sprintf("%s@%s", strings.Join(p.Components, "/"), p.Realm)
 }
 
 // New creates new, empty Keytab type.
 func New() *Keytab {
 	var e []entry
 	return &Keytab{
-		version: 0,
+		version: 2,
 		Entries: e,
 	}
 }
 
 // GetEncryptionKey returns the EncryptionKey from the Keytab for the newest entry with the required kvno, etype and matching principal.
-func (kt *Keytab) GetEncryptionKey(princName types.PrincipalName, realm string, kvno int, etype int32) (types.EncryptionKey, error) {
-	//TODO (theme: KVNO from keytab) this function should return the kvno too
+// If the kvno is zero then the latest kvno will be returned. The kvno is also returned for
+func (kt *Keytab) GetEncryptionKey(princName types.PrincipalName, realm string, kvno int, etype int32) (types.EncryptionKey, int, error) {
 	var key types.EncryptionKey
 	var t time.Time
+	var kv int
 	for _, k := range kt.Entries {
 		if k.Principal.Realm == realm && len(k.Principal.Components) == len(princName.NameString) &&
 			k.Key.KeyType == etype &&
@@ -69,18 +87,19 @@ func (kt *Keytab) GetEncryptionKey(princName types.PrincipalName, realm string, 
 			}
 			if p {
 				key = k.Key
+				kv = int(k.KVNO)
 				t = k.Timestamp
 			}
 		}
 	}
 	if len(key.KeyValue) < 1 {
-		return key, fmt.Errorf("matching key not found in keytab. Looking for %v realm: %v kvno: %v etype: %v", princName.NameString, realm, kvno, etype)
+		return key, 0, fmt.Errorf("matching key not found in keytab. Looking for %q realm: %v kvno: %v etype: %v", princName.PrincipalNameString(), realm, kvno, etype)
 	}
-	return key, nil
+	return key, kv, nil
 }
 
 // Create a new Keytab entry.
-func newKeytabEntry() entry {
+func newEntry() entry {
 	var b []byte
 	return entry{
 		Principal: newPrincipal(),
@@ -92,6 +111,49 @@ func newKeytabEntry() entry {
 		},
 		KVNO: 0,
 	}
+}
+
+func (kt Keytab) String() string {
+	var s string
+	s = `KVNO Timestamp         Principal                                                ET Key
+---- ----------------- -------------------------------------------------------- -- ----------------------------------------------------------------
+`
+	for _, entry := range kt.Entries {
+		s += entry.String() + "\n"
+	}
+	return s
+}
+
+// AddEntry adds an entry to the keytab. The password should be provided in plain text and it will be converted using the defined enctype to be stored.
+func (kt *Keytab) AddEntry(principalName, realm, password string, ts time.Time, KVNO uint8, encType int32) error {
+	// Generate a key from the password
+	princ, _ := types.ParseSPNString(principalName)
+	key, _, err := crypto.GetKeyFromPassword(password, princ, realm, encType, types.PADataSequence{})
+	if err != nil {
+		return err
+	}
+
+	// Populate the keytab entry principal
+	ktep := newPrincipal()
+	ktep.NumComponents = int16(len(princ.NameString))
+	if kt.version == 1 {
+		ktep.NumComponents += 1
+	}
+
+	ktep.Realm = realm
+	ktep.Components = princ.NameString
+	ktep.NameType = princ.NameType
+
+	// Populate the keytab entry
+	e := newEntry()
+	e.Principal = ktep
+	e.Timestamp = ts
+	e.KVNO8 = KVNO
+	e.KVNO = uint32(KVNO)
+	e.Key = key
+
+	kt.Entries = append(kt.Entries, e)
+	return nil
 }
 
 // Create a new principal.
@@ -108,7 +170,7 @@ func newPrincipal() principal {
 // Load a Keytab file into a Keytab type.
 func Load(ktPath string) (*Keytab, error) {
 	kt := new(Keytab)
-	b, err := ioutil.ReadFile(ktPath)
+	b, err := os.ReadFile(ktPath)
 	if err != nil {
 		return kt, err
 	}
@@ -181,7 +243,7 @@ func (kt *Keytab) Unmarshal(b []byte) error {
 			}
 			eb := b[n : n+int(l)]
 			n = n + int(l)
-			ke := newKeytabEntry()
+			ke := newEntry()
 			// p keeps track as to where we are in the byte stream
 			var p int
 			var err error
@@ -456,4 +518,13 @@ func isNativeEndianLittle() bool {
 		endian = false
 	}
 	return endian
+}
+
+// JSON return information about the keys held in the keytab in a JSON format.
+func (kt *Keytab) JSON() (string, error) {
+	b, err := json.MarshalIndent(kt, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return string(b), nil
 }

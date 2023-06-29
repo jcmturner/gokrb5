@@ -6,9 +6,9 @@ import (
 	"encoding/hex"
 	"errors"
 
+	"github.com/jcmturner/gokrb5/v8/crypto/etype"
+	"github.com/jcmturner/gokrb5/v8/iana/etypeID"
 	"golang.org/x/crypto/pbkdf2"
-	"gopkg.in/jcmturner/gokrb5.v7/crypto/etype"
-	"gopkg.in/jcmturner/gokrb5.v7/iana/etypeID"
 )
 
 const (
@@ -29,6 +29,7 @@ func DeriveKey(protocolKey, label []byte, e etype.EType) []byte {
 	var kl int
 	// Key length is longer for aes256-cts-hmac-sha384-192 is it is a Ke or from StringToKey (where label is "kerberos")
 	if e.GetETypeID() == etypeID.AES256_CTS_HMAC_SHA384_192 {
+	Swtch:
 		switch label[len(label)-1] {
 		case 0x73:
 			// 0x73 is "s" so label could be kerberos meaning StringToKey so now check if the label is "kerberos"
@@ -39,7 +40,7 @@ func DeriveKey(protocolKey, label []byte, e etype.EType) []byte {
 			for i, b := range label {
 				if b != kerblabel[i] {
 					kl = e.GetKeySeedBitLength()
-					break
+					break Swtch
 				}
 			}
 			if kl == 0 {
