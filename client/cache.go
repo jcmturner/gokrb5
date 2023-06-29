@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jcmturner/gokrb5/v8/messages"
-	"github.com/jcmturner/gokrb5/v8/types"
+	"github.com/jcmturner/gokrb5/v9/messages"
+	"github.com/jcmturner/gokrb5/v9/types"
 )
 
 // Cache for service tickets held by the client.

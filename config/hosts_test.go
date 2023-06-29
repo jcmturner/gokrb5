@@ -1,10 +1,10 @@
 package config
 
 import (
-	"github.com/jcmturner/gokrb5/v8/test"
+	"github.com/jcmturner/gokrb5/v9/test"
 	"testing"
 
-	"github.com/jcmturner/gokrb5/v8/test/testdata"
+	"github.com/jcmturner/gokrb5/v9/test/testdata"
 	"github.com/stretchr/testify/assert"
 )
 

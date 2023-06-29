@@ -1,5 +1,5 @@
 # Name of the workflow needs to match the name of the major version directory
-name: v8
+name: v9
 on:
   push:
   pull_request:
