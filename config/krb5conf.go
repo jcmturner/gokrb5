@@ -57,7 +57,7 @@ type LibDefaults struct {
 	DefaultTktEnctypes      []string //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
 	DefaultTGSEnctypeIDs    []int32  //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
 	DefaultTktEnctypeIDs    []int32  //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
-	DNSCanonicalizeHostname bool     //default true
+	DNSCanonicalizeHostname int      //default true
 	DNSLookupKDC            bool     //default false
 	DNSLookupRealm          bool
 	ExtraAddresses          []net.IP       //Not implementing yet
@@ -83,6 +83,12 @@ type LibDefaults struct {
 	VerifyAPReqNofail     bool          //default false
 }
 
+const (
+	DNSCanonicalizeHostnameFalse    = iota
+	DNSCanonicalizeHostnameTrue     = iota
+	DNSCanonicalizeHostnameFallback = iota
+)
+
 // Create a new LibDefaults struct.
 func newLibDefaults() LibDefaults {
 	uid := "0"
@@ -102,7 +108,7 @@ func newLibDefaults() LibDefaults {
 		DefaultKeytabName:       "/etc/krb5.keytab",
 		DefaultTGSEnctypes:      []string{"aes256-cts-hmac-sha1-96", "aes128-cts-hmac-sha1-96", "des3-cbc-sha1", "arcfour-hmac-md5", "camellia256-cts-cmac", "camellia128-cts-cmac", "des-cbc-crc", "des-cbc-md5", "des-cbc-md4"},
 		DefaultTktEnctypes:      []string{"aes256-cts-hmac-sha1-96", "aes128-cts-hmac-sha1-96", "des3-cbc-sha1", "arcfour-hmac-md5", "camellia256-cts-cmac", "camellia128-cts-cmac", "des-cbc-crc", "des-cbc-md5", "des-cbc-md4"},
-		DNSCanonicalizeHostname: true,
+		DNSCanonicalizeHostname: DNSCanonicalizeHostnameTrue,
 		K5LoginDirectory:        hdir,
 		KDCDefaultOptions:       opts,
 		KDCTimeSync:             1,
@@ -176,10 +182,17 @@ func (l *LibDefaults) parseLines(lines []string) error {
 			l.DefaultTktEnctypes = strings.Fields(p[1])
 		case "dns_canonicalize_hostname":
 			v, err := parseBoolean(p[1])
-			if err != nil {
-				return InvalidErrorf("libdefaults section line (%s): %v", line, err)
+			if err == nil {
+				if v {
+					l.DNSCanonicalizeHostname = DNSCanonicalizeHostnameTrue
+				} else {
+					l.DNSCanonicalizeHostname = DNSCanonicalizeHostnameFalse
+				}
+			} else if strings.TrimSpace(p[1]) == "fallback" {
+				l.DNSCanonicalizeHostname = DNSCanonicalizeHostnameFallback
+			} else {
+				return InvalidErrorf("libdefaults section line (%s)", line)
 			}
-			l.DNSCanonicalizeHostname = v
 		case "dns_lookup_kdc":
 			v, err := parseBoolean(p[1])
 			if err != nil {

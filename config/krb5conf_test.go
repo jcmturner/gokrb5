@@ -60,7 +60,7 @@ const (
  .test.gokrb5 = TEST.GOKRB5 #comment to be ignored
 
  test.gokrb5 = TEST.GOKRB5 ;comment to be ignored
- 
+
   .example.com = EXAMPLE.COM # comment to be ignored
  hostname1.example.com = EXAMPLE.COM ; comment to be ignored
  hostname2.example.com = TEST.GOKRB5
@@ -111,7 +111,7 @@ const (
       18,
       17
     ],
-    "DNSCanonicalizeHostname": true,
+    "DNSCanonicalizeHostname": 1,
     "DNSLookupKDC": false,
     "DNSLookupRealm": false,
     "ExtraAddresses": null,
@@ -354,7 +354,7 @@ const (
 	.test.gokrb5 = TEST.GOKRB5
 
 	test.gokrb5 = TEST.GOKRB5
- 
+
 	.example.com = EXAMPLE.COM
 	hostname1.example.com = EXAMPLE.COM
 	hostname2.example.com = TEST.GOKRB5
@@ -423,7 +423,7 @@ const (
  .test.gokrb5 = TEST.GOKRB5
 
  test.gokrb5 = TEST.GOKRB5
- 
+
   .example.com = EXAMPLE.COM
  hostname1.example.com = EXAMPLE.COM
  hostname2.example.com = TEST.GOKRB5
