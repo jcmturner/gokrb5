@@ -4,6 +4,7 @@ package config
 import (
 	"bufio"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -16,7 +17,7 @@ import (
 	"time"
 
 	"github.com/jcmturner/gofork/encoding/asn1"
-	"gopkg.in/jcmturner/gokrb5.v7/iana/etypeID"
+	"github.com/jcmturner/gokrb5/v9/iana/etypeID"
 )
 
 // Config represents the KRB5 configuration.
@@ -32,8 +33,8 @@ type Config struct {
 // WeakETypeList is a list of encryption types that have been deemed weak.
 const WeakETypeList = "des-cbc-crc des-cbc-md4 des-cbc-md5 des-cbc-raw des3-cbc-raw des-hmac-sha1 arcfour-hmac-exp rc4-hmac-exp arcfour-hmac-md5-exp des"
 
-// NewConfig creates a new config struct instance.
-func NewConfig() *Config {
+// New creates a new config struct instance.
+func New() *Config {
 	d := make(DomainRealm)
 	return &Config{
 		LibDefaults: newLibDefaults(),
@@ -56,7 +57,7 @@ type LibDefaults struct {
 	DefaultTktEnctypes      []string //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
 	DefaultTGSEnctypeIDs    []int32  //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
 	DefaultTktEnctypeIDs    []int32  //default aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 des3-cbc-sha1 arcfour-hmac-md5 camellia256-cts-cmac camellia128-cts-cmac des-cbc-crc des-cbc-md5 des-cbc-md4
-	DNSCanonicalizeHostname bool     //default true
+	DNSCanonicalizeHostname int      //default true
 	DNSLookupKDC            bool     //default false
 	DNSLookupRealm          bool
 	ExtraAddresses          []net.IP       //Not implementing yet
@@ -82,6 +83,12 @@ type LibDefaults struct {
 	VerifyAPReqNofail     bool          //default false
 }
 
+const (
+	DNSCanonicalizeHostnameFalse    = iota
+	DNSCanonicalizeHostnameTrue     = iota
+	DNSCanonicalizeHostnameFallback = iota
+)
+
 // Create a new LibDefaults struct.
 func newLibDefaults() LibDefaults {
 	uid := "0"
@@ -94,14 +101,14 @@ func newLibDefaults() LibDefaults {
 	opts := asn1.BitString{}
 	opts.Bytes, _ = hex.DecodeString("00000010")
 	opts.BitLength = len(opts.Bytes) * 8
-	return LibDefaults{
+	l := LibDefaults{
 		CCacheType:              4,
 		Clockskew:               time.Duration(300) * time.Second,
 		DefaultClientKeytabName: fmt.Sprintf("/usr/local/var/krb5/user/%s/client.keytab", uid),
 		DefaultKeytabName:       "/etc/krb5.keytab",
 		DefaultTGSEnctypes:      []string{"aes256-cts-hmac-sha1-96", "aes128-cts-hmac-sha1-96", "des3-cbc-sha1", "arcfour-hmac-md5", "camellia256-cts-cmac", "camellia128-cts-cmac", "des-cbc-crc", "des-cbc-md5", "des-cbc-md4"},
 		DefaultTktEnctypes:      []string{"aes256-cts-hmac-sha1-96", "aes128-cts-hmac-sha1-96", "des3-cbc-sha1", "arcfour-hmac-md5", "camellia256-cts-cmac", "camellia128-cts-cmac", "des-cbc-crc", "des-cbc-md5", "des-cbc-md4"},
-		DNSCanonicalizeHostname: true,
+		DNSCanonicalizeHostname: DNSCanonicalizeHostnameTrue,
 		K5LoginDirectory:        hdir,
 		KDCDefaultOptions:       opts,
 		KDCTimeSync:             1,
@@ -114,6 +121,10 @@ func newLibDefaults() LibDefaults {
 		UDPPreferenceLimit:      1465,
 		PreferredPreauthTypes:   []int{17, 16, 15, 14},
 	}
+	l.DefaultTGSEnctypeIDs = parseETypes(l.DefaultTGSEnctypes, l.AllowWeakCrypto)
+	l.DefaultTktEnctypeIDs = parseETypes(l.DefaultTktEnctypes, l.AllowWeakCrypto)
+	l.PermittedEnctypeIDs = parseETypes(l.PermittedEnctypes, l.AllowWeakCrypto)
+	return l
 }
 
 // Parse the lines of the [libdefaults] section of the configuration into the LibDefaults struct.
@@ -171,10 +182,17 @@ func (l *LibDefaults) parseLines(lines []string) error {
 			l.DefaultTktEnctypes = strings.Fields(p[1])
 		case "dns_canonicalize_hostname":
 			v, err := parseBoolean(p[1])
-			if err != nil {
-				return InvalidErrorf("libdefaults section line (%s): %v", line, err)
+			if err == nil {
+				if v {
+					l.DNSCanonicalizeHostname = DNSCanonicalizeHostnameTrue
+				} else {
+					l.DNSCanonicalizeHostname = DNSCanonicalizeHostnameFalse
+				}
+			} else if strings.TrimSpace(p[1]) == "fallback" {
+				l.DNSCanonicalizeHostname = DNSCanonicalizeHostnameFallback
+			} else {
+				return InvalidErrorf("libdefaults section line (%s)", line)
 			}
-			l.DNSCanonicalizeHostname = v
 		case "dns_lookup_kdc":
 			v, err := parseBoolean(p[1])
 			if err != nil {
@@ -301,9 +319,6 @@ func (l *LibDefaults) parseLines(lines []string) error {
 				return InvalidErrorf("libdefaults section line (%s): %v", line, err)
 			}
 			l.VerifyAPReqNofail = v
-		default:
-			//Ignore the line
-			continue
 		}
 	}
 	l.DefaultTGSEnctypeIDs = parseETypes(l.DefaultTGSEnctypes, l.AllowWeakCrypto)
@@ -394,9 +409,6 @@ func (r *Realm) parseLines(name string, lines []string) (err error) {
 			appendUntilFinal(&r.KPasswdServer, v, &kpasswdServerFinal)
 		case "master_kdc":
 			appendUntilFinal(&r.MasterKDC, v, &masterKDCFinal)
-		default:
-			//Ignore the line
-			continue
 		}
 	}
 	//default for Kpasswd_server = admin_server:464
@@ -512,7 +524,7 @@ func (c *Config) ResolveRealm(domainName string) string {
 			return r
 		}
 	}
-	return c.LibDefaults.DefaultRealm
+	return ""
 }
 
 // Load the KRB5 configuration from the specified file path.
@@ -523,24 +535,24 @@ func Load(cfgPath string) (*Config, error) {
 	}
 	defer fh.Close()
 	scanner := bufio.NewScanner(fh)
-	return NewConfigFromScanner(scanner)
+	return NewFromScanner(scanner)
 }
 
-// NewConfigFromString creates a new Config struct from a string.
-func NewConfigFromString(s string) (*Config, error) {
+// NewFromString creates a new Config struct from a string.
+func NewFromString(s string) (*Config, error) {
 	reader := strings.NewReader(s)
-	return NewConfigFromReader(reader)
+	return NewFromReader(reader)
 }
 
-// NewConfigFromReader creates a new Config struct from an io.Reader.
-func NewConfigFromReader(r io.Reader) (*Config, error) {
+// NewFromReader creates a new Config struct from an io.Reader.
+func NewFromReader(r io.Reader) (*Config, error) {
 	scanner := bufio.NewScanner(r)
-	return NewConfigFromScanner(scanner)
+	return NewFromScanner(scanner)
 }
 
-// NewConfigFromScanner creates a new Config struct from a bufio.Scanner.
-func NewConfigFromScanner(scanner *bufio.Scanner) (*Config, error) {
-	c := NewConfig()
+// NewFromScanner creates a new Config struct from a bufio.Scanner.
+func NewFromScanner(scanner *bufio.Scanner) (*Config, error) {
+	c := New()
 	var e error
 	sections := make(map[int]string)
 	var sectionLineNum []int
@@ -605,8 +617,6 @@ func NewConfigFromScanner(scanner *bufio.Scanner) (*Config, error) {
 				}
 				e = err
 			}
-		default:
-			continue
 		}
 	}
 	return c, e
@@ -723,4 +733,13 @@ func appendUntilFinal(s *[]string, value string, final *bool) {
 		value = value[:len(value)-1]
 	}
 	*s = append(*s, value)
+}
+
+// JSON return details of the config in a JSON format.
+func (c *Config) JSON() (string, error) {
+	b, err := json.MarshalIndent(c, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return string(b), nil
 }

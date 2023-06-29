@@ -11,11 +11,11 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/jcmturner/gokrb5/v9/iana/nametype"
+	"github.com/jcmturner/gokrb5/v9/test"
+	"github.com/jcmturner/gokrb5/v9/test/testdata"
+	"github.com/jcmturner/gokrb5/v9/types"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v7/iana/nametype"
-	"gopkg.in/jcmturner/gokrb5.v7/test"
-	"gopkg.in/jcmturner/gokrb5.v7/test/testdata"
-	"gopkg.in/jcmturner/gokrb5.v7/types"
 )
 
 const (
@@ -61,7 +61,7 @@ func login() error {
 		return fmt.Errorf("cannot open krb5.conf: %v", err)
 	}
 	defer file.Close()
-	fmt.Fprintf(file, testdata.TEST_KRB5CONF)
+	fmt.Fprintf(file, testdata.KRB5_CONF)
 
 	cmd := exec.Command(kinitCmd, "testuser1@TEST.GOKRB5")
 

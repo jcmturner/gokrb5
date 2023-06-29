@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jcmturner/gokrb5/v9/iana"
+	"github.com/jcmturner/gokrb5/v9/iana/msgtype"
+	"github.com/jcmturner/gokrb5/v9/test/testdata"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v7/iana"
-	"gopkg.in/jcmturner/gokrb5.v7/iana/msgtype"
-	"gopkg.in/jcmturner/gokrb5.v7/test/testdata"
 )
 
 func TestUnmarshalAPRep(t *testing.T) {

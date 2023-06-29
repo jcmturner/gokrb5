@@ -1,9 +1,10 @@
 package credentials
 
 import (
-	"github.com/stretchr/testify/assert"
-	goidentity "gopkg.in/jcmturner/goidentity.v3"
 	"testing"
+
+	"github.com/jcmturner/goidentity/v6"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestImplementsInterface(t *testing.T) {
@@ -11,4 +12,17 @@ func TestImplementsInterface(t *testing.T) {
 	u := new(Credentials)
 	i := new(goidentity.Identity)
 	assert.Implements(t, i, u, "Credentials type does not implement the Identity interface")
+}
+
+func TestCredentials_Marshal(t *testing.T) {
+	var cred Credentials
+	b, err := cred.Marshal()
+	if err != nil {
+		t.Fatalf("could not marshal credetials: %v", err)
+	}
+	var credum Credentials
+	err = credum.Unmarshal(b)
+	if err != nil {
+		t.Fatalf("could not unmarshal credetials: %v", err)
+	}
 }

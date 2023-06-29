@@ -3,8 +3,8 @@ package pac
 import (
 	"bytes"
 
-	"gopkg.in/jcmturner/gokrb5.v7/iana/chksumtype"
-	"gopkg.in/jcmturner/rpc.v1/mstypes"
+	"github.com/jcmturner/gokrb5/v9/iana/chksumtype"
+	"github.com/jcmturner/rpc/v2/mstypes"
 )
 
 /*

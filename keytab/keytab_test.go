@@ -9,13 +9,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jcmturner/gokrb5/v9/iana/etypeID"
+	"github.com/jcmturner/gokrb5/v9/iana/nametype"
+	"github.com/jcmturner/gokrb5/v9/test/testdata"
+	"github.com/jcmturner/gokrb5/v9/types"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v7/test/testdata"
 )
 
 func TestUnmarshal(t *testing.T) {
 	t.Parallel()
-	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER1_TEST_GOKRB5)
 	kt := New()
 	err := kt.Unmarshal(b)
 	if err != nil {
@@ -35,7 +38,7 @@ func TestUnmarshal(t *testing.T) {
 
 func TestMarshal(t *testing.T) {
 	t.Parallel()
-	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER1_TEST_GOKRB5)
 	kt := New()
 	err := kt.Unmarshal(b)
 	if err != nil {
@@ -143,4 +146,106 @@ func TestBadKeytabs(t *testing.T) {
 		parsedKt := new(Keytab)
 		parsedKt.Unmarshal(decodedKt)
 	}
+}
+
+func TestKeytabEntriesUser(t *testing.T) {
+
+	// Load known-good keytab generated with ktutil
+	ktutilb64 := "BQIAAABGAAEAC0VYQU1QTEUuT1JHAAR1c2VyAAAAAV5ePQAfABIAIG6I6ys5Me8XyS54Ck7kIfFBH/WxBOP3W1DdE/ntBPnGAAAAHwAAADYAAQALRVhBTVBMRS5PUkcABHVzZXIAAAABXl49AB8AEQAQm7fVug9VRBJVhEGjHyN3EgAAAB8AAAA2AAEAC0VYQU1QTEUuT1JHAAR1c2VyAAAAAV5ePQAfABcAEBENDFHhRNNvt+T54BL7uIgAAAAf"
+	ktutilbytes, err := base64.StdEncoding.DecodeString(ktutilb64)
+	if err != nil {
+		t.Errorf("Could not parse b64 ktutil keytab: %s", err)
+	}
+	ktutil := new(Keytab)
+	err = ktutil.Unmarshal(ktutilbytes)
+	if err != nil {
+		t.Fatalf("Could not load ktutil-generated keytab: %s", err)
+	}
+
+	// Generate the same keytab with gokrb5
+	var ts time.Time = ktutil.Entries[0].Timestamp
+	var encTypes []int32 = []int32{
+		etypeID.AES256_CTS_HMAC_SHA1_96,
+		etypeID.AES128_CTS_HMAC_SHA1_96,
+		etypeID.RC4_HMAC,
+	}
+
+	kt := New()
+	for _, et := range encTypes {
+		err = kt.AddEntry("user", "EXAMPLE.ORG", "hello123", ts, uint8(31), et)
+		if err != nil {
+			t.Errorf("Error adding entry to keytab: %s", err)
+		}
+	}
+	generated, err := kt.Marshal()
+	if err != nil {
+		t.Errorf("Error marshalling generated keytab: %s", err)
+	}
+
+	// Compare content
+	assert.Equal(t, generated, ktutilbytes, "Service keytab doesn't match ktutil keytab")
+}
+
+func TestKeytabEntriesService(t *testing.T) {
+
+	// Load known-good keytab generated with ktutil
+	ktutilb64 := "BQIAAABXAAIAC0VYQU1QTEUuT1JHAARIVFRQAA93d3cuZXhhbXBsZS5vcmcAAAABXl49ggoAEgAgOCSpM5CdiZQn1+rUtLtt6sTrg5Saw1DXJMai7vDWJ0QAAAAKAAAARwACAAtFWEFNUExFLk9SRwAESFRUUAAPd3d3LmV4YW1wbGUub3JnAAAAAV5ePYIKABEAEDpczoDyER1jscz0RWkThCMAAAAKAAAARwACAAtFWEFNUExFLk9SRwAESFRUUAAPd3d3LmV4YW1wbGUub3JnAAAAAV5ePYIKABcAELP27YfH0Th5rD+GtJkQmXQAAAAK"
+	ktutilbytes, err := base64.StdEncoding.DecodeString(ktutilb64)
+	if err != nil {
+		t.Errorf("Could not parse b64 ktutil keytab: %s", err)
+	}
+	ktutil := new(Keytab)
+	err = ktutil.Unmarshal(ktutilbytes)
+	if err != nil {
+		t.Errorf("Could not load ktutil-generated keytab: %s", err)
+	}
+
+	// Generate the same keytab with gokrb5
+	var ts time.Time = ktutil.Entries[0].Timestamp
+	var encTypes []int32 = []int32{
+		etypeID.AES256_CTS_HMAC_SHA1_96,
+		etypeID.AES128_CTS_HMAC_SHA1_96,
+		etypeID.RC4_HMAC,
+	}
+
+	kt := New()
+	for _, et := range encTypes {
+		err = kt.AddEntry("HTTP/www.example.org", "EXAMPLE.ORG", "hello456", ts, uint8(10), et)
+		if err != nil {
+			t.Errorf("Error adding entry to keytab: %s", err)
+		}
+	}
+	generated, err := kt.Marshal()
+	if err != nil {
+		t.Errorf("Error marshalling generated keytab: %s", err)
+	}
+
+	// Compare content
+	assert.Equal(t, generated, ktutilbytes, "Service keytab doesn't match ktutil keytab")
+}
+
+func TestKeytab_GetEncryptionKey(t *testing.T) {
+	princ := "HTTP/princ.test.gokrb5"
+	realm := "TEST.GOKRB5"
+
+	kt := New()
+	kt.AddEntry(princ, realm, "abcdefg", time.Unix(100, 0), 1, 18)
+	kt.AddEntry(princ, realm, "abcdefg", time.Unix(200, 0), 2, 18)
+	kt.AddEntry(princ, realm, "abcdefg", time.Unix(300, 0), 3, 18)
+	kt.AddEntry(princ, realm, "abcdefg", time.Unix(400, 0), 4, 18)
+	kt.AddEntry(princ, realm, "abcdefg", time.Unix(350, 0), 5, 18)
+	kt.AddEntry("HTTP/other.test.gokrb5", realm, "abcdefg", time.Unix(500, 0), 5, 18)
+
+	pn := types.NewPrincipalName(nametype.KRB_NT_PRINCIPAL, princ)
+
+	_, kvno, err := kt.GetEncryptionKey(pn, realm, 0, 18)
+	if err != nil {
+		t.Error(err)
+	}
+	assert.Equal(t, 4, kvno)
+	_, kvno, err = kt.GetEncryptionKey(pn, realm, 3, 18)
+	if err != nil {
+		t.Error(err)
+	}
+	assert.Equal(t, 3, kvno)
 }

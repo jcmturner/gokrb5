@@ -5,16 +5,16 @@ import (
 	"time"
 
 	"github.com/jcmturner/gofork/encoding/asn1"
-	"gopkg.in/jcmturner/gokrb5.v7/asn1tools"
-	"gopkg.in/jcmturner/gokrb5.v7/crypto"
-	"gopkg.in/jcmturner/gokrb5.v7/iana"
-	"gopkg.in/jcmturner/gokrb5.v7/iana/asnAppTag"
-	"gopkg.in/jcmturner/gokrb5.v7/iana/errorcode"
-	"gopkg.in/jcmturner/gokrb5.v7/iana/keyusage"
-	"gopkg.in/jcmturner/gokrb5.v7/iana/msgtype"
-	"gopkg.in/jcmturner/gokrb5.v7/keytab"
-	"gopkg.in/jcmturner/gokrb5.v7/krberror"
-	"gopkg.in/jcmturner/gokrb5.v7/types"
+	"github.com/jcmturner/gokrb5/v9/asn1tools"
+	"github.com/jcmturner/gokrb5/v9/crypto"
+	"github.com/jcmturner/gokrb5/v9/iana"
+	"github.com/jcmturner/gokrb5/v9/iana/asnAppTag"
+	"github.com/jcmturner/gokrb5/v9/iana/errorcode"
+	"github.com/jcmturner/gokrb5/v9/iana/keyusage"
+	"github.com/jcmturner/gokrb5/v9/iana/msgtype"
+	"github.com/jcmturner/gokrb5/v9/keytab"
+	"github.com/jcmturner/gokrb5/v9/krberror"
+	"github.com/jcmturner/gokrb5/v9/types"
 )
 
 type marshalAPReq struct {
@@ -69,6 +69,7 @@ func encryptAuthenticator(a types.Authenticator, sessionKey types.EncryptionKey,
 }
 
 // DecryptAuthenticator decrypts the Authenticator within the AP_REQ.
+// sessionKey may simply be the key within the decrypted EncPart of the ticket within the AP_REQ.
 func (a *APReq) DecryptAuthenticator(sessionKey types.EncryptionKey) error {
 	usage := authenticatorKeyUsage(a.Ticket.SName)
 	ab, e := crypto.DecryptEncPart(a.EncryptedAuthenticator, sessionKey, uint32(usage))
@@ -139,7 +140,7 @@ func (a *APReq) Marshal() ([]byte, error) {
 
 // Verify an AP_REQ using service's keytab, spn and max acceptable clock skew duration.
 // The service ticket encrypted part and authenticator will be decrypted as part of this operation.
-func (a *APReq) Verify(kt *keytab.Keytab, d time.Duration, cAddr types.HostAddress) (bool, error) {
+func (a *APReq) Verify(kt *keytab.Keytab, d time.Duration, cAddr types.HostAddress, snameOverride *types.PrincipalName) (bool, error) {
 	// Decrypt ticket's encrypted part with service key
 	//TODO decrypt with service's session key from its TGT is use-to-user. Need to figure out how to get TGT.
 	//if types.IsFlagSet(&a.APOptions, flags.APOptionUseSessionKey) {
@@ -153,7 +154,11 @@ func (a *APReq) Verify(kt *keytab.Keytab, d time.Duration, cAddr types.HostAddre
 	//		return false, krberror.Errorf(err, krberror.DecryptingError, "error decrypting encpart of service ticket provided")
 	//	}
 	//}
-	err := a.Ticket.DecryptEncPart(kt, &a.Ticket.SName)
+	sname := &a.Ticket.SName
+	if snameOverride != nil {
+		sname = snameOverride
+	}
+	err := a.Ticket.DecryptEncPart(kt, sname)
 	if err != nil {
 		return false, krberror.Errorf(err, krberror.DecryptingError, "error decrypting encpart of service ticket provided")
 	}

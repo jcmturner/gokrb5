@@ -2,20 +2,21 @@ package service
 
 import (
 	"encoding/hex"
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/jcmturner/gokrb5/v9/client"
+	"github.com/jcmturner/gokrb5/v9/config"
+	"github.com/jcmturner/gokrb5/v9/credentials"
+	"github.com/jcmturner/gokrb5/v9/iana/errorcode"
+	"github.com/jcmturner/gokrb5/v9/iana/flags"
+	"github.com/jcmturner/gokrb5/v9/iana/nametype"
+	"github.com/jcmturner/gokrb5/v9/keytab"
+	"github.com/jcmturner/gokrb5/v9/messages"
+	"github.com/jcmturner/gokrb5/v9/test/testdata"
+	"github.com/jcmturner/gokrb5/v9/types"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v7/client"
-	"gopkg.in/jcmturner/gokrb5.v7/config"
-	"gopkg.in/jcmturner/gokrb5.v7/credentials"
-	"gopkg.in/jcmturner/gokrb5.v7/iana/errorcode"
-	"gopkg.in/jcmturner/gokrb5.v7/iana/flags"
-	"gopkg.in/jcmturner/gokrb5.v7/iana/nametype"
-	"gopkg.in/jcmturner/gokrb5.v7/keytab"
-	"gopkg.in/jcmturner/gokrb5.v7/messages"
-	"gopkg.in/jcmturner/gokrb5.v7/test/testdata"
-	"gopkg.in/jcmturner/gokrb5.v7/types"
 )
 
 func TestVerifyAPREQ(t *testing.T) {
@@ -54,9 +55,54 @@ func TestVerifyAPREQ(t *testing.T) {
 
 	h, _ := types.GetHostAddress("127.0.0.1:1234")
 	s := NewSettings(kt, ClientAddress(h))
-	ok, _, err := VerifyAPREQ(APReq, s)
+	ok, _, err := VerifyAPREQ(&APReq, s)
 	if !ok || err != nil {
 		t.Fatalf("Validation of AP_REQ failed when it should not have: %v", err)
+	}
+}
+
+func TestVerifyAPREQWithPrincipalOverride(t *testing.T) {
+	t.Parallel()
+	cl := getClient()
+	sname := types.PrincipalName{
+		NameType:   nametype.KRB_NT_PRINCIPAL,
+		NameString: []string{"HTTP", "host.test.gokrb5"},
+	}
+	b, _ := hex.DecodeString(testdata.HTTP_KEYTAB)
+	kt := keytab.New()
+	kt.Unmarshal(b)
+	st := time.Now().UTC()
+	tkt, sessionKey, err := messages.NewTicket(cl.Credentials.CName(), cl.Credentials.Domain(),
+		sname, "TEST.GOKRB5",
+		types.NewKrbFlags(),
+		kt,
+		18,
+		1,
+		st,
+		st,
+		st.Add(time.Duration(24)*time.Hour),
+		st.Add(time.Duration(48)*time.Hour),
+	)
+	if err != nil {
+		t.Fatalf("Error getting test ticket: %v", err)
+	}
+	apReq, err := messages.NewAPReq(
+		tkt,
+		sessionKey,
+		newTestAuthenticator(*cl.Credentials),
+	)
+	if err != nil {
+		t.Fatalf("Error getting test AP_REQ: %v", err)
+	}
+
+	h, _ := types.GetHostAddress("127.0.0.1:1234")
+	s := NewSettings(kt, ClientAddress(h), KeytabPrincipal("foo"))
+	ok, _, err := VerifyAPREQ(&apReq, s)
+	if ok || err == nil {
+		t.Fatalf("Validation of AP_REQ should have failed")
+	}
+	if !strings.Contains(err.Error(), "Looking for \"foo\" realm") {
+		t.Fatalf("Looking for wrong entity: %s", err.Error())
 	}
 }
 
@@ -100,7 +146,7 @@ func TestVerifyAPREQ_KRB_AP_ERR_BADMATCH(t *testing.T) {
 	}
 	h, _ := types.GetHostAddress("127.0.0.1:1234")
 	s := NewSettings(kt, ClientAddress(h))
-	ok, _, err := VerifyAPREQ(APReq, s)
+	ok, _, err := VerifyAPREQ(&APReq, s)
 	if ok || err == nil {
 		t.Fatal("Validation of AP_REQ passed when it should not have")
 	}
@@ -149,7 +195,7 @@ func TestVerifyAPREQ_LargeClockSkew(t *testing.T) {
 
 	h, _ := types.GetHostAddress("127.0.0.1:1234")
 	s := NewSettings(kt, ClientAddress(h))
-	ok, _, err := VerifyAPREQ(APReq, s)
+	ok, _, err := VerifyAPREQ(&APReq, s)
 	if ok || err == nil {
 		t.Fatal("Validation of AP_REQ passed when it should not have")
 	}
@@ -196,12 +242,12 @@ func TestVerifyAPREQ_Replay(t *testing.T) {
 
 	h, _ := types.GetHostAddress("127.0.0.1:1234")
 	s := NewSettings(kt, ClientAddress(h))
-	ok, _, err := VerifyAPREQ(APReq, s)
+	ok, _, err := VerifyAPREQ(&APReq, s)
 	if !ok || err != nil {
 		t.Fatalf("Validation of AP_REQ failed when it should not have: %v", err)
 	}
 	// Replay
-	ok, _, err = VerifyAPREQ(APReq, s)
+	ok, _, err = VerifyAPREQ(&APReq, s)
 	if ok || err == nil {
 		t.Fatal("Validation of AP_REQ passed when it should not have")
 	}
@@ -246,7 +292,7 @@ func TestVerifyAPREQ_FutureTicket(t *testing.T) {
 
 	h, _ := types.GetHostAddress("127.0.0.1:1234")
 	s := NewSettings(kt, ClientAddress(h))
-	ok, _, err := VerifyAPREQ(APReq, s)
+	ok, _, err := VerifyAPREQ(&APReq, s)
 	if ok || err == nil {
 		t.Fatal("Validation of AP_REQ passed when it should not have")
 	}
@@ -295,7 +341,7 @@ func TestVerifyAPREQ_InvalidTicket(t *testing.T) {
 
 	h, _ := types.GetHostAddress("127.0.0.1:1234")
 	s := NewSettings(kt, ClientAddress(h))
-	ok, _, err := VerifyAPREQ(APReq, s)
+	ok, _, err := VerifyAPREQ(&APReq, s)
 	if ok || err == nil {
 		t.Fatal("Validation of AP_REQ passed when it should not have")
 	}
@@ -343,7 +389,7 @@ func TestVerifyAPREQ_ExpiredTicket(t *testing.T) {
 
 	h, _ := types.GetHostAddress("127.0.0.1:1234")
 	s := NewSettings(kt, ClientAddress(h))
-	ok, _, err := VerifyAPREQ(APReq, s)
+	ok, _, err := VerifyAPREQ(&APReq, s)
 	if ok || err == nil {
 		t.Fatal("Validation of AP_REQ passed when it should not have")
 	}
@@ -365,10 +411,10 @@ func newTestAuthenticator(creds credentials.Credentials) types.Authenticator {
 }
 
 func getClient() *client.Client {
-	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER1_TEST_GOKRB5)
 	kt := keytab.New()
 	kt.Unmarshal(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
-	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
+	c, _ := config.NewFromString(testdata.KRB5_CONF)
+	cl := client.NewWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 	return cl
 }

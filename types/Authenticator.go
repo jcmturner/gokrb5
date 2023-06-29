@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/jcmturner/gofork/encoding/asn1"
-	"gopkg.in/jcmturner/gokrb5.v7/asn1tools"
-	"gopkg.in/jcmturner/gokrb5.v7/iana"
-	"gopkg.in/jcmturner/gokrb5.v7/iana/asnAppTag"
+	"github.com/jcmturner/gokrb5/v9/asn1tools"
+	"github.com/jcmturner/gokrb5/v9/iana"
+	"github.com/jcmturner/gokrb5/v9/iana/asnAppTag"
 )
 
 // Authenticator - A record containing information that can be shown to have been recently generated using the session
@@ -43,7 +43,7 @@ func NewAuthenticator(realm string, cname PrincipalName) (Authenticator, error) 
 		Cksum:     Checksum{},
 		Cusec:     int((t.UnixNano() / int64(time.Microsecond)) - (t.Unix() * 1e6)),
 		CTime:     t,
-		SeqNumber: seq.Int64(),
+		SeqNumber: seq.Int64() & 0x3fffffff,
 	}, nil
 }
 
@@ -53,7 +53,7 @@ func (a *Authenticator) GenerateSeqNumberAndSubKey(keyType int32, keySize int) e
 	if err != nil {
 		return err
 	}
-	a.SeqNumber = seq.Int64()
+	a.SeqNumber = seq.Int64() & 0x3fffffff
 	//Generate subkey value
 	sk := make([]byte, keySize, keySize)
 	rand.Read(sk)

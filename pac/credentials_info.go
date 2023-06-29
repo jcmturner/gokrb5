@@ -5,11 +5,11 @@ import (
 	"errors"
 	"fmt"
 
-	"gopkg.in/jcmturner/gokrb5.v7/crypto"
-	"gopkg.in/jcmturner/gokrb5.v7/iana/keyusage"
-	"gopkg.in/jcmturner/gokrb5.v7/types"
-	"gopkg.in/jcmturner/rpc.v1/mstypes"
-	"gopkg.in/jcmturner/rpc.v1/ndr"
+	"github.com/jcmturner/gokrb5/v9/crypto"
+	"github.com/jcmturner/gokrb5/v9/iana/keyusage"
+	"github.com/jcmturner/gokrb5/v9/types"
+	"github.com/jcmturner/rpc/v2/mstypes"
+	"github.com/jcmturner/rpc/v2/ndr"
 )
 
 // https://msdn.microsoft.com/en-us/library/cc237931.aspx
@@ -41,7 +41,7 @@ func (c *CredentialsInfo) Unmarshal(b []byte, k types.EncryptionKey) (err error)
 	}
 	c.PACCredentialDataEncrypted, err = r.ReadBytes(len(b) - 8)
 	if err != nil {
-		err = fmt.Errorf("error reading credentials info: %v", err)
+		err = fmt.Errorf("error reading PAC Credetials Data: %v", err)
 		return
 	}
 

@@ -1,45 +1,45 @@
+// Package examples provides simple examples of gokrb5 use.
 //go:build examples
 // +build examples
 
-// Package examples provides simple examples of gokrb5 use.
 package main
 
 import (
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
 
-	goidentity "gopkg.in/jcmturner/goidentity.v3"
-	"gopkg.in/jcmturner/gokrb5.v7/client"
-	"gopkg.in/jcmturner/gokrb5.v7/config"
-	"gopkg.in/jcmturner/gokrb5.v7/keytab"
-	"gopkg.in/jcmturner/gokrb5.v7/service"
-	"gopkg.in/jcmturner/gokrb5.v7/spnego"
-	"gopkg.in/jcmturner/gokrb5.v7/test/testdata"
+	"github.com/jcmturner/goidentity/v6"
+	"github.com/jcmturner/gokrb5/v9/client"
+	"github.com/jcmturner/gokrb5/v9/config"
+	"github.com/jcmturner/gokrb5/v9/keytab"
+	"github.com/jcmturner/gokrb5/v9/service"
+	"github.com/jcmturner/gokrb5/v9/spnego"
+	"github.com/jcmturner/gokrb5/v9/test/testdata"
 )
 
 func main() {
 	s := httpServer()
 	defer s.Close()
 
-	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER1_TEST_GOKRB5)
 	kt := keytab.New()
 	kt.Unmarshal(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	c, _ := config.NewFromString(testdata.KRB5_CONF)
 	c.LibDefaults.NoAddresses = true
-	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
+	cl := client.NewWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 	httpRequest(s.URL, cl)
 
-	b, _ = hex.DecodeString(testdata.TESTUSER2_KEYTAB)
+	b, _ = hex.DecodeString(testdata.KEYTAB_TESTUSER2_TEST_GOKRB5)
 	kt = keytab.New()
 	kt.Unmarshal(b)
-	c, _ = config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	c, _ = config.NewFromString(testdata.KRB5_CONF)
 	c.LibDefaults.NoAddresses = true
-	cl = client.NewClientWithKeytab("testuser2", "TEST.GOKRB5", kt, c)
+	cl = client.NewWithKeytab("testuser2", "TEST.GOKRB5", kt, c)
 	httpRequest(s.URL, cl)
 }
 
@@ -60,7 +60,7 @@ func httpRequest(url string, cl *client.Client) {
 		l.Printf("Request error: %v\n", err)
 	}
 	fmt.Fprintf(os.Stdout, "Response Code: %v\n", httpResp.StatusCode)
-	content, _ := ioutil.ReadAll(httpResp.Body)
+	content, _ := io.ReadAll(httpResp.Body)
 	fmt.Fprintf(os.Stdout, "Response Body:\n%s\n", content)
 }
 
@@ -75,14 +75,11 @@ func httpServer() *httptest.Server {
 }
 
 func testAppHandler(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	creds := goidentity.FromHTTPRequestContext(r)
 	fmt.Fprint(w, "<html>\n<p><h1>TEST.GOKRB5 Handler</h1></p>\n")
-	if validuser, ok := ctx.Value(spnego.CTXKeyAuthenticated).(bool); ok && validuser {
-		if creds, ok := ctx.Value(spnego.CTXKeyCredentials).(goidentity.Identity); ok {
-			fmt.Fprintf(w, "<ul><li>Authenticed user: %s</li>\n", creds.UserName())
-			fmt.Fprintf(w, "<li>User's realm: %s</li></ul>\n", creds.Domain())
-		}
-
+	if creds != nil && creds.Authenticated() {
+		fmt.Fprintf(w, "<ul><li>Authenticed user: %s</li>\n", creds.UserName())
+		fmt.Fprintf(w, "<li>User's realm: %s</li></ul>\n", creds.Domain())
 	} else {
 		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprint(w, "Authentication failed")

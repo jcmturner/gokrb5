@@ -14,15 +14,15 @@ import (
 	"time"
 
 	"fmt"
+	"github.com/jcmturner/gokrb5/v9/client"
+	"github.com/jcmturner/gokrb5/v9/config"
+	"github.com/jcmturner/gokrb5/v9/credentials"
+	"github.com/jcmturner/gokrb5/v9/iana/etypeID"
+	"github.com/jcmturner/gokrb5/v9/keytab"
+	"github.com/jcmturner/gokrb5/v9/spnego"
+	"github.com/jcmturner/gokrb5/v9/test"
+	"github.com/jcmturner/gokrb5/v9/test/testdata"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v7/client"
-	"gopkg.in/jcmturner/gokrb5.v7/config"
-	"gopkg.in/jcmturner/gokrb5.v7/credentials"
-	"gopkg.in/jcmturner/gokrb5.v7/iana/etypeID"
-	"gopkg.in/jcmturner/gokrb5.v7/keytab"
-	"gopkg.in/jcmturner/gokrb5.v7/spnego"
-	"gopkg.in/jcmturner/gokrb5.v7/test"
-	"gopkg.in/jcmturner/gokrb5.v7/test/testdata"
 	"strings"
 	"sync"
 )
@@ -32,20 +32,20 @@ func TestClient_SuccessfulLogin_Keytab(t *testing.T) {
 
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
-		addr = testdata.TEST_KDC_ADDR
+		addr = testdata.KDC_IP_TEST_GOKRB5
 	}
-	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER1_TEST_GOKRB5)
 	kt := keytab.New()
 	kt.Unmarshal(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	c, _ := config.NewFromString(testdata.KRB5_CONF)
 	var tests = []string{
-		testdata.TEST_KDC,
-		testdata.TEST_KDC_OLD,
-		testdata.TEST_KDC_LASTEST,
+		testdata.KDC_PORT_TEST_GOKRB5,
+		testdata.KDC_PORT_TEST_GOKRB5_OLD,
+		testdata.KDC_PORT_TEST_GOKRB5_LASTEST,
 	}
 	for _, tst := range tests {
 		c.Realms[0].KDC = []string{addr + ":" + tst}
-		cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
+		cl := client.NewWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 
 		err := cl.Login()
 		if err != nil {
@@ -59,17 +59,17 @@ func TestClient_SuccessfulLogin_Password(t *testing.T) {
 
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
-		addr = testdata.TEST_KDC_ADDR
+		addr = testdata.KDC_IP_TEST_GOKRB5
 	}
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	c, _ := config.NewFromString(testdata.KRB5_CONF)
 	var tests = []string{
-		testdata.TEST_KDC,
-		testdata.TEST_KDC_OLD,
-		testdata.TEST_KDC_LASTEST,
+		testdata.KDC_PORT_TEST_GOKRB5,
+		testdata.KDC_PORT_TEST_GOKRB5_OLD,
+		testdata.KDC_PORT_TEST_GOKRB5_LASTEST,
 	}
 	for _, tst := range tests {
 		c.Realms[0].KDC = []string{addr + ":" + tst}
-		cl := client.NewClientWithPassword("testuser1", "TEST.GOKRB5", "passwordvalue", c)
+		cl := client.NewWithPassword("testuser1", "TEST.GOKRB5", "passwordvalue", c)
 
 		err := cl.Login()
 		if err != nil {
@@ -81,17 +81,17 @@ func TestClient_SuccessfulLogin_Password(t *testing.T) {
 func TestClient_SuccessfulLogin_TCPOnly(t *testing.T) {
 	test.Integration(t)
 
-	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER1_TEST_GOKRB5)
 	kt := keytab.New()
 	kt.Unmarshal(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	c, _ := config.NewFromString(testdata.KRB5_CONF)
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
-		addr = testdata.TEST_KDC_ADDR
+		addr = testdata.KDC_IP_TEST_GOKRB5
 	}
-	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
+	c.Realms[0].KDC = []string{addr + ":" + testdata.KDC_PORT_TEST_GOKRB5}
 	c.LibDefaults.UDPPreferenceLimit = 1
-	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
+	cl := client.NewWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 
 	err := cl.Login()
 	if err != nil {
@@ -102,15 +102,15 @@ func TestClient_SuccessfulLogin_TCPOnly(t *testing.T) {
 func TestClient_ASExchange_TGSExchange_EncTypes_Keytab(t *testing.T) {
 	test.Integration(t)
 
-	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER1_TEST_GOKRB5)
 	kt := keytab.New()
 	kt.Unmarshal(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	c, _ := config.NewFromString(testdata.KRB5_CONF)
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
-		addr = testdata.TEST_KDC_ADDR
+		addr = testdata.KDC_IP_TEST_GOKRB5
 	}
-	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC_LASTEST}
+	c.Realms[0].KDC = []string{addr + ":" + testdata.KDC_PORT_TEST_GOKRB5_LASTEST}
 	var tests = []string{
 		"des3-cbc-sha1-kd",
 		"aes128-cts-hmac-sha1-96",
@@ -124,7 +124,7 @@ func TestClient_ASExchange_TGSExchange_EncTypes_Keytab(t *testing.T) {
 		c.LibDefaults.DefaultTktEnctypeIDs = []int32{etypeID.ETypesByName[tst]}
 		c.LibDefaults.DefaultTGSEnctypes = []string{tst}
 		c.LibDefaults.DefaultTGSEnctypeIDs = []int32{etypeID.ETypesByName[tst]}
-		cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
+		cl := client.NewWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 
 		err := cl.Login()
 		if err != nil {
@@ -142,12 +142,12 @@ func TestClient_ASExchange_TGSExchange_EncTypes_Keytab(t *testing.T) {
 func TestClient_ASExchange_TGSExchange_EncTypes_Password(t *testing.T) {
 	test.Integration(t)
 
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	c, _ := config.NewFromString(testdata.KRB5_CONF)
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
-		addr = testdata.TEST_KDC_ADDR
+		addr = testdata.KDC_IP_TEST_GOKRB5
 	}
-	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC_LASTEST}
+	c.Realms[0].KDC = []string{addr + ":" + testdata.KDC_PORT_TEST_GOKRB5_LASTEST}
 	var tests = []string{
 		"des3-cbc-sha1-kd",
 		"aes128-cts-hmac-sha1-96",
@@ -161,7 +161,7 @@ func TestClient_ASExchange_TGSExchange_EncTypes_Password(t *testing.T) {
 		c.LibDefaults.DefaultTktEnctypeIDs = []int32{etypeID.ETypesByName[tst]}
 		c.LibDefaults.DefaultTGSEnctypes = []string{tst}
 		c.LibDefaults.DefaultTGSEnctypeIDs = []int32{etypeID.ETypesByName[tst]}
-		cl := client.NewClientWithPassword("testuser1", "TEST.GOKRB5", "passwordvalue", c)
+		cl := client.NewWithPassword("testuser1", "TEST.GOKRB5", "passwordvalue", c)
 
 		err := cl.Login()
 		if err != nil {
@@ -179,16 +179,16 @@ func TestClient_ASExchange_TGSExchange_EncTypes_Password(t *testing.T) {
 func TestClient_FailedLogin(t *testing.T) {
 	test.Integration(t)
 
-	b, _ := hex.DecodeString(testdata.TESTUSER1_WRONGPASSWD)
+	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER1_TEST_GOKRB5_WRONGPASSWD)
 	kt := keytab.New()
 	kt.Unmarshal(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	c, _ := config.NewFromString(testdata.KRB5_CONF)
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
-		addr = testdata.TEST_KDC_ADDR
+		addr = testdata.KDC_IP_TEST_GOKRB5
 	}
-	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
-	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
+	c.Realms[0].KDC = []string{addr + ":" + testdata.KDC_PORT_TEST_GOKRB5}
+	cl := client.NewWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 
 	err := cl.Login()
 	if err == nil {
@@ -199,16 +199,16 @@ func TestClient_FailedLogin(t *testing.T) {
 func TestClient_SuccessfulLogin_UserRequiringPreAuth(t *testing.T) {
 	test.Integration(t)
 
-	b, _ := hex.DecodeString(testdata.TESTUSER2_KEYTAB)
+	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER2_TEST_GOKRB5)
 	kt := keytab.New()
 	kt.Unmarshal(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	c, _ := config.NewFromString(testdata.KRB5_CONF)
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
-		addr = testdata.TEST_KDC_ADDR
+		addr = testdata.KDC_IP_TEST_GOKRB5
 	}
-	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
-	cl := client.NewClientWithKeytab("testuser2", "TEST.GOKRB5", kt, c)
+	c.Realms[0].KDC = []string{addr + ":" + testdata.KDC_PORT_TEST_GOKRB5}
+	cl := client.NewWithKeytab("testuser2", "TEST.GOKRB5", kt, c)
 
 	err := cl.Login()
 	if err != nil {
@@ -219,17 +219,17 @@ func TestClient_SuccessfulLogin_UserRequiringPreAuth(t *testing.T) {
 func TestClient_SuccessfulLogin_UserRequiringPreAuth_TCPOnly(t *testing.T) {
 	test.Integration(t)
 
-	b, _ := hex.DecodeString(testdata.TESTUSER2_KEYTAB)
+	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER2_TEST_GOKRB5)
 	kt := keytab.New()
 	kt.Unmarshal(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	c, _ := config.NewFromString(testdata.KRB5_CONF)
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
-		addr = testdata.TEST_KDC_ADDR
+		addr = testdata.KDC_IP_TEST_GOKRB5
 	}
-	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
+	c.Realms[0].KDC = []string{addr + ":" + testdata.KDC_PORT_TEST_GOKRB5}
 	c.LibDefaults.UDPPreferenceLimit = 1
-	cl := client.NewClientWithKeytab("testuser2", "TEST.GOKRB5", kt, c)
+	cl := client.NewWithKeytab("testuser2", "TEST.GOKRB5", kt, c)
 
 	err := cl.Login()
 	if err != nil {
@@ -240,12 +240,12 @@ func TestClient_SuccessfulLogin_UserRequiringPreAuth_TCPOnly(t *testing.T) {
 func TestClient_NetworkTimeout(t *testing.T) {
 	test.Integration(t)
 
-	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER1_TEST_GOKRB5)
 	kt := keytab.New()
 	kt.Unmarshal(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
-	c.Realms[0].KDC = []string{testdata.TEST_KDC_BADADDR + ":88"}
-	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
+	c, _ := config.NewFromString(testdata.KRB5_CONF)
+	c.Realms[0].KDC = []string{testdata.KDC_IP_TEST_GOKRB5_BADADDR + ":88"}
+	cl := client.NewWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 
 	err := cl.Login()
 	if err == nil {
@@ -253,19 +253,84 @@ func TestClient_NetworkTimeout(t *testing.T) {
 	}
 }
 
+func TestClient_NetworkTryNextKDC(t *testing.T) {
+	test.Integration(t)
+
+	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER1_TEST_GOKRB5)
+	kt := keytab.New()
+	kt.Unmarshal(b)
+	c, _ := config.NewFromString(testdata.KRB5_CONF)
+	addr := os.Getenv("TEST_KDC_ADDR")
+	if addr == "" {
+		addr = testdata.KDC_IP_TEST_GOKRB5
+	}
+	// Two out fo three times this should fail the first time.
+	// So will run login twice to expect at least once the first time it will be to a bad KDC
+	c.Realms[0].KDC = []string{testdata.KDC_IP_TEST_GOKRB5_BADADDR + ":88",
+		testdata.KDC_IP_TEST_GOKRB5_BADADDR + ":88",
+		addr + ":" + testdata.KDC_PORT_TEST_GOKRB5,
+	}
+	cl := client.NewWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
+
+	err := cl.Login()
+	if err != nil {
+		t.Fatal("login failed")
+	}
+	err = cl.Login()
+	if err != nil {
+		t.Fatal("login failed")
+	}
+}
+
 func TestClient_GetServiceTicket(t *testing.T) {
 	test.Integration(t)
 
-	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER1_TEST_GOKRB5)
 	kt := keytab.New()
 	kt.Unmarshal(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	c, _ := config.NewFromString(testdata.KRB5_CONF)
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
-		addr = testdata.TEST_KDC_ADDR
+		addr = testdata.KDC_IP_TEST_GOKRB5
 	}
-	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
-	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
+	c.Realms[0].KDC = []string{addr + ":" + testdata.KDC_PORT_TEST_GOKRB5}
+	cl := client.NewWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
+
+	err := cl.Login()
+	if err != nil {
+		t.Fatalf("error on login: %v\n", err)
+	}
+	spn := "HTTP/host.test.gokrb5"
+	tkt, key, err := cl.GetServiceTicket(spn)
+	if err != nil {
+		t.Fatalf("error getting service ticket: %v\n", err)
+	}
+	assert.Equal(t, spn, tkt.SName.PrincipalNameString())
+	assert.Equal(t, int32(18), key.KeyType)
+
+	//Check cache use - should get the same values back again
+	tkt2, key2, err := cl.GetServiceTicket(spn)
+	if err != nil {
+		t.Fatalf("error getting service ticket: %v\n", err)
+	}
+	assert.Equal(t, tkt.EncPart.Cipher, tkt2.EncPart.Cipher)
+	assert.Equal(t, key.KeyValue, key2.KeyValue)
+}
+
+func TestClient_GetServiceTicket_CanonicalizeTrue(t *testing.T) {
+	test.Integration(t)
+
+	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER1_TEST_GOKRB5)
+	kt := keytab.New()
+	kt.Unmarshal(b)
+	c, _ := config.NewFromString(testdata.KRB5_CONF)
+	c.LibDefaults.Canonicalize = true
+	addr := os.Getenv("TEST_KDC_ADDR")
+	if addr == "" {
+		addr = testdata.KDC_IP_TEST_GOKRB5
+	}
+	c.Realms[0].KDC = []string{addr + ":" + testdata.KDC_PORT_TEST_GOKRB5}
+	cl := client.NewWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 
 	err := cl.Login()
 	if err != nil {
@@ -291,16 +356,16 @@ func TestClient_GetServiceTicket(t *testing.T) {
 func TestClient_GetServiceTicket_InvalidSPN(t *testing.T) {
 	test.Integration(t)
 
-	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER1_TEST_GOKRB5)
 	kt := keytab.New()
 	kt.Unmarshal(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	c, _ := config.NewFromString(testdata.KRB5_CONF)
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
-		addr = testdata.TEST_KDC_ADDR
+		addr = testdata.KDC_IP_TEST_GOKRB5
 	}
-	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
-	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
+	c.Realms[0].KDC = []string{addr + ":" + testdata.KDC_PORT_TEST_GOKRB5}
+	cl := client.NewWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 
 	err := cl.Login()
 	if err != nil {
@@ -315,16 +380,16 @@ func TestClient_GetServiceTicket_InvalidSPN(t *testing.T) {
 func TestClient_GetServiceTicket_OlderKDC(t *testing.T) {
 	test.Integration(t)
 
-	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER1_TEST_GOKRB5)
 	kt := keytab.New()
 	kt.Unmarshal(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	c, _ := config.NewFromString(testdata.KRB5_CONF)
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
-		addr = testdata.TEST_KDC_ADDR
+		addr = testdata.KDC_IP_TEST_GOKRB5
 	}
-	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC_OLD}
-	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
+	c.Realms[0].KDC = []string{addr + ":" + testdata.KDC_PORT_TEST_GOKRB5_OLD}
+	cl := client.NewWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 
 	err := cl.Login()
 	if err != nil {
@@ -342,16 +407,16 @@ func TestClient_GetServiceTicket_OlderKDC(t *testing.T) {
 func TestMultiThreadedClientUse(t *testing.T) {
 	test.Integration(t)
 
-	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER1_TEST_GOKRB5)
 	kt := keytab.New()
 	kt.Unmarshal(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	c, _ := config.NewFromString(testdata.KRB5_CONF)
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
-		addr = testdata.TEST_KDC_ADDR
+		addr = testdata.KDC_IP_TEST_GOKRB5
 	}
-	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
-	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
+	c.Realms[0].KDC = []string{addr + ":" + testdata.KDC_PORT_TEST_GOKRB5}
+	cl := client.NewWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 
 	var wg sync.WaitGroup
 	wg.Add(5)
@@ -407,7 +472,7 @@ func spnegoGet(cl *client.Client) error {
 	return nil
 }
 
-func TestNewClientFromCCache(t *testing.T) {
+func TestNewFromCCache(t *testing.T) {
 	test.Integration(t)
 
 	b, err := hex.DecodeString(testdata.CCACHE_TEST)
@@ -419,13 +484,13 @@ func TestNewClientFromCCache(t *testing.T) {
 	if err != nil {
 		t.Fatal("error getting test CCache")
 	}
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	c, _ := config.NewFromString(testdata.KRB5_CONF)
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
-		addr = testdata.TEST_KDC_ADDR
+		addr = testdata.KDC_IP_TEST_GOKRB5
 	}
-	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
-	cl, err := client.NewClientFromCCache(cc, c)
+	c.Realms[0].KDC = []string{addr + ":" + testdata.KDC_PORT_TEST_GOKRB5}
+	cl, err := client.NewFromCCache(cc, c)
 	if err != nil {
 		t.Fatalf("error creating client from CCache: %v", err)
 	}
@@ -439,26 +504,26 @@ func TestNewClientFromCCache(t *testing.T) {
 func TestClient_GetServiceTicket_Trusted_Resource_Domain(t *testing.T) {
 	test.Integration(t)
 
-	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER1_TEST_GOKRB5)
 	kt := keytab.New()
 	kt.Unmarshal(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	c, _ := config.NewFromString(testdata.KRB5_CONF)
 
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
-		addr = testdata.TEST_KDC_ADDR
+		addr = testdata.KDC_IP_TEST_GOKRB5
 	}
 	for i, r := range c.Realms {
 		if r.Realm == "TEST.GOKRB5" {
-			c.Realms[i].KDC = []string{addr + ":" + testdata.TEST_KDC}
+			c.Realms[i].KDC = []string{addr + ":" + testdata.KDC_PORT_TEST_GOKRB5}
 		}
 		if r.Realm == "RESDOM.GOKRB5" {
-			c.Realms[i].KDC = []string{addr + ":" + testdata.TEST_KDC_RESDOM}
+			c.Realms[i].KDC = []string{addr + ":" + testdata.KDC_PORT_TEST_GOKRB5_RESDOM}
 		}
 	}
 
 	c.LibDefaults.DefaultRealm = "TEST.GOKRB5"
-	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
+	cl := client.NewWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 	c.LibDefaults.DefaultTktEnctypes = []string{"aes256-cts-hmac-sha1-96"}
 	c.LibDefaults.DefaultTktEnctypeIDs = []int32{etypeID.ETypesByName["aes256-cts-hmac-sha1-96"]}
 	c.LibDefaults.DefaultTGSEnctypes = []string{"aes256-cts-hmac-sha1-96"}
@@ -477,7 +542,7 @@ func TestClient_GetServiceTicket_Trusted_Resource_Domain(t *testing.T) {
 	assert.Equal(t, spn, tkt.SName.PrincipalNameString())
 	assert.Equal(t, etypeID.ETypesByName["aes256-cts-hmac-sha1-96"], key.KeyType)
 
-	b, _ = hex.DecodeString(testdata.SYSHTTP_RESDOM_KEYTAB)
+	b, _ = hex.DecodeString(testdata.KEYTAB_SYSHTTP_RESDOM_GOKRB5)
 	skt := keytab.New()
 	skt.Unmarshal(b)
 	err = tkt.DecryptEncPart(skt, nil)
@@ -498,7 +563,7 @@ func login() error {
 		return fmt.Errorf("cannot open krb5.conf: %v", err)
 	}
 	defer file.Close()
-	fmt.Fprintf(file, testdata.TEST_KRB5CONF)
+	fmt.Fprintf(file, testdata.KRB5_CONF)
 
 	cmd := exec.Command(kinitCmd, "testuser1@TEST.GOKRB5")
 
@@ -559,13 +624,13 @@ func TestGetServiceTicketFromCCacheTGT(t *testing.T) {
 	if err != nil {
 		t.Errorf("error loading CCache: %v", err)
 	}
-	cfg, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	cfg, _ := config.NewFromString(testdata.KRB5_CONF)
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
-		addr = testdata.TEST_KDC_ADDR
+		addr = testdata.KDC_IP_TEST_GOKRB5
 	}
-	cfg.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
-	cl, err := client.NewClientFromCCache(c, cfg)
+	cfg.Realms[0].KDC = []string{addr + ":" + testdata.KDC_PORT_TEST_GOKRB5}
+	cl, err := client.NewFromCCache(c, cfg)
 	if err != nil {
 		t.Fatalf("error generating client from ccache: %v", err)
 	}
@@ -616,8 +681,8 @@ func TestGetServiceTicketFromCCacheWithoutKDC(t *testing.T) {
 	if err != nil {
 		t.Errorf("error loading CCache: %v", err)
 	}
-	cfg, _ := config.NewConfigFromString("...")
-	cl, err := client.NewClientFromCCache(c, cfg)
+	cfg, _ := config.NewFromString("...")
+	cl, err := client.NewFromCCache(c, cfg)
 	if err != nil {
 		t.Fatalf("error generating client from ccache: %v", err)
 	}
@@ -640,17 +705,17 @@ func TestGetServiceTicketFromCCacheWithoutKDC(t *testing.T) {
 func TestClient_ChangePasswd(t *testing.T) {
 	test.Integration(t)
 
-	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER1_TEST_GOKRB5)
 	kt := keytab.New()
 	kt.Unmarshal(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
+	c, _ := config.NewFromString(testdata.KRB5_CONF)
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
-		addr = testdata.TEST_KDC_ADDR
+		addr = testdata.KDC_IP_TEST_GOKRB5
 	}
-	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC}
+	c.Realms[0].KDC = []string{addr + ":" + testdata.KDC_PORT_TEST_GOKRB5}
 	c.Realms[0].KPasswdServer = []string{addr + ":464"}
-	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
+	cl := client.NewWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 
 	ok, err := cl.ChangePasswd("newpassword")
 	if err != nil {
@@ -658,14 +723,14 @@ func TestClient_ChangePasswd(t *testing.T) {
 	}
 	assert.True(t, ok, "password was not changed")
 
-	cl = client.NewClientWithPassword("testuser1", "TEST.GOKRB5", "newpassword", c)
-	ok, err = cl.ChangePasswd(testdata.TESTUSER1_PASSWORD)
+	cl = client.NewWithPassword("testuser1", "TEST.GOKRB5", "newpassword", c)
+	ok, err = cl.ChangePasswd(testdata.TESTUSER_PASSWORD)
 	if err != nil {
 		t.Fatalf("error changing password: %v", err)
 	}
 	assert.True(t, ok, "password was not changed back")
 
-	cl = client.NewClientWithPassword("testuser1", "TEST.GOKRB5", testdata.TESTUSER1_PASSWORD, c)
+	cl = client.NewWithPassword("testuser1", "TEST.GOKRB5", testdata.TESTUSER_PASSWORD, c)
 	err = cl.Login()
 	if err != nil {
 		t.Fatalf("Could not log back in after reverting password: %v", err)
@@ -677,14 +742,14 @@ func TestClient_Destroy(t *testing.T) {
 
 	addr := os.Getenv("TEST_KDC_ADDR")
 	if addr == "" {
-		addr = testdata.TEST_KDC_ADDR
+		addr = testdata.KDC_IP_TEST_GOKRB5
 	}
-	b, _ := hex.DecodeString(testdata.TESTUSER1_KEYTAB)
+	b, _ := hex.DecodeString(testdata.KEYTAB_TESTUSER1_TEST_GOKRB5)
 	kt := keytab.New()
 	kt.Unmarshal(b)
-	c, _ := config.NewConfigFromString(testdata.TEST_KRB5CONF)
-	c.Realms[0].KDC = []string{addr + ":" + testdata.TEST_KDC_SHORTTICKETS}
-	cl := client.NewClientWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
+	c, _ := config.NewFromString(testdata.KRB5_CONF)
+	c.Realms[0].KDC = []string{addr + ":" + testdata.KDC_PORT_TEST_GOKRB5_SHORTTICKETS}
+	cl := client.NewWithKeytab("testuser1", "TEST.GOKRB5", kt, c)
 
 	err := cl.Login()
 	if err != nil {

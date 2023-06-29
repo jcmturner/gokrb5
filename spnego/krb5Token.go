@@ -8,16 +8,16 @@ import (
 	"fmt"
 
 	"github.com/jcmturner/gofork/encoding/asn1"
-	"gopkg.in/jcmturner/gokrb5.v7/asn1tools"
-	"gopkg.in/jcmturner/gokrb5.v7/client"
-	"gopkg.in/jcmturner/gokrb5.v7/credentials"
-	"gopkg.in/jcmturner/gokrb5.v7/gssapi"
-	"gopkg.in/jcmturner/gokrb5.v7/iana/chksumtype"
-	"gopkg.in/jcmturner/gokrb5.v7/iana/msgtype"
-	"gopkg.in/jcmturner/gokrb5.v7/krberror"
-	"gopkg.in/jcmturner/gokrb5.v7/messages"
-	"gopkg.in/jcmturner/gokrb5.v7/service"
-	"gopkg.in/jcmturner/gokrb5.v7/types"
+	"github.com/jcmturner/gokrb5/v9/asn1tools"
+	"github.com/jcmturner/gokrb5/v9/client"
+	"github.com/jcmturner/gokrb5/v9/credentials"
+	"github.com/jcmturner/gokrb5/v9/gssapi"
+	"github.com/jcmturner/gokrb5/v9/iana/chksumtype"
+	"github.com/jcmturner/gokrb5/v9/iana/msgtype"
+	"github.com/jcmturner/gokrb5/v9/krberror"
+	"github.com/jcmturner/gokrb5/v9/messages"
+	"github.com/jcmturner/gokrb5/v9/service"
+	"github.com/jcmturner/gokrb5/v9/types"
 )
 
 // GSSAPI KRB5 MechToken IDs.
@@ -70,8 +70,8 @@ func (m *KRB5Token) Unmarshal(b []byte) error {
 	if err != nil {
 		return fmt.Errorf("error unmarshalling KRB5Token OID: %v", err)
 	}
-	if !oid.Equal(gssapi.OID(gssapi.OIDKRB5)) {
-		return fmt.Errorf("error unmarshalling KRB5Token, OID is %s not %s", oid.String(), gssapi.OID(gssapi.OIDKRB5).String())
+	if !oid.Equal(gssapi.OIDKRB5.OID()) {
+		return fmt.Errorf("error unmarshalling KRB5Token, OID is %s not %s", oid.String(), gssapi.OIDKRB5.OID().String())
 	}
 	m.OID = oid
 	if len(r) < 2 {
@@ -108,7 +108,7 @@ func (m *KRB5Token) Unmarshal(b []byte) error {
 func (m *KRB5Token) Verify() (bool, gssapi.Status) {
 	switch hex.EncodeToString(m.tokID) {
 	case TOK_ID_KRB_AP_REQ:
-		ok, creds, err := service.VerifyAPREQ(m.APReq, m.settings)
+		ok, creds, err := service.VerifyAPREQ(&m.APReq, m.settings)
 		if err != nil {
 			return false, gssapi.Status{Code: gssapi.StatusDefectiveToken, Message: err.Error()}
 		}
@@ -116,8 +116,7 @@ func (m *KRB5Token) Verify() (bool, gssapi.Status) {
 			return false, gssapi.Status{Code: gssapi.StatusDefectiveCredential, Message: "KRB5_AP_REQ token not valid"}
 		}
 		m.context = context.Background()
-		m.context = context.WithValue(m.context, CTXKeyCredentials, creds)
-		m.context = context.WithValue(m.context, CTXKeyAuthenticated, ok)
+		m.context = context.WithValue(m.context, ctxCredentials, creds)
 		return true, gssapi.Status{Code: gssapi.StatusComplete}
 	case TOK_ID_KRB_AP_REP:
 		// Client side
@@ -165,7 +164,7 @@ func (m *KRB5Token) Context() context.Context {
 func NewKRB5TokenAPREQ(cl *client.Client, tkt messages.Ticket, sessionKey types.EncryptionKey, GSSAPIFlags []int, APOptions []int) (KRB5Token, error) {
 	// TODO consider providing the SPN rather than the specific tkt and key and get these from the krb client.
 	var m KRB5Token
-	m.OID = gssapi.OID(gssapi.OIDKRB5)
+	m.OID = gssapi.OIDKRB5.OID()
 	tb, _ := hex.DecodeString(TOK_ID_KRB_AP_REQ)
 	m.tokID = tb
 
