@@ -15,6 +15,13 @@ import (
 
 const (
 	headerFieldTagKDCOffset = 1
+
+	// minimumCCacheFileLength is the minimum length of the credential
+	// cache file in bytes. This is a rough estimate of a minimum ccache
+	// file that contains: the version indicator (2 bytes), no header,
+	// minimum default principal (8 bytes), no credentials. See:
+	// https://web.mit.edu/kerberos/krb5-latest/doc/formats/ccache_file_format.html
+	minimumCCacheFileLength = 10
 )
 
 // CCache is the file credentials cache as define here: https://web.mit.edu/kerberos/krb5-latest/doc/formats/ccache_file_format.html
@@ -66,6 +73,9 @@ func LoadCCache(cpath string) (*CCache, error) {
 	b, err := os.ReadFile(cpath)
 	if err != nil {
 		return c, err
+	}
+	if len(b) < minimumCCacheFileLength {
+		return c, errors.New("Invalid credential cache file length: file is too short")
 	}
 	err = c.Unmarshal(b)
 	return c, err
