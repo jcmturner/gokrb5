@@ -1,0 +1,11 @@
+[realms]
+ FEDORAPROJECT.ORG = {
+        kdc = https://id.fedoraproject.org/KdcProxy
+        pkinit_anchors = FILE:/etc/pki/ipa/fedoraproject_ipa_ca.crt
+ }
+[domain_realm]
+ .fedoraproject.org = FEDORAPROJECT.ORG
+ fedoraproject.org = FEDORAPROJECT.ORG
+ .centos.org = FEDORAPROJECT.ORG
+ centos.org = FEDORAPROJECT.ORG
+

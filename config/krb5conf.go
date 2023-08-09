@@ -10,6 +10,7 @@ import (
 	"net"
 	"os"
 	"os/user"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -515,15 +516,60 @@ func (c *Config) ResolveRealm(domainName string) string {
 	return c.LibDefaults.DefaultRealm
 }
 
-// Load the KRB5 configuration from the specified file path.
-func Load(cfgPath string) (*Config, error) {
+// Recursively load the contents of the KRB5 config files using include and includedir
+func recurLoadFile(cfgPath string) ([]string, error) {
 	fh, err := os.Open(cfgPath)
 	if err != nil {
 		return nil, errors.New("configuration file could not be opened: " + cfgPath + " " + err.Error())
 	}
 	defer fh.Close()
+	var lines []string
+	var recurlines []string
 	scanner := bufio.NewScanner(fh)
-	return NewConfigFromScanner(scanner)
+	reinclude := regexp.MustCompile(`^include\s*(\S*)$`)
+	reincludedir := regexp.MustCompile(`^includedir\s*(\S*)$`)
+	for scanner.Scan() {
+		result := reincludedir.FindStringSubmatch(scanner.Text())
+		if len(result) > 1 {
+			cfgDir := result[1]
+			files, err := os.ReadDir(cfgDir)
+			if err != nil {
+				return nil, errors.New("configuration directory could not be opened: " + cfgDir + " " + err.Error())
+			}
+			for _, file := range files {
+				if matched, _ := regexp.MatchString(`^[\w-\.]+$`, file.Name()); matched {
+					filePath := filepath.Join(cfgDir, file.Name())
+					recurlines, err = recurLoadFile(filePath)
+					if err != nil {
+						return nil, errors.New("subconfiguration file could not be opened: " + filePath + " " + err.Error())
+					}
+					lines = append(lines, recurlines...)
+				}
+			}
+			continue
+		}
+		result = reinclude.FindStringSubmatch(scanner.Text())
+		if len(result) > 1 {
+			subCfgPath := result[1]
+			recurlines, err = recurLoadFile(subCfgPath)
+			if err != nil {
+				return nil, errors.New("subconfiguration file could not be opened: " + subCfgPath + " " + err.Error())
+			}
+			lines = append(lines, recurlines...)
+			continue
+		}
+		lines = append(lines, scanner.Text())
+	}
+	return lines, nil
+}
+
+// Load the KRB5 configuration from the specified file path.
+func Load(cfgPath string) (*Config, error) {
+	lines, err := recurLoadFile(cfgPath)
+	if err != nil {
+		return nil, errors.New("configuration file could not be opened: " + cfgPath + " " + err.Error())
+	}
+	return NewConfigFromString(strings.Join(lines, "\n"))
 }
 
 // NewConfigFromString creates a new Config struct from a string.
@@ -596,12 +642,12 @@ func NewConfigFromScanner(scanner *bufio.Scanner) (*Config, error) {
 				}
 				e = err
 			}
-			c.Realms = realms
+			c.Realms = append(c.Realms, realms...)
 		case "domain_realm":
 			err := c.DomainRealm.parseLines(lines[start:end])
 			if err != nil {
 				if _, ok := err.(UnsupportedDirective); !ok {
-					return nil, fmt.Errorf("error processing domaain_realm section: %v", err)
+					return nil, fmt.Errorf("error processing domain_realm section: %v", err)
 				}
 				e = err
 			}
