@@ -26,12 +26,13 @@ import (
 
 // Client side functionality //
 
+var errRedirectLoop = errors.New("stopped after 10 redirects")
+
 // Client will negotiate authentication with a server using SPNEGO.
 type Client struct {
 	*http.Client
 	krb5Client *client.Client
 	spn        string
-	reqs       []*http.Request
 }
 
 type redirectErr struct {
@@ -80,6 +81,14 @@ func NewClient(krb5Cl *client.Client, httpCl *http.Client, spn string) *Client {
 
 // Do is the SPNEGO enabled HTTP client's equivalent of the http.Client's Do method.
 func (c *Client) Do(req *http.Request) (resp *http.Response, err error) {
+	return c.do(req, nil, nil)
+}
+
+func (c *Client) do(req *http.Request, via []*http.Request, prevResp *http.Response) (resp *http.Response, err error) {
+	if len(via) >= 10 {
+		return resp, errRedirectLoop
+	}
+
 	var body bytes.Buffer
 	if req.Body != nil {
 		// Use a tee reader to capture any body sent in case we have to replay it again
@@ -93,15 +102,11 @@ func (c *Client) Do(req *http.Request) (resp *http.Response, err error) {
 			if e, ok := ue.Err.(redirectErr); ok {
 				// Picked up a redirect
 				e.reqTarget.Header.Del(HTTPHeaderAuthRequest)
-				c.reqs = append(c.reqs, e.reqTarget)
-				if len(c.reqs) >= 10 {
-					return resp, errors.New("stopped after 10 redirects")
-				}
 				if req.Body != nil {
 					// Refresh the body reader so the body can be sent again
 					e.reqTarget.Body = io.NopCloser(&body)
 				}
-				return c.Do(e.reqTarget)
+				return c.do(e.reqTarget, append(via, e.reqTarget), resp)
 			}
 		}
 		return resp, err
@@ -117,7 +122,7 @@ func (c *Client) Do(req *http.Request) (resp *http.Response, err error) {
 		}
 		io.Copy(io.Discard, resp.Body)
 		resp.Body.Close()
-		return c.Do(req)
+		return c.do(req, via, nil)
 	}
 	return resp, err
 }
