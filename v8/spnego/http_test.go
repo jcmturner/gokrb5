@@ -14,6 +14,7 @@ import (
 	"net/http/cookiejar"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"sync"
 	"testing"
 
@@ -27,6 +28,104 @@ import (
 	"github.com/jcmturner/gokrb5/v8/test/testdata"
 	"github.com/stretchr/testify/assert"
 )
+
+// fakeTransport is a transport implementation allowing specification of HTTP responses.
+type fakeTransport map[string]func() *http.Response
+
+func (ft fakeTransport) RoundTrip(r *http.Request) (*http.Response, error) {
+	// Note: This doesn't support requests with multiple parameters, since parameter ordering in the string is nondeterministic.
+	if resp, ok := ft[r.URL.String()]; ok {
+		return resp(), nil
+	}
+	return nil, fmt.Errorf("unexpected url: %s", r.URL.String())
+}
+
+func httpResponse(statusCode int, body string, extraHeaders map[string]string) func() *http.Response {
+	return func() *http.Response {
+		resp := &http.Response{
+			StatusCode: statusCode,
+			Header:     http.Header{},
+			Body:       io.NopCloser(strings.NewReader(body)),
+		}
+		for k, v := range extraHeaders {
+			resp.Header.Add(k, v)
+		}
+		return resp
+	}
+}
+
+func TestClient_Do(t *testing.T) {
+	hc := &http.Client{
+		Transport: fakeTransport{
+			"http://example.com/page1":    httpResponse(http.StatusOK, "page 1 ok", nil),
+			"http://example.com/redirect": httpResponse(http.StatusFound, "shouldn't see this", map[string]string{"Location": "http://example.com/page1"}),
+			"http://example.com/loop":     httpResponse(http.StatusFound, "down the spiral you go", map[string]string{"Location": "http://example.com/loop"}),
+		},
+	}
+
+	tests := []struct {
+		desc           string
+		target         string
+		wantStatusCode int
+		wantBody       string
+		wantErr        error
+	}{
+		{
+			desc:           "single page",
+			target:         "http://example.com/page1",
+			wantStatusCode: http.StatusOK,
+			wantBody:       "page 1 ok",
+		},
+		{
+			desc:           "single redirect hop",
+			target:         "http://example.com/redirect",
+			wantStatusCode: http.StatusOK,
+			wantBody:       "page 1 ok",
+		},
+		{
+			desc:    "redirect loop",
+			target:  "http://example.com/loop",
+			wantErr: errRedirectLoop,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.desc, func(t *testing.T) {
+			// So long as we don't return any 401s, we can safely run this without needing to fall through to Kerberos auth.
+			spnClient := NewClient(nil, hc, "")
+
+			// Run the request multiple times, to ensure our loop detection is properly counting redirects on a per-request basis.
+			for i := 0; i < 20; i++ {
+				req, err := http.NewRequest("GET", tc.target, nil)
+				if err != nil {
+					t.Fatalf("Failed to create GET request for target %s: %v", tc.target, err)
+				}
+
+				resp, err := spnClient.Do(req)
+				if err == nil {
+					defer resp.Body.Close()
+				}
+				if !errors.Is(err, tc.wantErr) {
+					t.Fatalf("Unexpected error result while attempting GET request for target %s - got: %v, want: %v", tc.target, err, tc.wantErr)
+				}
+
+				if err == nil {
+					if resp.StatusCode != tc.wantStatusCode {
+						t.Errorf("Unexpected status code - got: %d, want: %d", resp.StatusCode, tc.wantStatusCode)
+					}
+					b, err := io.ReadAll(resp.Body)
+					if err != nil {
+						t.Fatalf("Failed to read response body for target %s: %v", tc.target, err)
+					}
+					body := string(b)
+					if body != tc.wantBody {
+						t.Errorf("Unexpected response body - got: %s, want: %s", body, tc.wantBody)
+					}
+				}
+			}
+		})
+	}
+}
 
 func TestClient_SetSPNEGOHeader(t *testing.T) {
 	test.Integration(t)
