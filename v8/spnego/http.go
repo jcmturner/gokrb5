@@ -81,10 +81,10 @@ func NewClient(krb5Cl *client.Client, httpCl *http.Client, spn string) *Client {
 
 // Do is the SPNEGO enabled HTTP client's equivalent of the http.Client's Do method.
 func (c *Client) Do(req *http.Request) (resp *http.Response, err error) {
-	return c.do(req, nil, nil)
+	return c.do(req, nil)
 }
 
-func (c *Client) do(req *http.Request, via []*http.Request, prevResp *http.Response) (resp *http.Response, err error) {
+func (c *Client) do(req *http.Request, via []*http.Request) (resp *http.Response, err error) {
 	if len(via) >= 10 {
 		return resp, errRedirectLoop
 	}
@@ -106,7 +106,7 @@ func (c *Client) do(req *http.Request, via []*http.Request, prevResp *http.Respo
 					// Refresh the body reader so the body can be sent again
 					e.reqTarget.Body = io.NopCloser(&body)
 				}
-				return c.do(e.reqTarget, append(via, e.reqTarget), resp)
+				return c.do(e.reqTarget, append(via, e.reqTarget))
 			}
 		}
 		return resp, err
@@ -122,7 +122,7 @@ func (c *Client) do(req *http.Request, via []*http.Request, prevResp *http.Respo
 		}
 		io.Copy(io.Discard, resp.Body)
 		resp.Body.Close()
-		return c.do(req, via, nil)
+		return c.do(req, via)
 	}
 	return resp, err
 }
