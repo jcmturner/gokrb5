@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -21,7 +22,7 @@ const (
 type CCache struct {
 	Version          uint8
 	Header           header
-	DefaultPrincipal principal
+	DefaultPrincipal Principal
 	Credentials      []*Credential
 	Path             string
 }
@@ -37,16 +38,16 @@ type headerField struct {
 	value  []byte
 }
 
-// Credential cache entry principal struct.
-type principal struct {
+// Credential cache entry Principal struct.
+type Principal struct {
 	Realm         string
 	PrincipalName types.PrincipalName
 }
 
 // Credential holds a Kerberos client's ccache credential information.
 type Credential struct {
-	Client       principal
-	Server       principal
+	Client       Principal
+	Server       Principal
 	Key          types.EncryptionKey
 	AuthTime     time.Time
 	StartTime    time.Time
@@ -71,6 +72,27 @@ func LoadCCache(cpath string) (*CCache, error) {
 	return c, err
 }
 
+func CCacheFromCredentials(creds []Credential) *CCache {
+	credentials := make([]*Credential, len(creds))
+	for i, cred := range creds {
+		credentials[i] = &cred
+	}
+	c := CCache{
+		Version:          4,
+		DefaultPrincipal: creds[0].Client,
+		Credentials:      credentials,
+	}
+
+	return &c
+}
+
+func (c *CCache) getEndianess() binary.ByteOrder {
+	if (c.Version == 1 || c.Version == 2) && isNativeEndianLittle() {
+		return binary.LittleEndian
+	}
+	return binary.BigEndian
+}
+
 // Unmarshal a byte slice of credential cache data into CCache type.
 func (c *CCache) Unmarshal(b []byte) error {
 	p := 0
@@ -88,10 +110,8 @@ func (c *CCache) Unmarshal(b []byte) error {
 	p++
 	//Version 1 or 2 of the file format uses native byte order for integer representations. Versions 3 & 4 always uses big-endian byte order
 	var endian binary.ByteOrder
-	endian = binary.BigEndian
-	if (c.Version == 1 || c.Version == 2) && isNativeEndianLittle() {
-		endian = binary.LittleEndian
-	}
+	endian = c.getEndianess()
+
 	if c.Version == 4 {
 		err := parseHeader(b, &p, c, &endian)
 		if err != nil {
@@ -107,6 +127,36 @@ func (c *CCache) Unmarshal(b []byte) error {
 		c.Credentials = append(c.Credentials, cred)
 	}
 	return nil
+}
+
+func (c *CCache) Marshal() ([]byte, error) {
+	var b []byte
+	b = append(b, 5)
+	b = append(b, c.Version)
+
+	var endian binary.ByteOrder
+	endian = c.getEndianess()
+	if c.Version == 4 {
+		header, err := c.writeHeader(endian)
+		if err != nil {
+			return b, err
+		}
+		b = append(b, header...)
+	}
+
+	princ, err := c.writePrincipal(c.DefaultPrincipal, endian)
+	if err != nil {
+		return b, err
+	}
+	b = append(b, princ...)
+
+	for i := 0; i < len(c.Credentials); i++ {
+		var cred []byte
+		cred = c.writeCredential(c.Credentials[i], endian)
+		b = append(b, cred...)
+	}
+
+	return b, nil
 }
 
 func parseHeader(b []byte, p *int, c *CCache, e *binary.ByteOrder) error {
@@ -130,8 +180,24 @@ func parseHeader(b []byte, p *int, c *CCache, e *binary.ByteOrder) error {
 	return nil
 }
 
+func (c *CCache) writeHeader(e binary.ByteOrder) ([]byte, error) {
+	var b []byte
+	i := make([]byte, 2)
+	e.PutUint16(i, c.Header.length)
+	b = append(b, i...)
+	for _, field := range c.Header.fields {
+		b = append(b, writeUint16(field.tag, e)...)
+		b = append(b, writeUint16(field.length, e)...)
+		b = append(b, field.value...)
+	}
+	if uint16(len(b))-2 != c.Header.length {
+		return b, fmt.Errorf("Header length and real length differ %d != %d", len(b), c.Header.length)
+	}
+	return b, nil
+}
+
 // Parse the Keytab bytes of a principal into a Keytab entry's principal.
-func parsePrincipal(b []byte, p *int, c *CCache, e *binary.ByteOrder) (princ principal) {
+func parsePrincipal(b []byte, p *int, c *CCache, e *binary.ByteOrder) (princ Principal) {
 	if c.Version != 1 {
 		//Name Type is omitted in version 1
 		princ.PrincipalName.NameType = readInt32(b, p, e)
@@ -148,6 +214,34 @@ func parsePrincipal(b []byte, p *int, c *CCache, e *binary.ByteOrder) (princ pri
 		princ.PrincipalName.NameString = append(princ.PrincipalName.NameString, string(readBytes(b, p, int(l), e)))
 	}
 	return princ
+}
+
+func (c *CCache) writePrincipal(p Principal, e binary.ByteOrder) ([]byte, error) {
+	var b []byte
+	if c.Version != 1 {
+		b = append(b, writeUint32(uint32(p.PrincipalName.NameType), e)...)
+	}
+	count := uint32(len(p.PrincipalName.NameString))
+	if c.Version == 1 {
+		count += 1
+	}
+	b = append(b, writeUint32(count, e)...)
+
+	realmLen := len(p.Realm)
+	b = append(b, writeUint32(uint32(realmLen), e)...)
+	for i := 0; i < realmLen; i++ {
+		b = append(b, p.Realm[i])
+	}
+
+	for i := 0; i < len(p.PrincipalName.NameString); i++ {
+		component := p.PrincipalName.NameString[i]
+		b = append(b, writeUint32(uint32(len(component)), e)...)
+		for j := 0; j < len(component); j++ {
+			b = append(b, component[j])
+		}
+	}
+
+	return b, nil
 }
 
 func parseCredential(b []byte, p *int, c *CCache, e *binary.ByteOrder) (cred *Credential, err error) {
@@ -186,6 +280,59 @@ func parseCredential(b []byte, p *int, c *CCache, e *binary.ByteOrder) (cred *Cr
 	cred.Ticket = readData(b, p, e)
 	cred.SecondTicket = readData(b, p, e)
 	return
+}
+
+func (c *CCache) writeCredential(cred *Credential, e binary.ByteOrder) []byte {
+	var b bytes.Buffer
+
+	client, _ := c.writePrincipal(cred.Client, e)
+	b.Write(client)
+
+	server, _ := c.writePrincipal(cred.Server, e)
+	b.Write(server)
+
+	b.Write(writeUint16(uint16(cred.Key.KeyType), e))
+
+	if c.Version == 3 {
+		// Repeated twice in version 3
+		b.Write(writeUint16(uint16(cred.Key.KeyType), e))
+	}
+
+	b.Write(writeUint32(uint32(len(cred.Key.KeyValue)), e))
+	b.Write(cred.Key.KeyValue)
+
+	b.Write(writeUint32(uint32(cred.AuthTime.Unix()), e))
+	b.Write(writeUint32(uint32(cred.StartTime.Unix()), e))
+	b.Write(writeUint32(uint32(cred.EndTime.Unix()), e))
+	b.Write(writeUint32(uint32(cred.RenewTill.Unix()), e))
+
+	if cred.IsSKey {
+		b.WriteByte(byte(1))
+	} else {
+		b.WriteByte(byte(0))
+	}
+
+	b.Write(cred.TicketFlags.Bytes)
+
+	b.Write(writeUint32(uint32(len(cred.Addresses)), e))
+	for i := 0; i < len(cred.Addresses); i++ {
+		address := cred.Addresses[i]
+		b.Write(writeUint16(uint16(address.AddrType), e))
+		b.Write(address.Address)
+	}
+
+	b.Write(writeUint32(uint32(len(cred.AuthData)), e))
+	for i := 0; i < len(cred.AuthData); i++ {
+		authEntry := cred.AuthData[i]
+		b.Write(writeUint16(uint16(authEntry.ADType), e))
+		b.Write(authEntry.ADData)
+	}
+
+	b.Write(writeUint32(uint32(len(cred.Ticket)), e))
+	b.Write(cred.Ticket)
+	b.Write(writeUint32(uint32(len(cred.SecondTicket)), e))
+	b.Write(cred.SecondTicket)
+	return b.Bytes()
 }
 
 // GetClientPrincipalName returns a PrincipalName type for the client the credentials cache is for.
@@ -281,6 +428,18 @@ func readAuthDataEntry(b []byte, p *int, e *binary.ByteOrder) types.Authorizatio
 // Read bytes representing a timestamp.
 func readTimestamp(b []byte, p *int, e *binary.ByteOrder) time.Time {
 	return time.Unix(int64(readInt32(b, p, e)), 0)
+}
+
+func writeUint16(i uint16, e binary.ByteOrder) []byte {
+	b := make([]byte, 2)
+	e.PutUint16(b, i)
+	return b
+}
+
+func writeUint32(i uint32, e binary.ByteOrder) []byte {
+	b := make([]byte, 4)
+	e.PutUint32(b, i)
+	return b
 }
 
 // Read bytes representing an eight bit integer.
