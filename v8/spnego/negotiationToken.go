@@ -123,7 +123,7 @@ func (n *NegTokenInit) Verify() (bool, gssapi.Status) {
 	}
 	// There should be some mechtoken bytes for a KRB5Token (other mech types are not supported)
 	mt := new(KRB5Token)
-	mt.settings = n.settings
+	mt.Settings = n.settings
 	if n.mechToken == nil {
 		err := mt.Unmarshal(n.MechTokenBytes)
 		if err != nil {
@@ -202,7 +202,7 @@ func (n *NegTokenResp) Verify() (bool, gssapi.Status) {
 			return false, gssapi.Status{Code: gssapi.StatusContinueNeeded}
 		}
 		mt := new(KRB5Token)
-		mt.settings = n.settings
+		mt.Settings = n.settings
 		if n.mechToken == nil {
 			err := mt.Unmarshal(n.ResponseToken)
 			if err != nil {

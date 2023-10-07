@@ -96,7 +96,7 @@ func (cl *Client) GetServiceTicket(spn string) (messages.Ticket, types.Encryptio
 		realm = cl.Credentials.Realm()
 	}
 
-	tgt, skey, err := cl.sessionTGT(realm)
+	tgt, _, skey, err := cl.sessionTGT(realm)
 	if err != nil {
 		return tkt, skey, err
 	}

@@ -3,7 +3,7 @@ package client
 import (
 	"encoding/hex"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"os"
 	"runtime"
 	"sync"
@@ -55,12 +55,12 @@ func TestMultiThreadedClientSession(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		go func() {
 			defer wg.Done()
-			tgt, _, err := cl.sessionTGT("TEST.GOKRB5")
+			tgt, _, _, err := cl.sessionTGT("TEST.GOKRB5")
 			if err != nil || tgt.Realm != "TEST.GOKRB5" {
 				t.Logf("error getting session: %v", err)
 			}
-			_, _, _, r, _ := cl.sessionTimes("TEST.GOKRB5")
-			fmt.Fprintf(io.Discard, "%v", r)
+			_, _, _, _, r, _ := cl.sessionTimes("TEST.GOKRB5")
+			fmt.Fprintf(ioutil.Discard, "%v", r)
 		}()
 		time.Sleep(time.Second)
 	}
@@ -90,7 +90,7 @@ func TestClient_AutoRenew_Goroutine(t *testing.T) {
 	n := runtime.NumGoroutine()
 	for i := 0; i < 24; i++ {
 		time.Sleep(time.Second * 5)
-		_, endTime, _, _, err := cl.sessionTimes("TEST.GOKRB5")
+		_, _, endTime, _, _, err := cl.sessionTimes("TEST.GOKRB5")
 		if err != nil {
 			t.Errorf("could not get client's session: %v", err)
 		}
@@ -123,6 +123,7 @@ func TestSessions_JSON(t *testing.T) {
 		e := &session{
 			realm:                realm,
 			authTime:             time.Unix(int64(0+i), 0).UTC(),
+			startTime:            time.Unix(int64(1+i), 0).UTC(),
 			endTime:              time.Unix(int64(10+i), 0).UTC(),
 			renewTill:            time.Unix(int64(20+i), 0).UTC(),
 			sessionKeyExpiration: time.Unix(int64(30+i), 0).UTC(),
@@ -137,6 +138,7 @@ func TestSessions_JSON(t *testing.T) {
   {
     "Realm": "test0",
     "AuthTime": "1970-01-01T00:00:00Z",
+    "StartTime": "1970-01-01T00:00:01Z",
     "EndTime": "1970-01-01T00:00:10Z",
     "RenewTill": "1970-01-01T00:00:20Z",
     "SessionKeyExpiration": "1970-01-01T00:00:30Z"
@@ -144,6 +146,7 @@ func TestSessions_JSON(t *testing.T) {
   {
     "Realm": "test1",
     "AuthTime": "1970-01-01T00:00:01Z",
+    "StartTime": "1970-01-01T00:00:02Z",
     "EndTime": "1970-01-01T00:00:11Z",
     "RenewTill": "1970-01-01T00:00:21Z",
     "SessionKeyExpiration": "1970-01-01T00:00:31Z"
@@ -151,6 +154,7 @@ func TestSessions_JSON(t *testing.T) {
   {
     "Realm": "test2",
     "AuthTime": "1970-01-01T00:00:02Z",
+    "StartTime": "1970-01-01T00:00:03Z",
     "EndTime": "1970-01-01T00:00:12Z",
     "RenewTill": "1970-01-01T00:00:22Z",
     "SessionKeyExpiration": "1970-01-01T00:00:32Z"

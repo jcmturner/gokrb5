@@ -34,7 +34,7 @@ type KRB5Token struct {
 	APReq    messages.APReq
 	APRep    messages.APRep
 	KRBError messages.KRBError
-	settings *service.Settings
+	Settings *service.Settings
 	context  context.Context
 }
 
@@ -52,7 +52,10 @@ func (m *KRB5Token) Marshal() ([]byte, error) {
 			return []byte{}, fmt.Errorf("error marshalling AP_REQ for MechToken: %v", err)
 		}
 	case TOK_ID_KRB_AP_REP:
-		return []byte{}, errors.New("marshal of AP_REP GSSAPI MechToken not supported by gokrb5")
+		tb, err = m.APRep.Marshal()
+		if err != nil {
+			return []byte{}, fmt.Errorf("error marshalling AP_REQ for MechToken: %v", err)
+		}
 	case TOK_ID_KRB_ERROR:
 		return []byte{}, errors.New("marshal of KRB_ERROR GSSAPI MechToken not supported by gokrb5")
 	}
@@ -108,7 +111,7 @@ func (m *KRB5Token) Unmarshal(b []byte) error {
 func (m *KRB5Token) Verify() (bool, gssapi.Status) {
 	switch hex.EncodeToString(m.tokID) {
 	case TOK_ID_KRB_AP_REQ:
-		ok, creds, err := service.VerifyAPREQ(&m.APReq, m.settings)
+		ok, creds, err := service.VerifyAPREQ(&m.APReq, m.Settings)
 		if err != nil {
 			return false, gssapi.Status{Code: gssapi.StatusDefectiveToken, Message: err.Error()}
 		}
@@ -116,7 +119,7 @@ func (m *KRB5Token) Verify() (bool, gssapi.Status) {
 			return false, gssapi.Status{Code: gssapi.StatusDefectiveCredential, Message: "KRB5_AP_REQ token not valid"}
 		}
 		m.context = context.Background()
-		m.context = context.WithValue(m.context, ctxCredentials, creds)
+		m.context = context.WithValue(m.context, CtxCredentials, creds)
 		return true, gssapi.Status{Code: gssapi.StatusComplete}
 	case TOK_ID_KRB_AP_REP:
 		// Client side
@@ -185,6 +188,15 @@ func NewKRB5TokenAPREQ(cl *client.Client, tkt messages.Ticket, sessionKey types.
 	}
 	m.APReq = APReq
 	return m, nil
+}
+
+func NewKRB5TokenAPREP() KRB5Token {
+	var m KRB5Token
+	m.OID = gssapi.OIDKRB5.OID()
+	tb, _ := hex.DecodeString(TOK_ID_KRB_AP_REP)
+	m.tokID = tb
+
+	return m
 }
 
 // krb5TokenAuthenticator creates a new kerberos authenticator for kerberos MechToken
