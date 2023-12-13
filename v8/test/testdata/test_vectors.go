@@ -127,6 +127,7 @@ const (
 	KDC_PORT_TEST_GOKRB5                     = "88"
 	KDC_PORT_TEST_GOKRB5_LASTEST             = "98"
 	KDC_PORT_TEST_GOKRB5_RESDOM              = "188"
+	KDC_PORT_TEST_GOKRB5_SUB                 = "288"
 	KDC_PORT_TEST_GOKRB5_OLD                 = "78"
 	KDC_PORT_TEST_GOKRB5_SHORTTICKETS        = "58"
 
@@ -153,6 +154,11 @@ const (
   admin_server = 127.0.0.1:749
   default_domain = test.gokrb5
  }
+ SUB.TEST.GOKRB5 = {
+  kdc = 127.0.0.1:288
+  admin_server = 127.0.0.1:749
+  default_domain = sub.test.gokrb5
+ }
  RESDOM.GOKRB5 = {
   kdc = 10.80.88.88:188
   admin_server = 127.0.0.1:749
@@ -162,6 +168,8 @@ const (
 [domain_realm]
  .test.gokrb5 = TEST.GOKRB5
  test.gokrb5 = TEST.GOKRB5
+ .sub.test.gokrb5 = SUB.TEST.GOKRB5
+ sub.test.gokrb5 = SUB.TEST.GOKRB5
  .resdom.gokrb5 = RESDOM.GOKRB5
  resdom.gokrb5 = RESDOM.GOKRB5
  `
