@@ -10,7 +10,7 @@ import (
 
 // TGSREQGenerateAndExchange generates the TGS_REQ and performs a TGS exchange to retrieve a ticket to the specified SPN.
 func (cl *Client) TGSREQGenerateAndExchange(spn types.PrincipalName, kdcRealm string, tgt messages.Ticket, sessionKey types.EncryptionKey, renewal bool) (tgsReq messages.TGSReq, tgsRep messages.TGSRep, err error) {
-	tgsReq, err = messages.NewTGSReq(cl.Credentials.CName(), kdcRealm, cl.Config, tgt, sessionKey, spn, renewal)
+	tgsReq, err = messages.NewTGSReq(cl.Credentials.CName(), cl.Credentials.Domain(), kdcRealm, cl.Config, tgt, sessionKey, spn, renewal)
 	if err != nil {
 		return tgsReq, tgsRep, krberror.Errorf(err, krberror.KRBMsgError, "TGS Exchange Error: failed to generate a new TGS_REQ")
 	}
@@ -60,7 +60,7 @@ func (cl *Client) TGSExchange(tgsReq messages.TGSReq, kdcRealm string, tgt messa
 				return tgsReq, tgsRep, err
 			}
 		}
-		tgsReq, err = messages.NewTGSReq(cl.Credentials.CName(), realm, cl.Config, tgsRep.Ticket, tgsRep.DecryptedEncPart.Key, tgsReq.ReqBody.SName, tgsReq.Renewal)
+		tgsReq, err = messages.NewTGSReq(cl.Credentials.CName(), cl.Credentials.Domain(), realm, cl.Config, tgsRep.Ticket, tgsRep.DecryptedEncPart.Key, tgsReq.ReqBody.SName, tgsReq.Renewal)
 		if err != nil {
 			return tgsReq, tgsRep, err
 		}
