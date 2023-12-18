@@ -157,9 +157,10 @@ func respUnauthorizedNegotiate(resp *http.Response) bool {
 	return false
 }
 
-// SetSPNEGOHeader gets the service ticket and sets it as the SPNEGO authorization header on HTTP request object.
-// To auto generate the SPN from the request object pass a null string "".
-func SetSPNEGOHeader(cl *client.Client, r *http.Request, spn string) error {
+func setSPNEGOHeaderCommon(cl *client.Client, r *http.Request, spn string, headerName string) error {
+    // Common SPNEGO logic...
+    // Generate the SPNEGO token, etc.
+
 	if spn == "" {
 		h := strings.TrimSuffix(strings.SplitN(r.URL.Host, ":", 2)[0], ".")
 		name, err := net.LookupCNAME(h)
@@ -185,8 +186,19 @@ func SetSPNEGOHeader(cl *client.Client, r *http.Request, spn string) error {
 		return krberror.Errorf(err, krberror.EncodingError, "could not marshal SPNEGO")
 	}
 	hs := "Negotiate " + base64.StdEncoding.EncodeToString(nb)
-	r.Header.Set(HTTPHeaderAuthRequest, hs)
+	r.Header.Set(headerName, hs)
+  
 	return nil
+}
+
+// SetSPNEGOHeader gets the service ticket and sets it as the SPNEGO authorization header on HTTP request object.
+// To auto generate the SPN from the request object pass a null string "".
+func SetSPNEGOHeader(cl *client.Client, r *http.Request, spn string) error {
+    return setSPNEGOHeaderCommon(cl, r, spn, HTTPHeaderAuthRequest)
+}
+
+func SetSPNEGOProxyAuthorizationHeader(cl *client.Client, r *http.Request, spn string) error {
+    return setSPNEGOHeaderCommon(cl, r, spn, HTTPHeaderProxyAuthRequest)
 }
 
 // Service side functionality //
@@ -206,6 +218,8 @@ const (
 	CTXKeyCredentials ctxKey = "github.com/jcmturner/gokrb5/CTXKeyCredentials"
 	// HTTPHeaderAuthRequest is the header that will hold authn/z information.
 	HTTPHeaderAuthRequest = "Authorization"
+  	// HTTPHeaderProxyAuthRequest is the header that will hold proxy authn/z information.
+	HTTPHeaderProxyAuthRequest = "Proxy-Authorization"
 	// HTTPHeaderAuthResponse is the header that will hold SPNEGO data from the server.
 	HTTPHeaderAuthResponse = "WWW-Authenticate"
 	// HTTPHeaderAuthResponseValueKey is the key in the auth header for SPNEGO.

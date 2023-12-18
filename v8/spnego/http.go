@@ -191,10 +191,40 @@ func setRequestSPN(r *http.Request) (types.PrincipalName, error) {
 	r.Host = h
 	return types.NewPrincipalName(nametype.KRB_NT_PRINCIPAL, "HTTP/"+h), nil
 }
+func GetSPNEGOHeader(cl *client.Client, r *http.Request, spn string) (string, error) {
+	// Common SPNEGO logic...
+	// Generate the SPNEGO token, etc.
 
-// SetSPNEGOHeader gets the service ticket and sets it as the SPNEGO authorization header on HTTP request object.
-// To auto generate the SPN from the request object pass a null string "".
-func SetSPNEGOHeader(cl *client.Client, r *http.Request, spn string) error {
+	if spn == "" {
+		pn, err := setRequestSPN(r)
+		if err != nil {
+			return "", err
+		}
+		spn = pn.PrincipalNameString()
+	}
+	cl.Log("using SPN %s", spn)
+	s := SPNEGOClient(cl, spn)
+	err := s.AcquireCred()
+	if err != nil {
+		return "", fmt.Errorf("could not acquire client credential: %v", err)
+	}
+	st, err := s.InitSecContext()
+	if err != nil {
+		return "", fmt.Errorf("could not initialize context: %v", err)
+	}
+	nb, err := st.Marshal()
+	if err != nil {
+		return "", krberror.Errorf(err, krberror.EncodingError, "could not marshal SPNEGO")
+	}
+	hs := base64.StdEncoding.EncodeToString(nb)
+
+	return hs, nil
+}
+
+func setSPNEGOHeaderCommon(cl *client.Client, r *http.Request, spn string, headerName string) error {
+	// Common SPNEGO logic...
+	// Generate the SPNEGO token, etc.
+
 	if spn == "" {
 		pn, err := setRequestSPN(r)
 		if err != nil {
@@ -217,8 +247,19 @@ func SetSPNEGOHeader(cl *client.Client, r *http.Request, spn string) error {
 		return krberror.Errorf(err, krberror.EncodingError, "could not marshal SPNEGO")
 	}
 	hs := "Negotiate " + base64.StdEncoding.EncodeToString(nb)
-	r.Header.Set(HTTPHeaderAuthRequest, hs)
+	r.Header.Set(headerName, hs)
+
 	return nil
+}
+
+// SetSPNEGOHeader gets the service ticket and sets it as the SPNEGO authorization header on HTTP request object.
+// To auto generate the SPN from the request object pass a null string "".
+func SetSPNEGOHeader(cl *client.Client, r *http.Request, spn string) error {
+	return setSPNEGOHeaderCommon(cl, r, spn, HTTPHeaderAuthRequest)
+}
+
+func SetSPNEGOProxyAuthorizationHeader(cl *client.Client, r *http.Request, spn string) error {
+	return setSPNEGOHeaderCommon(cl, r, spn, HTTPHeaderProxyAuthRequest)
 }
 
 // Service side functionality //
@@ -236,6 +277,8 @@ const (
 	ctxCredentials = "github.com/jcmturner/gokrb5/v8/ctxCredentials"
 	// HTTPHeaderAuthRequest is the header that will hold authn/z information.
 	HTTPHeaderAuthRequest = "Authorization"
+	// HTTPHeaderProxyAuthRequest is the header that will hold proxy authn/z information.
+	HTTPHeaderProxyAuthRequest = "Proxy-Authorization"
 	// HTTPHeaderAuthResponse is the header that will hold SPNEGO data from the server.
 	HTTPHeaderAuthResponse = "WWW-Authenticate"
 	// HTTPHeaderAuthResponseValueKey is the key in the auth header for SPNEGO.
