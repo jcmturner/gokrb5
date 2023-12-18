@@ -154,12 +154,12 @@ func NewASReq(realm string, c *config.Config, cname, sname types.PrincipalName) 
 }
 
 // NewTGSReq generates a new KRB_TGS_REQ struct.
-func NewTGSReq(cname types.PrincipalName, kdcRealm string, c *config.Config, tgt Ticket, sessionKey types.EncryptionKey, sname types.PrincipalName, renewal bool) (TGSReq, error) {
+func NewTGSReq(cname types.PrincipalName, paRealm, kdcRealm string, c *config.Config, tgt Ticket, sessionKey types.EncryptionKey, sname types.PrincipalName, renewal bool) (TGSReq, error) {
 	a, err := tgsReq(cname, sname, kdcRealm, renewal, c)
 	if err != nil {
 		return a, err
 	}
-	err = a.setPAData(tgt, sessionKey)
+	err = a.setPAData(paRealm, tgt, sessionKey)
 	return a, err
 }
 
@@ -171,7 +171,7 @@ func NewUser2UserTGSReq(cname types.PrincipalName, kdcRealm string, c *config.Co
 	}
 	a.ReqBody.AdditionalTickets = []Ticket{verifyingTGT}
 	types.SetFlag(&a.ReqBody.KDCOptions, flags.EncTktInSkey)
-	err = a.setPAData(clientTGT, sessionKey)
+	err = a.setPAData(clientTGT.Realm, clientTGT, sessionKey)
 	return a, err
 }
 
@@ -226,7 +226,7 @@ func tgsReq(cname, sname types.PrincipalName, kdcRealm string, renewal bool, c *
 	}, nil
 }
 
-func (k *TGSReq) setPAData(tgt Ticket, sessionKey types.EncryptionKey) error {
+func (k *TGSReq) setPAData(paRealm string, tgt Ticket, sessionKey types.EncryptionKey) error {
 	// Marshal the request and calculate checksum
 	b, err := k.ReqBody.Marshal()
 	if err != nil {
@@ -243,7 +243,7 @@ func (k *TGSReq) setPAData(tgt Ticket, sessionKey types.EncryptionKey) error {
 
 	// Form PAData for TGS_REQ
 	// Create authenticator
-	auth, err := types.NewAuthenticator(tgt.Realm, k.ReqBody.CName)
+	auth, err := types.NewAuthenticator(paRealm, k.ReqBody.CName)
 	if err != nil {
 		return krberror.Errorf(err, krberror.KRBMsgError, "error generating new authenticator")
 	}
