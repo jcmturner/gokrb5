@@ -10,6 +10,7 @@ import (
 	"unsafe"
 
 	"github.com/jcmturner/gofork/encoding/asn1"
+	"github.com/jcmturner/gokrb5/v8/messages"
 	"github.com/jcmturner/gokrb5/v8/types"
 )
 
@@ -330,4 +331,162 @@ func isNativeEndianLittle() bool {
 		endian = false
 	}
 	return endian
+}
+
+// Marshal ticket to file cache format
+func marshalTicketFileType(tkt messages.Ticket) ([]byte, error) {
+	var cacheTicket []byte
+
+	// write client
+	writePrincipal(&cacheTicket, tkt.DecryptedEncPart.CName, tkt.Realm)
+	// write server
+	writePrincipal(&cacheTicket, tkt.SName, tkt.Realm)
+
+	// write keytype
+	writeInt16(&cacheTicket, uint16(tkt.DecryptedEncPart.Key.KeyType))
+	// write key len
+	writeInt32(&cacheTicket, uint32(len(tkt.DecryptedEncPart.Key.KeyValue)))
+	// write key value
+	writeBytes(&cacheTicket, tkt.DecryptedEncPart.Key.KeyValue)
+
+	// write Auth time
+	writeTimestamp(&cacheTicket, uint32(tkt.DecryptedEncPart.AuthTime.Unix()))
+	// write Start time
+	writeTimestamp(&cacheTicket, uint32(tkt.DecryptedEncPart.StartTime.Unix()))
+	// write End time
+	writeTimestamp(&cacheTicket, uint32(tkt.DecryptedEncPart.EndTime.Unix()))
+	// write Renew time
+	writeTimestamp(&cacheTicket, uint32(tkt.DecryptedEncPart.RenewTill.Unix()))
+
+	// write isSKey TODO
+	writeByte(&cacheTicket, byte(0))
+	// write krb flags
+	writeBytes(&cacheTicket, tkt.DecryptedEncPart.Flags.Bytes)
+
+	// write count Addr
+	writeInt32(&cacheTicket, uint32(len(tkt.DecryptedEncPart.CAddr)))
+	// write len Addresses
+	for _, addr := range tkt.DecryptedEncPart.CAddr {
+		writeAddr(&cacheTicket, addr)
+	}
+
+	// write count authData
+	writeInt32(&cacheTicket, uint32(len(tkt.DecryptedEncPart.AuthorizationData)))
+	// write len Addresses
+	for _, authData := range tkt.DecryptedEncPart.AuthorizationData {
+		writeAuthData(&cacheTicket, authData)
+	}
+
+	// write ticket
+	err := writeTGS(&cacheTicket, tkt)
+	if err != nil {
+		return nil, err
+	}
+
+	// write secondTicket TODO
+	writeInt32(&cacheTicket, 0)
+
+	return cacheTicket, nil
+}
+
+func writeInt32(b *[]byte, numb uint32) {
+	*b = append(*b, byte(numb>>24), byte(numb>>16), byte(numb>>8), byte(numb))
+}
+
+func writeInt16(b *[]byte, numb uint16) {
+	*b = append(*b, byte(numb>>8), byte(numb))
+}
+
+func writeBytes(b *[]byte, bytes []byte) {
+	*b = append(*b, bytes...)
+}
+
+func writeByte(b *[]byte, numb byte) {
+	*b = append(*b, numb)
+}
+
+func writeTimestamp(b *[]byte, timeStamp uint32) {
+	writeInt32(b, timeStamp)
+}
+
+func writeBytesFromString(b *[]byte, s string) {
+	*b = append(*b, []byte(s)...)
+}
+
+func writeAuthData(b *[]byte, authData types.AuthorizationDataEntry) {
+	// write auth type
+	writeInt16(b, uint16(authData.ADType))
+	// write auth len
+	writeInt32(b, uint32(len(authData.ADData)))
+	// write addr
+	writeBytes(b, authData.ADData)
+}
+
+func writeAddr(b *[]byte, addr types.HostAddress) {
+	// write addr type
+	writeInt16(b, uint16(addr.AddrType))
+	// write addr len
+	writeInt32(b, uint32(len(addr.Address)))
+	// write addr
+	writeBytes(b, addr.Address)
+}
+
+// Write the entry's principal bytes.
+func writePrincipal(b *[]byte, name types.PrincipalName, realm string) {
+	// version > 1
+	// write principal name type
+	writeInt32(b, uint32(name.NameType))
+
+	// write nc
+	writeInt32(b, uint32(len(name.NameString)))
+
+	// write len realm
+	writeInt32(b, uint32(len(realm)))
+
+	// write realm
+	writeBytesFromString(b, realm)
+
+	// write PrincipalName string TODO
+	for _, value := range name.NameString {
+		writeInt32(b, uint32(len(value)))
+		writeBytesFromString(b, value)
+	}
+}
+
+func writeTGS(b *[]byte, tkt messages.Ticket) error {
+	// write ticket
+	type ccacheFormat struct {
+		TktVNO  int                 `asn1:"explicit,tag:0"`
+		Realm   string              `asn1:"generalstring,explicit,tag:1"`
+		SName   types.PrincipalName `asn1:"explicit,tag:2"`
+		EncPart types.EncryptedData `asn1:"explicit,tag:3"`
+	}
+	var ccacheTicket ccacheFormat
+	ccacheTicket.TktVNO = tkt.TktVNO
+	ccacheTicket.Realm = tkt.Realm
+	ccacheTicket.SName = tkt.SName
+	ccacheTicket.EncPart = tkt.EncPart
+
+	TGSbytes, err := asn1.Marshal(ccacheTicket)
+	if err != nil {
+		return err
+	}
+
+	r := asn1.RawValue{
+		Class:      asn1.ClassApplication,
+		IsCompound: true,
+		Tag:        1,
+		Bytes:      TGSbytes,
+	}
+	ASN1TGS, err := asn1.Marshal(r)
+	if err != nil {
+		return err
+	}
+
+	// write ticket len
+	writeInt32(b, uint32(len(ASN1TGS)))
+	// write ticket
+	writeBytes(b, ASN1TGS)
+
+	return nil
 }
