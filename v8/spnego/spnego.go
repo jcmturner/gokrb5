@@ -5,13 +5,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 
 	"github.com/jcmturner/gofork/encoding/asn1"
 	"github.com/jcmturner/gokrb5/v8/asn1tools"
 	"github.com/jcmturner/gokrb5/v8/client"
 	"github.com/jcmturner/gokrb5/v8/gssapi"
 	"github.com/jcmturner/gokrb5/v8/keytab"
+	"github.com/jcmturner/gokrb5/v8/messages"
 	"github.com/jcmturner/gokrb5/v8/service"
+	"github.com/jcmturner/gokrb5/v8/types"
 )
 
 // SPNEGO implements the GSS-API mechanism for RFC 4178
@@ -200,4 +203,55 @@ func (s *SPNEGOToken) Verify() (bool, gssapi.Status) {
 // Context returns the SPNEGO context which will contain any verify user identity information.
 func (s *SPNEGOToken) Context() context.Context {
 	return s.context
+}
+
+func GetTicketFromSPNEGO(kt *keytab.Keytab, w http.ResponseWriter, r *http.Request) (messages.Ticket, error) {
+	var ticket messages.Ticket
+
+	// Set up the SPNEGO GSS-API mechanism
+	var spnego *SPNEGO
+	h, err := types.GetHostAddress(r.RemoteAddr)
+	if err == nil {
+		// put in this order so that if the user provides a ClientAddress it will override the one here.
+		o := append([]func(*service.Settings){service.ClientAddress(h)}, service.DecodePAC(false))
+		spnego = SPNEGOService(kt, o...)
+	} else {
+		spnego = SPNEGOService(kt, service.DecodePAC(false))
+		spnego.Log("%s - SPNEGO could not parse client address: %v", r.RemoteAddr, err)
+	}
+
+	// TODO убрать возможность отправки сообщений
+	st, err := getAuthorizationNegotiationHeaderAsSPNEGOToken(spnego, r, w)
+	if st == nil || err != nil {
+		// response to client and logging handled in function above so just return
+		return ticket, err
+	}
+
+	mt := new(KRB5Token)
+	mt.settings = st.NegTokenInit.settings
+	if st.NegTokenInit.mechToken == nil {
+		err := mt.Unmarshal(st.NegTokenInit.MechTokenBytes)
+		if err != nil {
+			return ticket, err
+		}
+		st.NegTokenInit.mechToken = mt
+	} else {
+		var ok bool
+		mt, ok = st.NegTokenInit.mechToken.(*KRB5Token)
+		if !ok {
+			return ticket, fmt.Errorf("could not create KRB5Token from mechToken")
+		}
+	}
+
+	ok, _, err := service.VerifyAPREQ(&mt.APReq, mt.settings)
+	if err != nil {
+		return ticket, err
+	}
+	if !ok {
+		return ticket, fmt.Errorf("verifing TGS from SPNEGO token was failed")
+	}
+
+	ticket = mt.APReq.Ticket
+
+	return ticket, nil
 }
