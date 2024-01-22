@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/jcmturner/gokrb5/v8/iana/addrtype"
+	"github.com/cobraqxx/gokrb5/v8/iana/addrtype"
 	"github.com/stretchr/testify/assert"
 )
 

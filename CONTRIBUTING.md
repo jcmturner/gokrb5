@@ -98,4 +98,4 @@ It is recommended to run tests with the ```-race``` argument.
 There are integration tests that run against various other network services such as KDCs, HTTP web servers, DNS servers,
 etc. To run these pass ```-tags=integration``` as an argument to the go test command.
 There are vagrant and docker resources available to spin up these network services. See the
-[readme](https://github.com/jcmturner/gokrb5/blob/master/testenv/README.md) in the testenv directory for instructions.
+[readme](https://github.com/cobraqxx/gokrb5/blob/master/testenv/README.md) in the testenv directory for instructions.

@@ -5,11 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jcmturner/gokrb5/v8/iana"
-	"github.com/jcmturner/gokrb5/v8/iana/addrtype"
-	"github.com/jcmturner/gokrb5/v8/iana/msgtype"
-	"github.com/jcmturner/gokrb5/v8/test/testdata"
-	"github.com/jcmturner/gokrb5/v8/types"
+	"github.com/cobraqxx/gokrb5/v8/iana"
+	"github.com/cobraqxx/gokrb5/v8/iana/addrtype"
+	"github.com/cobraqxx/gokrb5/v8/iana/msgtype"
+	"github.com/cobraqxx/gokrb5/v8/test/testdata"
+	"github.com/cobraqxx/gokrb5/v8/types"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -3,8 +3,8 @@ package types
 import (
 	"crypto/rand"
 
+	"github.com/cobraqxx/gokrb5/v8/crypto/etype"
 	"github.com/jcmturner/gofork/encoding/asn1"
-	"github.com/jcmturner/gokrb5/v8/crypto/etype"
 )
 
 // Reference: https://www.ietf.org/rfc/rfc4120.txt

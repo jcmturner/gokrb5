@@ -8,10 +8,10 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/cobraqxx/gokrb5/v8/asn1tools"
+	"github.com/cobraqxx/gokrb5/v8/iana"
+	"github.com/cobraqxx/gokrb5/v8/iana/asnAppTag"
 	"github.com/jcmturner/gofork/encoding/asn1"
-	"github.com/jcmturner/gokrb5/v8/asn1tools"
-	"github.com/jcmturner/gokrb5/v8/iana"
-	"github.com/jcmturner/gokrb5/v8/iana/asnAppTag"
 )
 
 // Authenticator - A record containing information that can be shown to have been recently generated using the session
