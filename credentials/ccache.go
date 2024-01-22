@@ -9,7 +9,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/jcmturner/gofork/encoding/asn1" //TODO
+	"github.com/jcmturner/gofork/encoding/asn1"
 	"github.com/jcmturner/gokrb5/v8/types"
 )
 
