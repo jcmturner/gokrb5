@@ -378,38 +378,10 @@ func marshalTicketFileType(tkt messages.Ticket) ([]byte, error) {
 	}
 
 	// write ticket
-	type ccacheFormat struct {
-		TktVNO  int                 `asn1:"explicit,tag:0"`
-		Realm   string              `asn1:"generalstring,explicit,tag:1"`
-		SName   types.PrincipalName `asn1:"explicit,tag:2"`
-		EncPart types.EncryptedData `asn1:"explicit,tag:3"`
-	}
-	var ccacheTicket ccacheFormat
-	ccacheTicket.TktVNO = tkt.TktVNO
-	ccacheTicket.Realm = tkt.Realm
-	ccacheTicket.SName = tkt.SName
-	ccacheTicket.EncPart = tkt.EncPart
-
-	TGSbytes, err := asn1.Marshal(ccacheTicket)
+	err := writeTGS(&cacheTicket, tkt)
 	if err != nil {
 		return nil, err
 	}
-
-	r := asn1.RawValue{
-		Class:      asn1.ClassApplication,
-		IsCompound: true,
-		Tag:        1,
-		Bytes:      TGSbytes,
-	}
-	ASN1TGS, err := asn1.Marshal(r)
-	if err != nil {
-		return nil, err
-	}
-
-	// write ticket len
-	writeInt32(&cacheTicket, uint32(len(ASN1TGS)))
-	// write ticket
-	writeBytes(&cacheTicket, ASN1TGS)
 
 	// write secondTicket TODO
 	writeInt32(&cacheTicket, 0)
@@ -479,4 +451,42 @@ func writePrincipal(b *[]byte, name types.PrincipalName, realm string) {
 		writeInt32(b, uint32(len(value)))
 		writeBytesFromString(b, value)
 	}
+}
+
+func writeTGS(b *[]byte, tkt messages.Ticket) error {
+	// write ticket
+	type ccacheFormat struct {
+		TktVNO  int                 `asn1:"explicit,tag:0"`
+		Realm   string              `asn1:"generalstring,explicit,tag:1"`
+		SName   types.PrincipalName `asn1:"explicit,tag:2"`
+		EncPart types.EncryptedData `asn1:"explicit,tag:3"`
+	}
+	var ccacheTicket ccacheFormat
+	ccacheTicket.TktVNO = tkt.TktVNO
+	ccacheTicket.Realm = tkt.Realm
+	ccacheTicket.SName = tkt.SName
+	ccacheTicket.EncPart = tkt.EncPart
+
+	TGSbytes, err := asn1.Marshal(ccacheTicket)
+	if err != nil {
+		return err
+	}
+
+	r := asn1.RawValue{
+		Class:      asn1.ClassApplication,
+		IsCompound: true,
+		Tag:        1,
+		Bytes:      TGSbytes,
+	}
+	ASN1TGS, err := asn1.Marshal(r)
+	if err != nil {
+		return err
+	}
+
+	// write ticket len
+	writeInt32(b, uint32(len(ASN1TGS)))
+	// write ticket
+	writeBytes(b, ASN1TGS)
+
+	return nil
 }
