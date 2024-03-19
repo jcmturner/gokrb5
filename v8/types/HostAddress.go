@@ -139,7 +139,13 @@ func HostAddressesEqual(h, a []HostAddress) bool {
 }
 
 // HostAddressesContains tests if a HostAddress is contained in a HostAddress slice.
+// Treat an address slice containing only a NetBIOS addresses
+// as empty, because we presently have no way of associating
+// a client with its NetBIOS address.
 func HostAddressesContains(h []HostAddress, a HostAddress) bool {
+	if len(h) == 1 && h[0].AddrType == addrtype.NetBios {
+		return true
+	}
 	for _, e := range h {
 		if e.Equal(a) {
 			return true
