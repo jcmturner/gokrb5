@@ -74,7 +74,13 @@ func (cl *Client) sendKDCUDP(realm string, b []byte) ([]byte, error) {
 	if err != nil {
 		return r, err
 	}
-	r, err = dialSendUDP(kdcs, b)
+
+	if cl.Config.LibDefaults.UDPConnGen == nil {
+		r, err = dialSendUDP(kdcs, b)
+	} else {
+		r, err = dialSendUDPCustom(kdcs, b, cl.Config.LibDefaults.UDPConnGen)
+	}
+
 	if err != nil {
 		return r, err
 	}
@@ -86,6 +92,38 @@ func dialSendUDP(kdcs map[int]string, b []byte) ([]byte, error) {
 	var errs []string
 	for i := 1; i <= len(kdcs); i++ {
 		conn, err := net.DialTimeout("udp", kdcs[i], 5*time.Second)
+		if err != nil {
+			errs = append(errs, fmt.Sprintf("error establishing connection to %s: %v", kdcs[i], err))
+			continue
+		}
+		if err := conn.SetDeadline(time.Now().Add(5 * time.Second)); err != nil {
+			errs = append(errs, fmt.Sprintf("error setting deadline on connection to %s: %v", kdcs[i], err))
+			continue
+		}
+		// conn is guaranteed to be a UDPConn
+		rb, err := sendUDP(conn.(*net.UDPConn), b)
+		if err != nil {
+			errs = append(errs, fmt.Sprintf("error sneding to %s: %v", kdcs[i], err))
+			continue
+		}
+		return rb, nil
+	}
+	return nil, fmt.Errorf("error sending to a KDC: %s", strings.Join(errs, "; "))
+}
+
+// dialSendUDPCustom establishes a custom UDP connection to a KDC.
+func dialSendUDPCustom(kdcs map[int]string, b []byte, udpConnGen func(string) (*net.UDPConn, error)) ([]byte, error) {
+	var errs []string
+	var err error
+	var conn net.Conn
+
+	for i := 1; i <= len(kdcs); i++ {
+		if udpConnGen == nil {
+			conn, err = net.DialTimeout("udp", kdcs[i], 5*time.Second)
+		} else {
+			conn, err = udpConnGen(kdcs[i])
+		}
+
 		if err != nil {
 			errs = append(errs, fmt.Sprintf("error establishing connection to %s: %v", kdcs[i], err))
 			continue
@@ -132,18 +170,55 @@ func (cl *Client) sendKDCTCP(realm string, b []byte) ([]byte, error) {
 	if err != nil {
 		return r, err
 	}
-	r, err = dialSendTCP(kdcs, b)
+	if cl.Config.LibDefaults.TCPConnGen == nil {
+		r, err = dialSendTCP(kdcs, b)
+	} else {
+		r, err = dialSendTCPCustom(kdcs, b, cl.Config.LibDefaults.TCPConnGen)
+	}
+
 	if err != nil {
 		return r, err
 	}
 	return checkForKRBError(r)
 }
 
-// dialKDCTCP establishes a TCP connection to a KDC.
+// dialSendTCP establishes a TCP connection to a KDC.
 func dialSendTCP(kdcs map[int]string, b []byte) ([]byte, error) {
 	var errs []string
 	for i := 1; i <= len(kdcs); i++ {
 		conn, err := net.DialTimeout("tcp", kdcs[i], 5*time.Second)
+		if err != nil {
+			errs = append(errs, fmt.Sprintf("error establishing connection to %s: %v", kdcs[i], err))
+			continue
+		}
+		if err := conn.SetDeadline(time.Now().Add(5 * time.Second)); err != nil {
+			errs = append(errs, fmt.Sprintf("error setting deadline on connection to %s: %v", kdcs[i], err))
+			continue
+		}
+		// conn is guaranteed to be a TCPConn
+		rb, err := sendTCP(conn.(*net.TCPConn), b)
+		if err != nil {
+			errs = append(errs, fmt.Sprintf("error sneding to %s: %v", kdcs[i], err))
+			continue
+		}
+		return rb, nil
+	}
+	return nil, fmt.Errorf("error sending to a KDC: %s", strings.Join(errs, "; "))
+}
+
+// dialSendTCPCustom establishes a custom TCP connection to a KDC.
+func dialSendTCPCustom(kdcs map[int]string, b []byte, tcpConnGen func(string) (*net.TCPConn, error)) ([]byte, error) {
+	var errs []string
+	var err error
+	var conn net.Conn
+
+	for i := 1; i <= len(kdcs); i++ {
+		if tcpConnGen == nil {
+			conn, err = net.DialTimeout("tcp", kdcs[i], 5*time.Second)
+		} else {
+			conn, err = tcpConnGen(kdcs[i])
+		}
+
 		if err != nil {
 			errs = append(errs, fmt.Sprintf("error establishing connection to %s: %v", kdcs[i], err))
 			continue

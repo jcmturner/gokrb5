@@ -81,6 +81,8 @@ type LibDefaults struct {
 	TicketLifetime        time.Duration //default 1 day
 	UDPPreferenceLimit    int           // 1 means to always use tcp. MIT krb5 has a default value of 1465, and it prevents user setting more than 32700.
 	VerifyAPReqNofail     bool          //default false
+	TCPConnGen            func(string) (*net.TCPConn, error)
+	UDPConnGen            func(string) (*net.UDPConn, error)
 }
 
 // Create a new LibDefaults struct.
