@@ -19,6 +19,7 @@ import (
 	"github.com/jcmturner/gokrb5/v8/krberror"
 	"github.com/jcmturner/gokrb5/v8/messages"
 	"github.com/jcmturner/gokrb5/v8/types"
+	"golang.org/x/net/proxy"
 )
 
 // Client side configuration and state.
@@ -28,6 +29,7 @@ type Client struct {
 	settings    *Settings
 	sessions    *sessions
 	cache       *Cache
+	tcpDialer   proxy.Dialer
 }
 
 // NewWithPassword creates a new client from a password credential.
@@ -326,4 +328,8 @@ func (cl *Client) Print(w io.Writer) {
 
 	k, _ := cl.Credentials.Keytab().JSON()
 	fmt.Fprintf(w, "Keytab:\n%s\n", k)
+}
+
+func (cl *Client) SetDialerForTCP(dialer proxy.Dialer) {
+	cl.tcpDialer = dialer
 }

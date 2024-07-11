@@ -10,6 +10,7 @@ import (
 
 	"github.com/jcmturner/gokrb5/v8/iana/errorcode"
 	"github.com/jcmturner/gokrb5/v8/messages"
+	"golang.org/x/net/proxy"
 )
 
 // SendToKDC performs network actions to send data to the KDC.
@@ -132,7 +133,7 @@ func (cl *Client) sendKDCTCP(realm string, b []byte) ([]byte, error) {
 	if err != nil {
 		return r, err
 	}
-	r, err = dialSendTCP(kdcs, b)
+	r, err = dialSendTCP(kdcs, b, cl.tcpDialer)
 	if err != nil {
 		return r, err
 	}
@@ -140,10 +141,18 @@ func (cl *Client) sendKDCTCP(realm string, b []byte) ([]byte, error) {
 }
 
 // dialKDCTCP establishes a TCP connection to a KDC.
-func dialSendTCP(kdcs map[int]string, b []byte) ([]byte, error) {
+func dialSendTCP(kdcs map[int]string, b []byte, dialer proxy.Dialer) ([]byte, error) {
 	var errs []string
 	for i := 1; i <= len(kdcs); i++ {
-		conn, err := net.DialTimeout("tcp", kdcs[i], 5*time.Second)
+		var conn net.Conn
+		var err error
+
+		if dialer != nil {
+			conn, err = dialer.Dial("tcp", kdcs[i])
+		} else {
+			conn, err = net.DialTimeout("tcp", kdcs[i], 5*time.Second)
+		}
+
 		if err != nil {
 			errs = append(errs, fmt.Sprintf("error establishing connection to %s: %v", kdcs[i], err))
 			continue
@@ -155,7 +164,7 @@ func dialSendTCP(kdcs map[int]string, b []byte) ([]byte, error) {
 		// conn is guaranteed to be a TCPConn
 		rb, err := sendTCP(conn.(*net.TCPConn), b)
 		if err != nil {
-			errs = append(errs, fmt.Sprintf("error sneding to %s: %v", kdcs[i], err))
+			errs = append(errs, fmt.Sprintf("error sending to %s: %v", kdcs[i], err))
 			continue
 		}
 		return rb, nil

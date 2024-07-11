@@ -65,7 +65,7 @@ func (cl *Client) sendToKPasswd(msg kadmin.Request) (r kadmin.Reply, err error) 
 			return
 		}
 	} else {
-		rb, err = dialSendTCP(kps, b)
+		rb, err = dialSendTCP(kps, b, cl.tcpDialer)
 		if err != nil {
 			return
 		}
