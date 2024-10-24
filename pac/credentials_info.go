@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 
-	"gopkg.in/jcmturner/gokrb5.v7/crypto"
-	"gopkg.in/jcmturner/gokrb5.v7/iana/keyusage"
-	"gopkg.in/jcmturner/gokrb5.v7/types"
+	"gopkg.in/matchaxnb/gokrb5.v7/crypto"
+	"gopkg.in/matchaxnb/gokrb5.v7/iana/keyusage"
+	"gopkg.in/matchaxnb/gokrb5.v7/types"
 	"gopkg.in/jcmturner/rpc.v1/mstypes"
 	"gopkg.in/jcmturner/rpc.v1/ndr"
 )

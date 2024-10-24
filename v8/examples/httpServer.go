@@ -13,10 +13,10 @@ import (
 
 	"github.com/gorilla/sessions"
 	"github.com/jcmturner/goidentity/v6"
-	"github.com/jcmturner/gokrb5/v8/keytab"
-	"github.com/jcmturner/gokrb5/v8/service"
-	"github.com/jcmturner/gokrb5/v8/spnego"
-	"github.com/jcmturner/gokrb5/v8/test/testdata"
+	"github.com/matchaxnb/gokrb5/v8/keytab"
+	"github.com/matchaxnb/gokrb5/v8/service"
+	"github.com/matchaxnb/gokrb5/v8/spnego"
+	"github.com/matchaxnb/gokrb5/v8/test/testdata"
 )
 
 const (

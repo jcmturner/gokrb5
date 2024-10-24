@@ -3,8 +3,8 @@ package client
 import (
 	"testing"
 
-	"gopkg.in/jcmturner/gokrb5.v7/config"
-	"gopkg.in/jcmturner/gokrb5.v7/keytab"
+	"gopkg.in/matchaxnb/gokrb5.v7/config"
+	"gopkg.in/matchaxnb/gokrb5.v7/keytab"
 )
 
 func TestAssumePreauthentication(t *testing.T) {

@@ -42,8 +42,8 @@ jobs:
 
       - name: Copy to gopkg.in in GOPATH
         run: |
-          mkdir -p /home/runner/go/src/gopkg.in/jcmturner/gokrb5.v7
-          cp -r $GITHUB_WORKSPACE/*  /home/runner/go/src/gopkg.in/jcmturner/gokrb5.v7
+          mkdir -p /home/runner/go/src/gopkg.in/matchaxnb/gokrb5.v7
+          cp -r $GITHUB_WORKSPACE/*  /home/runner/go/src/gopkg.in/matchaxnb/gokrb5.v7
         id: gopkg
 
       - name: Get dependencies
@@ -53,7 +53,7 @@ jobs:
 
       - name: Unit tests
         run: |
-          cd /home/runner/go/src/gopkg.in/jcmturner/gokrb5.v7
+          cd /home/runner/go/src/gopkg.in/matchaxnb/gokrb5.v7
           go test -race $(go list ./... | grep -E -v '/v[0-9]+' | grep -v /vendor/)
         id: unitTests
 
@@ -61,13 +61,13 @@ jobs:
         run: |
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -yq krb5-user
           sudo chmod 666 /etc/krb5.conf
-          sudo docker run -d -h ns.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -e "TEST_KDC_ADDR=${TEST_KDC_ADDR}" -e "TEST_HTTP_ADDR=${TEST_HTTP_ADDR}" -p ${DNSUTILS_OVERRIDE_NS}:53 -p ${DNSUTILS_OVERRIDE_NS}:53/udp --name dns jcmturner/gokrb5:dns
-          sudo docker run -d -h kdc.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -p 88:88 -p 88:88/udp -p 464:464 -p 464:464/udp --name krb5kdc jcmturner/gokrb5:kdc-centos-default
-          sudo docker run -d -h kdc.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -p 78:88 -p 78:88/udp --name krb5kdc-old jcmturner/gokrb5:kdc-older
-          sudo docker run -d -h kdc.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -p 98:88 -p 98:88/udp --name krb5kdc-latest jcmturner/gokrb5:kdc-latest
-          sudo docker run -d -h kdc.resdom.gokrb5 -v /etc/localtime:/etc/localtime:ro -p 188:88 -p 188:88/udp --name krb5kdc-resdom jcmturner/gokrb5:kdc-resdom
-          sudo docker run -d -h kdc.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -p 58:88 -p 58:88/udp --name krb5kdc-shorttickets jcmturner/gokrb5:kdc-shorttickets
-          sudo docker run -d --add-host host.test.gokrb5:127.0.0.88 -v /etc/localtime:/etc/localtime:ro -p 80:80 -p 443:443 --name gokrb5-http jcmturner/gokrb5:http
+          sudo docker run -d -h ns.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -e "TEST_KDC_ADDR=${TEST_KDC_ADDR}" -e "TEST_HTTP_ADDR=${TEST_HTTP_ADDR}" -p ${DNSUTILS_OVERRIDE_NS}:53 -p ${DNSUTILS_OVERRIDE_NS}:53/udp --name dns matchaxnb/gokrb5:dns
+          sudo docker run -d -h kdc.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -p 88:88 -p 88:88/udp -p 464:464 -p 464:464/udp --name krb5kdc matchaxnb/gokrb5:kdc-centos-default
+          sudo docker run -d -h kdc.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -p 78:88 -p 78:88/udp --name krb5kdc-old matchaxnb/gokrb5:kdc-older
+          sudo docker run -d -h kdc.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -p 98:88 -p 98:88/udp --name krb5kdc-latest matchaxnb/gokrb5:kdc-latest
+          sudo docker run -d -h kdc.resdom.gokrb5 -v /etc/localtime:/etc/localtime:ro -p 188:88 -p 188:88/udp --name krb5kdc-resdom matchaxnb/gokrb5:kdc-resdom
+          sudo docker run -d -h kdc.test.gokrb5 -v /etc/localtime:/etc/localtime:ro -p 58:88 -p 58:88/udp --name krb5kdc-shorttickets matchaxnb/gokrb5:kdc-shorttickets
+          sudo docker run -d --add-host host.test.gokrb5:127.0.0.88 -v /etc/localtime:/etc/localtime:ro -p 80:80 -p 443:443 --name gokrb5-http matchaxnb/gokrb5:http
           sudo sed -i 's/nameserver .*/nameserver '${DNS_IP}'/g' /etc/resolv.conf
           dig _kerberos._udp.TEST.GOKRB5
         id: intgTestDeps
@@ -78,7 +78,7 @@ jobs:
 
       - name: Tests including integration tests
         run: |
-          cd /home/runner/go/src/gopkg.in/jcmturner/gokrb5.v7
+          cd /home/runner/go/src/gopkg.in/matchaxnb/gokrb5.v7
           go test -race $(go list ./... | grep -E -v '/v[0-9]+' | grep -v /vendor/)
         env:
           INTEGRATION: 1
@@ -87,7 +87,7 @@ jobs:
 
       - name: Tests (32bit)
         run: |
-          cd /home/runner/go/src/gopkg.in/jcmturner/gokrb5.v7
+          cd /home/runner/go/src/gopkg.in/matchaxnb/gokrb5.v7
           go test $(go list ./... | grep -E -v '/v[0-9]+' | grep -v /vendor/)
         env:
           GOARCH: 386

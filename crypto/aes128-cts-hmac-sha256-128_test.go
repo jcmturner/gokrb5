@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v7/crypto/common"
-	"gopkg.in/jcmturner/gokrb5.v7/crypto/rfc8009"
+	"gopkg.in/matchaxnb/gokrb5.v7/crypto/common"
+	"gopkg.in/matchaxnb/gokrb5.v7/crypto/rfc8009"
 )
 
 func TestAes128CtsHmacSha256128_StringToKey(t *testing.T) {

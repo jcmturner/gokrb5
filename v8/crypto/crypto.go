@@ -5,11 +5,11 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/jcmturner/gokrb5/v8/crypto/etype"
-	"github.com/jcmturner/gokrb5/v8/iana/chksumtype"
-	"github.com/jcmturner/gokrb5/v8/iana/etypeID"
-	"github.com/jcmturner/gokrb5/v8/iana/patype"
-	"github.com/jcmturner/gokrb5/v8/types"
+	"github.com/matchaxnb/gokrb5/v8/crypto/etype"
+	"github.com/matchaxnb/gokrb5/v8/iana/chksumtype"
+	"github.com/matchaxnb/gokrb5/v8/iana/etypeID"
+	"github.com/matchaxnb/gokrb5/v8/iana/patype"
+	"github.com/matchaxnb/gokrb5/v8/types"
 )
 
 // GetEtype returns an instances of the required etype struct for the etype ID.

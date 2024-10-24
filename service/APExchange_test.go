@@ -6,16 +6,16 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jcmturner/gokrb5.v7/client"
-	"gopkg.in/jcmturner/gokrb5.v7/config"
-	"gopkg.in/jcmturner/gokrb5.v7/credentials"
-	"gopkg.in/jcmturner/gokrb5.v7/iana/errorcode"
-	"gopkg.in/jcmturner/gokrb5.v7/iana/flags"
-	"gopkg.in/jcmturner/gokrb5.v7/iana/nametype"
-	"gopkg.in/jcmturner/gokrb5.v7/keytab"
-	"gopkg.in/jcmturner/gokrb5.v7/messages"
-	"gopkg.in/jcmturner/gokrb5.v7/test/testdata"
-	"gopkg.in/jcmturner/gokrb5.v7/types"
+	"gopkg.in/matchaxnb/gokrb5.v7/client"
+	"gopkg.in/matchaxnb/gokrb5.v7/config"
+	"gopkg.in/matchaxnb/gokrb5.v7/credentials"
+	"gopkg.in/matchaxnb/gokrb5.v7/iana/errorcode"
+	"gopkg.in/matchaxnb/gokrb5.v7/iana/flags"
+	"gopkg.in/matchaxnb/gokrb5.v7/iana/nametype"
+	"gopkg.in/matchaxnb/gokrb5.v7/keytab"
+	"gopkg.in/matchaxnb/gokrb5.v7/messages"
+	"gopkg.in/matchaxnb/gokrb5.v7/test/testdata"
+	"gopkg.in/matchaxnb/gokrb5.v7/types"
 )
 
 func TestVerifyAPREQ(t *testing.T) {
