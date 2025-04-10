@@ -97,7 +97,7 @@ func dialSendUDP(kdcs map[int]string, b []byte) ([]byte, error) {
 		// conn is guaranteed to be a UDPConn
 		rb, err := sendUDP(conn.(*net.UDPConn), b)
 		if err != nil {
-			errs = append(errs, fmt.Sprintf("error sneding to %s: %v", kdcs[i], err))
+			errs = append(errs, fmt.Sprintf("error sending to %s: %v", kdcs[i], err))
 			continue
 		}
 		return rb, nil
@@ -155,7 +155,7 @@ func dialSendTCP(kdcs map[int]string, b []byte) ([]byte, error) {
 		// conn is guaranteed to be a TCPConn
 		rb, err := sendTCP(conn.(*net.TCPConn), b)
 		if err != nil {
-			errs = append(errs, fmt.Sprintf("error sneding to %s: %v", kdcs[i], err))
+			errs = append(errs, fmt.Sprintf("error sending to %s: %v", kdcs[i], err))
 			continue
 		}
 		return rb, nil
