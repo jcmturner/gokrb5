@@ -169,7 +169,7 @@ func setRequestSPN(r *http.Request) (types.PrincipalName, error) {
 	// This if statement checks if the host includes a port number
 	if strings.LastIndex(r.URL.Host, ":") > strings.LastIndex(r.URL.Host, "]") {
 		// There is a port number in the URL
-		h, p, err := net.SplitHostPort(h)
+		h, _, err := net.SplitHostPort(h)
 		if err != nil {
 			return types.PrincipalName{}, err
 		}
@@ -179,7 +179,6 @@ func setRequestSPN(r *http.Request) (types.PrincipalName, error) {
 			h = strings.ToLower(name)
 		}
 		h = strings.TrimSuffix(h, ".")
-		r.Host = fmt.Sprintf("%s:%s", h, p)
 		return types.NewPrincipalName(nametype.KRB_NT_PRINCIPAL, "HTTP/"+h), nil
 	}
 	name, err := net.LookupCNAME(h)
@@ -188,7 +187,6 @@ func setRequestSPN(r *http.Request) (types.PrincipalName, error) {
 		h = strings.ToLower(name)
 	}
 	h = strings.TrimSuffix(h, ".")
-	r.Host = h
 	return types.NewPrincipalName(nametype.KRB_NT_PRINCIPAL, "HTTP/"+h), nil
 }
 
