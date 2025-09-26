@@ -112,6 +112,8 @@ func (c *Client) Do(req *http.Request) (resp *http.Response, err error) {
 		}
 		return c.Do(req)
 	}
+	// Clear the saved requests as we have successfully authenticated
+	c.reqs = c.reqs[:0]
 	return resp, err
 }
 
