@@ -74,4 +74,13 @@ const (
 	//UNASSIGNED : 151-164
 	PA_SUPPORTED_ETYPES int32 = 165
 	PA_EXTENDED_ERROR   int32 = 166
+	PA_PAC_OPTIONS      int32 = 167 // MS Specific extension
+)
+
+// MS specific PA PAC option bits
+const (
+	PA_PAC_OPTION_CLAIMS                                int = 0
+	PA_PAC_OPTION_BRANCH_AWARE                          int = 1
+	PA_PAC_OPTION_FORWARD_TO_FULL_DC                    int = 2
+	PA_PAC_OPTION_RESOURCE_BASED_CONSTRAINED_DELEGATION int = 3
 )

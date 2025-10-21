@@ -11,6 +11,7 @@ import (
 	"github.com/jcmturner/gokrb5/v8/client"
 	"github.com/jcmturner/gokrb5/v8/gssapi"
 	"github.com/jcmturner/gokrb5/v8/keytab"
+	"github.com/jcmturner/gokrb5/v8/messages"
 	"github.com/jcmturner/gokrb5/v8/service"
 )
 
@@ -50,6 +51,24 @@ func (s *SPNEGO) AcquireCred() error {
 // InitSecContext is the GSS-API method for the client to a generate a context token to the service via Kerberos.
 func (s *SPNEGO) InitSecContext() (gssapi.ContextToken, error) {
 	tkt, key, err := s.client.GetServiceTicket(s.spn)
+	if err != nil {
+		return &SPNEGOToken{}, err
+	}
+	negTokenInit, err := NewNegTokenInitKRB5(s.client, tkt, key)
+	if err != nil {
+		return &SPNEGOToken{}, fmt.Errorf("could not create NegTokenInit: %v", err)
+	}
+	return &SPNEGOToken{
+		Init:         true,
+		NegTokenInit: negTokenInit,
+		settings:     s.serviceSettings,
+	}, nil
+}
+
+// InitProxySecContext is the GSS-API method for the client to generate a proxy token for the
+// service, using a user's verified forwardable ticket.
+func (s *SPNEGO) InitProxySecContext(userTicket messages.Ticket) (gssapi.ContextToken, error) {
+	tkt, key, err := s.client.GetProxyTicket(s.spn, userTicket)
 	if err != nil {
 		return &SPNEGOToken{}, err
 	}

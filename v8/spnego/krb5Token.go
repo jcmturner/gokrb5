@@ -116,7 +116,8 @@ func (m *KRB5Token) Verify() (bool, gssapi.Status) {
 			return false, gssapi.Status{Code: gssapi.StatusDefectiveCredential, Message: "KRB5_AP_REQ token not valid"}
 		}
 		m.context = context.Background()
-		m.context = context.WithValue(m.context, ctxCredentials, creds)
+		m.context = context.WithValue(m.context, CtxCredentialsKey{}, creds)
+		m.context = context.WithValue(m.context, CtxTicketKey{}, m.APReq.Ticket)
 		return true, gssapi.Status{Code: gssapi.StatusComplete}
 	case TOK_ID_KRB_AP_REP:
 		// Client side

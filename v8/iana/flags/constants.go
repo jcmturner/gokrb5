@@ -20,6 +20,7 @@ const (
 	RequestAnonymous       = 12
 	TransitedPolicyChecked = 12
 	OKAsDelegate           = 13
+	CnameInAddlTkt         = 14 // MS specific: needed in S4U2Proxy TGS Request
 	EncPARep               = 15
 	Canonicalize           = 15
 	DisableTransitedCheck  = 26

@@ -21,6 +21,14 @@ func (cl *Client) TGSREQGenerateAndExchange(spn types.PrincipalName, kdcRealm st
 // Referrals are automatically handled.
 // The client's cache is updated with the ticket received.
 func (cl *Client) TGSExchange(tgsReq messages.TGSReq, kdcRealm string, tgt messages.Ticket, sessionKey types.EncryptionKey, referral int) (messages.TGSReq, messages.TGSRep, error) {
+	return cl.tgsExchange(tgsReq, kdcRealm, tgt, sessionKey, referral, false)
+}
+
+func (cl *Client) TGSExchangeNoCache(tgsReq messages.TGSReq, kdcRealm string, tgt messages.Ticket, sessionKey types.EncryptionKey, referral int) (messages.TGSReq, messages.TGSRep, error) {
+	return cl.tgsExchange(tgsReq, kdcRealm, tgt, sessionKey, referral, true)
+}
+
+func (cl *Client) tgsExchange(tgsReq messages.TGSReq, kdcRealm string, tgt messages.Ticket, sessionKey types.EncryptionKey, referral int, cacheTicket bool) (messages.TGSReq, messages.TGSRep, error) {
 	var tgsRep messages.TGSRep
 	b, err := tgsReq.Marshal()
 	if err != nil {
@@ -66,15 +74,17 @@ func (cl *Client) TGSExchange(tgsReq messages.TGSReq, kdcRealm string, tgt messa
 		}
 		return cl.TGSExchange(tgsReq, realm, tgsRep.Ticket, tgsRep.DecryptedEncPart.Key, referral)
 	}
-	cl.cache.addEntry(
-		tgsRep.Ticket,
-		tgsRep.DecryptedEncPart.AuthTime,
-		tgsRep.DecryptedEncPart.StartTime,
-		tgsRep.DecryptedEncPart.EndTime,
-		tgsRep.DecryptedEncPart.RenewTill,
-		tgsRep.DecryptedEncPart.Key,
-	)
-	cl.Log("ticket added to cache for %s (EndTime: %v)", tgsRep.Ticket.SName.PrincipalNameString(), tgsRep.DecryptedEncPart.EndTime)
+	if cacheTicket {
+		cl.cache.addEntry(
+			tgsRep.Ticket,
+			tgsRep.DecryptedEncPart.AuthTime,
+			tgsRep.DecryptedEncPart.StartTime,
+			tgsRep.DecryptedEncPart.EndTime,
+			tgsRep.DecryptedEncPart.RenewTill,
+			tgsRep.DecryptedEncPart.Key,
+		)
+		cl.Log("ticket added to cache for %s (EndTime: %v)", tgsRep.Ticket.SName.PrincipalNameString(), tgsRep.DecryptedEncPart.EndTime)
+	}
 	return tgsReq, tgsRep, err
 }
 
@@ -101,6 +111,42 @@ func (cl *Client) GetServiceTicket(spn string) (messages.Ticket, types.Encryptio
 		return tkt, skey, err
 	}
 	_, tgsRep, err := cl.TGSREQGenerateAndExchange(princ, realm, tgt, skey, false)
+	if err != nil {
+		return tkt, skey, err
+	}
+	return tgsRep.Ticket, tgsRep.DecryptedEncPart.Key, nil
+}
+
+// GetProxyTicket uses the MS S4U2Proxy protocol extensions to request a ticket for a service
+// on behalf of another user. The proxy tickets are not looked up in or added to the ticket cache.
+// The userTicket must be a (already decrypted) forwardable ticket received from the user.
+func (cl *Client) GetProxyTicket(spn string, userTicket messages.Ticket) (messages.Ticket, types.EncryptionKey, error) {
+	var tkt messages.Ticket
+	var skey types.EncryptionKey
+
+	// The userTicket must have the forwardable field set.
+	if !types.IsFlagSet(&userTicket.DecryptedEncPart.Flags, flags.Forwardable) {
+		return tkt, skey, krberror.New(krberror.KRBMsgError, "user ticket does not have the forwardable flag set")
+	}
+	user := userTicket.DecryptedEncPart.CName
+	princ := types.NewPrincipalName(nametype.KRB_NT_PRINCIPAL, spn)
+	realm := cl.spnRealm(princ)
+
+	// if we don't know the SPN's realm, ask the client realm's KDC
+	if realm == "" {
+		realm = cl.Credentials.Realm()
+	}
+
+	tgt, skey, err := cl.sessionTGT(realm)
+	if err != nil {
+		return tkt, skey, err
+	}
+
+	tgsReq, err := messages.NewS4U2ProxyTGSReq(user, realm, cl.Config, tgt, skey, princ, false, userTicket)
+	if err != nil {
+		return tkt, skey, krberror.Errorf(err, krberror.KRBMsgError, "TGS Exchange Error: failed to generate a new S4U2Proxy TGS_REQ")
+	}
+	_, tgsRep, err := cl.TGSExchangeNoCache(tgsReq, realm, tgt, skey, 0)
 	if err != nil {
 		return tkt, skey, err
 	}

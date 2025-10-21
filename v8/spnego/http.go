@@ -232,8 +232,6 @@ const (
 	spnegoNegTokenRespIncompleteKRB5 = "Negotiate oRQwEqADCgEBoQsGCSqGSIb3EgECAg=="
 	// sessionCredentials is the session value key holding the credentials jcmturner/goidentity/Identity object.
 	sessionCredentials = "github.com/jcmturner/gokrb5/v8/sessionCredentials"
-	// ctxCredentials is the SPNEGO context key holding the credentials jcmturner/goidentity/Identity object.
-	ctxCredentials = "github.com/jcmturner/gokrb5/v8/ctxCredentials"
 	// HTTPHeaderAuthRequest is the header that will hold authn/z information.
 	HTTPHeaderAuthRequest = "Authorization"
 	// HTTPHeaderAuthResponse is the header that will hold SPNEGO data from the server.
@@ -243,6 +241,12 @@ const (
 	// UnauthorizedMsg is the message returned in the body when authentication fails.
 	UnauthorizedMsg = "Unauthorised.\n"
 )
+
+// CtxCredentialsKey is the SPNEGO context key holding the credentials jcmturner/goidentity/Identity object.
+type CtxCredentialsKey struct{}
+
+// CtxTicketKey is the SPNEGO context key holding the authenticated client ticket if any.
+type CtxTicketKey struct{}
 
 // SPNEGOKRB5Authenticate is a Kerberos SPNEGO authentication HTTP handler wrapper.
 func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, settings ...func(*service.Settings)) http.Handler {
@@ -287,7 +291,7 @@ func SPNEGOKRB5Authenticate(inner http.Handler, kt *keytab.Keytab, settings ...f
 
 		if authed {
 			// Authentication successful; get user's credentials from the context
-			id := ctx.Value(ctxCredentials).(*credentials.Credentials)
+			id := ctx.Value(CtxCredentialsKey{}).(*credentials.Credentials)
 			// Create a new session if a session manager has been configured
 			err = newSession(spnego, r, w, id)
 			if err != nil {

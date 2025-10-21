@@ -156,6 +156,33 @@ func (kt *Keytab) AddEntry(principalName, realm, password string, ts time.Time, 
 	return nil
 }
 
+// AddEntryWithKey adds an entry to the keytab with the given key.
+func (kt *Keytab) AddEntryWithKey(principalName, realm string, key types.EncryptionKey, ts time.Time, KVNO uint8) {
+	// Generate a key from the password
+	princ, _ := types.ParseSPNString(principalName)
+
+	// Populate the keytab entry principal
+	ktep := newPrincipal()
+	ktep.NumComponents = int16(len(princ.NameString))
+	if kt.version == 1 {
+		ktep.NumComponents += 1
+	}
+
+	ktep.Realm = realm
+	ktep.Components = princ.NameString
+	ktep.NameType = princ.NameType
+
+	// Populate the keytab entry
+	e := newEntry()
+	e.Principal = ktep
+	e.Timestamp = ts
+	e.KVNO8 = KVNO
+	e.KVNO = uint32(KVNO)
+	e.Key = key
+
+	kt.Entries = append(kt.Entries, e)
+}
+
 // Create a new principal.
 func newPrincipal() principal {
 	var c []string
