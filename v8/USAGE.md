@@ -1,9 +1,9 @@
 ## Version 8 Usage
 
 ### Configuration
-The gokrb5 libraries use the same krb5.conf configuration file format as MIT Kerberos, 
+The gokrb5 libraries use the same krb5.conf configuration file format as MIT Kerberos,
 described [here](https://web.mit.edu/kerberos/krb5-latest/doc/admin/conf_files/krb5_conf.html).
-Config instances can be created by loading from a file path or by passing a string, io.Reader or bufio.Scanner to the 
+Config instances can be created by loading from a file path or by passing a string, io.Reader or bufio.Scanner to the
 relevant method:
 ```go
 import "github.com/jcmturner/gokrb5/v8/config"
@@ -12,13 +12,13 @@ cfg, err := config.NewFromString(krb5Str) //String must have appropriate newline
 cfg, err := config.NewFromReader(reader)
 cfg, err := config.NewFromScanner(scanner)
 ```
+
 ### Keytab files
 Standard keytab files can be read from a file or from a slice of bytes:
 ```go
-import 	"github.com/jcmturner/gokrb5/v8/keytab"
+import "github.com/jcmturner/gokrb5/v8/keytab"
 ktFromFile, err := keytab.Load("/path/to/file.keytab")
 ktFromBytes, err := keytab.Parse(b)
-
 ```
 
 ---
@@ -27,7 +27,7 @@ ktFromBytes, err := keytab.Parse(b)
 **Create** a client instance with either a password or a keytab.
 A configuration must also be passed. Additionally optional additional settings can be provided.
 ```go
-import 	"github.com/jcmturner/gokrb5/v8/client"
+import  "github.com/jcmturner/gokrb5/v8/client"
 cl := client.NewWithPassword("username", "REALM.COM", "password", cfg)
 cl := client.NewWithKeytab("username", "REALM.COM", kt, cfg)
 ```
@@ -57,10 +57,10 @@ cl := client.NewWithPassword("username", "REALM.COM", "password", cfg, client.Di
 #### Authenticate to a Service
 
 ##### HTTP SPNEGO
-Create the HTTP request object and then create an SPNEGO client and use this to process the request with methods that 
+Create the HTTP request object and then create an SPNEGO client and use this to process the request with methods that
 are the same as on a HTTP client.
 If nil is passed as the HTTP client when creating the SPNEGO client the http.DefaultClient is used.
-When creating the SPNEGO client pass the Service Principal Name (SPN) or auto generate the SPN from the request 
+When creating the SPNEGO client pass the Service Principal Name (SPN) or auto generate the SPN from the request
 object by passing a null string "".
 ```go
 r, _ := http.NewRequest("GET", "http://host.test.gokrb5/index.html", nil)
@@ -69,20 +69,20 @@ resp, err := spnegoCl.Do(r)
 ```
 
 ##### Generic Kerberos Client
-To authenticate to a service a client will need to request a service ticket for a Service Principal Name (SPN) and form 
-into an AP_REQ message along with an authenticator encrypted with the session key that was delivered from the KDC along 
+To authenticate to a service a client will need to request a service ticket for a Service Principal Name (SPN) and form
+into an AP_REQ message along with an authenticator encrypted with the session key that was delivered from the KDC along
 with the service ticket.
 
 The steps below outline how to do this.
 * Get the service ticket and session key for the service the client is authenticating to.
-The following method will use the client's cache either returning a valid cached ticket, renewing a cached ticket with 
+The following method will use the client's cache either returning a valid cached ticket, renewing a cached ticket with
 the KDC or requesting a new ticket from the KDC.
 Therefore the GetServiceTicket method can be continually used for the most efficient interaction with the KDC.
 ```go
 tkt, key, err := cl.GetServiceTicket("HTTP/host.test.gokrb5")
 ```
 
-The steps after this will be specific to the application protocol but it will likely involve a client/server 
+The steps after this will be specific to the application protocol but it will likely involve a client/server
 Authentication Protocol exchange (AP exchange).
 This will involve these steps:
 
@@ -96,9 +96,9 @@ auth.GenerateSeqNumberAndSubKey(key.KeyType, etype.GetKeyByteSize())
 The checksum is an application specific value. Set as follows:
 ```go
 auth.Cksum = types.Checksum{
-		CksumType: checksumIDint,
-		Checksum:  checksumBytesSlice,
-	}
+	CksumType: checksumIDint,
+	Checksum:  checksumBytesSlice,
+}
 ```
 * Create the AP_REQ:
 ```go
@@ -108,7 +108,7 @@ APReq, err := messages.NewAPReq(tkt, key, auth)
 Now send the AP_REQ to the service. How this is done will be specific to the application use case.
 
 #### Changing a Client Password
-This feature uses the Microsoft Kerberos Password Change protocol (RFC 3244). 
+This feature uses the Microsoft Kerberos Password Change protocol (RFC 3244).
 This is implemented in Microsoft Active Directory and in MIT krb5kdc as of version 1.7.
 Typically the kpasswd server listens on port 464.
 
@@ -134,16 +134,16 @@ if !ok {
 }
 ```
 
-The client kerberos config (krb5.conf) will need to have either the kpassd_server or admin_server defined in the 
+The client kerberos config (krb5.conf) will need to have either the kpassd_server or admin_server defined in the
 relevant [realms] section. For example:
 ```
 REALM.COM = {
   kdc = 127.0.0.1:88
   kpasswd_server = 127.0.0.1:464
   default_domain = realm.com
- }
+}
 ```
-See https://web.mit.edu/kerberos/krb5-latest/doc/admin/conf_files/krb5_conf.html#realms for more information.
+See <https://web.mit.edu/kerberos/krb5-latest/doc/admin/conf_files/krb5_conf.html#realms> for more information.
 
 #### Client Diagnostics
 In the event of issues the configuration of a client can be investigated with its ``Diagnostics`` method.
@@ -171,18 +171,18 @@ Configure the HTTP handler:
 ```go
 http.Handler("/", spnego.SPNEGOKRB5Authenticate(h, &kt, service.Logger(l)))
 ```
-The handler to be wrapped and the keytab are required arguments. 
+The handler to be wrapped and the keytab are required arguments.
 Additional optional settings can be provided, such as the logger shown above.
 
-Another example of optional settings may be that when using Active Directory where the SPN is mapped to a user account 
-the keytab may contain an entry for this user account. In this case this should be specified as below with the 
+Another example of optional settings may be that when using Active Directory where the SPN is mapped to a user account
+the keytab may contain an entry for this user account. In this case this should be specified as below with the
 ``KeytabPrincipal``:
 ```go
 http.Handler("/", spnego.SPNEGOKRB5Authenticate(h, &kt, service.Logger(l), service.KeytabPrincipal(pn)))
 ```
 
 ##### Session Management
-For efficiency reasons it is not desirable to authenticate on every call to a web service. 
+For efficiency reasons it is not desirable to authenticate on every call to a web service.
 Therefore most authenticated web applications implement some form of session with the user.
 Such sessions can be supported by passing a "session manager" into the ``SPNEGOKRB5Authenticate`` wrapper handler.
 In order to not demand a specific session manager solution, the session manager must implement a simple interface:
@@ -192,11 +192,11 @@ type SessionMgr interface {
 	Get(r *http.Request, k string) ([]byte, error)
 }
 ```
-- New - creates a new session for the request and adds a piece of data (key/value pair) to the session
-- Get - extract from an existing session the value held within it under the key provided. 
+* New - creates a new session for the request and adds a piece of data (key/value pair) to the session
+* Get - extract from an existing session the value held within it under the key provided.
 This should return nil bytes or an error if there is no existing session.
 
-The session manager (sm) that implements this interface should then be passed to the ``SPNEGOKRB5Authenticate`` wrapper 
+The session manager (sm) that implements this interface should then be passed to the ``SPNEGOKRB5Authenticate`` wrapper
 handler as below:
 ```go
 http.Handler("/", spnego.SPNEGOKRB5Authenticate(h, &kt, service.Logger(l), service.SessionManager(sm)))
@@ -207,8 +207,8 @@ The ``httpServer.go`` source file in the examples directory shows how this can b
 ##### Validating Users and Accessing Users' Details
 If authentication succeeds then the request's context will have a credentials objected added to it.
 This object implements the ``github.com/jcmturner/goidentity/identity`` interface.
-If Microsoft Active Directory is used as the KDC then additional ADCredentials are available in the 
-``credentials.Attributes`` map under the key ``credentials.AttributeKeyADCredentials``. 
+If Microsoft Active Directory is used as the KDC then additional ADCredentials are available in the
+``credentials.Attributes`` map under the key ``credentials.AttributeKeyADCredentials``.
 For example the SIDs of the users group membership are available and can be used by your application for authorization.
 
 Checking and access the credentials within your application:
@@ -217,17 +217,17 @@ Checking and access the credentials within your application:
 creds := goidentity.FromHTTPRequestContext(r)
 // Check if it indicates it is authenticated
 if creds != nil && creds.Authenticated() {
-    // Check for Active Directory attributes
+	// Check for Active Directory attributes
 	if ADCredsJSON, ok := creds.Attributes()[credentials.AttributeKeyADCredentials]; ok {
 		ADCreds := new(credentials.ADCredentials)
-        // Unmarshal the AD attributes
+		// Unmarshal the AD attributes
 		err := json.Unmarshal([]byte(ADCredsJSON), ADCreds)
 		if err == nil {
 			// Now access the fields of the ADCredentials struct. For example: ADCreds.GroupMembershipSIDs
 		}
 	}
 } else {
-    // Not authenticated user
+	// Not authenticated user
 	w.WriteHeader(http.StatusUnauthorized)
 	fmt.Fprint(w, "Authentication failed")
 }
@@ -236,10 +236,131 @@ if creds != nil && creds.Authenticated() {
 #### Generic Kerberised Service - Validating Client Details
 To validate the AP_REQ sent by the client on the service side call this method:
 ```go
-import 	"github.com/jcmturner/gokrb5/v8/service"
+import  "github.com/jcmturner/gokrb5/v8/service"
 s := service.NewSettings(&kt) // kt is a keytab and optional settings can also be provided.
 if ok, creds, err := service.VerifyAPREQ(&APReq, s); ok {
-        // Perform application specific actions
-        // creds object has details about the client identity
+	// Perform application specific actions
+	// creds object has details about the client identity
 }
 ```
+
+---
+
+### SASL Security Layers
+
+SASL (Simple Authentication and Security Layer) provides message protection for GSSAPI/Kerberos authentication.
+After authentication, messages can be wrapped with integrity protection (checksums) or confidentiality (encryption).
+
+This is required by many protocols (LDAP, IMAP, SMTP, Kafka) and can be used for Windows Active Directory
+authentication on non-TLS connections.
+
+> **⚠️ Active Directory Warning**: Microsoft Active Directory (per MS-ADTS specification) prohibits using SASL
+> security layers (integrity/confidentiality) over TLS/SSL connections and will reject such connections. When
+> connecting to Active Directory, use SASL security layers only on non-TLS connections (typically port 389).
+>
+> If you use `NewSecureConn()` with a TLS connection and an integrity/confidentiality layer, a warning will be
+> logged to stderr by default. For non-AD LDAP servers that accept this configuration per RFC 4513, you can
+> suppress the warning by setting `GOKRB5_SASL_TLS_NO_WARN=1`.
+
+#### Security Layers
+
+Three security layers are supported:
+
+```go
+import "github.com/jcmturner/gokrb5/v8/gssapi"
+
+const (
+  SecurityLayerNone           SecurityLayer = 1 // Authentication only
+  SecurityLayerIntegrity      SecurityLayer = 2 // HMAC checksums
+  SecurityLayerConfidentiality SecurityLayer = 4 // Encryption + integrity
+)
+```
+
+#### SecurityLayerSession
+
+Create a session to manage message wrapping/unwrapping:
+
+```go
+// Create session with negotiated security layer
+session, err := gssapi.NewSecurityLayerSession(
+	sessionKey,                      // types.EncryptionKey from Kerberos context
+	gssapi.SecurityLayerIntegrity,   // or SecurityLayerConfidentiality
+	true,                            // isInitiator (client=true, server=false)
+	65536,                           // maxMessageSize (0 = unlimited)
+)
+if err != nil {
+	return err
+}
+
+// Wrap a message
+message := []byte("Hello, server!")
+wrapped, err := session.Wrap(message)
+
+// Unwrap on receiving side
+unwrapped, err := session.Unwrap(wrapped)
+```
+
+The session automatically manages:
+
+* Sequence numbers (thread-safe)
+* GSS-API token format (RFC 4121)
+* Token rotation (RRC) for Windows AD compatibility
+
+#### SASL Framing
+
+For protocols that use SASL framing (4-byte length prefix):
+
+```go
+// Wrap with SASL framing
+framedMessage, err := session.WrapWithSASLFraming(message)
+
+// Send over network
+conn.Write(framedMessage)
+
+// On receiving side, read and unwrap
+data := make([]byte, 8192)
+n, err := conn.Read(data)
+unwrapped, err := session.UnwrapFromSASLFraming(data[:n])
+```
+
+#### SecureConn - Transparent Wrapper
+
+For automatic message protection, wrap your connection:
+
+```go
+// After authentication and security layer negotiation
+secureConn := gssapi.NewSecureConn(conn, session)
+
+// All Read/Write operations are now transparently protected
+secureConn.Write([]byte("Hello"))  // Automatically wrapped
+buf := make([]byte, 1024)
+n, err := secureConn.Read(buf)     // Automatically unwrapped
+```
+
+This provides a drop-in replacement for `net.Conn` with transparent SASL protection.
+
+#### Protocol Integration Example
+
+Typical protocol integration flow:
+
+```go
+// 1. Perform GSSAPI authentication (protocol-specific)
+// 2. Negotiate security layer with server (protocol-specific)
+// 3. Extract session key from Kerberos context
+sessionKey := kerberosContext.Key()
+
+// 4. Create security layer session
+session, err := gssapi.NewSecurityLayerSession(
+	sessionKey,
+	negotiatedLayer,  // From protocol negotiation
+	true,             // Client side
+	maxMsgSize,       // From negotiation
+)
+
+// 5. Wrap the connection for transparent protection
+conn = gssapi.NewSecureConn(conn, session)
+
+// 6. All subsequent protocol operations are automatically protected
+```
+
+See `examples/example-sasl.go` for complete working examples including LDAP-style integration.

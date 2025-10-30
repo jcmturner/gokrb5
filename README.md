@@ -19,7 +19,7 @@ gokrb5 may work with other versions of Go but they are not formally tested.
 It has been reported that gokrb5 also works with the [gollvm](https://go.googlesource.com/gollvm/) compiler but this is not formally tested.
 
 ## Features
-* **Pure Go** - no dependency on external libraries 
+* **Pure Go** - no dependency on external libraries
 * No platform specific code
 * Server Side
   * HTTP handler wrapper implements SPNEGO Kerberos authentication
@@ -27,6 +27,7 @@ It has been reported that gokrb5 also works with the [gollvm](https://go.googles
 * Client Side
   * Client that can authenticate to an SPNEGO Kerberos authenticated web service
   * Ability to change client's password
+  * SASL security layer support (integrity and confidentiality) for GSSAPI
 * General
   * Kerberos libraries for custom integration
   * Parsing Keytab files
@@ -63,7 +64,9 @@ If you are interested in contributing to gokrb5, great! Please read the [contrib
 * [RFC 3962 Advanced Encryption Standard (AES) Encryption for Kerberos 5](https://tools.ietf.org/html/rfc3962)
 * [RFC 4121 The Kerberos Version 5 GSS-API Mechanism](https://tools.ietf.org/html/rfc4121)
 * [RFC 4178 The Simple and Protected Generic Security Service Application Program Interface (GSS-API) Negotiation Mechanism](https://tools.ietf.org/html/rfc4178.html)
+* [RFC 4422 Simple Authentication and Security Layer (SASL)](https://tools.ietf.org/html/rfc4422)
 * [RFC 4559 SPNEGO-based Kerberos and NTLM HTTP Authentication in Microsoft Windows](https://tools.ietf.org/html/rfc4559.html)
+* [RFC 4752 The Kerberos V5 ("GSSAPI") SASL Mechanism](https://tools.ietf.org/html/rfc4752)
 * [RFC 4757 The RC4-HMAC Kerberos Encryption Types Used by Microsoft Windows](https://tools.ietf.org/html/rfc4757)
 * [RFC 6806 Kerberos Principal Name Canonicalization and Cross-Realm Referrals](https://tools.ietf.org/html/rfc6806.html)
 * [RFC 6113 A Generalized Framework for Kerberos Pre-Authentication](https://tools.ietf.org/html/rfc6113.html)

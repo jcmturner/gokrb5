@@ -110,6 +110,13 @@ func getChecksumHeader(flags byte, senderSeqNum uint64) []byte {
 	return header
 }
 
+// GetEmbeddedHeader returns the 16-byte header with EC and RRC fields zeroed.
+// This is used for encryption (RFC 4121 section 4.2.4) and checksum computation,
+// where the embedded header must have EC=0 and RRC=0.
+func (wt *WrapToken) GetEmbeddedHeader() []byte {
+	return getChecksumHeader(wt.Flags, wt.SndSeqNum)
+}
+
 // Verify computes the token's checksum with the provided key and usage,
 // and compares it to the checksum present in the token.
 // In case of any failure, (false, Err) is returned, with Err an explanatory error.
