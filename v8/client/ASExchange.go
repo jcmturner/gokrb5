@@ -69,14 +69,28 @@ func (cl *Client) ASExchange(realm string, ASReq messages.ASReq, referral int) (
 	if err != nil {
 		return messages.ASRep{}, krberror.Errorf(err, krberror.EncodingError, "AS Exchange Error: failed to process the AS_REP")
 	}
-	if ok, err := ASRep.Verify(cl.Config, cl.Credentials, ASReq); !ok {
-		return messages.ASRep{}, krberror.Errorf(err, krberror.KRBMsgError, "AS Exchange Error: AS_REP is not valid or client password/keytab incorrect")
+
+	// For PKINIT, use special verification that derives the key
+	if cl.Credentials.HasCertificate() && isPKInitResponse(&ASRep) {
+		err = verifyPKInitASRep(cl, &ASRep, &ASReq)
+		if err != nil {
+			return messages.ASRep{}, krberror.Errorf(err, krberror.KRBMsgError, "AS Exchange Error: PKINIT AS_REP verification failed")
+		}
+	} else {
+		if ok, err := ASRep.Verify(cl.Config, cl.Credentials, ASReq); !ok {
+			return messages.ASRep{}, krberror.Errorf(err, krberror.KRBMsgError, "AS Exchange Error: AS_REP is not valid or client password/keytab incorrect")
+		}
 	}
 	return ASRep, nil
 }
 
 // setPAData adds pre-authentication data to the AS_REQ.
 func setPAData(cl *Client, krberr *messages.KRBError, ASReq *messages.ASReq) error {
+	// Check if PKINIT (certificate-based) authentication should be used
+	if cl.Credentials.HasCertificate() {
+		return setPKInitPAData(cl, ASReq)
+	}
+
 	if !cl.settings.DisablePAFXFAST() {
 		pa := types.PAData{PADataType: patype.PA_REQ_ENC_PA_REP}
 		ASReq.PAData = append(ASReq.PAData, pa)

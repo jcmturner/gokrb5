@@ -3,6 +3,8 @@ package credentials
 
 import (
 	"bytes"
+	"crypto"
+	"crypto/x509"
 	"encoding/gob"
 	"encoding/json"
 	"time"
@@ -19,8 +21,8 @@ const (
 )
 
 // Credentials struct for a user.
-// Contains either a keytab, password or both.
-// Keytabs are used over passwords if both are defined.
+// Contains either a keytab, password, certificate or combination.
+// Priority order: certificate, keytab, password.
 type Credentials struct {
 	username        string
 	displayName     string
@@ -28,6 +30,9 @@ type Credentials struct {
 	cname           types.PrincipalName
 	keytab          *keytab.Keytab
 	password        string
+	certificate     *x509.Certificate
+	privateKey      crypto.PrivateKey
+	certChain       []*x509.Certificate // Additional certificates in the chain
 	attributes      map[string]interface{}
 	validUntil      time.Time
 	authenticated   bool
@@ -46,6 +51,7 @@ type marshalCredentials struct {
 	CName           types.PrincipalName `json:"-"`
 	Keytab          bool
 	Password        bool
+	Certificate     bool
 	Attributes      map[string]interface{} `json:"-"`
 	ValidUntil      time.Time
 	Authenticated   bool
@@ -342,6 +348,7 @@ func (c *Credentials) Marshal() ([]byte, error) {
 		CName:           c.cname,
 		Keytab:          c.HasKeytab(),
 		Password:        c.HasPassword(),
+		Certificate:     c.HasCertificate(),
 		Attributes:      c.attributes,
 		ValidUntil:      c.validUntil,
 		Authenticated:   c.authenticated,
@@ -391,6 +398,7 @@ func (c *Credentials) JSON() (string, error) {
 		CName:         c.cname,
 		Keytab:        c.HasKeytab(),
 		Password:      c.HasPassword(),
+		Certificate:   c.HasCertificate(),
 		ValidUntil:    c.validUntil,
 		Authenticated: c.authenticated,
 		Human:         c.human,
@@ -402,4 +410,47 @@ func (c *Credentials) JSON() (string, error) {
 		return "", err
 	}
 	return string(b), nil
+}
+
+// PKINIT Certificate Methods
+
+// WithCertificate sets the certificate and private key in the Credentials struct for PKINIT.
+func (c *Credentials) WithCertificate(cert *x509.Certificate, privateKey crypto.PrivateKey) *Credentials {
+	c.certificate = cert
+	c.privateKey = privateKey
+	c.password = ""     // Clear password
+	c.keytab = keytab.New() // Clear keytab
+	return c
+}
+
+// Certificate returns the credential's X.509 certificate.
+func (c *Credentials) Certificate() *x509.Certificate {
+	return c.certificate
+}
+
+// PrivateKey returns the credential's private key.
+func (c *Credentials) PrivateKey() crypto.PrivateKey {
+	return c.privateKey
+}
+
+// CertificateChain returns the credential's certificate chain.
+func (c *Credentials) CertificateChain() []*x509.Certificate {
+	return c.certChain
+}
+
+// HasCertificate queries if the Credentials has a certificate defined.
+func (c *Credentials) HasCertificate() bool {
+	return c.certificate != nil && c.privateKey != nil
+}
+
+// GetFullCertificateChain returns the complete certificate chain including the client certificate.
+func (c *Credentials) GetFullCertificateChain() []*x509.Certificate {
+	if c.certificate == nil {
+		return nil
+	}
+	chain := []*x509.Certificate{c.certificate}
+	if c.certChain != nil {
+		chain = append(chain, c.certChain...)
+	}
+	return chain
 }

@@ -2,6 +2,8 @@
 package client
 
 import (
+	"crypto"
+	"crypto/x509"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,7 +13,7 @@ import (
 
 	"github.com/jcmturner/gokrb5/v8/config"
 	"github.com/jcmturner/gokrb5/v8/credentials"
-	"github.com/jcmturner/gokrb5/v8/crypto"
+	gokrb5crypto "github.com/jcmturner/gokrb5/v8/crypto"
 	"github.com/jcmturner/gokrb5/v8/crypto/etype"
 	"github.com/jcmturner/gokrb5/v8/iana/errorcode"
 	"github.com/jcmturner/gokrb5/v8/iana/nametype"
@@ -50,6 +52,21 @@ func NewWithKeytab(username, realm string, kt *keytab.Keytab, krb5conf *config.C
 	creds := credentials.New(username, realm)
 	return &Client{
 		Credentials: creds.WithKeytab(kt),
+		Config:      krb5conf,
+		settings:    NewSettings(settings...),
+		sessions: &sessions{
+			Entries: make(map[string]*session),
+		},
+		cache: NewCache(),
+	}
+}
+
+// NewWithCertificate creates a new client from a certificate credential for PKINIT authentication.
+// Set the realm to empty string to use the default realm from config.
+func NewWithCertificate(username, realm string, cert *x509.Certificate, privateKey crypto.PrivateKey, krb5conf *config.Config, settings ...func(*Settings)) *Client {
+	creds := credentials.New(username, realm)
+	return &Client{
+		Credentials: creds.WithCertificate(cert, privateKey),
 		Config:      krb5conf,
 		settings:    NewSettings(settings...),
 		sessions: &sessions{
@@ -114,9 +131,14 @@ func NewFromCCache(c *credentials.CCache, krb5conf *config.Config, settings ...f
 // Key returns the client's encryption key for the specified encryption type and its kvno (kvno of zero will find latest).
 // The key can be retrieved either from the keytab or generated from the client's password.
 // If the client has both a keytab and a password defined the keytab is favoured as the source for the key
+// For PKINIT authentication with certificates, this returns an error as keys are derived during the AS exchange.
 // A KRBError can be passed in the event the KDC returns one of type KDC_ERR_PREAUTH_REQUIRED and is required to derive
 // the key for pre-authentication from the client's password. If a KRBError is not available, pass nil to this argument.
 func (cl *Client) Key(etype etype.EType, kvno int, krberr *messages.KRBError) (types.EncryptionKey, int, error) {
+	if cl.Credentials.HasCertificate() {
+		// For PKINIT, the key is derived during the AS exchange, not beforehand
+		return types.EncryptionKey{}, 0, errors.New("PKINIT authentication: key will be derived during AS exchange")
+	}
 	if cl.Credentials.HasKeytab() && etype != nil {
 		return cl.Credentials.Keytab().GetEncryptionKey(cl.Credentials.CName(), cl.Credentials.Domain(), kvno, etype.GetETypeID())
 	} else if cl.Credentials.HasPassword() {
@@ -126,13 +148,13 @@ func (cl *Client) Key(etype etype.EType, kvno int, krberr *messages.KRBError) (t
 			if err != nil {
 				return types.EncryptionKey{}, 0, fmt.Errorf("could not get PAData from KRBError to generate key from password: %v", err)
 			}
-			key, _, err := crypto.GetKeyFromPassword(cl.Credentials.Password(), krberr.CName, krberr.CRealm, etype.GetETypeID(), pas)
+			key, _, err := gokrb5crypto.GetKeyFromPassword(cl.Credentials.Password(), krberr.CName, krberr.CRealm, etype.GetETypeID(), pas)
 			return key, 0, err
 		}
-		key, _, err := crypto.GetKeyFromPassword(cl.Credentials.Password(), cl.Credentials.CName(), cl.Credentials.Domain(), etype.GetETypeID(), types.PADataSequence{})
+		key, _, err := gokrb5crypto.GetKeyFromPassword(cl.Credentials.Password(), cl.Credentials.CName(), cl.Credentials.Domain(), etype.GetETypeID(), types.PADataSequence{})
 		return key, 0, err
 	}
-	return types.EncryptionKey{}, 0, errors.New("credential has neither keytab or password to generate key")
+	return types.EncryptionKey{}, 0, errors.New("credential has neither keytab, password, nor certificate to generate key")
 }
 
 // IsConfigured indicates if the client has the values required set.
@@ -143,11 +165,11 @@ func (cl *Client) IsConfigured() (bool, error) {
 	if cl.Credentials.Domain() == "" {
 		return false, errors.New("client does not have a define realm")
 	}
-	// Client needs to have either a password, keytab or a session already (later when loading from CCache)
-	if !cl.Credentials.HasPassword() && !cl.Credentials.HasKeytab() {
+	// Client needs to have either a password, keytab, certificate, or a session already (later when loading from CCache)
+	if !cl.Credentials.HasPassword() && !cl.Credentials.HasKeytab() && !cl.Credentials.HasCertificate() {
 		authTime, _, _, _, err := cl.sessionTimes(cl.Credentials.Domain())
 		if err != nil || authTime.IsZero() {
-			return false, errors.New("client has neither a keytab nor a password set and no session")
+			return false, errors.New("client has neither a keytab, password, nor certificate set and no session")
 		}
 	}
 	if !cl.Config.LibDefaults.DNSLookupKDC {
@@ -168,7 +190,7 @@ func (cl *Client) Login() error {
 	if ok, err := cl.IsConfigured(); !ok {
 		return err
 	}
-	if !cl.Credentials.HasPassword() && !cl.Credentials.HasKeytab() {
+	if !cl.Credentials.HasPassword() && !cl.Credentials.HasKeytab() && !cl.Credentials.HasCertificate() {
 		_, endTime, _, _, err := cl.sessionTimes(cl.Credentials.Domain())
 		if err != nil {
 			return krberror.Errorf(err, krberror.KRBMsgError, "no user credentials available and error getting any existing session")
