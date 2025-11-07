@@ -129,6 +129,24 @@ func setPKInitPAData(cl *Client, ASReq *messages.ASReq) error {
 	}
 
 	ASReq.PAData = append(ASReq.PAData, paData)
+
+	// Add PA-PAC-REQUEST if configured (MS-KILE)
+	if cl.settings.HasPACRequest() {
+		includePAC := *cl.settings.IncludePAC()
+		pacRequest := types.KerbPaPacRequest{
+			IncludePAC: includePAC,
+		}
+		pacRequestBytes, err := pacRequest.Marshal()
+		if err != nil {
+			return krberror.Errorf(err, krberror.EncodingError, "PKINIT: failed to marshal PA-PAC-REQUEST")
+		}
+		paPACData := types.PAData{
+			PADataType:  patype.PA_PAC_REQUEST,
+			PADataValue: pacRequestBytes,
+		}
+		ASReq.PAData = append(ASReq.PAData, paPACData)
+	}
+
 	return nil
 }
 

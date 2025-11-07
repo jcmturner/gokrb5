@@ -12,6 +12,7 @@ type Settings struct {
 	assumePreAuthentication bool
 	preAuthEType            int32
 	logger                  *log.Logger
+	includePAC              *bool // Whether to request PAC inclusion via PA-PAC-REQUEST (MS-KILE, for PKINIT)
 }
 
 // jsonSettings is used when marshaling the Settings details to JSON format.
@@ -76,6 +77,28 @@ func (cl *Client) Log(format string, v ...interface{}) {
 	if cl.settings.Logger() != nil {
 		cl.settings.Logger().Output(2, fmt.Sprintf(format, v...))
 	}
+}
+
+// PACRequest used to configure the client to request (or not request) a PAC via PA-PAC-REQUEST (MS-KILE).
+// This is primarily used with PKINIT authentication.
+// Omit this setting to not send PA-PAC-REQUEST (default behavior).
+//
+// s := NewSettings(PACRequest(true))  // Request PAC
+// s := NewSettings(PACRequest(false)) // Suppress PAC
+func PACRequest(include bool) func(*Settings) {
+	return func(s *Settings) {
+		s.includePAC = &include
+	}
+}
+
+// IncludePAC returns the PAC inclusion preference (nil = not specified, will not send PA-PAC-REQUEST).
+func (s *Settings) IncludePAC() *bool {
+	return s.includePAC
+}
+
+// HasPACRequest returns true if PA-PAC-REQUEST should be sent.
+func (s *Settings) HasPACRequest() bool {
+	return s.includePAC != nil
 }
 
 // JSON returns a JSON representation of the settings.
