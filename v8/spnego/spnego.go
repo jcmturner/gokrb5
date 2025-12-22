@@ -19,13 +19,34 @@ type SPNEGO struct {
 	serviceSettings *service.Settings
 	client          *client.Client
 	spn             string
+	bindings        *gssapi.ChannelBindings // Optional channel bindings for CBT support
 }
 
 // SPNEGOClient configures the SPNEGO mechanism suitable for client side use.
+// For backward compatibility, this function does not include channel bindings.
+// Use SPNEGOClientWithBindings if channel bindings are required.
 func SPNEGOClient(cl *client.Client, spn string) *SPNEGO {
+	return SPNEGOClientWithBindings(cl, spn, nil)
+}
+
+// SPNEGOClientWithBindings configures the SPNEGO mechanism with optional channel bindings.
+// This is used for LDAP authentication with CBT (Channel Binding Token) support.
+//
+// The bindings parameter can be nil if channel bindings are not required.
+// When bindings is non-nil, the MD5 hash of the serialized bindings is embedded
+// in the authenticator checksum per RFC 4121 Section 4.1.1.
+//
+// Example usage with TLS channel bindings:
+//
+//	conn.StartTLS(tlsConfig)
+//	cs, _ := conn.TLSConnectionState()
+//	cb, _ := gssapi.NewTLSChannelBindingsFromState(&cs)
+//	s := spnego.SPNEGOClientWithBindings(client, "ldap/dc.example.com", cb)
+func SPNEGOClientWithBindings(cl *client.Client, spn string, bindings *gssapi.ChannelBindings) *SPNEGO {
 	s := new(SPNEGO)
 	s.client = cl
 	s.spn = spn
+	s.bindings = bindings
 	s.serviceSettings = service.NewSettings(nil, service.SName(spn))
 	return s
 }
@@ -47,13 +68,14 @@ func (s *SPNEGO) AcquireCred() error {
 	return s.client.AffirmLogin()
 }
 
-// InitSecContext is the GSS-API method for the client to a generate a context token to the service via Kerberos.
+// InitSecContext is the GSS-API method for the client to generate a context token to the service via Kerberos.
+// If channel bindings were configured via SPNEGOClientWithBindings, they are included in the token.
 func (s *SPNEGO) InitSecContext() (gssapi.ContextToken, error) {
 	tkt, key, err := s.client.GetServiceTicket(s.spn)
 	if err != nil {
 		return &SPNEGOToken{}, err
 	}
-	negTokenInit, err := NewNegTokenInitKRB5(s.client, tkt, key)
+	negTokenInit, err := NewNegTokenInitKRB5WithBindings(s.client, tkt, key, s.bindings)
 	if err != nil {
 		return &SPNEGOToken{}, fmt.Errorf("could not create NegTokenInit: %v", err)
 	}

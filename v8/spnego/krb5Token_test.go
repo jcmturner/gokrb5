@@ -46,7 +46,7 @@ func TestKRB5Token_newAuthenticatorChksum(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error decoding KRB5Token hex: %v", err)
 	}
-	cb := newAuthenticatorChksum([]int{gssapi.ContextFlagInteg, gssapi.ContextFlagConf})
+	cb := newAuthenticatorChksum([]int{gssapi.ContextFlagInteg, gssapi.ContextFlagConf}, nil)
 	assert.Equal(t, b, cb, "SPNEGO Authenticator checksum not as expected")
 }
 
@@ -57,7 +57,7 @@ func TestKRB5Token_newAuthenticatorWithSubkeyGeneration(t *testing.T) {
 	creds.SetCName(types.PrincipalName{NameType: nametype.KRB_NT_PRINCIPAL, NameString: testdata.TEST_PRINCIPALNAME_NAMESTRING})
 	var etypeID int32 = 18
 	keyLen := 32 // etypeID 18 refers to AES256 -> 32 bytes key
-	a, err := krb5TokenAuthenticator(creds, []int{gssapi.ContextFlagInteg, gssapi.ContextFlagConf})
+	a, err := krb5TokenAuthenticator(creds, []int{gssapi.ContextFlagInteg, gssapi.ContextFlagConf}, nil)
 	if err != nil {
 		t.Fatalf("Error creating authenticator: %v", err)
 	}
@@ -85,7 +85,7 @@ func TestKRB5Token_newAuthenticator(t *testing.T) {
 	t.Parallel()
 	creds := credentials.New("hftsai", testdata.TEST_REALM)
 	creds.SetCName(types.PrincipalName{NameType: nametype.KRB_NT_PRINCIPAL, NameString: testdata.TEST_PRINCIPALNAME_NAMESTRING})
-	a, err := krb5TokenAuthenticator(creds, []int{gssapi.ContextFlagInteg, gssapi.ContextFlagConf})
+	a, err := krb5TokenAuthenticator(creds, []int{gssapi.ContextFlagInteg, gssapi.ContextFlagConf}, nil)
 	if err != nil {
 		t.Fatalf("Error creating authenticator: %v", err)
 	}
@@ -99,6 +99,42 @@ func TestKRB5Token_newAuthenticator(t *testing.T) {
 	assert.Condition(t, assert.Comparison(func() bool {
 		return a.SeqNumber <= math.MaxUint32
 	}))
+}
+
+func TestKRB5Token_newAuthenticatorChksumWithBindings(t *testing.T) {
+	t.Parallel()
+	// Test that channel bindings are embedded in the checksum
+	cb := &gssapi.ChannelBindings{
+		ApplicationData: []byte("tls-server-end-point:test-hash"),
+	}
+	chksum := newAuthenticatorChksum([]int{gssapi.ContextFlagInteg, gssapi.ContextFlagConf}, cb)
+
+	// Checksum should be 24 bytes (or 28 with delegation)
+	assert.Equal(t, 24, len(chksum), "Checksum length not as expected")
+
+	// Bytes 0-3 should be 16 (length of MD5 hash)
+	assert.Equal(t, byte(16), chksum[0], "Lgth field not as expected")
+	assert.Equal(t, byte(0), chksum[1], "Lgth field not as expected")
+	assert.Equal(t, byte(0), chksum[2], "Lgth field not as expected")
+	assert.Equal(t, byte(0), chksum[3], "Lgth field not as expected")
+
+	// Bytes 4-19 should contain the MD5 hash of the channel bindings (non-zero)
+	expectedHash := cb.MD5Hash()
+	for i := 0; i < 16; i++ {
+		assert.Equal(t, expectedHash[i], chksum[4+i], "Channel binding hash byte %d not as expected", i)
+	}
+
+	// Compare with nil bindings - bytes 4-19 should be zero
+	chksumNil := newAuthenticatorChksum([]int{gssapi.ContextFlagInteg, gssapi.ContextFlagConf}, nil)
+	for i := 4; i < 20; i++ {
+		assert.Equal(t, byte(0), chksumNil[i], "Nil bindings should have zero in byte %d", i)
+	}
+
+	// The two checksums should differ in bytes 4-19
+	assert.NotEqual(t, chksum[4:20], chksumNil[4:20], "Checksums with and without bindings should differ in Bnd field")
+
+	// Flags (bytes 20-23) should be the same
+	assert.Equal(t, chksum[20:24], chksumNil[20:24], "Flags should be the same regardless of bindings")
 }
 
 func TestNewAPREQKRB5Token_and_Marshal(t *testing.T) {

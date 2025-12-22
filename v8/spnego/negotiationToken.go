@@ -285,9 +285,24 @@ func UnmarshalNegToken(b []byte) (bool, interface{}, error) {
 
 }
 
-// NewNegTokenInitKRB5 creates new Init negotiation token for Kerberos 5
+// NewNegTokenInitKRB5 creates new Init negotiation token for Kerberos 5.
+// For backward compatibility, this function does not include channel bindings.
+// Use NewNegTokenInitKRB5WithBindings if channel bindings are required.
 func NewNegTokenInitKRB5(cl *client.Client, tkt messages.Ticket, sessionKey types.EncryptionKey) (NegTokenInit, error) {
-	mt, err := NewKRB5TokenAPREQ(cl, tkt, sessionKey, []int{gssapi.ContextFlagInteg, gssapi.ContextFlagConf}, []int{})
+	return NewNegTokenInitKRB5WithBindings(cl, tkt, sessionKey, nil)
+}
+
+// NewNegTokenInitKRB5WithBindings creates new Init negotiation token for Kerberos 5
+// with optional channel bindings support.
+//
+// The bindings parameter can be nil if channel bindings are not required.
+// When bindings is non-nil, the MD5 hash of the serialized bindings is embedded
+// in the authenticator checksum per RFC 4121 Section 4.1.1.
+//
+// This is the primary entry point for creating SPNEGO tokens with TLS channel bindings
+// for LDAP authentication with CBT (Channel Binding Token) support.
+func NewNegTokenInitKRB5WithBindings(cl *client.Client, tkt messages.Ticket, sessionKey types.EncryptionKey, bindings *gssapi.ChannelBindings) (NegTokenInit, error) {
+	mt, err := NewKRB5TokenAPREQWithBindings(cl, tkt, sessionKey, []int{gssapi.ContextFlagInteg, gssapi.ContextFlagConf}, []int{}, bindings)
 	if err != nil {
 		return NegTokenInit{}, fmt.Errorf("error getting KRB5 token; %v", err)
 	}
