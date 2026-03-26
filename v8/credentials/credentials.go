@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/hashicorp/go-uuid"
+	"github.com/google/uuid"
 	"github.com/jcmturner/gokrb5/v8/iana/nametype"
 	"github.com/jcmturner/gokrb5/v8/keytab"
 	"github.com/jcmturner/gokrb5/v8/types"
@@ -72,9 +72,9 @@ type ADCredentials struct {
 
 // New creates a new Credentials instance.
 func New(username string, realm string) *Credentials {
-	uid, err := uuid.GenerateUUID()
-	if err != nil {
-		uid = "00unique-sess-ions-uuid-unavailable0"
+	uid := "00unique-sess-ions-uuid-unavailable0"
+	if uidRandom, err := uuid.NewRandom(); err == nil {
+		uid = uidRandom.String()
 	}
 	return &Credentials{
 		username:        username,
