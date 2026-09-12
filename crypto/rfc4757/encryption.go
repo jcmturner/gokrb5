@@ -58,6 +58,12 @@ func EncryptMessage(key, data []byte, usage uint32, export bool, e etype.EType) 
 // DecryptMessage decrypts the message provided using the methods specific to the etype provided as defined in RFC 4757.
 // The integrity of the message is also verified.
 func DecryptMessage(key, data []byte, usage uint32, export bool, e etype.EType) ([]byte, error) {
+	// Data shorter than a checksum plus a confounder cannot be a message.
+	// It arrives from the network, so the slice expressions below would
+	// otherwise panic on attacker-controlled input.
+	if len(data) < e.GetHMACBitLength()/8+e.GetConfounderByteSize() {
+		return []byte{}, errors.New("data too short")
+	}
 	checksum := data[:e.GetHMACBitLength()/8]
 	ct := data[e.GetHMACBitLength()/8:]
 	_, k2, k3 := deriveKeys(key, checksum, usage, export)
@@ -69,6 +75,9 @@ func DecryptMessage(key, data []byte, usage uint32, export bool, e etype.EType) 
 
 	if !VerifyIntegrity(k2, pt, data, e) {
 		return []byte{}, errors.New("integrity checksum incorrect")
+	}
+	if len(pt) < e.GetConfounderByteSize() {
+		return []byte{}, errors.New("decrypted data too short to contain a confounder")
 	}
 	return pt[e.GetConfounderByteSize():], nil
 }

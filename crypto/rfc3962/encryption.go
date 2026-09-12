@@ -75,6 +75,12 @@ func DecryptMessage(key, ciphertext []byte, usage uint32, e etype.EType) ([]byte
 	if err != nil {
 		return nil, fmt.Errorf("error deriving key: %v", err)
 	}
+	// A ciphertext shorter than a confounder plus a checksum cannot be a
+	// message. Ciphertexts arrive from the network, so the slice
+	// expressions below would otherwise panic on attacker-controlled input.
+	if len(ciphertext) < e.GetConfounderByteSize()+e.GetHMACBitLength()/8 {
+		return nil, errors.New("ciphertext too short")
+	}
 	// Strip off the checksum from the end
 	b, err := e.DecryptData(k, ciphertext[:len(ciphertext)-e.GetHMACBitLength()/8])
 	if err != nil {
@@ -85,5 +91,8 @@ func DecryptMessage(key, ciphertext []byte, usage uint32, e etype.EType) ([]byte
 		return nil, errors.New("integrity verification failed")
 	}
 	//Remove the confounder bytes
+	if len(b) < e.GetConfounderByteSize() {
+		return nil, errors.New("decrypted data too short to contain a confounder")
+	}
 	return b[e.GetConfounderByteSize():], nil
 }
