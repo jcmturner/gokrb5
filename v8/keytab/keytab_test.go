@@ -6,8 +6,10 @@ import (
 	"encoding/hex"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
+	"unicode/utf8"
 
 	"github.com/jcmturner/gokrb5/v8/iana/etypeID"
 	"github.com/jcmturner/gokrb5/v8/iana/nametype"
@@ -15,6 +17,71 @@ import (
 	"github.com/jcmturner/gokrb5/v8/types"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestTruncatedKeytabErrors(t *testing.T) {
+	var native binary.ByteOrder = binary.BigEndian
+	if isNativeEndianLittle() {
+		native = binary.LittleEndian
+	}
+	v1Entry := []byte{5, 1, 0, 0, 0, 0, 0xff, 0xfe}
+	native.PutUint32(v1Entry[2:6], 8)
+	for _, tc := range []struct {
+		name string
+		data []byte
+	}{
+		{"v1 entry length", []byte{5, 1, 0xff}},
+		{"v1 entry data", v1Entry},
+		{"v2 entry length", []byte{5, 2, 0xff}},
+		{"v2 entry data", []byte{5, 2, 0, 0, 0, 8, 0xff, 0xfe}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := New().Unmarshal(tc.data)
+			if err == nil {
+				t.Fatal("truncated keytab unexpectedly accepted")
+			}
+			if !utf8.ValidString(err.Error()) {
+				t.Errorf("error is not valid UTF-8: %q", err)
+			}
+			if strings.Contains(err.Error(), string(tc.data)) {
+				t.Errorf("error includes raw keytab: %q", err)
+			}
+			if !strings.Contains(err.Error(), "length") {
+				t.Errorf("error omits length information: %q", err)
+			}
+		})
+	}
+}
+
+func TestTruncatedKeytabFieldErrors(t *testing.T) {
+	var endian binary.ByteOrder = binary.BigEndian
+	for _, size := range []int{1, 2, 4, 8} {
+		p := 1
+		data := []byte{0xff}
+		var err error
+		switch size {
+		case 1:
+			_, err = readInt8(data, &p, &endian)
+		case 2:
+			_, err = readInt16(data, &p, &endian)
+		case 4:
+			_, err = readInt32(data, &p, &endian)
+		case 8:
+			_, err = readBytes(data, &p, size, &endian)
+		}
+		if err == nil {
+			t.Fatalf("read %d bytes unexpectedly succeeded", size)
+		}
+		if !utf8.ValidString(err.Error()) {
+			t.Errorf("read %d error is not valid UTF-8: %q", size, err)
+		}
+		if strings.Contains(err.Error(), string(data)) {
+			t.Errorf("read %d error includes raw keytab: %q", size, err)
+		}
+		if p != 1 {
+			t.Errorf("failed read advanced position to %d", p)
+		}
+	}
+}
 
 func TestUnmarshal(t *testing.T) {
 	t.Parallel()
